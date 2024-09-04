@@ -29,6 +29,12 @@ jobs:
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test
+      - name: Get version from package.json
+        id: get_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Create .zip package
         run: |
           zip -r dist.zip dist
@@ -55,8 +61,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v1
-          release_name: v1
+          tag_name: v${{ env.VERSION }}
+          release_name: v${{ env.VERSION }}
           draft: false
           prerelease: false
       - name: Upload Release Assets dist.zip
