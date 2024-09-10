@@ -93,3 +93,14 @@ export const isObject = (obj, isEffective = false) => {
 export const isInList=(value=string, list=Array)=> {
   return list.includes(value);
 }
+
+/**
+ * Get default value
+ * @param obj
+ * @param key
+ * @param defaultValue
+ */
+export const getOrDefault = (obj = {}, key = '', defaultValue = 1) => {
+  //console.log("getOrDefault",obj,key,obj[key] !== undefined )
+  return obj[key] !== undefined ? obj[key].toString() : defaultValue.toString();
+};

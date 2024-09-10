@@ -301,6 +301,8 @@ export default {
       scan_detection_tips: "是否检测扫描工具",
       rce_detection: "RCE检测",
       rce_detection_tips: "RCE远程攻击检测",
+      sensitive_detection: "敏感词检测",
+      sensitive_detection_tips: "敏感词检测",
       engine_protection: "引擎自带防护",
       other_config: "其他配置",
       guard_status_confirm: "防护状态提示",

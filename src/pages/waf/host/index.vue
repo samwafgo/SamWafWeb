@@ -199,6 +199,15 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.sensitive_detection')">
+                <t-tooltip class="placement top center" :content="$t('page.host.sensitive_detection_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="hostDefenseData.sensitive">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
             </t-tab-panel>
             <t-tab-panel :value="3">
               <template #label>
@@ -321,6 +330,15 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.sensitive_detection')">
+                <t-tooltip class="placement top center" :content="$t('page.host.sensitive_detection_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="hostDefenseData.sensitive">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
             </t-tab-panel>
             <t-tab-panel :value="3">
               <template #label>
@@ -369,7 +387,7 @@
   </div>
 </template>
 <script lang="ts">
-import {AesDecrypt, getBaseUrl} from '@/utils/usuallytool';
+import {AesDecrypt, getBaseUrl,getOrDefault} from '@/utils/usuallytool';
 import Vue from 'vue';
 import {FileSafetyIcon, LinkIcon, SearchIcon} from 'tdesign-icons-vue';
 import {prefix} from '@/config/global';
@@ -377,10 +395,6 @@ import {prefix} from '@/config/global';
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost} from '@/apis/host';
 import {
-  CONTRACT_PAYMENT_TYPES,
-  CONTRACT_STATUS,
-  CONTRACT_STATUS_OPTIONS,
-  CONTRACT_TYPES,
   GUARD_STATUS,
   SSL_STATUS,
   START_STATUS
@@ -397,7 +411,7 @@ const INITIAL_DATA = {
   remote_app: "默认",
   guard_status: '',
   remarks: '',
-  defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1}',
+  defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1}',
   start_status: '0',
   exclude_url_log:'',
 };
@@ -433,6 +447,7 @@ export default Vue.extend({
         xss: "1",
         scan: "1",
         rce: "1",
+        sensitive:"1",
       },
       rules: {
         host: [{
@@ -725,11 +740,12 @@ export default Vue.extend({
             }
             that.formData.code = null
             let defenseJson = JSON.parse(detail_data_tmp.defense_json)
-            that.hostDefenseData.bot = defenseJson.bot.toString()
-            that.hostDefenseData.sqli = defenseJson.sqli.toString()
-            that.hostDefenseData.xss = defenseJson.xss.toString()
-            that.hostDefenseData.scan = defenseJson.scan.toString()
-            that.hostDefenseData.rce = defenseJson.rce.toString()
+            that.hostDefenseData.bot = getOrDefault(defenseJson,"bot","1")
+            that.hostDefenseData.sqli = getOrDefault(defenseJson,"sqli","1")
+            that.hostDefenseData.xss = getOrDefault(defenseJson,"xss","1")
+            that.hostDefenseData.scan = getOrDefault(defenseJson,"scan","1")
+            that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
+            that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
           }
         })
         .catch((e: Error) => {
@@ -779,6 +795,7 @@ export default Vue.extend({
           xss: parseInt(this.hostDefenseData.xss),
           scan: parseInt(this.hostDefenseData.scan),
           rce: parseInt(this.hostDefenseData.rce),
+          sensitive: parseInt(this.hostDefenseData.sensitive)
         }
         postdata['defense_json'] = JSON.stringify(defenseData)
         addHost( {
@@ -803,7 +820,7 @@ export default Vue.extend({
                 remote_app: "默认",
                 guard_status: '',
                 remarks: '',
-                defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1}',
+                defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1}',
                 start_status: '0',
               };
               that.getList("")
@@ -840,6 +857,7 @@ export default Vue.extend({
           xss: parseInt(this.hostDefenseData.xss),
           scan: parseInt(this.hostDefenseData.scan),
           rce: parseInt(this.hostDefenseData.rce),
+          sensitive: parseInt(this.hostDefenseData.sensitive),
         }
         postdata['defense_json'] = JSON.stringify(defenseData)
         console.log(postdata)
@@ -877,6 +895,7 @@ export default Vue.extend({
         xss: "1",
         scan: "1",
         rce: "1",
+        sensitive: "1",
       }
     },
     onClickCloseEditBtn(): void {
@@ -888,6 +907,7 @@ export default Vue.extend({
         xss: "1",
         scan: "1",
         rce: "1",
+        sensitive: "1",
       }
     },
     handleClickDelete(row) {
@@ -956,11 +976,12 @@ export default Vue.extend({
               ...that.detail_data
             }
             let defenseJson = JSON.parse(that.detail_data.defense_json)
-            that.hostDefenseData.bot = defenseJson.bot.toString()
-            that.hostDefenseData.sqli = defenseJson.sqli.toString()
-            that.hostDefenseData.xss = defenseJson.xss.toString()
-            that.hostDefenseData.scan = defenseJson.scan.toString()
-            that.hostDefenseData.rce = defenseJson.rce.toString()
+            that.hostDefenseData.bot = getOrDefault(defenseJson,"bot","1")
+            that.hostDefenseData.sqli = getOrDefault(defenseJson,"sqli","1")
+            that.hostDefenseData.xss = getOrDefault(defenseJson,"xss","1")
+            that.hostDefenseData.scan = getOrDefault(defenseJson,"scan","1")
+            that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
+            that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
             console.log(that.hostDefenseData)
             console.log(that.formEditData)
           }
