@@ -66,7 +66,7 @@
     <!-- New WebSite Dialog -->
     <t-dialog :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="header">
-        {{ $t('page.host.website_protection') }}
+        {{ $t('common.new') }}
         <t-link theme="primary" :href="hostAddUrl" target="_blank">
           <link-icon slot="prefix-icon"></link-icon>
           {{ $t('common.online_document') }}
