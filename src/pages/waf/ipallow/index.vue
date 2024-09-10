@@ -14,7 +14,7 @@
                 {{ item }}
               </t-option>
             </t-select>
-              <span>Ip：</span>
+              <span>{{ $t('page.ipallow.label_ip') }}</span>
               <t-input v-model="searchformData.ip" class="search-input" :placeholder="$t('common.placeholder')" clearable>
               </t-input>
               <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
@@ -157,12 +157,12 @@
         rules: {
           host_code: [{
             required: true,
-            message: this.$t('common.placeholder')+this.$t('page.ipallow.website'),
+            message: this.$t('common.placeholder')+this.$t('page.ipallow.label_website'),
             type: 'error'
           }],
           ip: [{
             required: true,
-            message: this.$t('common.placeholder')+this.$t('page.ipallow.ip'),
+            message: this.$t('common.placeholder')+this.$t('page.ipallow.label_ip'),
             type: 'error'
           }],
         },
@@ -175,7 +175,7 @@
         value: 'first',
         columns: [
           {
-            title: this.$t('page.ipallow.website'),
+            title: this.$t('page.ipallow.label_website'),
             align: 'left',
             width: 250,
             ellipsis: true,
@@ -183,7 +183,7 @@
             fixed: 'left',
           },
           {
-            title: this.$t('page.ipallow.ip'),
+            title: this.$t('page.ipallow.label_ip'),
             width: 200,
             ellipsis: true,
             colKey: 'ip',

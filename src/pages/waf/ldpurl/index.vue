@@ -68,7 +68,7 @@
           <t-form-item :label="$t('page.ldpurl.label_url')" name="url">
             <t-input :style="{ width: '480px' }" v-model="formData.url" ></t-input>
           </t-form-item>
-          <t-form-item  :label="$t('page.ldpurl.label_remarks')" name="remarks">
+          <t-form-item  :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"   name="remarks">
             </t-textarea>
           </t-form-item>
@@ -102,7 +102,7 @@
          <t-form-item :label="$t('page.ldpurl.label_url')" name="url">
            <t-input :style="{ width: '480px' }" v-model="formEditData.url" ></t-input>
          </t-form-item>
-          <t-form-item :label="$t('page.ldpurl.label_remarks')" name="remarks">
+          <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks"  name="remarks">
             </t-textarea>
           </t-form-item>

@@ -38,8 +38,8 @@
           </template>
 
           <template #op="slotProps">
-             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $('common.edit') }}</a>
-            <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $('common.delete') }}</a>
+             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
+            <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
           </template>
         </t-table>
       </div>
