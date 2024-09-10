@@ -610,7 +610,7 @@ export default Vue.extend({
         const {
           host
         } = this.data?.[this.deleteIdx];
-        return $t('page.host.delete_confirm_clear_relation');
+        return this.$t('page.host.delete_confirm_clear_relation');
       }
       return '';
     },
