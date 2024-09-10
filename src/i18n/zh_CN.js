@@ -102,9 +102,10 @@ export default {
       allow_ip:"IP白名单",
       allow_url:"Url白名单",
       deny_ip:"IP黑名单",
-      deny_url:"IP黑名单",
+      deny_url:"URL黑名单",
       ldp_url:"隐私保护Url",
       cc:"cc防御",
+      sensitive:"敏感词",
     },
     analysis:{
       parent_title:"数据分析",
@@ -387,6 +388,16 @@ export default {
       compare_type_option_end:"后缀匹配",
       compare_type_option_contain:"包含匹配",
     },
+    sensitive:{
+      button_add_sensitive: "新建敏感词",
+      label_type: "类型",
+      label_content: "内容",
+      alert_message: "SamWaf防护墙会阻止敏感词内容",
+      type_option_0:"未选择",
+      type_option_1:"类型1",
+      type_option_2:"类型2",
+      type_option_3:"类型3",
+    },
     systemconfig:{
       new_system_configuration: "新建系统配置",
       label_configuration_item: "配置项",
@@ -495,6 +506,6 @@ export default {
       theme_mode_color_light:"明亮",
       theme_mode_color_dark:"暗黑",
       theme_mode_color_auto:"跟随系统",
-    }
+    },
   }
 };

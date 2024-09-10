@@ -1,5 +1,6 @@
 <template>
   <div class="detail-base">
+    <t-alert v-if="detail_data.status_code===403" theme="error" :message="detail_data.rule" />
     <t-card :title="$t('page.visit_log.detail.defense_status')" class="container-base-margin-top">
       <t-steps class="detail-base-info-steps" layout="horizontal" theme="dot" :current="3">
         <t-step-item :title="$t('page.visit_log.detail.visit_time')" :content="detail_data.create_time" />

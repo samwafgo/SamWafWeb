@@ -105,6 +105,7 @@ export default {
       deny_url: "URL Block List",
       ldp_url: "Protection URL",
       cc: "CC Protection",
+      sensitive:"Sensitive",
     },
     analysis:{
       parent_title: "Data Analysis",
@@ -385,6 +386,16 @@ export default {
       compare_type_option_pre: "Prefix Match",
       compare_type_option_end: "Suffix Match",
       compare_type_option_contain: "Contains Match"
+    },
+    sensitive:{
+      button_add_sensitive: "Add Sensitive Word",
+      label_type: "Type",
+      label_content: "Content",
+      alert_message: "SamWaf firewall will block sensitive content",
+      type_option_0: "Not Selected",
+      type_option_1: "Type 1",
+      type_option_2: "Type 2",
+      type_option_3: "Type 3"
     },
     systemconfig: {
       new_system_configuration: "Add New System Configuration",

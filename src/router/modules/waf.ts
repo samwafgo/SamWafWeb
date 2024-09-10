@@ -70,6 +70,13 @@ export default [
         meta: { title: 'menu.host.cc' },
 
       },
+      {
+        path: 'wafsensitivelist',
+        name: 'WafSensitiveList',
+        component: () => import('@/pages/waf/sensitive/index.vue'),
+        meta: { title: 'menu.host.sensitive' },
+
+      },
     ],
   },
 
