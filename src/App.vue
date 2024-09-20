@@ -89,6 +89,13 @@ export default Vue.extend({
                     },
                   });
               return
+          }else if(wsData.msg_cmd_type=="DOWNLOAD_LOG"){
+            let token  =localStorage.getItem("access_token")? localStorage.getItem("access_token"):""
+            //下载连接
+            let downloadUrl = env=="development"? "http://127.0.0.1:26666/samwaf/waflog/attack/download" : "http://"+window.location.host+"/samwaf/waflog/attack/download"
+            downloadUrl = downloadUrl +"?X-Token="+token
+            console.log(downloadUrl)
+            window.open(downloadUrl)
           }
           this.$store.commit('notification/addMsgData', wsData.msg_data);
         }else if(wsData.msg_code=="-999"){

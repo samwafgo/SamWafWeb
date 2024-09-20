@@ -19,6 +19,7 @@ export default {
     delete: "删除",
     reset: "重置",
     submit: "提交",
+    export: "导出",
     return: "返回",
     status: "状态",
     remarks: "备注",
@@ -202,6 +203,8 @@ export default {
       date_range_last_3_days: "最近3天",
       date_range_last_7_days: "最近7天",
       date_range_last_300_days: "最近300天",
+      export_db_file_header:"导出当前选择的日志文件(SQLITE)",
+      export_db_file_content:"历史文件可能很大，为避免影响带宽，请在闲时进行数据导出",
       detail:{
         defense_status: "防御情况",
         visit_time: "访问",

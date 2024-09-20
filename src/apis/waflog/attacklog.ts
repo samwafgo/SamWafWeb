@@ -16,3 +16,17 @@ export function allsharedblist(params) {
     params: params
   })
 }
+//导出json数据
+export function exportlog(data) {
+  return request({
+    url: 'waflog/attack/export',
+    method: 'get',
+  })
+}
+//下载已经生成好的数据
+export function downloadlog() {
+  return request({
+    url: 'waflog/attack/download',
+    method: 'get',
+  })
+}

@@ -69,6 +69,7 @@
 
             <t-col :span="2" class="operation-container">
               <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
+              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="exportDbVisible=true"> {{ $t('common.export') }} </t-button>
               <t-button type="reset" variant="base" theme="default"> {{ $t('common.reset') }}  </t-button>
             </t-col>
           </t-row>
@@ -109,6 +110,16 @@
         </t-table>
       </div>
     </t-card>
+    <t-dialog
+      :header="$t('page.visit_log.export_db_file_header')"
+      :body="$t('page.visit_log.export_db_file_content')"
+      :visible.sync="exportDbVisible"
+      @confirm="handelExport"
+      width="40%"
+      :confirmOnEnter="true"
+      :onClose="close"
+    >
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -116,7 +127,7 @@
   import { SearchIcon } from 'tdesign-icons-vue';
   import Trend from '@/components/trend/index.vue';
   import { prefix } from '@/config/global';
-  import { allsharedblist } from '@/apis/waflog/attacklog';
+  import { allsharedblist,exportlog } from '@/apis/waflog/attacklog';
 
   import { NowDate, ConvertStringToUnix, ConvertDateToString, ConvertUnixToDate } from '@/utils/date';
   import {
@@ -125,6 +136,7 @@
 
   import { CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
   import { ErrorCircleFilledIcon, CheckCircleFilledIcon, CloseCircleFilledIcon } from 'tdesign-icons-vue';
+  import {export_api} from "@/apis/common";
 
   const staticColumn = ['action', 'op'];
 
@@ -390,7 +402,9 @@
         //主机字典
         host_dic: {},
         //日志存档字典
-        share_db_dic: {}
+        share_db_dic: {},
+        //export db
+        exportDbVisible:false,
       };
     },
     computed: {
@@ -541,6 +555,36 @@
             this.dataLoading = false;
           });
         this.dataLoading = true;
+      },
+      handelExport(keyword) {
+
+        let that = this
+        if (keyword != undefined && keyword == "all") {
+          that.pagination.current = 1
+        }
+        that.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
+        that.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
+
+        let sort_descending =that.sorts.descending?"desc":"asc"
+
+        exportlog({
+          batch_size:1000,
+          pageSize: that.pagination.pageSize,
+          pageIndex: that.pagination.current,
+          sort_by: that.sorts.sortBy,
+          sort_descending: sort_descending,
+          filter_by:that.filters.filter_by,
+          filter_value:that.filters.filter_value,
+          unix_add_time_begin: ConvertStringToUnix(this.dateControl.range1[0]).toString(),
+          unix_add_time_end: ConvertStringToUnix(this.dateControl.range1[1]).toString(),
+          ...that.searchformData}
+         ).then((res) => {
+          let resdata = res
+            console.log(resdata)
+        })
+          .catch((e: Error) => {
+            console.log(e);
+          })
       },
       getContainer() {
         return document.querySelector('.tdesign-starter-layout');

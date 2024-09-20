@@ -80,10 +80,10 @@ instance.interceptors.response.use(
     if (response.status === 200) {
       const { data } = response;
       if (data.code === CODE.REQUEST_SUCCESS) {
-        //console.log("解密前",data)
+        console.log("解密前",data)
         let tmpSrcContent = AesDecrypt(data.data)
         data.data = JSON.parse(tmpSrcContent)
-        //console.log("解密后",data)
+        console.log("解密后",data)
 
         //console.log("再加密后",AesEncrypt(tmpSrcContent))
         return data;

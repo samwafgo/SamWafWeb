@@ -19,6 +19,7 @@ export default {
     delete: "Delete",
     reset: "Reset",
     submit: "Submit",
+    export: "Export",
     return: "Return",
     status: "Status",
     remarks: "Remarks",
@@ -202,6 +203,8 @@ export default {
       date_range_last_3_days: "Last 3 Days",
       date_range_last_7_days: "Last 7 Days",
       date_range_last_300_days: "Last 300 Days",
+      export_db_file_header: "Export the currently selected log file(SQLITE)",
+      export_db_file_content: "The historical file may be large, to avoid affecting bandwidth, please export during off-peak hours.",
       detail:{
         defense_status: "Defense Status",
         visit_time: "Visit",
