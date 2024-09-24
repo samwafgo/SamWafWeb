@@ -436,12 +436,12 @@
         }
       },
       onClickCloseBtn(): void {
-        this.formVisible = false;
-        this.formData = {};
+        this.addFormVisible = false;
+        this.formData = {...INITIAL_DATA};
       },
       onClickCloseEditBtn(): void {
         this.editFormVisible = false;
-        this.formEditData = {};
+        this.formEditData = {...INITIAL_DATA};
       },
       handleClickDelete(row) {
         console.log(row)

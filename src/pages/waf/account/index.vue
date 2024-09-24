@@ -39,7 +39,7 @@
     <t-dialog :header="$t('page.account.create_account')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
         <!-- 表单内容 -->
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
+        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150">
           <t-form-item :label="$t('page.account.login_account_label')" name="login_account">
               <t-input :style="{ width: '480px' }" v-model="formData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')"></t-input>
           </t-form-item>
@@ -62,7 +62,7 @@
             </t-textarea>
           </t-form-item>
           <t-form-item style="float: right">
-            <t-button variant="outline" @click="onClickCloseBtn">{{ $t('common.cancel') }}</t-button>
+            <t-button variant="outline" @click="onClickCloseBtn">{{ $t('common.close') }}</t-button>
             <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
           </t-form-item>
         </t-form>
@@ -73,7 +73,7 @@
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
         <!-- 表单内容 -->
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="100">
+        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="150">
           <t-form-item :label="$t('page.account.login_account_label')" name="login_account">
            <t-input :style="{ width: '480px' }" v-model="formEditData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')"></t-input>
           </t-form-item>
@@ -85,7 +85,7 @@
             </t-textarea>
           </t-form-item>
           <t-form-item style="float: right">
-            <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.cancel') }}</t-button>
+            <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>
             <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
           </t-form-item>
         </t-form>
@@ -95,7 +95,7 @@
     <t-dialog :header="$t('page.account.reset_password')" :visible.sync="resetPwdFormVisible" :width="680" :footer="false">
       <div slot="body">
         <!-- 表单内容 -->
-        <t-form :data="formResetPwdData" ref="form" :rules="resetPwdRules" @submit="onSubmitResetPwd" :labelWidth="100">
+        <t-form :data="formResetPwdData" ref="form" :rules="resetPwdRules" @submit="onSubmitResetPwd" :labelWidth="150">
           <t-form-item :label="$t('page.account.login_account_label')" name="login_account">
             <t-input :style="{ width: '480px' }" v-model="formResetPwdData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')"></t-input>
           </t-form-item>
@@ -109,7 +109,7 @@
             <t-input :style="{ width: '480px' }" type="password"  v-model="formResetPwdData.login_new_password2" :placeholder="$t('common.placeholder')+$t('page.account.confirm_password')"></t-input>
           </t-form-item>
           <t-form-item style="float: right">
-            <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.cancel') }}</t-button>
+            <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>
             <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
           </t-form-item>
         </t-form>
@@ -376,10 +376,7 @@
         //添加
         this.addFormVisible = true
         this.formData =  {
-          login_account: '',
-          login_password: '',
-          remarks: '',
-          status:1,
+          ...INITIAL_DATA
         };
       },
       handleClickResetPwd(e) {
@@ -506,12 +503,12 @@
         }
       },
       onClickCloseBtn(): void {
-        this.formVisible = false;
-        this.formData = {};
+        this.addFormVisible = false;
+        this.formData = {...INITIAL_DATA};
       },
       onClickCloseEditBtn(): void {
         this.editFormVisible = false;
-        this.formEditData = {};
+        this.formEditData = {...INITIAL_DATA};
       },
       handleClickDelete(row) {
         if(row.row.login_account=="admin"){

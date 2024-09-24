@@ -51,7 +51,7 @@
     <!-- New CC Protect Dialog -->
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
+        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150">
           <t-form-item :label="$t('page.cc.website')" name="host_code">
             <t-select v-model="formData.host_code" clearable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item"
@@ -84,7 +84,7 @@
     <!-- Edit CC Protect Dialog -->
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="100">
+        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="150">
           <t-form-item :label="$t('page.cc.website')"  name="host_code">
             <t-select v-model="formEditData.host_code" clearable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item"
@@ -421,12 +421,12 @@ import {
         }
       },
       onClickCloseBtn(): void {
-        this.formVisible = false;
-        this.formData = {};
+        this.addFormVisible = false;
+        this.formData = {...INITIAL_DATA};
       },
       onClickCloseEditBtn(): void {
         this.editFormVisible = false;
-        this.formEditData = {};
+        this.formEditData = {...INITIAL_DATA};
       },
       handleClickDelete(row) {
         console.log(row)

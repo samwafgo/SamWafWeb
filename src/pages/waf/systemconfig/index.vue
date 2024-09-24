@@ -42,7 +42,7 @@
 
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
+        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150">
           <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
               <t-input :style="{ width: '480px' }" v-model="formData.item"  ></t-input>
           </t-form-item>
@@ -64,7 +64,7 @@
 
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="100">
+        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="150">
           <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
            <t-input :style="{ width: '480px' }" v-model="formEditData.item" ></t-input>
           </t-form-item>
@@ -365,12 +365,12 @@
         }
       },
       onClickCloseBtn(): void {
-        this.formVisible = false;
-        this.formData = {};
+        this.addFormVisible = false;
+        this.formData = {...INITIAL_DATA};
       },
       onClickCloseEditBtn(): void {
         this.editFormVisible = false;
-        this.formEditData = {};
+        this.formEditData = {...INITIAL_DATA};
       },
       handleClickDelete(row) {
         console.log(row)
