@@ -330,7 +330,24 @@ export default {
       delete_confirm_clear_relation: "After deletion, the website information and rules will be cleared and cannot be restored.",
       forbid_for_global_site: "Global websites cannot be operated",
       forbid_for_global_site_only_change_guard_status: "Global websites can only configure protection status",
-      host_rule_msg: "Do not fill in HTTP and HTTPS, just enter the domain name."
+      host_rule_msg: "Do not fill in HTTP and HTTPS, just enter the domain name.",
+      loadbalance: {
+        label_loadbalance_is_enable: "Enable Load Balancing",
+        label_loadbalance_type: "Load Balancing Type",
+        label_loadbalance_type_weight_round_robin: "Weighted Round Robin (WRR)",
+        label_loadbalance_type_least_connections: "Least Connections",
+        label_loadbalance_type_ip_hash: "IP Hash",
+        label_loadbalance_type_source_hash: "Source Address Hash",
+        label_loadbalance_type_url_hash: "URL Hash",
+        label_loadbalance_type_least_time: "Minimum Response Time",
+        label_is_enable_load_balance_on: "Enable Load Balancing",
+        label_is_enable_load_balance_off: "Disable Load Balancing",
+        label_add_loadbalance: "Add Load Balancer",
+        website: "Website",
+        remote_ip: "Remote IP",
+        remote_port: "Remote Port",
+        weight: "Weight"
+      }
     },
     one_key_mod: {
       one_key_placeholder: "Due to the fact that only one program can use Web (port 80, port 443) on a single server, if you need to set Waf as a proxy, you need to change 80 to 81 and 443 to 444 here.\nSamWaf has added a one-click modification of Baota Web port for user convenience. Available only on Linux.",

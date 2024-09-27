@@ -64,7 +64,7 @@
     </t-card>
 
     <!-- New WebSite Dialog -->
-    <t-dialog :visible.sync="addFormVisible" :width="680" :footer="false">
+    <t-dialog :visible.sync="addFormVisible" :width="700" :footer="false">
       <div slot="header">
         {{ $t('common.new') }}
         <t-link theme="primary" :href="hostAddUrl" target="_blank">
@@ -125,13 +125,30 @@
                   </t-textarea>
                 </t-tooltip>
               </t-form-item>
-              <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip">
+              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_is_enable')" name="is_enable_load_balance">
+                <t-radio-group v-model="formData.is_enable_load_balance">
+                  <t-radio value="0">{{ $t('page.host.loadbalance.label_is_enable_load_balance_off') }} </t-radio>
+                  <t-radio value="1">{{ $t('page.host.loadbalance.label_is_enable_load_balance_on') }}</t-radio>
+                </t-radio-group>
+              </t-form-item>
+              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_type')" name="load_balance_stage" v-if="formData.is_enable_load_balance=='1'">
+                <t-radio-group v-model="formData.load_balance_stage">
+                  <t-radio value="1">{{ $t('page.host.loadbalance.label_loadbalance_type_weight_round_robin') }} </t-radio>
+                  <t-radio value="2">{{ $t('page.host.loadbalance.label_loadbalance_type_ip_hash') }}</t-radio>
+                </t-radio-group>
+              </t-form-item>
+
+              <t-form-item   name="loadbalance"  v-if="formData.is_enable_load_balance=='1'">
+                <load-balance :propHostCode="formData.code"></load-balance>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formData.is_enable_load_balance!='1'">
                 <t-tooltip class="placement top center" :content="$t('page.host.remote_ip_content')"
                            placement="top" :overlay-style="{ width: '200px' }" show-arrow>
                   <t-input :style="{ width: '480px' }" v-model="formData.remote_ip" :placeholder="$t('common.placeholder')+$t('page.host.remote_ip')"></t-input>
                 </t-tooltip>
               </t-form-item>
-              <t-form-item :label="$t('page.host.remote_port')"  name="remote_port">
+              <t-form-item :label="$t('page.host.remote_port')"  name="remote_port" v-if="formData.is_enable_load_balance!='1'">
                 <t-tooltip class="placement top center"
                            :content="$t('page.host.remote_port_content')" placement="top"
                            :overlay-style="{ width: '200px' }" show-arrow>
@@ -229,12 +246,11 @@
             <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
           </t-form-item>
         </t-form>
-
       </div>
     </t-dialog>
 
     <!-- Edit WebSite Dialog -->
-    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
+    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="700" :footer="false">
       <div slot="body">
         <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="160">
           <t-tabs :defaultValue="1">
@@ -262,10 +278,27 @@
                             name="certfile">
                 </t-textarea>
               </t-form-item>
-              <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip">
+              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_is_enable')" name="is_enable_load_balance">
+                <t-radio-group v-model="formEditData.is_enable_load_balance">
+                  <t-radio value="0">{{ $t('page.host.loadbalance.label_is_enable_load_balance_off') }} </t-radio>
+                  <t-radio value="1">{{ $t('page.host.loadbalance.label_is_enable_load_balance_on') }}</t-radio>
+                </t-radio-group>
+              </t-form-item>
+              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_type')" name="load_balance_stage" v-if="formEditData.is_enable_load_balance=='1'">
+                <t-radio-group v-model="formEditData.load_balance_stage">
+                  <t-radio value="1">{{ $t('page.host.loadbalance.label_loadbalance_type_weight_round_robin') }} </t-radio>
+                  <t-radio value="2">{{ $t('page.host.loadbalance.label_loadbalance_type_ip_hash') }}</t-radio>
+                </t-radio-group>
+              </t-form-item>
+
+              <t-form-item   name="loadbalance"  v-if="formEditData.is_enable_load_balance=='1'">
+                <load-balance :propHostCode="formEditData.code"></load-balance>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formEditData.is_enable_load_balance!='1'">
                 <t-input :style="{ width: '480px' }" v-model="formEditData.remote_ip" :placeholder="$t('common.placeholder')+$t('page.host.remote_ip')"></t-input>
               </t-form-item>
-              <t-form-item :label="$t('page.host.remote_port')" name="remote_port">
+              <t-form-item :label="$t('page.host.remote_port')" name="remote_port" v-if="formEditData.is_enable_load_balance!='1'">
                 <t-input-number :style="{ width: '150px' }" v-model="formEditData.remote_port"
                                 :placeholder="$t('page.host.port_placeholder')"></t-input-number>
               </t-form-item>
@@ -384,6 +417,7 @@
               :onCancel="onStartStatusCancel">
       <div>{{$t('page.host.start_status_confirm_content')}}</div>
     </t-dialog>
+
   </div>
 </template>
 <script lang="ts">
@@ -394,11 +428,13 @@ import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost} from '@/apis/host';
+import { v4 as uuidv4 } from 'uuid';
 import {
   GUARD_STATUS,
   SSL_STATUS,
   START_STATUS
 } from '@/constants';
+import LoadBalance from "../loadbalance/index.vue";
 
 const INITIAL_DATA = {
   host: 'www.baidu.com',
@@ -414,10 +450,14 @@ const INITIAL_DATA = {
   defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1}',
   start_status: '0',
   exclude_url_log:'',
+  is_enable_load_balance: '0',
+  load_balance_stage: '1',
+
 };
 export default Vue.extend({
   name: 'ListBase',
   components: {
+    LoadBalance,
     SearchIcon,
     FileSafetyIcon,
     LinkIcon
@@ -602,6 +642,35 @@ export default Vue.extend({
       //弹窗确认
       guardConfirmVisible: false,//更改防护状态的弹窗控制
       startConfirmVisible: false,//更改启动状态的弹窗控制
+
+      //负载列表
+      loadBalanceColumns: [
+        {
+          title: this.$t('page.host.host'),
+          align: 'left',
+          width: 200,
+          ellipsis: true,
+          colKey: 'remote_ip',
+        },
+        {
+          title: this.$t('page.host.port'),
+          width: 100,
+          ellipsis: true,
+          colKey: 'remote_port',
+        },
+        {
+          title: this.$t('common.remarks'),
+          width: 200,
+          ellipsis: true,
+          colKey: 'remarks',
+        },
+        {
+          align: 'left',
+          width: 200,
+          colKey: 'op',
+          title: this.$t('common.op'),
+        },
+      ],
     };
   },
   computed: {
@@ -738,7 +807,7 @@ export default Vue.extend({
             that.formData= {
               ...detail_data_tmp
             }
-            that.formData.code = null
+            that.formData.code = uuidv4()
             let defenseJson = JSON.parse(detail_data_tmp.defense_json)
             that.hostDefenseData.bot = getOrDefault(defenseJson,"bot","1")
             that.hostDefenseData.sqli = getOrDefault(defenseJson,"sqli","1")
@@ -770,6 +839,8 @@ export default Vue.extend({
     },
     handleAddHost() {
       this.addFormVisible = true
+      this.formData.code = uuidv4()
+      console.log("新增主机code信息", this.formData.code)
     },
     onSubmit({
                result,
@@ -789,6 +860,8 @@ export default Vue.extend({
         postdata.remote_host = "http://" + postdata.host
         postdata['ssl'] = Number(postdata['ssl'])
         postdata['start_status'] = Number(postdata['start_status'])
+        postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
+        postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
         let defenseData = {
           bot: parseInt(this.hostDefenseData.bot),
           sqli: parseInt(this.hostDefenseData.sqli),
@@ -809,20 +882,7 @@ export default Vue.extend({
               that.addFormVisible = false;
               that.pagination.current = 1
 
-              that.formData = {
-                host: 'www.baidu.com',
-                port: 80,
-                remote_host: 'http://www.baidu.com',
-                remote_ip: '127.0.0.1',
-                remote_port: 81,
-                ssl: '0',
-                remote_system: "默认",
-                remote_app: "默认",
-                guard_status: '',
-                remarks: '',
-                defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1}',
-                start_status: '0',
-              };
+              that.formData = { ...INITIAL_DATA };
               that.getList("")
             } else {
               that.$message.warning(resdata.msg);
@@ -851,6 +911,8 @@ export default Vue.extend({
 
         postdata['ssl'] = Number(postdata['ssl'])
         postdata['start_status'] = Number(postdata['start_status'])
+        postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
+        postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
         let defenseData = {
           bot: parseInt(this.hostDefenseData.bot),
           sqli: parseInt(this.hostDefenseData.sqli),
@@ -860,7 +922,7 @@ export default Vue.extend({
           sensitive: parseInt(this.hostDefenseData.sensitive),
         }
         postdata['defense_json'] = JSON.stringify(defenseData)
-        console.log(postdata)
+        console.log('editHost',postdata)
         editHost( {
             ...postdata
           })
@@ -972,6 +1034,9 @@ export default Vue.extend({
             that.detail_data = resdata.data;
             that.detail_data.ssl = that.detail_data.ssl.toString()
             that.detail_data.start_status = that.detail_data.start_status.toString()
+
+            that.detail_data.is_enable_load_balance = that.detail_data.is_enable_load_balance.toString()
+            that.detail_data.load_balance_stage = that.detail_data.load_balance_stage.toString()
             that.formEditData = {
               ...that.detail_data
             }

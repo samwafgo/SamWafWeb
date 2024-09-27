@@ -331,6 +331,23 @@ export default {
       forbid_for_global_site:"全局网站不能操作",
       forbid_for_global_site_only_change_guard_status:"全局网站只能配置保护状态",
       host_rule_msg:"主机请不要填写http和https 直接写域名即可",
+      loadbalance:{
+        label_loadbalance_is_enable: "是否启用负载",
+        label_loadbalance_type: "负载均衡类型",
+        label_loadbalance_type_weight_round_robin: "权重轮询(WRR)",
+        label_loadbalance_type_least_connections: "最少连接",
+        label_loadbalance_type_ip_hash: "IP Hash",
+        label_loadbalance_type_source_hash: "源地址 Hash",
+        label_loadbalance_type_url_hash: "URL Hash",
+        label_loadbalance_type_least_time: "最小响应时间",
+        label_is_enable_load_balance_on: "启动负载",
+        label_is_enable_load_balance_off: "关闭负载",
+        label_add_loadbalance:"添加负载",
+        website: "网站",
+        remote_ip: "远端ip",
+        remote_port: "远端端口",
+        weight:"权重",
+      }
     },
     one_key_mod:{
       one_key_placeholder: "由于单台服务器只能一个程序使用Web(80端口，443端口)，所以如果需要让Waf变为前置，那么此处需要将80=》81 ，443=》444。\n" +
