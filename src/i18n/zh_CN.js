@@ -40,7 +40,7 @@ export default {
       forbid:"禁止",
     },
     on:"开启",
-    of:"关闭"
+    off:"关闭"
   },
   login:{
     login_title:"登录",
