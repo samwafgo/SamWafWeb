@@ -347,6 +347,12 @@ export default {
         remote_ip: "Remote IP",
         remote_port: "Remote Port",
         weight: "Weight"
+      },
+      unrestricted_port: {
+        label_unrestricted_port_is_enable: "Strict Source Port",
+        label_unrestricted_port_is_enable_on: "Enable",
+        label_unrestricted_port_is_enable_off: "Disable",
+        unrestricted_port_tip: "If disabled, suitable when using an external CDN or Nginx, it only matches the protected domain and not the source port."
       }
     },
     one_key_mod: {

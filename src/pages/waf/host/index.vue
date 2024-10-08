@@ -108,6 +108,15 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
+                <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="formData.unrestricted_port">
+                    <t-radio value="0">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_on') }}</t-radio>
+                    <t-radio value="1">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_off') }}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
               <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formData.ssl=='1'">
                 <t-tooltip class="placement top center"
                            :content="$t('page.host.keyfile_content')" placement="top"
@@ -267,6 +276,15 @@
                   <t-radio value="0">{{ $t('page.host.ssl_option_no') }}</t-radio>
                   <t-radio value="1">{{ $t('page.host.ssl_option_yes') }}</t-radio>
                 </t-radio-group>
+              </t-form-item>
+              <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
+                <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="formEditData.unrestricted_port">
+                    <t-radio value="0">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_on') }}</t-radio>
+                    <t-radio value="1">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_off') }}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formEditData.ssl=='1'">
                 <t-textarea :style="{ width: '480px' }" v-model="formEditData.keyfile" :placeholder="$t('common.placeholder')"
@@ -452,7 +470,7 @@ const INITIAL_DATA = {
   exclude_url_log:'',
   is_enable_load_balance: '0',
   load_balance_stage: '1',
-
+  unrestricted_port:'0'
 };
 export default Vue.extend({
   name: 'ListBase',
@@ -804,6 +822,7 @@ export default Vue.extend({
             let detail_data_tmp = resdata.data;
             detail_data_tmp.ssl = detail_data_tmp.ssl.toString()
             detail_data_tmp.start_status = detail_data_tmp.start_status.toString()
+            detail_data_tmp.unrestricted_port = detail_data_tmp.unrestricted_port.toString()
             that.formData= {
               ...detail_data_tmp
             }
@@ -860,6 +879,7 @@ export default Vue.extend({
         postdata.remote_host = "http://" + postdata.host
         postdata['ssl'] = Number(postdata['ssl'])
         postdata['start_status'] = Number(postdata['start_status'])
+        postdata['unrestricted_port'] = Number(postdata['unrestricted_port'])
         postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
         postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
         let defenseData = {
@@ -911,6 +931,7 @@ export default Vue.extend({
 
         postdata['ssl'] = Number(postdata['ssl'])
         postdata['start_status'] = Number(postdata['start_status'])
+        postdata['unrestricted_port'] = Number(postdata['unrestricted_port'])
         postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
         postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
         let defenseData = {
@@ -1034,6 +1055,7 @@ export default Vue.extend({
             that.detail_data = resdata.data;
             that.detail_data.ssl = that.detail_data.ssl.toString()
             that.detail_data.start_status = that.detail_data.start_status.toString()
+            that.detail_data.unrestricted_port = that.detail_data.unrestricted_port.toString()
 
             that.detail_data.is_enable_load_balance = that.detail_data.is_enable_load_balance.toString()
             that.detail_data.load_balance_stage = that.detail_data.load_balance_stage.toString()

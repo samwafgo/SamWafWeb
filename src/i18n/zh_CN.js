@@ -347,6 +347,12 @@ export default {
         remote_ip: "远端ip",
         remote_port: "远端端口",
         weight:"权重",
+      },
+      unrestricted_port:{
+        label_unrestricted_port_is_enable: "来源严格端口",
+        label_unrestricted_port_is_enable_on: "启用",
+        label_unrestricted_port_is_enable_off: "关闭",
+        unrestricted_port_tip:"如果关闭，适合外层有CDN,Nginx情况，只匹配被保护域名，不匹配来源端口"
       }
     },
     one_key_mod:{
