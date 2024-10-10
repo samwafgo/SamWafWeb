@@ -99,6 +99,16 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formData.ssl=='1'">
+                <div style="display: flex; align-items: center;">
+                  <t-select @change="handleSslChange"  v-model="formData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
+                    <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
+                    <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
+                  </t-select>
+
+                  <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
+                </div>
+              </t-form-item>
               <t-form-item :label="$t('page.host.start_status')" name="start_status">
                 <t-tooltip class="placement top center" :content="$t('page.host.start_status_content')" placement="top"
                            :overlay-style="{ width: '200px' }" show-arrow>
@@ -117,6 +127,7 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+
               <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formData.ssl=='1'">
                 <t-tooltip class="placement top center"
                            :content="$t('page.host.keyfile_content')" placement="top"
@@ -277,6 +288,16 @@
                   <t-radio value="1">{{ $t('page.host.ssl_option_yes') }}</t-radio>
                 </t-radio-group>
               </t-form-item>
+              <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formEditData.ssl=='1'">
+                <div style="display: flex; align-items: center;">
+                  <t-select @change="handleSslChange" v-model="formEditData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
+                    <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
+                    <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
+                  </t-select>
+
+                  <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
+                </div>
+              </t-form-item>
               <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
                 <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
                            :overlay-style="{ width: '200px' }" show-arrow>
@@ -286,12 +307,12 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
-              <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formEditData.ssl=='1'">
+              <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formEditData.ssl=='1' && formEditData.bind_ssl_id==''">
                 <t-textarea :style="{ width: '480px' }" v-model="formEditData.keyfile" :placeholder="$t('common.placeholder')"
                             name="keyfile">
                 </t-textarea>
               </t-form-item>
-              <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formEditData.ssl=='1'">
+              <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formEditData.ssl=='1' && formEditData.bind_ssl_id==''">
                 <t-textarea :style="{ width: '480px' }" v-model="formEditData.certfile" :placeholder="$t('common.placeholder')"
                             name="certfile">
                 </t-textarea>
@@ -436,6 +457,22 @@
       <div>{{$t('page.host.start_status_confirm_content')}}</div>
     </t-dialog>
 
+    <t-dialog :header="$t('common.new')" :visible.sync="addSSLFormVisible" :width="750" :footer="false">
+      <div slot="body">
+        <t-form :data="sslformData" ref="form" :rules="sslrules" @submit="onSSLSubmit" :labelWidth="220">
+          <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
+            <t-textarea v-model="sslformData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+          </t-form-item>
+          <t-form-item :label="$t('page.ssl.label_key_content')" name="key_content">
+            <t-textarea v-model="sslformData.key_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="addSSLFormVisible = !addSSLFormVisible">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -446,6 +483,7 @@ import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost} from '@/apis/host';
+import {sslConfigListApi,sslConfigAddApi} from '@/apis/sslconfig';
 import { v4 as uuidv4 } from 'uuid';
 import {
   GUARD_STATUS,
@@ -470,7 +508,12 @@ const INITIAL_DATA = {
   exclude_url_log:'',
   is_enable_load_balance: '0',
   load_balance_stage: '1',
-  unrestricted_port:'0'
+  unrestricted_port:'0',
+  bind_ssl_id:'',
+};
+const INITIAL_SSL_DATA = {
+  cert_content: '',
+  key_content: ''
 };
 export default Vue.extend({
   name: 'ListBase',
@@ -491,12 +534,16 @@ export default Vue.extend({
       editFormVisible: false,
       guardVisible: false,
       confirmVisible: false,
+      addSSLFormVisible:false,
       ImportXlsxVisible: false,
       formData: {
         ...INITIAL_DATA
       },
       formEditData: {
         ...INITIAL_DATA
+      },
+      sslformData: {
+        ...INITIAL_SSL_DATA
       },
       //主机防御细节
       hostDefenseData: {
@@ -528,6 +575,22 @@ export default Vue.extend({
           message: this.$t('common.placeholder'+this.$t('page.host.remote_port')),
           type: 'error'
         }],
+      },
+      sslrules: {
+        cert_content: [
+          {
+            required: true,
+            message: this.$t('common.select_placeholder') + this.$t('page.ssl.label_cert_content'),
+            type: 'error'
+          }
+        ],
+        key_content: [
+          {
+            required: true,
+            message: this.$t('common.select_placeholder') + this.$t('page.ssl.label_key_content'),
+            type: 'error'
+          }
+        ]
       },
       remote_system_options: [{
         label: this.$t('page.host.back_system_type_baota'),
@@ -689,6 +752,8 @@ export default Vue.extend({
           title: this.$t('common.op'),
         },
       ],
+      //ssl证书夹
+      sslConfigList: [],
     };
   },
   computed: {
@@ -843,7 +908,7 @@ export default Vue.extend({
         });
     },
     handleClickEdit(e) {
-
+      this.getSslFolderList()
       console.log(e)
       const {
         code, global_host
@@ -857,6 +922,7 @@ export default Vue.extend({
       this.getDetail(code)
     },
     handleAddHost() {
+      this.getSslFolderList()
       this.addFormVisible = true
       this.formData.code = uuidv4()
       console.log("新增主机code信息", this.formData.code)
@@ -1247,6 +1313,65 @@ export default Vue.extend({
     onStartStatusCancel() {
       this.startConfirmVisible = false
       this.startStatusIdx = -1;
+    },
+    getSslFolderList() {
+      let that = this;
+      sslConfigListApi({
+        pageSize: 10000,
+        ...that.searchformData
+      })
+        .then((res) => {
+          let resdata = res;
+          if (resdata.code === 0) {
+            this.sslConfigList = resdata.data.list;
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        })
+        .finally(() => {
+          this.dataLoading = false;
+        });
+      this.dataLoading = true;
+    },
+    handleAddNewSsl(){
+      this.addSSLFormVisible = true
+      this.sslformData ={...INITIAL_SSL_DATA}
+    },
+    onSSLSubmit({
+               result,
+               firstError
+             }): void {
+      let that = this;
+      if (!firstError) {
+        sslConfigAddApi({
+          ...this.sslformData,
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              that.getSslFolderList()
+              that.$message.success('添加成功');
+              that.addSSLFormVisible = false;
+            }else{
+              that.$message.warning(res.msg);
+            }
+          });
+      }
+    },
+    handleSslChange(selectedId) {
+      // 根据选中的 ID 从 sslConfigList 中找到对应的项
+      const selectedItem = this.sslConfigList.find(item => item.id === selectedId);
+      if (selectedItem) {
+        // 你可以在这里处理需要的逻辑，例如复制 selectedItem
+        console.log('Selected SSL Item:', selectedItem);
+        if(this.addFormVisible){
+            this.formData.certfile = selectedItem.cert_content
+            this.formData.keyfile = selectedItem.key_content
+        }else if(this.editFormVisible){
+            this.formEditData.certfile = selectedItem.cert_content
+            this.formEditData.keyfile = selectedItem.key_content
+        }
+      }
     },
     //end method
   },

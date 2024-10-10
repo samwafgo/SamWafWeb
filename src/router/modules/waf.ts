@@ -76,6 +76,12 @@ export default [
         component: () => import('@/pages/waf/sensitive/index.vue'),
         meta: { title: 'menu.host.sensitive' },
 
+      }, {
+        path: 'wafsslconfiglist',
+        name: 'WafSSLConfigList',
+        component: () => import('@/pages/waf/sslconfig/index.vue'),
+        meta: { title: 'menu.host.sslconfig' },
+
       },
     ],
   },
