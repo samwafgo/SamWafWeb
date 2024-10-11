@@ -445,6 +445,7 @@
       if (this.$store.state.attacklog.msgData) {
         const attack = this.$store.state.attacklog;
         this.pagination.current = attack.msgData.currentpage;
+        this.pagination.pageSize = attack.msgData.pagesize;
         this.searchformData = attack.msgData.searchData;   // 可以直接取出整个对象
         console.log('daysrc', attack.msgData.searchData)
         let newrange =  Array()
@@ -470,6 +471,7 @@
       // vuex 存储操作
       this.$store.dispatch("attacklog/setAttackMsgData", {
         //query: this.queryParam,
+        pagesize: this.pagination.pageSize,
         currentpage: this.pagination.current,
         searchData: this.searchformData,
       })
