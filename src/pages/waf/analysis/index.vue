@@ -400,47 +400,47 @@
     }
   };
 </script>
+<style lang="less" scoped>
+@import '@/style/variables';
 
-<style>
-  .contentarea {
-    display: flex;
-    width: 80%;
-    height: 100vh;
-    /* 让布局占据整个视口高度 */
-    height: 50rem;
-  }
+.contentarea {
+  display: flex;
+  width: 80%;
+  height: 100vh;
+  /* 让布局占据整个视口高度 */
+  height: 50rem;
+}
 
-  .left-column {
-    flex: 2;
-    /* 左边列宽度占比，这里为 1，可以根据需要调整 */
-    background-color: #f0f0f0;
-    /* 左边列背景色 */
-    padding: 20px;
-  }
+.left-column {
+  flex: 2;
+  /* 左边列宽度占比，这里为 2，可以根据需要调整 */
+  background-color: var(--td-bg-color-page);
+  /* 左边列背景色基于主题 */
+  padding: 20px;
+}
 
-  .right-column {
-    flex: 1;
-    /* 右边列宽度占比，这里为 2，可以根据需要调整 */
-    display: flex;
-    flex-direction: column;
-    /* 纵向排列子元素 */
-  }
+.right-column {
+  flex: 1;
+  /* 右边列宽度占比，这里为 1，可以根据需要调整 */
+  display: flex;
+  flex-direction: column;
+  /* 纵向排列子元素 */
+}
 
-  .top-right {
-    flex: 1;
-    /* 上半部分高度占比，这里为 1，可以根据需要调整 */
-    //background-color: #dcdcdc;
-    /* 上半部分背景色 */
-    padding: 20px;
-    margin-bottom: 10px;
-    /* 上下边距 */
-  }
+.top-right {
+  flex: 1;
+  /* 上半部分高度占比 */
+  background-color:var(--td-bg-color-page) ;/* 基于主题的颜色变量 */
+  padding: 20px;
+  margin-bottom: 10px;
+  /* 上下边距 */
+}
 
-  .bottom-right {
-    flex: 1;
-    /* 下半部分高度占比，这里为 1，可以根据需要调整 */
-    background-color: #f0f0f0;
-    /* 下半部分背景色 */
-    padding: 20px;
-  }
+.bottom-right {
+  flex: 1;
+  /* 下半部分高度占比 */
+  background-color:var(--td-bg-color-page); /* 另一基于主题的颜色 */
+  padding: 20px;
+}
 </style>
+
