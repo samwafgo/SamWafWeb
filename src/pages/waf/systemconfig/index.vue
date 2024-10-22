@@ -104,6 +104,7 @@
 
 
   const INITIAL_DATA = {
+    item_class:'system',
     item: '',
     value: '',
     item_type: 'string',
