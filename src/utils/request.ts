@@ -17,7 +17,7 @@ const CODE = {
 
 const instance = axios.create({
   baseURL: API_HOST,
-  timeout: 3000,
+  timeout: 5000,
   withCredentials: true,
   transformRequest: [
     function (data, headers) {
