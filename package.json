@@ -1,6 +1,6 @@
 {
   "name": "localwaf",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "scripts": {
     "dev:mock": "vite --open --mode mock",
     "dev": "vite --open --mode development",
