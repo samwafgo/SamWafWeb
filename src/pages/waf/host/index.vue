@@ -118,6 +118,12 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.auto_jump_https.label_autu_jump_https')" name="auto_jump_https"  v-if="formData.ssl=='1'">
+                  <t-radio-group v-model="formData.auto_jump_https">
+                    <t-radio value="0">{{ $t('page.host.auto_jump_https.label_autu_jump_https_off') }}</t-radio>
+                    <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
+                  </t-radio-group>
+              </t-form-item>
               <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
                 <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
                            :overlay-style="{ width: '200px' }" show-arrow>
@@ -297,6 +303,12 @@
 
                   <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
                 </div>
+              </t-form-item>
+              <t-form-item :label="$t('page.host.auto_jump_https.label_autu_jump_https')" name="auto_jump_https"  v-if="formEditData.ssl=='1'">
+                <t-radio-group v-model="formEditData.auto_jump_https">
+                  <t-radio value="0">{{ $t('page.host.auto_jump_https.label_autu_jump_https_off') }}</t-radio>
+                  <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
+                </t-radio-group>
               </t-form-item>
               <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
                 <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
@@ -510,6 +522,7 @@ const INITIAL_DATA = {
   load_balance_stage: '1',
   unrestricted_port:'0',
   bind_ssl_id:'',
+  auto_jump_https:'0'
 };
 const INITIAL_SSL_DATA = {
   cert_content: '',
@@ -557,22 +570,22 @@ export default Vue.extend({
       rules: {
         host: [{
           required: true,
-          message: this.$t('common.placeholder'+this.$t('page.host.host')),
+          message: this.$t('common.placeholder')+this.$t('page.host.host'),
           type: 'error'
         }],
         port: [{
           required: true,
-          message: this.$t('common.placeholder'+this.$t('page.host.port')),
+          message: this.$t('common.placeholder')+this.$t('page.host.port'),
           type: 'error'
         }],
         remote_ip: [{
           required: true,
-          message: this.$t('common.placeholder'+this.$t('page.host.remote_ip')),
+          message: this.$t('common.placeholder')+this.$t('page.host.remote_ip'),
           type: 'error'
         }],
         remote_port: [{
           required: true,
-          message: this.$t('common.placeholder'+this.$t('page.host.remote_port')),
+          message: this.$t('common.placeholder')+this.$t('page.host.remote_port'),
           type: 'error'
         }],
       },
@@ -888,6 +901,7 @@ export default Vue.extend({
             detail_data_tmp.ssl = detail_data_tmp.ssl.toString()
             detail_data_tmp.start_status = detail_data_tmp.start_status.toString()
             detail_data_tmp.unrestricted_port = detail_data_tmp.unrestricted_port.toString()
+            detail_data_tmp.auto_jump_https = detail_data_tmp.auto_jump_https.toString()
             that.formData= {
               ...detail_data_tmp
             }
@@ -948,6 +962,7 @@ export default Vue.extend({
         postdata['unrestricted_port'] = Number(postdata['unrestricted_port'])
         postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
         postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
+        postdata['auto_jump_https'] = Number(postdata['auto_jump_https'])
         let defenseData = {
           bot: parseInt(this.hostDefenseData.bot),
           sqli: parseInt(this.hostDefenseData.sqli),
@@ -1000,6 +1015,10 @@ export default Vue.extend({
         postdata['unrestricted_port'] = Number(postdata['unrestricted_port'])
         postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
         postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
+        postdata['auto_jump_https'] = Number(postdata['auto_jump_https'])
+        if(postdata['ssl'] ==0){
+          postdata['auto_jump_https'] = 0
+        }
         let defenseData = {
           bot: parseInt(this.hostDefenseData.bot),
           sqli: parseInt(this.hostDefenseData.sqli),
@@ -1122,9 +1141,9 @@ export default Vue.extend({
             that.detail_data.ssl = that.detail_data.ssl.toString()
             that.detail_data.start_status = that.detail_data.start_status.toString()
             that.detail_data.unrestricted_port = that.detail_data.unrestricted_port.toString()
-
             that.detail_data.is_enable_load_balance = that.detail_data.is_enable_load_balance.toString()
             that.detail_data.load_balance_stage = that.detail_data.load_balance_stage.toString()
+            that.detail_data.auto_jump_https = that.detail_data.auto_jump_https.toString()
             that.formEditData = {
               ...that.detail_data
             }

@@ -356,7 +356,13 @@ export default {
         label_unrestricted_port_is_enable_on: "启用",
         label_unrestricted_port_is_enable_off: "关闭",
         unrestricted_port_tip:"如果关闭，适合外层有CDN,Nginx情况，只匹配被保护域名，不匹配来源端口"
-      }
+      },
+      auto_jump_https:{
+        label_autu_jump_https: "强制80跳转HTTPS",
+        label_autu_jump_https_on: "启用",
+        label_autu_jump_https_off: "关闭",
+        autu_jump_https_tip:"如果启用，那么SamWaf将强制自动跳转到https，如果关闭，那么SamWaf将不会自动跳转"
+      },
     },
     one_key_mod:{
       one_key_placeholder: "由于单台服务器只能一个程序使用Web(80端口，443端口)，所以如果需要让Waf变为前置，那么此处需要将80=》81 ，443=》444。\n" +
