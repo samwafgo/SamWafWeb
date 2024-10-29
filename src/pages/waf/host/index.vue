@@ -167,7 +167,16 @@
               <t-form-item   name="loadbalance"  v-if="formData.is_enable_load_balance=='1'">
                 <load-balance :propHostCode="formData.code"></load-balance>
               </t-form-item>
-
+              <t-form-item :label="$t('page.host.remote_host')" name="remote_host">
+                <t-tooltip
+                  class="placement top center"
+                  :content="$t('page.host.remote_host_content')"
+                  placement="top"
+                  :overlay-style="{ width: '200px' }"
+                  show-arrow>
+                  <t-input :style="{ width: '480px' }" v-model="formData.remote_host" :placeholder="$t('common.placeholder')+$t('page.host.remote_host')"></t-input>
+                </t-tooltip>
+              </t-form-item>
               <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formData.is_enable_load_balance!='1'">
                 <t-tooltip class="placement top center" :content="$t('page.host.remote_ip_content')"
                            placement="top" :overlay-style="{ width: '200px' }" show-arrow>
@@ -345,7 +354,16 @@
               <t-form-item   name="loadbalance"  v-if="formEditData.is_enable_load_balance=='1'">
                 <load-balance :propHostCode="formEditData.code"></load-balance>
               </t-form-item>
-
+              <t-form-item :label="$t('page.host.remote_host')" name="remote_host">
+                <t-tooltip
+                  class="placement top center"
+                  :content="$t('page.host.remote_host_content')"
+                  placement="top"
+                  :overlay-style="{ width: '200px' }"
+                  show-arrow>
+                  <t-input :style="{ width: '480px' }" v-model="formEditData.remote_host" :placeholder="$t('common.placeholder')+$t('page.host.remote_host')"></t-input>
+                </t-tooltip>
+              </t-form-item>
               <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formEditData.is_enable_load_balance!='1'">
                 <t-input :style="{ width: '480px' }" v-model="formEditData.remote_ip" :placeholder="$t('common.placeholder')+$t('page.host.remote_ip')"></t-input>
               </t-form-item>
@@ -568,16 +586,42 @@ export default Vue.extend({
         sensitive:"1",
       },
       rules: {
-        host: [{
-          required: true,
-          message: this.$t('common.placeholder')+this.$t('page.host.host'),
-          type: 'error'
-        }],
+        host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
+          {
+            validator: (val) => {
+              const hostRegex = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+              const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+              const isValid = !!val && (hostRegex.test(val) || ipRegex.test(val));
+
+              // 如果验证通过，则赋值
+              if (isValid) {
+                this.formData.remote_host = `http://${val}`;
+              }else{
+                this.formData.remote_host = ""
+              }
+              return isValid;
+            },            message: this.$t('page.host.host_validation'),
+            type: 'error',
+          },
+        ],
         port: [{
           required: true,
           message: this.$t('common.placeholder')+this.$t('page.host.port'),
           type: 'error'
         }],
+        remote_host: [
+          {required: true, message: this.$t('common.placeholder')+this.$t('page.host.remote_host'), type: 'error' },
+          {
+            validator: (val) => {
+              const regex = /^(https?:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/; // 验证域名
+              const ipRegex = /^(https?:\/\/)(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/; // 验证 IP
+
+              return regex.test(val) || ipRegex.test(val); // 返回是否有效
+            },
+            message: this.$t('page.host.remote_host_validation'),
+            type: 'error',
+          },
+        ],
         remote_ip: [{
           required: true,
           message: this.$t('common.placeholder')+this.$t('page.host.remote_ip'),
