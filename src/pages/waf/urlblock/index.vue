@@ -420,7 +420,6 @@
               if (resdata.code === 0) {
                 that.$message.success(resdata.msg);
                 that.editFormVisible = false;
-                that.pagination.current = 1
                 that.getList("")
               } else {
                 that.$message.warning(resdata.msg);
@@ -464,7 +463,6 @@
             console.log(resdata)
             if (resdata.code === 0) {
 
-              that.pagination.current = 1
               that.getList("")
               that.$message.success(resdata.msg);
             } else {
