@@ -61,6 +61,9 @@
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="750" :footer="false">
       <div slot="body">
         <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="220">
+          <t-form-item :label="$t('page.ssl.label_valid_to')" name="valid_to">
+            <span>{{formEditData.valid_to}} ({{formEditData.expiration_info}})</span>
+          </t-form-item>
           <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
             <t-textarea v-model="formEditData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
           </t-form-item>
@@ -71,10 +74,10 @@
             <b>{{$t("page.ssl.label_auto_tip")}}</b>
           </t-form-item>
           <t-form-item :label="$t('page.ssl.label_auto_key_path')" name="key_path">
-            <t-textarea v-model="formEditData.key_path" :style="{ width: '480px',backgroundColor: 'gray !important' }" readonly="readonly" rows="4"></t-textarea>
+            <t-textarea v-model="formEditData.key_path" :style="{ width: '480px' }" rows="4"></t-textarea>
           </t-form-item>
           <t-form-item :label="$t('page.ssl.label_auto_crt_path')" name="cert_path">
-            <t-textarea v-model="formEditData.cert_path" :style="{ width: '480px',backgroundColor: 'gray !important' }" readonly="readonly" rows="4"></t-textarea>
+            <t-textarea v-model="formEditData.cert_path" :style="{ width: '480px' }"   rows="4"></t-textarea>
           </t-form-item>
           <t-form-item style="float: right">
             <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>
@@ -106,7 +109,9 @@ import {
 
 const INITIAL_DATA = {
   cert_content: '',
-  key_content: ''
+  key_content: '',
+  cert_path: '',
+  key_path: '',
 };
 
 export default Vue.extend({
@@ -197,6 +202,13 @@ export default Vue.extend({
           width: 250,
           ellipsis: true,
           colKey: 'serial_no',
+        },
+        {
+          title: "id",
+          align: 'left',
+          width: 250,
+          ellipsis: true,
+          colKey: 'id',
         },
       ],
       rowKey: 'id',

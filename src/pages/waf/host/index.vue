@@ -101,12 +101,14 @@
               </t-form-item>
               <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formData.ssl=='1'">
                 <div style="display: flex; align-items: center;">
-                  <t-select @change="handleSslChange"  v-model="formData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
+                  <t-select @change="handleSslChange"  :filterable="selectCanFilter" v-model="formData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
                     <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
                     <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
                   </t-select>
 
                   <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
+                  <t-button @click="handleEditSsl('new')" style="margin-left: 10px;">{{$t('page.host.edit_ssl')}}</t-button>
+
                 </div>
               </t-form-item>
               <t-form-item :label="$t('page.host.start_status')" name="start_status">
@@ -305,12 +307,13 @@
               </t-form-item>
               <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formEditData.ssl=='1'">
                 <div style="display: flex; align-items: center;">
-                  <t-select @change="handleSslChange" v-model="formEditData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
+                  <t-select @change="handleSslChange" :filterable="selectCanFilter" v-model="formEditData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
                     <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
                     <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
                   </t-select>
 
                   <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
+                  <t-button @click="handleEditSsl('edit')" style="margin-left: 10px;">{{$t('page.host.edit_ssl')}}</t-button>
                 </div>
               </t-form-item>
               <t-form-item :label="$t('page.host.auto_jump_https.label_autu_jump_https')" name="auto_jump_https"  v-if="formEditData.ssl=='1'">
@@ -503,6 +506,35 @@
         </t-form>
       </div>
     </t-dialog>
+    <t-dialog :header="$t('common.edit')" :visible.sync="editSSLFormVisible" :width="750" :footer="false">
+      <div slot="body">
+
+        <t-form :data="sslformEditData" ref="form" :rules="sslrules" @submit="onSSLSubmitEdit" :labelWidth="220">
+          <t-form-item :label="$t('page.ssl.label_valid_to')" name="valid_to">
+            <span>{{sslformEditData.valid_to}} ({{sslformEditData.expiration_info}})</span>
+          </t-form-item>
+          <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
+            <t-textarea v-model="sslformEditData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+          </t-form-item>
+          <t-form-item :label="$t('page.ssl.label_key_content')" name="key_content">
+            <t-textarea v-model="sslformEditData.key_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+          </t-form-item>
+          <t-form-item>
+            <b>{{$t("page.ssl.label_auto_tip")}}</b>
+          </t-form-item>
+          <t-form-item :label="$t('page.ssl.label_auto_key_path')" name="key_path">
+            <t-textarea v-model="sslformEditData.key_path" :style="{ width: '480px' }" rows="4"></t-textarea>
+          </t-form-item>
+          <t-form-item :label="$t('page.ssl.label_auto_crt_path')" name="cert_path">
+            <t-textarea v-model="sslformEditData.cert_path" :style="{ width: '480px' }"   rows="4"></t-textarea>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="editSSLFormVisible = !editSSLFormVisible">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -513,7 +545,7 @@ import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost} from '@/apis/host';
-import {sslConfigListApi,sslConfigAddApi} from '@/apis/sslconfig';
+import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
 import { v4 as uuidv4 } from 'uuid';
 import {
   GUARD_STATUS,
@@ -540,11 +572,14 @@ const INITIAL_DATA = {
   load_balance_stage: '1',
   unrestricted_port:'0',
   bind_ssl_id:'',
-  auto_jump_https:'0'
+  auto_jump_https:'0',
+  expiration_info:'',//仅对ssl前端处理
 };
 const INITIAL_SSL_DATA = {
   cert_content: '',
-  key_content: ''
+  key_content: '' ,
+  cert_path: '',
+  key_path: '',
 };
 export default Vue.extend({
   name: 'ListBase',
@@ -566,6 +601,7 @@ export default Vue.extend({
       guardVisible: false,
       confirmVisible: false,
       addSSLFormVisible:false,
+      editSSLFormVisible:false,
       ImportXlsxVisible: false,
       formData: {
         ...INITIAL_DATA
@@ -574,6 +610,9 @@ export default Vue.extend({
         ...INITIAL_DATA
       },
       sslformData: {
+        ...INITIAL_SSL_DATA
+      },
+      sslformEditData: {
         ...INITIAL_SSL_DATA
       },
       //主机防御细节
@@ -811,6 +850,8 @@ export default Vue.extend({
       ],
       //ssl证书夹
       sslConfigList: [],
+      //下拉框是否可以筛选
+      selectCanFilter:true,
     };
   },
   computed: {
@@ -1399,6 +1440,41 @@ export default Vue.extend({
       this.addSSLFormVisible = true
       this.sslformData ={...INITIAL_SSL_DATA}
     },
+    handleEditSsl(source) {
+      let sslConfigItem;
+
+      if (source === "new") {
+        if (this.formData.bind_ssl_id === '') {
+          this.$message.warning(this.$t('page.host.bind_empty_ssl_tips'));
+          return;
+        }
+        sslConfigItem = this.sslConfigList.find(item => item.id === this.formData.bind_ssl_id);
+
+        if (!sslConfigItem) {
+          this.$message.warning(this.$t('page.host.ssl_not_found_tips')); // 提示未找到 SSL
+          return;
+        }
+
+        this.sslformEditData = { ...sslConfigItem };
+        this.editSSLFormVisible = true;
+
+      } else if (source === "edit") {
+        if (this.formEditData.bind_ssl_id === '') {
+          this.$message.warning(this.$t('page.host.bind_empty_ssl_tips'));
+          return;
+        }
+        sslConfigItem = this.sslConfigList.find(item => item.id === this.formEditData.bind_ssl_id);
+
+        if (!sslConfigItem) {
+          this.$message.warning(this.$t('page.host.ssl_not_found_tips'));
+          return;
+        }
+
+        this.sslformEditData = { ...sslConfigItem };
+        this.editSSLFormVisible = true;
+        console.log("edit ssl", this.sslformEditData);
+      }
+    },
     onSSLSubmit({
                result,
                firstError
@@ -1413,6 +1489,26 @@ export default Vue.extend({
               that.getSslFolderList()
               that.$message.success('添加成功');
               that.addSSLFormVisible = false;
+            }else{
+              that.$message.warning(res.msg);
+            }
+          });
+      }
+    },
+    onSSLSubmitEdit({
+                  result,
+                  firstError
+                }): void {
+      let that = this;
+      if (!firstError) {
+        sslConfigEditApi({
+          ...this.sslformEditData,
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              that.getSslFolderList()
+              that.$message.success('编辑成功');
+              that.editSSLFormVisible = false;
             }else{
               that.$message.warning(res.msg);
             }
