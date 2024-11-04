@@ -9,7 +9,7 @@
           <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
 
             <t-row>
-              <span>{{$t('page.cc.host')}} :</span><t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
+              <span>{{$t('page.cc.website')}} :</span><t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                 {{ item }}
               </t-option>
