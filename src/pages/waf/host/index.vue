@@ -628,9 +628,9 @@ export default Vue.extend({
         host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
           {
             validator: (val) => {
-              const hostRegex = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
-              const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-              const isValid = !!val && (hostRegex.test(val) || ipRegex.test(val));
+
+              const hostRegex = /^(?!https?:\/\/)[^\s]+$/;
+              const isValid = !!val && (hostRegex.test(val));
 
               // 如果验证通过，则赋值
               if (isValid) {
@@ -652,10 +652,8 @@ export default Vue.extend({
           {required: true, message: this.$t('common.placeholder')+this.$t('page.host.remote_host'), type: 'error' },
           {
             validator: (val) => {
-              const regex = /^(https?:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/; // 验证域名
-              const ipRegex = /^(https?:\/\/)(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/; // 验证 IP
-
-              return regex.test(val) || ipRegex.test(val); // 返回是否有效
+              const regex = /^(http:\/\/|https:\/\/)[^\s]+$/; // 验证域名
+              return regex.test(val); // 返回是否有效
             },
             message: this.$t('page.host.remote_host_validation'),
             type: 'error',
