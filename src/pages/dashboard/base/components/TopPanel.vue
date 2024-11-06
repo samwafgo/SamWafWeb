@@ -80,7 +80,7 @@ export default {
     };
   },
   computed: {
-    ...mapState('setting', ['brandTheme', 'mode']), // 这里需要用到主题色和主题模式的全局配置
+    ...mapState('setting', ['brandTheme', 'mode']),
   },
   watch: {
     brandTheme() {

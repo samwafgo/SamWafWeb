@@ -25,7 +25,7 @@
         <div
           id="countContainer"
           ref="countContainer"
-          :style="{ width: `${resizeTime * 326}px`, height: `${resizeTime * 326}px`, margin: '0 auto' }"
+          :style="{ width: `${resizeTime * 326}px`, height: `${resizeTime * 300}px`, margin: '0 auto' }"
         ></div>
       </t-card>
     </t-col>

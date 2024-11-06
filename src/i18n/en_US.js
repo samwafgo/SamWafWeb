@@ -88,6 +88,17 @@ export default {
     cycle_attack_count: "Attack Count This Period",
     cycle_percent_title: "Proportion of Normal to Attack",
     cycle_percent_subtitle: "In the Period",
+    ip_rank:{
+      normal_title:"IP Normal Rank",
+      attack_title:"IP Attack Rank",
+      ip:"IP",
+      counter:"Counter",
+      rank:"Rank",
+      tag:"Tag",
+      ip_belong:"IP Belong",
+      day:"Today",
+      week:"Week",
+    }
   },
   menu:{
     dashboard: {

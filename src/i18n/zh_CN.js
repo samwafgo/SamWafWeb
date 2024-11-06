@@ -88,6 +88,17 @@ export default {
     cycle_attack_count:"本周期攻击数",
     cycle_percent_title:"正常攻击占比",
     cycle_percent_subtitle:"周期内",
+    ip_rank:{
+      normal_title:"IP正常访问排名",
+      attack_title:"IP攻击访问排名",
+      ip:"IP",
+      counter:"访问次数",
+      rank:"排名",
+      tag:"标签",
+      ip_belong:"归属地",
+      day:"今日",
+      week:"本周",
+    }
   },
   menu:{
     dashboard: {

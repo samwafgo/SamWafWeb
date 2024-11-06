@@ -16,7 +16,7 @@
     <!-- 中部图表  -->
     <middle-chart class="row-container" />
     <!-- 列表排名 -->
-   <!-- <rank-list class="row-container" /> -->
+    <rank-list class="row-container" />
   </div>
 </template>
 <script lang="ts">
