@@ -10,17 +10,13 @@
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
-
             <t-row>
               <span>{{ $t('page.host.website') }}</span>
-              <t-select v-model="searchformData.code" clearable :style="{ width: '150px' }">
+              <t-select v-model="searchformData.code" clearable :style="{ width: '200px' }">
                 <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                   {{ item }}
                 </t-option>
               </t-select>
-              <span>URL：</span>
-              <t-input v-model="searchformData.url" class="search-input" :placeholder="$t('common.placeholder')" clearable>
-              </t-input>
               <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }}</t-button>
             </t-row>
           </t-form>
@@ -36,6 +32,7 @@
         <t-table :columns="columns" size="small" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign"
                  :hover="hover" :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
                  @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
+                 @filter-change="onFilterChange"
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #guard_status="{ row }">
               <t-switch size="large" v-model="row.guard_status ===1" :label="[$t('page.host.guard_status_on'), $t('page.host.guard_status_off')]"
@@ -736,12 +733,30 @@ export default Vue.extend({
           width: 200,
           ellipsis: true,
           colKey: 'host',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            showConfirmAndReset: true,
+          },
         },
         {
           title: this.$t('page.host.port'),
           width: 100,
           ellipsis: true,
           colKey: 'port',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            showConfirmAndReset: true,
+          },
         },
         {
           title: this.$t('page.host.start_status'),
@@ -769,10 +784,49 @@ export default Vue.extend({
           }
         },
         {
+          title: this.$t('page.host.remote_ip'),
+          width: 100,
+          ellipsis: true,
+          colKey: 'remote_ip',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            showConfirmAndReset: true,
+          },
+        },
+        {
+          title: this.$t('page.host.remote_port'),
+          width: 100,
+          ellipsis: true,
+          colKey: 'remote_port',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            showConfirmAndReset: true,
+          },
+        },
+        {
           title: this.$t('common.remarks'),
           width: 200,
           ellipsis: true,
           colKey: 'remarks',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            showConfirmAndReset: true,
+          },
         },
         {
           title: this.$t('common.create_time'),
@@ -802,6 +856,11 @@ export default Vue.extend({
       searchformData: {
         remarks: "",
         code: ""
+      },
+      //筛选字段
+      filters:{
+        filter_by:"",
+        filter_value:"",
       },
       //索引区域
       deleteIdx: -1,
@@ -903,6 +962,8 @@ export default Vue.extend({
       hostlist({
         pageSize: that.pagination.pageSize,
         pageIndex: that.pagination.current,
+        filter_by:that.filters.filter_by,
+        filter_value:that.filters.filter_value,
         ...that.searchformData
       }).then((res) => {
         let resdata = res
@@ -1528,6 +1589,36 @@ export default Vue.extend({
         }
       }
     },
+    /**
+     * 筛选结果
+     */
+    onFilterChange(e){
+      const filters = [];
+
+
+      if (e.host) {
+        filters.push({ by: "host", value: e.host });
+      }
+      if (e.port) {
+        filters.push({ by: "port", value: e.port });
+      }
+
+      if (e.remote_ip) {
+        filters.push({ by: "remote_ip", value: e.remote_ip });
+      }
+      if (e.remote_port) {
+        filters.push({ by: "remote_port", value: e.remote_port });
+      }
+      if (e.remarks) {
+        filters.push({ by: "remarks", value: e.remarks });
+      }
+
+      // 将 filters 数组中的 by 和 value 属性分别拼接到 filter_by 和 filter_value 字符串中
+      this.filters.filter_by = filters.map(f => f.by).join("|");
+      this.filters.filter_value = filters.map(f => f.value).join("|");
+
+      this.getList("");
+    }
     //end method
   },
 });
