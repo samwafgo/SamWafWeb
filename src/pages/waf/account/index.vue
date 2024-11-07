@@ -6,14 +6,14 @@
           <t-button @click="handleAddAccount"> {{$t('page.account.create_account')}} </t-button>
         </div>
         <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
-
-            <t-row>
-              <span>{{$t('page.account.login_account_label')}}</span>
-              <t-input v-model="searchformData.login_account" class="search-input" :placeholder="$t('common.placeholder_content')" clearable>
+          <t-form ref="form" :data="searchformData" :label-width="120" colon   layout="inline" :style="{ marginBottom: '8px' }">
+            <t-form-item :label="$t('page.account.login_account_label')" name="login_account">
+              <t-input v-model="searchformData.login_account"  :placeholder="$t('common.placeholder_content')" clearable>
               </t-input>
+            </t-form-item>
+            <t-form-item >
               <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{$t('common.search')}} </t-button>
-            </t-row>
+            </t-form-item>
           </t-form>
         </div>
       </t-row>

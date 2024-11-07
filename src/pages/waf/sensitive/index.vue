@@ -6,20 +6,25 @@
           <t-button @click="handleAddSensitive"> {{ $t('page.sensitive.button_add_sensitive') }} </t-button>
         </div>
         <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
-
-            <t-row>
-              <span>{{ $t('page.sensitive.label_type') }}:</span><t-select v-model="searchformData.type" clearable :style="{ width: '150px' }">
-              <t-option v-for="(item, index) in type_options" :value="index" :label="item.label" :key="index">
-                {{ item.label }}
-              </t-option>
-            </t-select>
-              <span>{{ $t('page.sensitive.label_content') }}:</span>
-              <t-input v-model="searchformData.content" class="search-input"   clearable>
+          <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
+            <t-form-item :label="$t('page.sensitive.label_type')" name="type">
+              <t-select v-model="searchformData.type" clearable :style="{ width: '150px' }">
+                <t-option v-for="(item, index) in type_options" :value="index" :label="item.label" :key="index">
+                  {{ item.label }}
+                </t-option>
+              </t-select>
+            </t-form-item>
+            <t-form-item :label="$t('page.sensitive.label_content')" name="content">
+              <t-input v-model="searchformData.content" class="search-input" clearable>
               </t-input>
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
-            </t-row>
+            </t-form-item>
+            <t-form-item>
+              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')">
+                {{ $t('common.search') }}
+              </t-button>
+            </t-form-item>
           </t-form>
+
         </div>
       </t-row>
       <t-alert theme="info" :message="$t('page.sensitive.alert_message')" close>

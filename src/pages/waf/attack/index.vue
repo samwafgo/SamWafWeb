@@ -1,78 +1,55 @@
 <template>
   <div>
-    <t-alert theme="info" :message="$t('page.visit_log.visit_log')" close>
+    <t-alert theme="info" :message="$t('page.visit_log.visit_log')" :close="true">
       <template #operation>
         <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
       </template>
     </t-alert>
     <t-card class="list-card-container">
       <t-row justify="space-between">
-        <t-form ref="form" :data="searchformData" :label-width="150" colon :style="{ marginBottom: '8px' }">
-          <t-row>
-            <t-col :span="10">
-              <t-row :gutter="[16, 24]">
-                <t-col :flex="1">
-                  <t-form-item :label="$t('page.visit_log.website')" name="website">
-                    <t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
-                      <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
-                        {{ item }}
-                      </t-option>
-                    </t-select>
-                  </t-form-item>
-                </t-col>
-                <t-col :flex="1">
-
-                  <t-form-item :label="$t('page.visit_log.rule_name')" name="rule">
-                    <t-input v-model="searchformData.rule" class="form-item-content" type="search" :placeholder="$t('common.placeholder') + $t('page.visit_log.rule_name')"
-                      :style="{ minWidth: '134px' }" />
-                  </t-form-item>
-                </t-col>
-                <t-col :flex="1">
-                  <t-form-item :label="$t('page.visit_log.access_status')" name="action">
-                    <t-select v-model="searchformData.action" class="form-item-content`" :options="action_options"
+        <t-form ref="form" :data="searchformData" :label-width="150" colon layout="inline"  :style="{ marginBottom: '8px' }">
+          <t-form-item :label="$t('page.visit_log.website')" name="website">
+            <t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
+              <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
+                {{ item }}
+              </t-option>
+            </t-select>
+          </t-form-item>
+          <t-form-item :label="$t('page.visit_log.rule_name')" name="rule">
+            <t-input v-model="searchformData.rule" class="form-item-content" type="search" :placeholder="$t('common.placeholder') + $t('page.visit_log.rule_name')"
+                     :style="{ minWidth: '134px' }" />
+          </t-form-item>
+          <t-form-item :label="$t('page.visit_log.access_status')" name="action">
+            <t-select v-model="searchformData.action" class="form-item-content`" :options="action_options"
                       :placeholder="$t('common.select_placeholder')+$t('page.visit_log.access_status')" :style="{ width: '100px' }" />
-                  </t-form-item>
-                </t-col>
-                <t-col :flex="1">
-                  <t-form-item :label="$t('page.visit_log.status_code')" name="status_code">
-                    <t-input v-model="searchformData.status_code" class="form-item-content" :placeholder="$t('common.placeholder')+$t('page.visit_log.status_code')"
-                      :style="{ minWidth: '100px' }" />
-                  </t-form-item>
-                </t-col>
-                <t-col :flex="1">
-                  <t-form-item :label="$t('page.visit_log.source_ip')" name="src_ip">
-                    <t-input v-model="searchformData.src_ip" class="form-item-content" :placeholder="$t('common.placeholder')+$t('page.visit_log.source_ip')"
-                      :style="{ minWidth: '100px' }" />
-                  </t-form-item>
-                </t-col>
-                <t-col :flex="2">
-                  <t-form-item :label="$t('page.visit_log.access_date')" name="unix_add_time">
-                    <t-date-range-picker v-model="dateControl.range1" :presets="dateControl.presets" enable-time-picker valueType="YYYY-MM-DD HH:mm:ss" /></t-form-item>
-                </t-col>
-                <t-col :flex="1">
-                  <t-form-item :label="$t('page.visit_log.access_method')" name="method">
-                    <t-select v-model="searchformData.method" class="form-item-content`" :options="method_options"
+          </t-form-item>
+          <t-form-item :label="$t('page.visit_log.status_code')" name="status_code">
+            <t-input v-model="searchformData.status_code" class="form-item-content" :placeholder="$t('common.placeholder')+$t('page.visit_log.status_code')"
+                     :style="{ minWidth: '100px' }" />
+          </t-form-item>
+          <t-form-item :label="$t('page.visit_log.source_ip')" name="src_ip">
+            <t-input v-model="searchformData.src_ip" class="form-item-content" :placeholder="$t('common.placeholder')+$t('page.visit_log.source_ip')"
+                     :style="{ minWidth: '100px' }" />
+          </t-form-item>
+          <t-form-item :label="$t('page.visit_log.access_date')" name="unix_add_time">
+            <t-date-range-picker v-model="dateControl.range1" :presets="dateControl.presets" enable-time-picker valueType="YYYY-MM-DD HH:mm:ss" />
+          </t-form-item>
+          <t-form-item :label="$t('page.visit_log.access_method')" name="method">
+            <t-select v-model="searchformData.method" class="form-item-content`" :options="method_options"
                       :placeholder="$t('common.placeholder') + $t('page.visit_log.access_method')" :style="{ width: '100px' }" />
-                  </t-form-item>
-                </t-col>
-                <t-col :flex="1">
-                  <t-form-item :label="$t('page.visit_log.log_archive_db')" name="sharedb">
-                    <t-select v-model="searchformData.current_db_name" clearable :style="{ width: '150px' }">
-                      <t-option v-for="(item, index) in share_db_dic" :value="index" :label="item" :key="index">
-                        {{ item }}
-                      </t-option>
-                    </t-select>
-                  </t-form-item>
-                </t-col>
-              </t-row>
-            </t-col>
-
-            <t-col :span="2" class="operation-container">
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="exportDbVisible=true"> {{ $t('common.export') }} </t-button>
-              <t-button type="reset" variant="base" theme="default"> {{ $t('common.reset') }}  </t-button>
-            </t-col>
-          </t-row>
+          </t-form-item>
+          <t-form-item :label="$t('page.visit_log.log_archive_db')" name="sharedb">
+            <t-select v-model="searchformData.current_db_name" clearable :style="{ width: '150px' }">
+              <t-option v-for="(item, index) in share_db_dic" :value="index" :label="item" :key="index">
+                {{ item }}
+              </t-option>
+            </t-select>
+          </t-form-item>
+          <t-form-item>
+            <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
+            <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="exportDbVisible=true"> {{ $t('common.export') }} </t-button>
+            <t-button type="reset" variant="base" theme="default"> {{ $t('common.reset') }}  </t-button>
+          </t-form-item>
         </t-form>
       </t-row>
 
@@ -117,7 +94,7 @@
       @confirm="handelExport"
       width="40%"
       :confirmOnEnter="true"
-      :onClose="close"
+      :onClose="() => { this.exportDbVisible = false}"
     >
     </t-dialog>
   </div>
@@ -135,8 +112,6 @@
   } from '@/apis/host';
 
   import { CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
-  import { ErrorCircleFilledIcon, CheckCircleFilledIcon, CloseCircleFilledIcon } from 'tdesign-icons-vue';
-  import {export_api} from "@/apis/common";
 
   const staticColumn = ['action', 'op'];
 

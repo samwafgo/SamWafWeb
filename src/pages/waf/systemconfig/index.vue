@@ -6,17 +6,20 @@
           <t-button @click="handleAddAccount"> {{$t('page.systemconfig.new_system_configuration')}} </t-button>
         </div>
         <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
-
-            <t-row>
-              <span>{{$t('page.systemconfig.label_configuration_item')}}:</span>
-              <t-input v-model="searchformData.item" class="search-input" style="width:200px"  clearable>
+          <t-form ref="form" :data="searchformData" :label-width="140" layout="inline" colon :style="{ marginBottom: '8px' }">
+            <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
+              <t-input v-model="searchformData.item" class="search-input" style="width:200px" clearable>
               </t-input>
-              <span>{{$t('common.remarks')}}:</span>
-              <t-input v-model="searchformData.remarks" class="search-input" style="width:200px"   clearable>
+            </t-form-item>
+            <t-form-item :label="$t('common.remarks')" name="remarks">
+              <t-input v-model="searchformData.remarks" class="search-input" style="width:200px" clearable>
               </t-input>
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
-            </t-row>
+            </t-form-item>
+            <t-form-item>
+              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')">
+                {{ $t('common.search') }}
+              </t-button>
+            </t-form-item>
           </t-form>
         </div>
       </t-row>

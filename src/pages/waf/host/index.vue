@@ -9,17 +9,21 @@
 
         </div>
         <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
-            <t-row>
-              <span>{{ $t('page.host.website') }}</span>
+          <t-form ref="form" :data="searchformData" :label-width="80" colon   layout="inline" :style="{ marginBottom: '8px' }">
+            <t-form-item :label="$t('page.host.website')" name="code">
               <t-select v-model="searchformData.code" clearable :style="{ width: '200px' }">
                 <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                   {{ item }}
                 </t-option>
               </t-select>
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }}</t-button>
-            </t-row>
+            </t-form-item>
+            <t-form-item>
+              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')">
+                {{ $t('common.search') }}
+              </t-button>
+            </t-form-item>
           </t-form>
+
         </div>
       </t-row>
 

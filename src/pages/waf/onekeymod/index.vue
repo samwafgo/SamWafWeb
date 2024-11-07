@@ -3,21 +3,19 @@
     <t-card class="list-card-container">
       <t-row justify="space-between">
         <div class="left-operation-container">
-
-          {{ $t('page.one_key_mod.one_key_placeholder')}}
-
-          <span>{{ $t('page.one_key_mod.baota_placeholder') }}:</span>
-          <t-input v-model="defaultFilePath" class="search-input" :placeholder="$t('page.one_key_mod.baota_placeholder')" clearable>
-          </t-input>
-          <t-button @click="handleOneKeyModify"> {{ $t('page.one_key_mod.button_one_key_modify') }} </t-button>
-        </div>
-        <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
-
-            <t-row>
-
+          <t-form :label-width="300" colon layout="inline"  :style="{ marginBottom: '8px' }">
+            <t-form-item>
+              {{ $t('page.one_key_mod.one_key_placeholder')}}
+            </t-form-item>
+            <t-form-item  :label="$t('page.one_key_mod.baota_placeholder')" >
+              <t-input v-model="defaultFilePath" class="search-input" :placeholder="$t('page.one_key_mod.baota_placeholder')" clearable>
+              </t-input>
+            </t-form-item>
+            <t-form-item>
+              <t-button theme="danger" @click="handleOneKeyModify"> {{ $t('page.one_key_mod.button_one_key_modify') }} </t-button>
               <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
-            </t-row>
+
+            </t-form-item>
           </t-form>
         </div>
       </t-row>

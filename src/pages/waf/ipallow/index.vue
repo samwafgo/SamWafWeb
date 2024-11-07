@@ -6,20 +6,25 @@
           <t-button @click="handleAddIpWhite"> {{ $t('page.ipallow.button_add_ip') }} </t-button>
         </div>
         <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" colon :style="{ marginBottom: '8px' }">
-
-            <t-row>
-              <span>{{ $t('page.ipallow.label_website') }}</span><t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
-              <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
-                {{ item }}
-              </t-option>
-            </t-select>
-              <span>{{ $t('page.ipallow.label_ip') }}</span>
+          <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
+            <t-form-item :label="$t('page.ipallow.label_website')" name="host_code">
+              <t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
+                <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
+                  {{ item }}
+                </t-option>
+              </t-select>
+            </t-form-item>
+            <t-form-item :label="$t('page.ipallow.label_ip')" name="ip">
               <t-input v-model="searchformData.ip" class="search-input" :placeholder="$t('common.placeholder')" clearable>
               </t-input>
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
-            </t-row>
+            </t-form-item>
+            <t-form-item>
+              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')">
+                {{ $t('common.search') }}
+              </t-button>
+            </t-form-item>
           </t-form>
+
         </div>
       </t-row>
       <t-alert theme="info" :message="$t('page.ipallow.alert_message')" close>
