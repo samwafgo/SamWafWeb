@@ -39,12 +39,12 @@
                  @filter-change="onFilterChange"
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #guard_status="{ row }">
-              <t-switch size="large" v-model="row.guard_status ===1" :label="[$t('page.host.guard_status_on'), $t('page.host.guard_status_off')]"
+              <t-switch size="medium" v-model="row.guard_status ===1" :label="[$t('page.host.guard_status_on'), $t('page.host.guard_status_off')]"
                    @change="changeGuardStatus($event,row)">
               </t-switch>
           </template>
           <template #start_status="{ row }">
-              <t-switch size="large" v-model="row.start_status===0" :label="[$t('page.host.auto_start_on'), $t('page.host.auto_start_off')]"
+              <t-switch size="medium" v-model="row.start_status===0" :label="[$t('page.host.auto_start_on'), $t('page.host.auto_start_off')]"
                         @change="changeStartStatus($event,row)">
               </t-switch>
           </template>
