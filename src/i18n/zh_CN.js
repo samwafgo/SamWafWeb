@@ -180,8 +180,14 @@ export default {
       url: "URL",
       rate: "速率",
       limit: "限制访问次数",
+      lock_minutes:"封禁时间(分钟)",
       samwaf_cc_protection: "SamWaf防护墙抵御CC攻击",
-      input_url_placeholder: "输入URL（可不填）"
+      input_url_placeholder: "输入URL（可不填）",
+      show_cc_ban_ip: "显示CC封禁IP",
+      ban_ip:"封禁IP",
+      ban_remain_time:"封禁剩余时间",
+      ban_ip_belong:"IP归属地",
+      remove_ban_ip:"移除封禁IP",
     },
     visit_log:{
       visit_log: "防御日志",

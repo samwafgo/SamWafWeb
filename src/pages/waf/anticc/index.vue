@@ -4,6 +4,7 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddAntiCC"> {{ $t('page.cc.new_cc_protection') }} </t-button>
+          <t-button theme="success" @click="handleShowCCBanIPList"> {{ $t('page.cc.show_cc_ban_ip') }} </t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="150"  layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -14,10 +15,6 @@
                 </t-option>
               </t-select>
             </t-form-item>
-            <t-form-item  :label="$t('page.cc.url')" name="url">
-              <t-input v-model="searchformData.url" class="search-input" :placeholder="$t('common.placeholder')" clearable>
-              </t-input>
-            </t-form-item >
             <t-form-item>
               <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
             </t-form-item>
@@ -62,14 +59,14 @@
               </t-option>
             </t-select>
           </t-form-item>
-          <t-form-item :label="$t('page.cc.url')" name="url">
-            <t-input :style="{ width: '480px' }" v-model="formData.url" :placeholder="$t('page.cc.input_url_placeholder')"></t-input>
-          </t-form-item>
           <t-form-item :label="$t('page.cc.rate')" name="rate">
             <t-input-number :style="{ width: '480px' }" v-model="formData.rate" :placeholder="$t('common.placeholder')+$t('page.cc.rate')"></t-input-number>
           </t-form-item>
           <t-form-item :label="$t('page.cc.limit')" name="limit">
             <t-input-number :style="{ width: '480px' }" v-model="formData.limit" :placeholder="$t('common.placeholder')+$t('page.cc.limit')"></t-input-number>
+          </t-form-item>
+          <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_minutes">
+            <t-input-number :style="{ width: '480px' }" min="1" v-model="formData.lock_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
           </t-form-item>
           <t-form-item :label="$t('common.remarks')"  name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks" :placeholder="$t('common.placeholder_content')" name="remarks">
@@ -95,16 +92,15 @@
               </t-option>
             </t-select>
           </t-form-item>
-          <t-form-item :label="$t('page.cc.url')" name="url">
-            <t-input :style="{ width: '480px' }" v-model="formEditData.url" :placeholder="$t('page.cc.input_url_placeholder')"></t-input>
-          </t-form-item>
           <t-form-item :label="$t('page.cc.rate')"  name="rate">
             <t-input-number :style="{ width: '480px' }" v-model="formEditData.rate" :placeholder="$t('common.placeholder')+$t('page.cc.rate')"></t-input-number>
           </t-form-item>
           <t-form-item :label="$t('page.cc.limit')"  name="limit">
             <t-input-number :style="{ width: '480px' }" v-model="formEditData.limit" :placeholder="$t('common.placeholder')+$t('page.cc.limit')"></t-input-number>
           </t-form-item>
-
+          <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_minutes">
+            <t-input-number :style="{ width: '480px' }" min="1" v-model="formEditData.lock_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
+          </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks" :placeholder="$t('common.placeholder_content')" name="remarks">
             </t-textarea>
@@ -120,6 +116,11 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
       :onCancel="onCancel">
     </t-dialog>
+    <t-dialog :header="$t('page.cc.show_cc_ban_ip')" :width="800" :body="confirmBody" :visible.sync="banIPListVisible" @confirm="()=>{banIPListVisible=false}"
+              :onCancel="()=>{banIPListVisible=false}">
+    <ban-ip-list ref="banIpList"></ban-ip-list>
+    </t-dialog>
+
   </div>
 </template>
 <script lang="ts">
@@ -128,6 +129,7 @@
     SearchIcon
   } from 'tdesign-icons-vue';
   import Trend from '@/components/trend/index.vue';
+  import BanIpList from './component/baniplist/index.vue';
   import {
     prefix
   } from '@/config/global';
@@ -138,20 +140,13 @@
 import {
     wafAntiCCListApi,wafAntiCCDelApi,wafAntiCCEditApi,wafAntiCCAddApi,wafAntiCCDetailApi
   } from '@/apis/anticc';
-  import {
-    SSL_STATUS,
-    GUARD_STATUS,
-    CONTRACT_STATUS,
-    CONTRACT_STATUS_OPTIONS,
-    CONTRACT_TYPES,
-    CONTRACT_PAYMENT_TYPES
-  } from '@/constants';
 
   const INITIAL_DATA = {
     host_code: '',
     url: '',
     rate: 1,
     limit: 30,
+    lock_minutes:10,//默认10分钟
     remarks: '',
   };
   export default Vue.extend({
@@ -159,6 +154,7 @@ import {
     components: {
       SearchIcon,
       Trend,
+      BanIpList
     },
     data() {
       return {
@@ -166,6 +162,7 @@ import {
         editFormVisible: false,
         guardVisible: false,
         confirmVisible: false,
+        banIPListVisible:false,
         formData: {
           ...INITIAL_DATA
         },
@@ -243,7 +240,6 @@ import {
         },
         //顶部搜索
         searchformData: {
-          url:"",
           host_code:""
         },
         //索引区域
@@ -488,6 +484,10 @@ import {
             console.log(e);
           })
           .finally(() => {});
+      },
+      handleShowCCBanIPList() {
+        this.$refs.banIpList.getList("");
+        this.banIPListVisible = true
       },
       //跳转界面
       handleJumpOnlineUrl(){

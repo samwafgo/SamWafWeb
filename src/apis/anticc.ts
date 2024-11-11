@@ -39,3 +39,27 @@ export function wafAntiCCDetailApi(params) {
     params: params
   })
 }
+
+/**
+ * 封禁ip列表
+ * @param params
+ */
+export function wafAntiCCBanIPListApi(params) {
+  return request({
+    url: '/wafhost/anticc/baniplist',
+    method: 'get',
+    params: params
+  })
+}
+
+/**
+ *  移除ip方法
+ * @param params
+ */
+export function wafAntiCCRemoveBanIpApi(params) {
+  return request({
+    url: '/wafhost/anticc/removebanip',
+    method: 'post',
+    data: params
+  })
+}

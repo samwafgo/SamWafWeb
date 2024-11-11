@@ -180,8 +180,14 @@ export default {
       url: "URL",
       rate: "Rate",
       limit: "Limit Access Times",
+      lock_minutes:"Lock Time(Minutes)",
       samwaf_cc_protection: "SamWaf Firewall Resists CC Attacks",
-      input_url_placeholder: "Enter URL (optional)"
+      input_url_placeholder: "Enter URL (optional)",
+      show_cc_ban_ip: "Show CC Ban IP",
+      ban_ip:"Ban IP",
+      ban_remain_time:"Ban Remain Ip",
+      ban_ip_belong:"IP Belong",
+      remove_ban_ip:"Remove Ban IP",
     },
     visit_log:{
       visit_log: "Protection Logs",
