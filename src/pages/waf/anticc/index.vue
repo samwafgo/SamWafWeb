@@ -185,6 +185,11 @@ import {
             message: this.$t('page.cc.limit'),
             type: 'error'
           }],
+          lock_minutes: [{
+            required: true,
+            message: this.$t('page.cc.lock_minutes'),
+            type: 'error'
+          }],
         },
         textareaValue: '',
         prefix,
