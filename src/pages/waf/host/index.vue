@@ -930,8 +930,9 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.loadHostList()
-    this.getList("")
+    this.loadHostList().then(() => {
+      this.getList("");
+    });
     this.baseUrl = getBaseUrl()
     this.fileUploadUrl = this.baseUrl + "/import"
     this.fileHeader['X-Token'] = localStorage.getItem("access_token") ? localStorage.getItem("access_token") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
@@ -946,20 +947,24 @@ export default Vue.extend({
 
   methods: {
     loadHostList() {
-      let that = this;
-      allhost("").then((res) => {
-        let resdata = res
-        console.log(resdata)
-        if (resdata.code === 0) {
-          let host_options = resdata.data;
-          for (let i = 0; i < host_options.length; i++) {
-            that.host_dic[host_options[i].value] = host_options[i].label
-          }
-        }
-      })
-        .catch((e: Error) => {
-          console.log(e);
-        })
+      return new Promise((resolve, reject) => {
+        allhost()
+          .then((res) => {
+            let resdata = res;
+            console.log(resdata);
+            if (resdata.code === 0) {
+              let host_options = resdata.data;
+              for (let i = 0; i < host_options.length; i++) {
+                this.host_dic[host_options[i].value] = host_options[i].label;
+              }
+            }
+            resolve(); // 调用 resolve 表示加载完成
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            reject(e); // 调用 reject 表示加载失败
+          });
+      });
     },
     getList(keyword) {
       let that = this

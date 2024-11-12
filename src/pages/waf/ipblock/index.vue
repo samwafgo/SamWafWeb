@@ -246,26 +246,31 @@
       },
     },
     mounted() {
-      this.loadHostList()
-      this.getList("")
+      this.loadHostList().then(() => {
+        this.getList("");
+      });
     },
 
     methods: {
-      loadHostList(){
-        let that = this;
-        allhost().then((res) => {
-              let resdata = res
-              console.log(resdata)
+      loadHostList() {
+        return new Promise((resolve, reject) => {
+          allhost()
+            .then((res) => {
+              let resdata = res;
+              console.log(resdata);
               if (resdata.code === 0) {
-                  let host_options = resdata.data;
-                  for(let i = 0;i<host_options.length;i++){
-                      that.host_dic[host_options[i].value] =  host_options[i].label
-                  }
+                let host_options = resdata.data;
+                for (let i = 0; i < host_options.length; i++) {
+                  this.host_dic[host_options[i].value] = host_options[i].label;
+                }
               }
+              resolve(); // 调用 resolve 表示加载完成
             })
             .catch((e: Error) => {
               console.log(e);
-        })
+              reject(e); // 调用 reject 表示加载失败
+            });
+        });
       },
       getList(keyword) {
         let that = this
@@ -286,6 +291,8 @@
                 ...this.pagination,
                 total: resdata.data.total,
               };
+
+              this.loadHostList()
             }
           })
           .catch((e: Error) => {

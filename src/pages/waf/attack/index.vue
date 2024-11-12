@@ -430,9 +430,10 @@
         this.$set(this.dateControl, "range1", newrange)
       }
 
-      this.loadHostList()
       this.loadShareDbList()
-      this.getList("")
+      this.loadHostList().then(() => {
+        this.getList("");
+      });
     },
     watch: {
       '$route.query.action'(newVal, oldVal) {
@@ -470,20 +471,24 @@
           })
       },
       loadHostList() {
-        let that = this;
-        allhost().then((res) => {
-          let resdata = res
-          console.log(resdata)
-          if (resdata.code === 0) {
-            let host_options = resdata.data;
-            for (let i = 0; i < host_options.length; i++) {
-              that.host_dic[host_options[i].value] = host_options[i].label
-            }
-          }
-        })
-          .catch((e : Error) => {
-            console.log(e);
-          })
+        return new Promise((resolve, reject) => {
+          allhost()
+            .then((res) => {
+              let resdata = res;
+              console.log(resdata);
+              if (resdata.code === 0) {
+                let host_options = resdata.data;
+                for (let i = 0; i < host_options.length; i++) {
+                  this.host_dic[host_options[i].value] = host_options[i].label;
+                }
+              }
+              resolve(); // 调用 resolve 表示加载完成
+            })
+            .catch((e: Error) => {
+              console.log(e);
+              reject(e); // 调用 reject 表示加载失败
+            });
+        });
       },
       getList(keyword) {
 
