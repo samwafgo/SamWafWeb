@@ -74,7 +74,7 @@
         </t-link>
       </div>
       <div slot="body">
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="160">
+        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="230">
           <t-tabs :defaultValue="1">
             <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
               <t-form-item :label="$t('page.host.website')" name="host">
@@ -290,7 +290,7 @@
     <!-- Edit WebSite Dialog -->
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="700" :footer="false">
       <div slot="body">
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="160">
+        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="230">
           <t-tabs :defaultValue="1">
             <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
               <t-form-item :label="$t('page.host.website')" name="host">
