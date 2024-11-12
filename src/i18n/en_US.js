@@ -407,13 +407,13 @@ export default {
       button_add_ip: "Add Allowlist IP",
       label_website: "Website",
       label_ip: "IP",
-      alert_message: "SamWaf firewall will ignore IPs in the allowlist."
+      alert_message: "SamWaf firewall will ignore IPs or CIDR in the allowlist."
     },
     ipblock: {
       button_add_ip: "Add Blocklist IP",
       label_website: "Website",
       label_ip: "IP",
-      alert_message: "SamWaf firewall will block access from IPs in the blocklist."
+      alert_message: "SamWaf firewall will block access from IPs or CIDR in the blocklist."
     },
     ldpurl: {
       new_privacy_url: "Add New Privacy Protection URL",

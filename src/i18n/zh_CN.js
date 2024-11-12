@@ -408,13 +408,13 @@ export default {
       button_add_ip: "新建白名单IP",
       label_website: "网站",
       label_ip: "Ip",
-      alert_message: "SamWaf防护墙会忽略在白名单内的IP",
+      alert_message: "SamWaf防护墙会忽略在白名单内的IP/网段",
     },
     ipblock:{
       button_add_ip: "新建黑名单IP",
       label_website: "网站",
       label_ip: "Ip",
-      alert_message: "SamWaf防护墙会阻止在黑名单内的IP的访问",
+      alert_message: "SamWaf防护墙会阻止在黑名单内的IP/网段的访问",
     },
     ldpurl:{
       new_privacy_url: "新建隐私保护Url",
