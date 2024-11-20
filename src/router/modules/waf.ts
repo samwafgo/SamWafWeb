@@ -82,6 +82,12 @@ export default [
         component: () => import('@/pages/waf/sslconfig/index.vue'),
         meta: { title: 'menu.host.sslconfig' },
 
+      },{
+        path: 'wafbatchtasklist',
+        name: 'WafBatchTaskList',
+        component: () => import('@/pages/waf/batchtask/index.vue'),
+        meta: { title: 'menu.host.batchtask' },
+
       },
     ],
   },

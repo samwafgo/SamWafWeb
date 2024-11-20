@@ -119,6 +119,7 @@ export default {
       cc: "CC Protection",
       sensitive:"Sensitive",
       sslconfig:"SSL Folder",
+      batchtask:"Batch Task",
     },
     analysis:{
       parent_title: "Data Analysis",
@@ -480,6 +481,29 @@ export default {
       label_auto_tip: "SamWaf will automatically extract the certificate information from the SSL file storage path below at 3 AM every day and back up the current certificate.",
       label_auto_key_path: "Key File Path",
       label_auto_crt_path: "Crt File Path",
+    },
+    batchtask: {
+      alert_message: "Automatically execute some batch operations, sequentially executed daily at 5 AM",
+      label_batch_task_name: "Task Name",
+      label_website: "Website",
+      label_batch_type: "Task Type",
+      label_batch_source_type: "Source Type",
+      label_batch_source: "Source Value",
+      label_batch_execute_method: "Execution Method",
+      label_remark: "Remarks",
+      label_btn_manual: "Manual Trigger",
+      label_confirm_message: "Are you sure you want to trigger manually?",
+      batch_type: {
+        add_ipallow: "Add Whitelist IP",
+      },
+      batch_source_type: {
+        local: "Local Path",
+        remote: "Remote URL",
+      },
+      batch_execute_method: {
+        append: "Append",
+        overwrite: "Overwrite",
+      },
     },
     syslog: {
       syslog: "System Log",

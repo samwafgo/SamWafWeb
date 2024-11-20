@@ -119,6 +119,7 @@ export default {
       cc:"cc防御",
       sensitive:"敏感词",
       sslconfig:"证书夹",
+      batchtask:"批量任务",
     },
     analysis:{
       parent_title:"数据分析",
@@ -482,6 +483,29 @@ export default {
       label_auto_path: "自动提取证书路径",
       label_auto_key_path: "key文件路径",
       label_auto_crt_path: "crt文件路径",
+    },
+    batchtask:{
+      alert_message:"自动执行一些批量化操作,每日5点依次执行",
+      label_batch_task_name: "任务名称",
+      label_website: "网站",
+      label_batch_type: "任务类型",
+      label_batch_source_type: "来源类型",
+      label_batch_source: "来源值",
+      label_batch_execute_method: "执行方式",
+      label_remark: "备注",
+      label_btn_manual: "手工触发",
+      label_confirm_message: "确认要手工触发吗？",
+      batch_type:{
+        add_ipallow: "添加白名单IP",
+      },
+      batch_source_type:{
+          local: "本地路径",
+          remote: "远端URL",
+      },
+      batch_execute_method:{
+        append: "添加",
+        overwrite: "覆盖",
+      },
     },
     syslog:{
       syslog:"系统日志",
