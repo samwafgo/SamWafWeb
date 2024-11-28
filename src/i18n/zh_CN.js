@@ -431,7 +431,7 @@ export default {
     urlallow:{
       button_add_url: "新建白名单URL",
       label_website: "网站",
-      label_url: "Ip",
+      label_url: "URL",
       label_compare_type: "匹配方式",
       alert_message: "SamWaf防护墙防护时候会忽略在白名单内的URL",
       compare_type_option_equal:"等于",
@@ -442,7 +442,7 @@ export default {
     urlblock:{
       button_add_url: "新建黑名单URL",
       label_website: "网站",
-      label_url: "Ip",
+      label_url: "URL",
       label_compare_type: "匹配方式",
       alert_message: "SamWaf防护墙会阻止访问在限制访问内的URL",
       compare_type_option_equal:"等于",
