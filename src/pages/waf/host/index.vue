@@ -43,6 +43,9 @@
                    @change="changeGuardStatus($event,row)">
               </t-switch>
           </template>
+          <template #real_time="{ row }">
+            <span :title="$t('page.host.real_qps')">{{row.real_time_qps}}</span> / <span :title="$t('page.host.real_active')">{{row.real_time_connect_cnt}}</span>
+          </template>
           <template #start_status="{ row }">
               <t-switch size="medium" v-model="row.start_status===0" :label="[$t('page.host.auto_start_on'), $t('page.host.auto_start_off')]"
                         @change="changeStartStatus($event,row)">
@@ -763,6 +766,14 @@ export default Vue.extend({
           },
         },
         {
+          title: this.$t('page.host.real_time'),
+          colKey: 'real_time',
+          width: 120,
+          cell: {
+            col: 'real_time'
+          }
+        },
+        {
           title: this.$t('page.host.start_status'),
           colKey: 'start_status',
           width: 100,
@@ -819,7 +830,7 @@ export default Vue.extend({
         },
         {
           title: this.$t('common.remarks'),
-          width: 200,
+          width: 100,
           ellipsis: true,
           colKey: 'remarks',
           filter: {
@@ -838,7 +849,6 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'create_time',
         },
-
         {
           align: 'left',
           width: 200,

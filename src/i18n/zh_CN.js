@@ -359,6 +359,9 @@ export default {
       forbid_for_global_site:"全局网站不能操作",
       forbid_for_global_site_only_change_guard_status:"全局网站只能配置保护状态",
       host_rule_msg:"主机请不要填写http和https 直接写域名即可",
+      real_time:"实时数据",
+      real_qps:"实时QPS",
+      real_active:"实时连接",
       loadbalance:{
         label_loadbalance_is_enable: "是否启用负载",
         label_loadbalance_type: "负载均衡类型",

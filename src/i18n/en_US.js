@@ -359,6 +359,9 @@ export default {
       forbid_for_global_site: "Global websites cannot be operated",
       forbid_for_global_site_only_change_guard_status: "Global websites can only configure protection status",
       host_rule_msg: "Do not fill in HTTP and HTTPS, just enter the domain name.",
+      real_time:"Real Time",
+      real_qps:"QPS",
+      real_active:"Active Count",
       loadbalance: {
         label_loadbalance_is_enable: "Enable Load Balancing",
         label_loadbalance_type: "Load Balancing Type",
