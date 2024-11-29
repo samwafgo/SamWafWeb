@@ -638,7 +638,12 @@ export default Vue.extend({
 
               // 如果验证通过，则赋值
               if (isValid) {
-                this.formData.remote_host = `http://${val}`;
+                // 如果是 IPv6 地址，确保加上方括号
+                if (val.includes(":") && !val.startsWith("[")) {
+                  this.formData.remote_host = `http://[${val}]`;  // 处理 IPv6 地址
+                } else {
+                  this.formData.remote_host = `http://${val}`;  // 处理 IPv4 或域名
+                }
               }else{
                 this.formData.remote_host = ""
               }
