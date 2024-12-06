@@ -206,6 +206,19 @@
             </t-tab-panel>
             <t-tab-panel :value="2">
               <template #label>
+                {{$t('page.host.tab_more_domain')}}
+              </template>
+              <t-form-item :label="$t('page.host.more_domain')" name="bind_more_host">
+                <t-tooltip class="placement top center" :content="$t('page.host.more_domain_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-textarea :style="{ width: '480px' }" v-model="formData.bind_more_host" :placeholder="$t('common.placeholder')"
+                              name="bind_more_host">
+                  </t-textarea>
+                </t-tooltip>
+              </t-form-item>
+            </t-tab-panel>
+            <t-tab-panel :value="3">
+              <template #label>
                 <file-safety-icon style="margin-right: 4px;color:red"/>
                 {{$t('page.host.tab_engine')}}
               </template>
@@ -267,7 +280,7 @@
                 </t-tooltip>
               </t-form-item>
             </t-tab-panel>
-            <t-tab-panel :value="3">
+            <t-tab-panel :value="4">
               <template #label>
                 {{$t('page.host.tab_other')}}
               </template>
@@ -280,6 +293,7 @@
                 </t-tooltip>
               </t-form-item>
             </t-tab-panel>
+
           </t-tabs>
 
           <t-form-item style="float: right;margin-top:5px">
@@ -388,6 +402,19 @@
             </t-tab-panel>
             <t-tab-panel :value="2">
               <template #label>
+                {{$t('page.host.tab_more_domain')}}
+              </template>
+              <t-form-item :label="$t('page.host.more_domain')" name="bind_more_host">
+                <t-tooltip class="placement top center" :content="$t('page.host.more_domain_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-textarea :style="{ width: '480px' }" v-model="formEditData.bind_more_host" :placeholder="$t('common.placeholder')"
+                              name="bind_more_host">
+                  </t-textarea>
+                </t-tooltip>
+              </t-form-item>
+            </t-tab-panel>
+            <t-tab-panel :value="3">
+              <template #label>
                 <file-safety-icon style="margin-right: 4px;color:red"/>
                 {{$t('page.host.tab_engine')}}
               </template>
@@ -449,7 +476,7 @@
                 </t-tooltip>
               </t-form-item>
             </t-tab-panel>
-            <t-tab-panel :value="3">
+            <t-tab-panel :value="4">
               <template #label>
                 {{$t('page.host.tab_other')}}
               </template>
@@ -578,6 +605,7 @@ const INITIAL_DATA = {
   bind_ssl_id:'',
   auto_jump_https:'0',
   expiration_info:'',//仅对ssl前端处理
+  bind_more_host:'',//多域名情况
 };
 const INITIAL_SSL_DATA = {
   cert_content: '',
