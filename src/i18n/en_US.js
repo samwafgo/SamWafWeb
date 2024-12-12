@@ -318,6 +318,8 @@ export default {
       remote_host: "Backend Host",
       remote_host_content: "The Backend host is usually the same as the domain name of the first website (make sure to include the protocol http:// or https://).",
       remote_host_validation: "Must start with http:// or https:// and must not contain a port number.",
+      is_trans_back_domain: "Trans backend domain",
+      is_trans_back_domain_content: "Off by default. On this option if the protected domain and backend domain are different.",
       remote_ip: "Backend IP(Dynamic Domain)",
       remote_ip_content: "If SamWaf and the website are on the same server, fill in 127.0.0.1. If on different servers, please fill in the actual IP or Dynamic domain.",
       remote_port: "Backend Port",

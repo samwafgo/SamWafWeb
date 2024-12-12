@@ -40,7 +40,7 @@ export default {
       forbid:"禁止",
     },
     on:"开启",
-    off:"关闭"
+    off:"关闭",
   },
   login:{
     login_title:"登录",
@@ -318,6 +318,8 @@ export default {
       remote_host: "后端域名",
       remote_host_content: "后端域名通常同第一项网站域名相同（一定要加上协议 http:// 或 https://）",
       remote_host_validation: "必须以 http:// 或 https:// 开头，并且不能包含端口号",
+      is_trans_back_domain: "是否传递后端域名",
+      is_trans_back_domain_content: "默认关闭，如果开启适用于防护域名和后端不一致情况",
       remote_ip: "后端IP(动态域名)",
       remote_ip_content: "如SamWaf同网站在同一台服务器 填写127.0.0.1 如果是不同服务器请填写实际IP或者动态域名",
       remote_port: "后端端口",

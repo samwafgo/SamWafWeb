@@ -183,6 +183,19 @@
                   <t-input :style="{ width: '480px' }" v-model="formData.remote_host" :placeholder="$t('common.placeholder')+$t('page.host.remote_host')"></t-input>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.is_trans_back_domain')" name="is_trans_back_domain">
+                <t-tooltip
+                  class="placement top center"
+                  :content="$t('page.host.is_trans_back_domain_content')"
+                  placement="top"
+                  :overlay-style="{ width: '200px' }"
+                  show-arrow>
+                <t-radio-group v-model="formData.is_trans_back_domain">
+                  <t-radio value="0">{{ $t('common.off') }}</t-radio>
+                  <t-radio value="1">{{ $t('common.on') }}</t-radio>
+                </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
               <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formData.is_enable_load_balance!='1'">
                 <t-tooltip class="placement top center" :content="$t('page.host.remote_ip_content')"
                            placement="top" :overlay-style="{ width: '200px' }" show-arrow>
@@ -383,6 +396,19 @@
                   :overlay-style="{ width: '200px' }"
                   show-arrow>
                   <t-input :style="{ width: '480px' }" v-model="formEditData.remote_host" :placeholder="$t('common.placeholder')+$t('page.host.remote_host')"></t-input>
+                </t-tooltip>
+              </t-form-item>
+              <t-form-item :label="$t('page.host.is_trans_back_domain')" name="is_trans_back_domain">
+                <t-tooltip
+                  class="placement top center"
+                  :content="$t('page.host.is_trans_back_domain_content')"
+                  placement="top"
+                  :overlay-style="{ width: '200px' }"
+                  show-arrow>
+                <t-radio-group v-model="formEditData.is_trans_back_domain">
+                  <t-radio value="0">{{ $t('common.off') }}</t-radio>
+                  <t-radio value="1">{{ $t('common.on') }}</t-radio>
+                </t-radio-group>
                 </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formEditData.is_enable_load_balance!='1'">
@@ -606,6 +632,7 @@ const INITIAL_DATA = {
   auto_jump_https:'0',
   expiration_info:'',//仅对ssl前端处理
   bind_more_host:'',//多域名情况
+  is_trans_back_domain:"0",//是否传递后端域名
 };
 const INITIAL_SSL_DATA = {
   cert_content: '',
@@ -1098,6 +1125,7 @@ export default Vue.extend({
             detail_data_tmp.start_status = detail_data_tmp.start_status.toString()
             detail_data_tmp.unrestricted_port = detail_data_tmp.unrestricted_port.toString()
             detail_data_tmp.auto_jump_https = detail_data_tmp.auto_jump_https.toString()
+            detail_data_tmp.is_trans_back_domain = detail_data_tmp.is_trans_back_domain.toString()
             that.formData= {
               ...detail_data_tmp
             }
@@ -1159,6 +1187,7 @@ export default Vue.extend({
         postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
         postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
         postdata['auto_jump_https'] = Number(postdata['auto_jump_https'])
+        postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain'])
         let defenseData = {
           bot: parseInt(this.hostDefenseData.bot),
           sqli: parseInt(this.hostDefenseData.sqli),
@@ -1212,6 +1241,7 @@ export default Vue.extend({
         postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
         postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
         postdata['auto_jump_https'] = Number(postdata['auto_jump_https'])
+        postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain'])
         if(postdata['ssl'] ==0){
           postdata['auto_jump_https'] = 0
         }
@@ -1338,6 +1368,7 @@ export default Vue.extend({
             that.detail_data.is_enable_load_balance = that.detail_data.is_enable_load_balance.toString()
             that.detail_data.load_balance_stage = that.detail_data.load_balance_stage.toString()
             that.detail_data.auto_jump_https = that.detail_data.auto_jump_https.toString()
+            that.detail_data.is_trans_back_domain = that.detail_data.is_trans_back_domain.toString()
             that.formEditData = {
               ...that.detail_data
             }
