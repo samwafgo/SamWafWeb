@@ -35,7 +35,7 @@
         </t-alert>
         <t-table :columns="columns" size="small" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign"
                  :hover="hover" :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
-                 @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
+                 @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"  @sort-change="onSortChange"
                  @filter-change="onFilterChange"
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #guard_status="{ row }">
@@ -908,6 +908,7 @@ export default Vue.extend({
           width: 200,
           ellipsis: true,
           colKey: 'create_time',
+          sorter: true
         },
         {
           align: 'left',
@@ -930,6 +931,11 @@ export default Vue.extend({
       searchformData: {
         remarks: "",
         code: ""
+      },
+      //排序字段
+      sorts: {
+        sortBy:"create_time",
+        descending:true,
       },
       //筛选字段
       filters:{
@@ -1038,9 +1044,12 @@ export default Vue.extend({
     },
     getList(keyword) {
       let that = this
+      let sort_descending =that.sorts.descending?"desc":"asc"
       hostlist({
         pageSize: that.pagination.pageSize,
         pageIndex: that.pagination.current,
+        sort_by: that.sorts.sortBy,
+        sort_descending: sort_descending,
         filter_by:that.filters.filter_by,
         filter_value:that.filters.filter_value,
         ...that.searchformData
@@ -1701,7 +1710,19 @@ export default Vue.extend({
       this.filters.filter_value = filters.map(f => f.value).join("|");
 
       this.getList("");
-    }
+    },
+    onSortChange(sorter){
+      let that = this
+
+      if (sorter != undefined){
+        this.sorts.sortBy= sorter.sortBy
+        that.sorts.descending= sorter.descending
+      }else{
+        that.sorts.sortBy="create_time"
+        that.sorts.descending= true
+      }
+      this.getList("")
+    },
     //end method
   },
 });
