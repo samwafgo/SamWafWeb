@@ -30,3 +30,19 @@ export function downloadlog() {
     method: 'get',
   })
 }
+//查看日志详情
+export function geWebLogDetail(params) {
+  return request({
+    url: 'waflog/attack/detail',
+    method: 'get',
+    params: params
+  })
+}
+// 复制脱敏后数据
+export function getHeaderCopyDetail(params) {
+  return request({
+    url: 'waflog/attack/httpcopymask',
+    method: 'get',
+    params: params
+  })
+}

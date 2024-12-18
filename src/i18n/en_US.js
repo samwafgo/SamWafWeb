@@ -255,8 +255,10 @@ export default {
         add_to_deny_list_confirm_body: "Are you sure you want to add this IP to the block list?",
         website_not_exist_warning: "The website does not exist",
         back: "Back",
-        mouse_select_tooltip: "Select the content you want to add with the mouse, then click on the page's blank area"
-      }
+        mouse_select_tooltip: "Select the content you want to add with the mouse, then click on the page's blank area",
+        http_copy_mask: "False Positive？",
+        http_copy_mask_tip: "If you encounter a false positive, please copy the text below and send it to samwafgo@gmail.com. Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue.",
+       }
     },
     center:{
       switch_local: "Switch to Local (No Remote Access)",

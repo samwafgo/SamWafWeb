@@ -1,6 +1,15 @@
 <template>
   <div class="detail-base">
-    <t-alert v-if="detail_data.status_code===403" theme="error" :message="detail_data.rule" />
+
+    <t-row justify="start" v-if="detail_data.status_code===403">
+      <t-col :span="2">
+        <t-alert theme="error" :message="detail_data.rule" />
+      </t-col>
+      <t-col :span="2">
+        <t-link theme="error" @click="loadHttpCopyMask">{{ $t('page.visit_log.detail.http_copy_mask') }}</t-link>
+      </t-col>
+
+    </t-row>
     <t-card :title="$t('page.visit_log.detail.defense_status')" class="container-base-margin-top">
       <t-steps class="detail-base-info-steps" layout="horizontal" theme="dot" :current="3">
         <t-step-item :title="$t('page.visit_log.detail.visit_time')" :content="detail_data.create_time" />
@@ -104,10 +113,17 @@
     <t-card :title="$t('page.visit_log.detail.response_data')">
       <t-textarea v-model="detail_data.res_body" :autosize="{ minRows: 5, maxRows: 10 }" readonly />
 
-      </t-card>
-     <t-button theme="primary" type="button" @click="backPage">{{ $t('page.visit_log.detail.back') }}</t-button>
+    </t-card>
+    <t-card >
+      <t-button theme="primary" type="button" @click="backPage">{{ $t('page.visit_log.detail.back') }}</t-button>
+    </t-card>
 
-
+    <t-dialog :header="$t('page.visit_log.detail.http_copy_mask')"  :visible.sync="httpCopyMaskVisible"
+              @confirm="()=>{httpCopyMaskVisible=false}"
+              :onCancel="()=>{httpCopyMaskVisible=false}" >
+      <t-alert theme="info" :message="$t('page.visit_log.detail.http_copy_mask_tip')" />
+      <t-textarea v-model="httpCopyMask" :autosize="{ minRows: 5, maxRows: 10 }"  />
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -118,7 +134,7 @@
   import {
     wafIPBlockAddApi
   } from '@/apis/ipblock';
-
+  import { getHeaderCopyDetail ,geWebLogDetail} from '@/apis/waflog/attacklog';
   export default {
     name: 'WafAttackLogDetail',
     data() {
@@ -127,6 +143,12 @@
         baseInfoData: model.getBaseInfoData(),
         detail_data: {},
         quickAddRuleChecked:false,
+        detail_req:{
+          req_uuid:'',
+          current_db:'',
+        },
+        httpCopyMask:'',
+        httpCopyMaskVisible:false,
       };
     },
     beforeRouteUpdate(to, from) {
@@ -134,9 +156,6 @@
     },
     mounted() {
       console.log('----mounted----')
-
-      //console.log(this.$route.params.req_uuid);
-      //this.getDetail(this.$route.params.req_uuid);
       this.getDetail(this.$route.query.req_uuid);
     },
     beforeCreate() {
@@ -164,6 +183,25 @@
       },
     },
     methods: {
+      loadHttpCopyMask(){
+        getHeaderCopyDetail({
+            REQ_UUID: this.detail_req.req_uuid,
+            current_db_name:this.detail_req.current_db
+        })
+          .then((res) => {
+            let resdata = res
+            console.log(resdata)
+            if (resdata.code === 0) {
+              console.log("http mark",  resdata.data)
+              this.httpCopyMask = resdata.data
+              this.httpCopyMaskVisible = true
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+          .finally(() => {});
+      },
       backPage(){
         　history.go(-1)
       },
@@ -171,26 +209,22 @@
         if(uuid_and_name == undefined){
           return
         }
-       let arr =  uuid_and_name.split("#");
+        let arr =  uuid_and_name.split("#");
         let id = arr[0]
-       let current_db_name = arr[1]
+        let current_db_name = arr[1]
+
+        this.detail_req.req_uuid = id
+        this.detail_req.current_db = current_db_name
         let that = this
-        this.$request
-          .get('/waflog/attack/detail', {
-            params: {
+        geWebLogDetail({
               REQ_UUID: id,
               current_db_name:current_db_name
-            }
           })
           .then((res) => {
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
-
-              //const { list = [] } = resdata.data.list;
-
               that.detail_data = resdata.data;
-
             }
           })
           .catch((e: Error) => {

@@ -255,8 +255,9 @@ export default {
         add_to_deny_list_confirm_body: "你确定要加入不允许访问的IP?",
         website_not_exist_warning: "当前网站不存在",
         back: "返回",
-        mouse_select_tooltip: "鼠标选中想要添加的内容后,点击页面空白即可"
-      }
+        mouse_select_tooltip: "鼠标选中想要添加的内容后,点击页面空白即可",
+        http_copy_mask:"误报?",
+        http_copy_mask_tip:"遇到误报情况，请复制下面文本信息到邮箱 samwafgo@gmail.com。内容已经屏蔽常见的敏感信息：header:Authorization, Token,Api-Key, Secret, Access-Token,X-Api-Key,X-Access-Token, X-Secret,Session-Key, Set-Cookie  cookies:sessionid|auth|token|key|secret ，如果有其他字段请自行屏蔽，或者欢迎提交issue",      }
     },
     center:{
       switch_local: "切换本机（不进行远程访问）",
