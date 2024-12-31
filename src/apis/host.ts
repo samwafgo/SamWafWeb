@@ -8,6 +8,15 @@ export function allhost(params) {
   })
 }
 
+//通过主机Code查询所有主机域名信息
+export function alldomainbyhostcode(params) {
+  return request({
+    url: 'wafhost/host/alldomainbyhostcode',
+    method: 'get',
+    params: params
+  })
+}
+
 //查询主机列表
 export function hostlist(data) {
   return request({

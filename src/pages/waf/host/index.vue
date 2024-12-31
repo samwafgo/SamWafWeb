@@ -59,6 +59,7 @@
             <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickCopy(slotProps)">{{ $t('common.copy') }}</a>
             <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
+            <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickSSLApply(slotProps)">{{ $t('page.host.ssl_auto_apply') }}</a>
           </template>
         </t-table>
       </div>
@@ -92,6 +93,11 @@
                            placement="top" :overlay-style="{ width: '200px' }" show-arrow>
                   <t-input-number :style="{ width: '150px' }" v-model="formData.port" :placeholder="$t('page.host.port_placeholder')">
                   </t-input-number>
+                </t-tooltip>
+                <t-tooltip class="placement top center"
+                           :content="$t('page.host.bind_more_port_tips')"
+                           placement="top" :overlay-style="{ width: '200px' }" show-arrow>
+                {{ $t('page.host.bind_more_port')  }} <t-input :style="{ width: '200px' }" v-model="formData.bind_more_port" :placeholder="$t('page.host.bind_more_port_placeholder')"></t-input>
                 </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.ssl')" name="ssl">
@@ -329,6 +335,11 @@
               <t-form-item :label="$t('page.host.port')" name="port">
                 <t-input-number :style="{ width: '150px' }" v-model="formEditData.port" :content="$t('page.host.port_tips')">
                 </t-input-number>
+                <t-tooltip class="placement top center"
+                           :content="$t('page.host.bind_more_port_tips')"
+                           placement="top" :overlay-style="{ width: '200px' }" show-arrow>
+                  {{ $t('page.host.bind_more_port')  }} <t-input  :style="{ width: '200px' }" v-model="formEditData.bind_more_port" :placeholder="$t('page.host.bind_more_port_placeholder')"></t-input>
+                </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.ssl')" name="ssl">
                 <t-radio-group v-model="formEditData.ssl">
@@ -592,6 +603,12 @@
         </t-form>
       </div>
     </t-dialog>
+
+    <t-dialog :header="$t('page.host.ssl_auto_apply')" :visible.sync="sslAutoApplyVisible" :width="900" :footer="false">
+      <div slot="body">
+        <ssl-order-list :src-host-code="currentHostCode"></ssl-order-list>
+        </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -603,6 +620,7 @@ import {prefix} from '@/config/global';
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost} from '@/apis/host';
 import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
+import SslOrderList from "@/pages/waf/sslorder/index.vue";
 import { v4 as uuidv4 } from 'uuid';
 import {
   GUARD_STATUS,
@@ -633,6 +651,7 @@ const INITIAL_DATA = {
   expiration_info:'',//仅对ssl前端处理
   bind_more_host:'',//多域名情况
   is_trans_back_domain:"0",//是否传递后端域名
+  bind_more_port:'',//多端口情况
 };
 const INITIAL_SSL_DATA = {
   cert_content: '',
@@ -643,6 +662,7 @@ const INITIAL_SSL_DATA = {
 export default Vue.extend({
   name: 'ListBase',
   components: {
+    SslOrderList,
     LoadBalance,
     SearchIcon,
     FileSafetyIcon,
@@ -661,6 +681,7 @@ export default Vue.extend({
       confirmVisible: false,
       addSSLFormVisible:false,
       editSSLFormVisible:false,
+      sslAutoApplyVisible: false,
       ImportXlsxVisible: false,
       formData: {
         ...INITIAL_DATA
@@ -989,6 +1010,8 @@ export default Vue.extend({
       sslConfigList: [],
       //下拉框是否可以筛选
       selectCanFilter:true,
+      //当前选择的主机
+      currentHostCode:"",
     };
   },
   computed: {
@@ -1323,6 +1346,18 @@ export default Vue.extend({
       console.log(row)
       this.deleteIdx = row.rowIndex;
       this.confirmVisible = true;
+    },
+    //SSL申请
+    handleClickSSLApply(row){
+      const {
+        code, global_host
+      } = row.row
+      if (global_host === 1) {
+        this.$message.warning("全局网站不能申请");
+      }
+      this.sslAutoApplyVisible = true;
+      this.currentHostCode = code
+      console.log("code,global_host",code,global_host)
     },
     onConfirmDelete() {
       this.confirmVisible = false;

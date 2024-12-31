@@ -88,7 +88,13 @@ export default [
         component: () => import('@/pages/waf/batchtask/index.vue'),
         meta: { title: 'menu.host.batchtask' },
 
-      },
+      }, {
+        path: 'wafsslOrderlist',
+        name: 'WafSSLOrderList',
+        component: () => import('@/pages/waf/sslorder/index.vue'),
+        meta: { title: 'menu.host.sslorder' },
+
+      }
     ],
   },
 
