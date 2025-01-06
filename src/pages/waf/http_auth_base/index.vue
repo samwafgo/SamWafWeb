@@ -211,6 +211,13 @@
         host_dic:{}
       };
     },
+    watch: {
+      propHostCode(newVal) {
+        // 当 propHostCode 更新时，更新相应的数据
+        this.searchformData.host_code = newVal;
+        this.getList("")
+      }
+    },
     computed: {
       confirmBody() {
         if (this.deleteIdx > -1) {
