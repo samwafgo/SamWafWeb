@@ -409,6 +409,7 @@ export default {
         autu_jump_https_tip:"If enabled, SamWaf will force automatic redirection to HTTPS; if disabled, SamWaf will not perform automatic redirection."
       },
       is_enable_http_auth_base:"Web Password Visit",
+      is_enable_http_auth_base_tips: "After enabled, the website will require a password for access. Please add a username and password."
     },
     one_key_mod: {
       one_key_placeholder: "Due to the fact that only one program can use Web (port 80, port 443) on a single server, if you need to set Waf as a proxy, you need to change 80 to 81 and 443 to 444 here.\nSamWaf has added a one-click modification of Baota Web port for user convenience. Available only on Linux.",

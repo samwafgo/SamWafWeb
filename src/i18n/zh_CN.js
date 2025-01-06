@@ -408,6 +408,7 @@ export default {
         autu_jump_https_tip:"如果启用，那么SamWaf将强制自动跳转到https，如果关闭，那么SamWaf将不会自动跳转"
       },
       is_enable_http_auth_base:"网站密码访问",
+      is_enable_http_auth_base_tips:"开启后该网站都是使用密码进行访问，并请添加帐号和密码",
     },
     one_key_mod:{
       one_key_placeholder: "由于单台服务器只能一个程序使用Web(80端口，443端口)，所以如果需要让Waf变为前置，那么此处需要将80=》81 ，443=》444。\n" +
