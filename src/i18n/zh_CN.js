@@ -316,6 +316,7 @@ export default {
       tab_engine:"引擎自带防护",
       tab_other:"其他配置",
       tab_more_domain:"绑定多个域名",
+      tab_password:"网站密码访问",
       more_domain:"同时绑定多个域名",
       more_domain_tips:"填写多个域名回车换行,不要加端口",
       start_status: "启动状态",
@@ -406,6 +407,7 @@ export default {
         label_autu_jump_https_off: "关闭",
         autu_jump_https_tip:"如果启用，那么SamWaf将强制自动跳转到https，如果关闭，那么SamWaf将不会自动跳转"
       },
+      is_enable_http_auth_base:"网站密码访问",
     },
     one_key_mod:{
       one_key_placeholder: "由于单台服务器只能一个程序使用Web(80端口，443端口)，所以如果需要让Waf变为前置，那么此处需要将80=》81 ，443=》444。\n" +
@@ -560,6 +562,14 @@ export default {
       visit_log: "访问记录",
       valid_to:"过期时间",
       status: "状态",
+    },
+    http_auth_base:{
+      alert_message: "开启网站密码后，请使用密码访问",
+      button_add_http_auth_base: "新建",
+      host_code: "网站",
+      user_name: "用户名",
+      password: "密码",
+      password_validation:"密码不合法"
     },
     syslog:{
       syslog:"系统日志",
