@@ -339,6 +339,8 @@ export default {
       remarks: "Remarks",
       exclude_url_log: "Exclude URL When Logging",
       exclude_url_log_tips: "Exclude URL prefix data when logging",
+      response_time_out: "Response timeout (in seconds)",
+      response_time_out_tips: "If set to 0, it will wait indefinitely, which is not recommended.",
       bot_detection: "Bot Detection",
       bot_detection_tips: "Detect if search engines are disguised",
       sql_injection_detection: "SQL Injection Detection",
