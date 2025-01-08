@@ -146,6 +146,7 @@ export default {
       system_config_title: "Parameter Settings",
       system_runtime_title: "Runtime Parameters",
       system_one_key_modify_title: "Quick Modification",
+      task:"Task Manager",
     },
     pc:{
       parent_title: "Device",
@@ -572,6 +573,22 @@ export default {
       user_name: "UserName",
       password: "Password",
       password_validation:"Password Not Normal"
+    },
+    task:{
+      alert_message: "SamWaf Task",
+      button_add_task: "New",
+      button_manual_execute: "Manual Execute",
+      task_name: "TaskName",
+      task_unit: "TaskUnit",
+      task_value: "TaskValue",
+      task_at: "TaskAt",
+      task_method: "TaskMethod",
+      task_unit_type:{
+        second:"Second",
+        minute:"Minute",
+        hour:"Hour",
+        day:"Day",
+      }
     },
     syslog: {
       syslog: "System Log",

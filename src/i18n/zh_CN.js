@@ -146,6 +146,7 @@ export default {
       system_config_title:"参数设置",
       system_runtime_title:"运行参数",
       system_one_key_modify_title:"一键修改",
+      task:"任务管理",
     },
     pc:{
       parent_title:"设备管理",
@@ -573,6 +574,22 @@ export default {
       user_name: "用户名",
       password: "密码",
       password_validation:"密码不合法"
+    },
+    task:{
+      alert_message: "SamWaf 任务管理",
+      button_add_task: "新建",
+      button_manual_execute: "手工执行",
+      task_name: "任务名",
+      task_unit: "间隔单位",
+      task_value: "值",
+      task_at: "具体时刻",
+      task_method: "内部标识",
+      task_unit_type:{
+        second:"每秒",
+        minute:"每分钟",
+        hour:"每小时",
+        day:"每天",
+      }
     },
     syslog:{
       syslog:"系统日志",
