@@ -43,7 +43,7 @@ export default {
       forbid: "Forbid",
     },
     on: "On",
-    off: "Off"
+    off: "Off",
   },
   login:{
     login_title: "Login",
@@ -367,6 +367,10 @@ export default {
       file_upload_success: "File uploaded successfully",
       file_upload_fail: "File upload failed",
       file_safety: "File Safety",
+      upload:{
+        import_auto_create_code:"Import new host code (for new data)",
+        import_remain_code:"Import retained host code (for old data)",
+      },
       back_system_type_baota: "Baota",
       back_system_type_phpstudy: "Xiao Pi Panel (phpstudy)",
       back_system_type_phpnow: "PHPnow",

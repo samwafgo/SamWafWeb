@@ -581,7 +581,12 @@
     </t-dialog>
 
     <t-dialog :visible.sync="ImportXlsxVisible" @confirm="ImportXlsxVisible=false">
+      <t-radio-group v-model="uploadParams.import_code_strategy">
+        <t-radio value="0">{{$t('page.host.upload.import_auto_create_code')}}</t-radio>
+        <t-radio value="1">{{$t('page.host.upload.import_remain_code')}}</t-radio>
+      </t-radio-group>
       <t-upload :action="fileUploadUrl" :tips="tips" :headers="fileHeader" v-model="files" @fail="handleFail"
+                :data="uploadParams"
                 @success="onSuccess" theme="file-input" :placeholder="$t('page.host.upload_tips')"></t-upload>
     </t-dialog>
 
@@ -713,6 +718,10 @@ export default Vue.extend({
   },
   data() {
     return {
+      uploadParams:{
+          import_code_strategy: '0',//编码导入策略 0 新增自动生成 1 保留原有
+          import_table:"hosts",//导入到哪个表
+      },
       files: [],
       tips: this.$t('page.host.upload_file_limit_size'),
       baseUrl: "",
@@ -1126,7 +1135,7 @@ export default Vue.extend({
 
           //const { list = [] } = resdata.data.list;
 
-          this.data = resdata.data.list;
+          this.data = resdata.data.list??[];
           this.data_attach = []
           for (var i = 0; i < this.data.length; i++) {
             this.data[i].guard_status_visiable = false //可扩充

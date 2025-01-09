@@ -307,7 +307,7 @@ import {
             console.log(resdata)
             if (resdata.code === 0) {
 
-              this.data = resdata.data.list;
+              this.data = resdata.data.list??[];
               this.data_attach = []
               console.log('getList',this.data)
               this.pagination = {

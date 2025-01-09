@@ -366,6 +366,10 @@ export default {
       file_upload_success: "文件上传成功",
       file_upload_fail: "文件上传失败",
       file_safety: "文件安全",
+      upload:{
+        import_auto_create_code:"导入新增主机编码(适用全新数据)",
+        import_remain_code:"导入保留主机编码(适用老数据数据)",
+      },
       back_system_type_baota:"宝塔",
       back_system_type_phpstudy:"小皮面板(phpstudy)",
       back_system_type_phpnow:"PHPnow",

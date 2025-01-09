@@ -171,7 +171,7 @@
             console.log(resdata)
             if (resdata.code === 0) {
 
-              this.data = resdata.data.list;
+              this.data = resdata.data.list??[];
               this.data_attach = []
               this.pagination = {
                 ...this.pagination,

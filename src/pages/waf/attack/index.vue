@@ -521,7 +521,7 @@
 
               //const { list = [] } = resdata.data.list;
 
-              this.data = resdata.data.list;
+              this.data = resdata.data.list??[];
               this.pagination = {
                 ...this.pagination,
                 total: resdata.data.total,

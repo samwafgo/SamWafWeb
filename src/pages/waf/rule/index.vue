@@ -225,7 +225,7 @@ export default Vue.extend({
           let resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
-            this.data = resdata.data.list;
+            this.data = resdata.data.list??[];
             this.pagination = {
               ...this.pagination,
               total: resdata.data.total,
