@@ -7,21 +7,21 @@
     </t-alert>
     <t-card class="list-card-container">
 
-      <t-tabs v-model="searchformData.rule">
+      <t-tabs v-model="attackSearchformData.rule">
         <t-tab-panel v-for="(item, index) in attackTags" :key="index" :value="item.value" :label="item.label">
         </t-tab-panel>
       </t-tabs>
       <t-row justify="space-between">
 
-        <t-form ref="form" :data="searchformData" :label-width="150" colon layout="inline"  :style="{ marginBottom: '8px' }">
+        <t-form ref="form" :data="attackSearchformData" :label-width="150" colon layout="inline" :style="{ marginBottom: '8px' }">
 
           <t-form-item :label="$t('page.attack_log.rule_name')" name="rule">
-            <t-select v-model="searchformData.rule" class="form-item-content`" :options="attackTags"
-                       :style="{ width: '280px' }" />
+            <t-select v-model="attackSearchformData.rule" class="form-item-content`" :options="attackTags"
+                      :style="{ width: '280px' }" />
 
           </t-form-item>
           <t-form-item :label="$t('page.attack_log.source_ip')" name="src_ip">
-            <t-input v-model="searchformData.src_ip" class="form-item-content" :placeholder="$t('common.placeholder')+$t('page.visit_log.source_ip')"
+            <t-input v-model="attackSearchformData.src_ip" class="form-item-content" :placeholder="$t('common.placeholder')+$t('page.visit_log.source_ip')"
                      :style="{ minWidth: '100px' }" />
           </t-form-item>
           <t-form-item>
@@ -58,10 +58,10 @@
       :visible.sync="attackIpVisible"
       width="100%"
       :confirmOnEnter="true"
-      :onConfirm="() => { this.attackIpVisible = false}"
-      :onClose="() => { this.attackIpVisible = false}"
+      :onConfirm="() => { this.resetChildState() }"
+      :onClose="() => {  this.resetChildState() }"
     >
-      <web-log-list :attack_ip="trans_to_parent_ip"></web-log-list>
+      <web-log-list ref="childLog" :attack_ip="trans_to_parent_ip"></web-log-list>
     </t-dialog>
   </div>
 </template>
@@ -147,7 +147,7 @@ export default Vue.extend({
       confirmVisible: false,
       deleteIdx: -1,
       //顶部搜索
-      searchformData: {
+      attackSearchformData: {
         rule: "",
         src_ip: "",
       },
@@ -190,26 +190,8 @@ export default Vue.extend({
   created() {
   },
   mounted() {
-    // 判断 vuex 中是否有保存的搜索参数
-    if (this.$store.state.attacklog.msgData) {
-      const attack = this.$store.state.attacklog;
-      this.pagination.current = attack.msgData.currentpage;
-      this.pagination.pageSize = attack.msgData.pagesize;
-      this.searchformData = attack.msgData.searchData;   // 可以直接取出整个对象
-    }
     this.getIpTags()
     this.getList("");
-  },
-  beforeRouteLeave(to, from, next) {
-    console.log("attack list beforeRouteLeave ");
-    // vuex 存储操作
-    this.$store.dispatch("attacklog/setAttackMsgData", {
-      //query: this.queryParam,
-      pagesize: this.pagination.pageSize,
-      currentpage: this.pagination.current,
-      searchData: this.searchformData,
-    })
-    next(); // 继续后续的导航解析过程
   },
   methods: {
     getIpTags(){
@@ -224,7 +206,7 @@ export default Vue.extend({
       attackIpListApi({
         pageSize: this.pagination.pageSize,
         pageIndex: this.pagination.current,
-        ...this.searchformData
+        ...this.attackSearchformData
       }).then((res) => {
         let resdata = res
         console.log(resdata)
@@ -268,13 +250,6 @@ export default Vue.extend({
       console.log(ip)
       this.attackIpVisible = true
       this.trans_to_parent_ip = ip
-    },
-    handleClickIPDetail(e) {
-      console.log(e)
-      const { src_ip } = e.row
-      this.searchformData.src_ip = src_ip
-      this.getList("")
-
     },
     handleClickDelete(row : { rowIndex : any }) {
       this.deleteIdx = row.rowIndex;
@@ -344,7 +319,11 @@ export default Vue.extend({
         }
       }
       this.getList("")
-    }
+    },
+    resetChildState(){
+      this.attackIpVisible = false
+      this.$refs.childLog.resetState()
+    },
     //end meathod
   },
 });

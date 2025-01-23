@@ -31,7 +31,7 @@
             <t-input v-model="searchformData.src_ip" class="form-item-content" :placeholder="$t('common.placeholder')+$t('page.visit_log.source_ip')"
                      :style="{ minWidth: '100px' }" />
           </t-form-item>
-          <t-form-item :label="$t('page.visit_log.access_date')" name="unix_add_time">
+          <t-form-item :label="$t('page.visit_log.access_date')" name="unix_add_time" v-if="attack_ip==''">
             <t-date-range-picker v-model="dateControl.range1" :presets="dateControl.presets" enable-time-picker valueType="YYYY-MM-DD HH:mm:ss" />
           </t-form-item>
           <t-form-item :label="$t('page.visit_log.access_method')" name="method">
@@ -387,7 +387,7 @@
         },
         //排序字段
         sorts: {
-          sortBy:"create_time",
+          sortBy:"unix_add_time",
           descending:true,
         },
         //筛选字段
@@ -491,6 +491,7 @@
           this.dateControl.range1[1] = NowDate + " 23:59:59"
           this.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
           this.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
+          this.pagination.current = 1
           this.getList("")
         }
 
@@ -540,6 +541,7 @@
         that.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
         that.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
 
+        console.log("getList searchformData",that.searchformData)
         let sort_descending =that.sorts.descending?"desc":"asc"
 
         this.$request
@@ -688,7 +690,7 @@
           that.sorts.descending= sorter.descending
 
         }else{
-          that.sorts.sortBy="create_time"
+          that.sorts.sortBy="unix_add_time"
           that.sorts.descending= true
         }
         this.getList("")
@@ -720,7 +722,15 @@
           }
         }
         this.getList("")
-      }
+      },
+      resetState(){
+        console.log("来自上级得状态清理")
+        this.$refs.form.reset()
+        this.dateControl.range1[0] = NowDate + " 00:00:00"
+        this.dateControl.range1[1] = NowDate + " 23:59:59"
+        this.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
+        this.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
+      },
       //end meathod
     },
   });
