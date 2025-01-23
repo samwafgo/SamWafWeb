@@ -132,8 +132,9 @@ export default {
     },
     visit_log:{
       parent_title:"防护日志",
-      visit_title:"防护日志",
+      visit_title:"访问日志",
       visit_detail_title:"防护详情",
+      attack_title:"风险日志",
     },
     account:{
       parent_title:"账号管理",
@@ -230,6 +231,7 @@ export default {
       date_range_last_300_days: "最近300天",
       export_db_file_header:"导出当前选择的日志文件(SQLITE)",
       export_db_file_content:"历史文件可能很大，为避免影响带宽，请在闲时进行数据导出",
+      pop_detail_header:"该记录访问详情页面",
       detail:{
         defense_status: "防御情况",
         visit_time: "访问",
@@ -264,6 +266,18 @@ export default {
         mouse_select_tooltip: "鼠标选中想要添加的内容后,点击页面空白即可",
         http_copy_mask:"误报?",
         http_copy_mask_tip:"遇到误报情况，请复制下面文本信息到邮箱 samwafgo@gmail.com。内容已经屏蔽常见的敏感信息：header:Authorization, Token,Api-Key, Secret, Access-Token,X-Api-Key,X-Access-Token, X-Secret,Session-Key, Set-Cookie  cookies:sessionid|auth|token|key|secret ，如果有其他字段请自行屏蔽，或者欢迎提交issue",      }
+    },
+    attack_log:{
+      attack_log: "风险日志",
+      online_document: "在线文档",
+      rule_name:"触发规则",
+      source_ip:"IP",
+      deny_num:"阻止数量",
+      pass_num:"放行数量",
+      first_time:"首次访问时间",
+      latest_time:"最新访问时间",
+      ip_total_tag:"触发规则集合",
+      attack_ip_visit_detail_list_header:"访问IP明细",
     },
     center:{
       switch_local: "切换本机（不进行远程访问）",

@@ -126,10 +126,16 @@ export default [
     meta: { title: 'menu.visit_log.parent_title', icon: LightingCircleIcon },
     children: [
       {
-        path: 'wafattacklog',
-        name: 'WafAttackLog',
+        path: 'wafvisitlog',
+        name: 'WafvisitLog',
         component: () => import('@/pages/waf/attack/index.vue'),
         meta: { title: 'menu.visit_log.visit_title' },
+      },
+      {
+        path: 'wafattacklog',
+        name: 'WafAttackLog',
+        component: () => import('@/pages/waf/attack/attack_index.vue'),
+        meta: { title: 'menu.visit_log.attack_title' },
       },
       {
         path: 'wafattacklogdetail',

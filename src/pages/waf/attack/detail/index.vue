@@ -115,7 +115,7 @@
 
     </t-card>
     <t-card >
-      <t-button theme="primary" type="button" @click="backPage">{{ $t('page.visit_log.detail.back') }}</t-button>
+      <t-button theme="primary" type="button" @click="backPage" v-if="prop_req_uuid==''">{{ $t('page.visit_log.detail.back') }}</t-button>
     </t-card>
 
     <t-dialog :header="$t('page.visit_log.detail.http_copy_mask')"  :visible.sync="httpCopyMaskVisible"
@@ -137,6 +137,16 @@
   import { getHeaderCopyDetail ,geWebLogDetail} from '@/apis/waflog/attacklog';
   export default {
     name: 'WafAttackLogDetail',
+    props:{
+      prop_req_uuid:{
+        type: String,
+        default: ''
+      },
+      prop_current_db:{
+        type: String,
+        default: ''
+      }
+    },
     data() {
       return {
         prefix,
@@ -179,7 +189,12 @@
         if(newVal!=undefined){
           this.getDetail(newVal)
         }
-
+      },
+      prop_req_uuid(newVal, oldVal) {
+        console.log('prop_req_uuid changed', newVal, oldVal)
+        if(newVal!=undefined){
+          this.getDetail(newVal)
+        }
       },
     },
     methods: {

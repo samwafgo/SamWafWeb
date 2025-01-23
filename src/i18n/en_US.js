@@ -132,8 +132,9 @@ export default {
     },
     visit_log:{
       parent_title: "Protection Logs",
-      visit_title: "Protection Logs",
+      visit_title: "Visit Logs",
       visit_detail_title: "Protection Details",
+      attack_title: "Attack Logs",
     },
     account:{
       parent_title: "Account",
@@ -230,6 +231,7 @@ export default {
       date_range_last_300_days: "Last 300 Days",
       export_db_file_header: "Export the currently selected log file(SQLITE)",
       export_db_file_content: "The historical file may be large, to avoid affecting bandwidth, please export during off-peak hours.",
+      pop_detail_header:"Visit Detail",
       detail:{
         defense_status: "Defense Status",
         visit_time: "Visit",
@@ -265,6 +267,18 @@ export default {
         http_copy_mask: "False Positive？",
         http_copy_mask_tip: "If you encounter a false positive, please copy the text below and send it to samwafgo@gmail.com. Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue.",
        }
+    },
+    attack_log:{
+      attack_log: "Risk Log",
+      online_document: "Online Documentation",
+      rule_name: "Triggered Rule",
+      source_ip: "IP",
+      deny_num: "Blocked Count",
+      pass_num: "Allowed Count",
+      first_time: "First Access Time",
+      latest_time: "Latest Access Time",
+      ip_total_tag: "Triggered Rule Set",
+      attack_ip_visit_detail_list_header: "Access IP Details",
     },
     center:{
       switch_local: "Switch to Local (No Remote Access)",

@@ -46,3 +46,19 @@ export function getHeaderCopyDetail(params) {
     params: params
   })
 }
+// 危险ip列表
+export function attackIpListApi(data) {
+  return request({
+    url: 'waflog/attack/attackiplist',
+    method: 'post',
+    data: data
+  })
+}
+//查询攻击iptag列表
+export function allattacktaglist(params) {
+  return request({
+    url: 'waflog/attack/alliptag',
+    method: 'get',
+    params: params
+  })
+}
