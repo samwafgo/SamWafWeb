@@ -8,6 +8,16 @@
     @submit="onSubmit"
   >
     <template v-if="type == 'password'">
+      <t-form-item name="lang" label="语言选择">
+        <t-select  v-model="langValue"
+                   placeholder="SelectLanguage"
+                   @change="changeLangEvent"  size="large"  title="Select Language">
+          <t-option  v-for="(item, index) in langOptions"
+                     :key="index"
+                     :label="item.label"
+                     :value="item.value"/>
+        </t-select>
+      </t-form-item>
       <t-form-item name="account">
         <t-input v-model="formData.account" size="large" :placeholder="$t('login.input_account_placeholder')">
           <template #prefix-icon>
@@ -80,12 +90,50 @@ export default Vue.extend({
       showPsw: false,
       countDown: 0,
       intervalTimer: null,
+      /**语言问题**/
+      langValue:"zh_CN",
+      langOptions: [
+        {
+          value: "zh_CN",
+          label: "中文"
+        },
+        {
+          value: "en_US",
+          label: "English"
+        },
+      ]
     };
   },
   beforeDestroy() {
     clearInterval(this.intervalTimer);
   },
+  mounted() {
+    this.init()
+  },
   methods: {
+    //init
+    init(){
+      //多语言
+      this.langValue = localStorage.getItem("lang") || "zh_CN"
+    },
+    // 切换语言
+    changeLangEvent(value, context) {
+      switch (value) {
+        case "zh_CN":
+          this.langValue = value;
+          this.$i18n.locale = this.langValue;
+          localStorage.setItem("lang",this.langValue)
+          break;
+        case "en_US":
+          this.langValue = value;
+          this.$i18n.locale = this.langValue;
+          localStorage.setItem("lang",this.langValue)
+          break;
+        default:
+          break;
+      }
+      location.reload(); // 刷新页面
+    },
     switchType(val) {
       this.type = val;
       this.$refs.form.reset();

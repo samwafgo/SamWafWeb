@@ -194,7 +194,7 @@
             value: "en_US",
             label: "English"
           },
-        ]
+        ],
       };
     },
     computed: {
