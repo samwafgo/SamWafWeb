@@ -132,7 +132,7 @@ export default Vue.extend({
         default:
           break;
       }
-      location.reload(); // 刷新页面
+      //location.reload(); // 刷新页面
     },
     switchType(val) {
       this.type = val;
