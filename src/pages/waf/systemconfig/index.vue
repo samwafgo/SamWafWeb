@@ -137,11 +137,6 @@
             message: this.$t('common.placeholder')+this.$t('page.systemconfig.label_configuration_item'),
             type: 'error'
           }],
-          value: [{
-            required: true,
-            message: this.$t('common.placeholder')+this.$t('page.systemconfig.label_configuration_value'),
-            type: 'error'
-          }],
         },
         textareaValue: '',
         prefix,
