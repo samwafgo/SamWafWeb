@@ -178,7 +178,7 @@
 
   const INITIAL_DATA = {
     blocking_page_name:'',
-    blocking_type:'',
+    blocking_type:'other_block',
     host_code:'',
     response_code:'403',
     response_header:'',

@@ -99,7 +99,11 @@ export default Vue.extend({
           }
           this.$store.commit('notification/addMsgData', wsData.msg_data);
         }else if(wsData.msg_code=="-999"){
-          localStorage.clear();     //删除用户信息
+          Object.keys(localStorage).forEach(key => {
+            if (key !== "lang") {
+              localStorage.removeItem(key);
+            }
+          });
           console.log("鉴权失败")
         }
       },

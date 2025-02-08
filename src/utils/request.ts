@@ -92,7 +92,11 @@ instance.interceptors.response.use(
         let remoteBean =localStorage.getItem("current_server")? localStorage.getItem("current_server"):"" //此处换成自己获取回来的token，通常存在在cookie或者store里面
 
         if(!remoteBean  && data.code === CODE.AUTH_FAILURE){
-          localStorage.clear();     //删除用户信息
+          Object.keys(localStorage).forEach(key => {
+            if (key !== "lang") {
+              localStorage.removeItem(key);
+            }
+          });
           console.log("鉴权失败")
           router.replace({path: '/login'})
         }else if(remoteBean  && data.code === CODE.AUTH_FAILURE){
