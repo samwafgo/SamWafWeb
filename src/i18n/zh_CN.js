@@ -15,6 +15,7 @@ export default {
     all:"全部",
     details: "详情",
     new: "新建",
+    add:"添加",
     copy: "复制",
     edit: "编辑",
     delete: "删除",
@@ -44,6 +45,10 @@ export default {
     },
     on:"开启",
     off:"关闭",
+    http_header:{
+      name:"键名",
+      value:"键值",
+    },
   },
   login:{
     login_title:"登录",
@@ -125,6 +130,7 @@ export default {
       batchtask:"批量任务",
       sslorder:"证书申请记录",
       ssl_expire:"证书过期批量检测",
+      blocking_page:"自定义拦截响应界面",
     },
     analysis:{
       parent_title:"数据分析",
@@ -584,6 +590,16 @@ export default {
       visit_log: "访问记录",
       valid_to:"过期时间",
       status: "状态",
+    },
+    blocking_page:{
+      alert_message: "SamWaf 自定义拦截响应界面",
+      button_add_blocking_page: "新建",
+      blocking_page_name: "自定义拦截模板页面名称",
+      blocking_type: "自定义类型",
+      host_code: "网站",
+      response_code: "响应代码",
+      response_header: "响应Header头信息",
+      response_content: "响应内容",
     },
     http_auth_base:{
       alert_message: "开启网站密码后，请使用密码访问",

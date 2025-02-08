@@ -94,11 +94,18 @@ export default [
         component: () => import('@/pages/waf/sslorder/index.vue'),
         meta: { title: 'menu.host.sslorder' },
 
-      }, {
+      },
+      {
         path: 'wafsslExpirelist',
         name: 'WafsslExpireList',
         component: () => import('@/pages/waf/ssl_expire/index.vue'),
         meta: { title: 'menu.host.ssl_expire' },
+
+      },{
+        path: 'wafBlockingPagelist',
+        name: 'WafBlockingPagelist',
+        component: () => import('@/pages/waf/bLocking_page/index.vue'),
+        meta: { title: 'menu.host.blocking_page' },
 
       }
     ],
