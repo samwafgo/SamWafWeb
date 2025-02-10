@@ -544,6 +544,7 @@ export default {
       label_confirm_message: "Are you sure you want to trigger manually?",
       batch_type: {
         add_ipallow: "Add Whitelist IP",
+        add_ipdeny: "Add DenyList IP",
       },
       batch_source_type: {
         local: "Local Path",

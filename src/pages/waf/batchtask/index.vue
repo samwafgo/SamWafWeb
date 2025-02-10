@@ -320,10 +320,15 @@ export default Vue.extend({
       },
       deleteIdx: -1,
       //任务类型
-      batch_task_type: [{
+      batch_task_type: [
+        {
             label: this.$t('page.batchtask.batch_type.add_ipallow'),
             value: 'ipallow'
        },
+        {
+        label: this.$t('page.batchtask.batch_type.add_ipdeny'),
+        value: 'ipdeny'
+         },
       ],
       //来源类型
       batch_source_type: [

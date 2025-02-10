@@ -545,6 +545,7 @@ export default {
       label_confirm_message: "确认要手工触发吗？",
       batch_type:{
         add_ipallow: "添加白名单IP",
+        add_ipdeny: "添加黑名单IP",
       },
       batch_source_type:{
           local: "本地路径",
