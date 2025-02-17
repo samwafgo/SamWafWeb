@@ -81,7 +81,7 @@ import { SettingType } from '@/interface';
 import { fetchChatStream } from '@/utils/eventSource';
 
 import '@/style/layout.less';
-
+import  {AesDecrypt} from '@/utils/usuallytool'
 const name = `${prefix}-base-layout`;
 
 export default Vue.extend({
@@ -203,7 +203,7 @@ export default Vue.extend({
         onSuccess: (assistantMessage) => {
           const answer = this.questionList[answerIndex];
           //console.log("onSuccess",assistantMessage)
-          answer.content += assistantMessage.content;
+          answer.content += AesDecrypt( assistantMessage.content);
           this.$set(this.questionList, answerIndex, { ...answer });
           this.goChatBottom();
 

@@ -1,26 +1,30 @@
 // eventSource.js
 import { fetchEventSource } from "@microsoft/fetch-event-source";
+import  {AesEncrypt} from './usuallytool'
 import proxy from "@/config/host";
 const env = import.meta.env.MODE || 'development';
 export function fetchChatStream({    history, q, ctrl, onSuccess, onError,onComplete }) {
   console.log('fetchChatStream history',  history)
   const API_HOST = env === 'mock' ? '/' : proxy[env].API
+
+
+  const requestData = {
+    history: history.filter((item) => item.role && item.content).slice(-3).map((item) => {
+      return [item.role, item.content];
+    }),
+  };
+  let encryptedData = JSON.stringify(requestData);
+  encryptedData = AesEncrypt(encryptedData);
+
   // url
   fetchEventSource(API_HOST+"/gpt/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Accept: ["text/event-stream", "application/json"],
-      Authorization: localStorage.getItem("access_token")? localStorage.getItem("access_token"):"",
+      Accept: [],
+      "X-Token": localStorage.getItem("access_token")? localStorage.getItem("access_token"):"",
     },
-    body: JSON.stringify({
-
-      history: history.filter((item) => item.role && item.content).slice(-3).map((item) => {
-        return [item.role, item.content];
-      }), // 历史记录传递最后三项
-     // question: q,
-      //streaming: true,
-    }),
+    body: encryptedData,
     signal: ctrl.signal,
     onopen(e) {
       if (e.ok && e.headers.get("content-type") === "text/event-stream") {
