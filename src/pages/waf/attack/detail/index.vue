@@ -2,14 +2,20 @@
   <div class="detail-base">
 
     <t-row justify="start" v-if="detail_data.status_code===403">
-      <t-col :span="2">
+      <t-col :span="12">
         <t-alert theme="error" :message="detail_data.rule" />
+        <t-link  @click="loadHttpCopyMask">{{ $t('page.visit_log.detail.http_copy_mask') }}</t-link>
       </t-col>
-      <t-col :span="2">
-        <t-link theme="error" @click="loadHttpCopyMask">{{ $t('page.visit_log.detail.http_copy_mask') }}</t-link>
-      </t-col>
-
     </t-row>
+    <t-card :title="$t('page.visit_log.detail.ai.title')" class="container-base-margin-top">
+      <t-space size="24px">
+        <t-button theme="primary" @click="beforeSendAi">
+          <logo-android-icon slot="icon" />
+           {{ $t('page.visit_log.detail.ai.log_ai_analysis') }}
+        </t-button>
+      </t-space>
+    </t-card>
+
     <t-card :title="$t('page.visit_log.detail.defense_status')" class="container-base-margin-top">
       <t-steps class="detail-base-info-steps" layout="horizontal" theme="dot" :current="3">
         <t-step-item :title="$t('page.visit_log.detail.visit_time')" :content="detail_data.create_time" />
@@ -114,9 +120,6 @@
       <t-textarea v-model="detail_data.res_body" :autosize="{ minRows: 5, maxRows: 10 }" readonly />
 
     </t-card>
-    <t-card >
-      <t-button theme="primary" type="button" @click="backPage" v-if="prop_req_uuid==''">{{ $t('page.visit_log.detail.back') }}</t-button>
-    </t-card>
 
     <t-dialog :header="$t('page.visit_log.detail.http_copy_mask')"  :visible.sync="httpCopyMaskVisible"
               @confirm="()=>{httpCopyMaskVisible=false}"
@@ -124,12 +127,22 @@
       <t-alert theme="info" :message="$t('page.visit_log.detail.http_copy_mask_tip')" />
       <t-textarea v-model="httpCopyMask" :autosize="{ minRows: 5, maxRows: 10 }"  />
     </t-dialog>
+
+    <t-dialog :header="$t('page.visit_log.detail.ai.before_send_ai')"  :visible.sync="httpAiMaskVisible"
+              @confirm="handelToAi"
+              :onCancel="()=>{httpAiMaskVisible=false}"  width="700px">
+      <t-alert theme="info" :message="$t('page.visit_log.detail.ai.before_send_ai_tip')" />
+      <t-textarea v-model="httpAiMask" :autosize="{ minRows: 5, maxRows: 10 }"  />
+    </t-dialog>
+
   </div>
 </template>
 <script lang="ts">
   import {
     prefix
   } from '@/config/global';
+  import { LogoAndroidIcon } from 'tdesign-icons-vue';
+
   import model from '@/service/service-detail-base';
   import {
     wafIPBlockAddApi
@@ -137,6 +150,9 @@
   import { getHeaderCopyDetail ,geWebLogDetail} from '@/apis/waflog/attacklog';
   export default {
     name: 'WafAttackLogDetail',
+    components:{
+      LogoAndroidIcon
+    },
     props:{
       prop_req_uuid:{
         type: String,
@@ -159,6 +175,8 @@
         },
         httpCopyMask:'',
         httpCopyMaskVisible:false,
+        httpAiMask:'',
+        httpAiMaskVisible:false,
       };
     },
     beforeRouteUpdate(to, from) {
@@ -198,10 +216,37 @@
       },
     },
     methods: {
+      handelToAi(){
+        console.log("handelToAi",this.httpAiMask)
+        this.$bus.$emit("sendAi",  this.httpAiMask)
+        this.httpAiMaskVisible = false
+      },
+      beforeSendAi(){
+        this.httpAiMask = ""
+        getHeaderCopyDetail({
+          REQ_UUID: this.detail_req.req_uuid,
+          current_db_name:this.detail_req.current_db,
+          output_format:"raw"
+        })
+          .then((res) => {
+            let resdata = res
+            console.log(resdata)
+            if (resdata.code === 0) {
+                this.httpAiMask = resdata.data
+                this.httpAiMaskVisible = true
+                // this.$bus.$emit("sendAi", resdata.data)
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+          .finally(() => {});
+      },
       loadHttpCopyMask(){
         getHeaderCopyDetail({
             REQ_UUID: this.detail_req.req_uuid,
-            current_db_name:this.detail_req.current_db
+            current_db_name:this.detail_req.current_db,
+            output_format:"curl"
         })
           .then((res) => {
             let resdata = res

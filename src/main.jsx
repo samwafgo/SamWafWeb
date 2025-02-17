@@ -19,6 +19,8 @@ import 'tdesign-vue/es/style/index.css';
 import '@/style/index.less';
 import './permission';
 import store from './store';
+import { purifyHtml } from './utils/purify';  // 引入 purify.js
+Vue.prototype.$purifyHtml = purifyHtml;  // 将清理函数注册为全局方法
 
 
 Vue.use(VueRouter);

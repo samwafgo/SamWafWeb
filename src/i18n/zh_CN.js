@@ -271,7 +271,14 @@ export default {
         back: "返回",
         mouse_select_tooltip: "鼠标选中想要添加的内容后,点击页面空白即可",
         http_copy_mask:"误报?",
-        http_copy_mask_tip:"遇到误报情况，请复制下面文本信息到邮箱 samwafgo@gmail.com。内容已经屏蔽常见的敏感信息：header:Authorization, Token,Api-Key, Secret, Access-Token,X-Api-Key,X-Access-Token, X-Secret,Session-Key, Set-Cookie  cookies:sessionid|auth|token|key|secret ，如果有其他字段请自行屏蔽，或者欢迎提交issue",      }
+        http_copy_mask_tip:"遇到误报情况，请复制下面文本信息到邮箱 samwafgo@gmail.com。内容已经屏蔽常见的敏感信息：header:Authorization, Token,Api-Key, Secret, Access-Token,X-Api-Key,X-Access-Token, X-Secret,Session-Key, Set-Cookie  cookies:sessionid|auth|token|key|secret ，如果有其他字段请自行屏蔽，或者欢迎提交issue",
+        ai:{
+          title: "AI",
+          log_ai_analysis: "AI日志分析",
+          before_send_ai:"发送AI前确认信息",
+          before_send_ai_tip:"发送给AI前，内容已经屏蔽常见的敏感信息：header:Authorization, Token,Api-Key, Secret, Access-Token,X-Api-Key,X-Access-Token, X-Secret,Session-Key, Set-Cookie  cookies:sessionid|auth|token|key|secret ，如果有其他字段请自行屏蔽，或者欢迎提交issue",
+        },
+      }
     },
     attack_log:{
       attack_log: "风险日志",
@@ -711,6 +718,14 @@ export default {
       set_read:"设为已读",
       empty:"暂无通知",
       all:"查看全部",
+    },
+    gpt:{
+      assistant:"AI助手",
+      chat:{
+        chat_title:"GPT对话",
+        chat_placeholder:"请输入内容",
+        chat_send:"发送",
+      }
     },
     right_setting:{
       page_setting: "页面配置",

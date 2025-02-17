@@ -18,11 +18,14 @@
     "test:coverage": "echo \"no test:coverage specified,work in process\""
   },
   "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
     "axios": "^0.27.2",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.10.8",
+    "dompurify": "^3.2.4",
     "echarts": "~5.1.2",
     "echarts-wordcloud": "^2.0.0",
+    "marked": "^15.0.7",
     "nprogress": "^0.2.0",
     "qrcode.vue": "^1.7.0",
     "tdesign-icons-vue": "^0.2.5",

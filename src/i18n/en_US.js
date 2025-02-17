@@ -272,6 +272,12 @@ export default {
         mouse_select_tooltip: "Select the content you want to add with the mouse, then click on the page's blank area",
         http_copy_mask: "False Positive？",
         http_copy_mask_tip: "If you encounter a false positive, please copy the text below and send it to samwafgo@gmail.com. Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue.",
+        ai:{
+          title: "AI",
+          log_ai_analysis: "AI Analysis",
+          before_send_ai :"Before you send content to ai",
+          before_send_ai_tip:"Before you send content to ai,Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue. ",
+        },
        }
     },
     attack_log:{
@@ -705,6 +711,14 @@ export default {
       set_read: "Mark as Read",
       empty: "No Notifications",
       all: "View All"
+    },
+    gpt:{
+      assistant:"AI",
+      chat:{
+        chat_title: "Chat",
+        chat_placeholder: "Enter Content",
+        chat_send:"Send",
+      }
     },
     right_setting: {
       page_setting: "Page Configuration",
