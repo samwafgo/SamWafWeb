@@ -1,6 +1,6 @@
 // eventSource.js
 import { fetchEventSource } from "@microsoft/fetch-event-source";
-import  {AesEncrypt} from './usuallytool'
+import {AesDecrypt, AesEncrypt} from './usuallytool'
 import proxy from "@/config/host";
 const env = import.meta.env.MODE || 'development';
 export function fetchChatStream({    history, q, ctrl, onSuccess, onError,onComplete }) {
@@ -42,15 +42,23 @@ export function fetchChatStream({    history, q, ctrl, onSuccess, onError,onComp
     },
     onmessage(msg) {
       console.log('onmessage', msg)
-      //if(msg.data != ""){
-        console.log('onmessage data =""', msg)
+      if (typeof msg.data !== 'string' || msg.data.trim() === '') {
+        console.log('Received invalid or empty data:', msg.data);
+        const fallback = { content: "远程服务器返回了非JSON数据", role: "assistant" };
+        return onSuccess(fallback);
+      }
+
+      try {
         const res = JSON.parse(msg.data);
+        if(typeof res.content == 'string'){
+          res.content = AesDecrypt(res.content);
+        }
         onSuccess(res);
-      //}else{
-      //  const res = JSON.parse("{\"content\":\"远程服务器未返回信息，请检查配置\",\"role\":\"assistant\"}");
-      //  console.log('onmessage data!="" ', res)
-      //  onSuccess(res);
-      //}
+      } catch (error) {
+        console.log('JSON 解析失败:', error, '原始数据:', msg.data);
+        const fallback = { content: "远程服务器返回了非JSON数据", role: "assistant" };
+        onSuccess(fallback);
+      }
     },
     onclose() {
       onComplete("连接已关闭，请稍后重试");
