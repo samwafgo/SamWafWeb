@@ -7,13 +7,6 @@
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
-            <t-form-item :label="$t('page.sensitive.label_type')" name="type">
-              <t-select v-model="searchformData.type" clearable :style="{ width: '150px' }">
-                <t-option v-for="(item, index) in type_options" :value="index" :label="item.label" :key="index">
-                  {{ item.label }}
-                </t-option>
-              </t-select>
-            </t-form-item>
             <t-form-item :label="$t('page.sensitive.label_content')" name="content">
               <t-input v-model="searchformData.content" class="search-input" clearable>
               </t-input>
@@ -41,7 +34,20 @@
           <template #host_code="{ row }">
             <span> {{host_dic[row.host_code]}}</span>
           </template>
-
+          <template #check_direction="{ row }">
+            <p>
+              {{
+                check_direction_type.find(option => option.value === row.check_direction)?.label || row.check_direction
+              }}
+            </p>
+          </template>
+          <template #action="{ row }">
+            <p>
+              {{
+                action_type.find(option => option.value === row.action)?.label || row.action
+              }}
+            </p>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -57,16 +63,21 @@
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
-          <t-form-item :label="$t('page.sensitive.label_type')" name="type">
-            <t-select v-model="formData.type" clearable :style="{ width: '480px' }">
-              <t-option v-for="(item, index) in type_options" :value="item.value" :label="item.label"
-                :key="index">
-                {{ item.label }}
+
+          <t-form-item :label="$t('page.sensitive.label_content')" name="content">
+            <t-input :style="{ width: '480px' }" v-model="formData.content"  ></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.sensitive.label_check_direction')" name="check_direction">
+            <t-select v-model="formData.check_direction" clearable :style="{ width: '480px' }">
+              <t-option v-for="item in check_direction_type" :value="item.value" :label="`${item.label}`">
               </t-option>
             </t-select>
           </t-form-item>
-          <t-form-item :label="$t('page.sensitive.label_content')" name="content">
-            <t-input :style="{ width: '480px' }" v-model="formData.content"  ></t-input>
+          <t-form-item :label="$t('page.sensitive.label_action')" name="action">
+            <t-select v-model="formData.action" clearable :style="{ width: '480px' }">
+              <t-option v-for="item in action_type" :value="item.value" :label="`${item.label}`">
+              </t-option>
+            </t-select>
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"   name="remarks">
@@ -84,17 +95,21 @@
     <t-dialog :header="$t('common.edit') " :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="100">
-          <t-form-item :label="$t('page.sensitive.label_type')" name="type">
-            <t-select v-model="formEditData.type" clearable :style="{ width: '480px' }">
-              <t-option v-for="(item, index) in type_options" :value="item.value" :label="item.label"
-                :key="index">
-                {{ item.label }}
-              </t-option>
-            </t-select>
-          </t-form-item>
          <t-form-item :label="$t('page.sensitive.label_content')" name="content">
            <t-input :style="{ width: '480px' }" v-model="formEditData.content" ></t-input>
          </t-form-item>
+          <t-form-item :label="$t('page.sensitive.label_check_direction')" name="check_direction">
+            <t-select v-model="formEditData.check_direction" clearable :style="{ width: '480px' }">
+              <t-option v-for="item in check_direction_type" :value="item.value" :label="`${item.label}`">
+              </t-option>
+            </t-select>
+          </t-form-item>
+          <t-form-item :label="$t('page.sensitive.label_action')" name="action">
+            <t-select v-model="formEditData.action" clearable :style="{ width: '480px' }">
+              <t-option v-for="item in action_type" :value="item.value" :label="`${item.label}`">
+              </t-option>
+            </t-select>
+          </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks" name="remarks">
             </t-textarea>
@@ -126,8 +141,9 @@
   } from '@/apis/sensitive';
 
   const INITIAL_DATA = {
-    type: '0',
     content: '',
+    check_direction: 'in',
+    action: 'deny',
     remarks: '',
   };
   export default Vue.extend({
@@ -186,17 +202,25 @@
         value: 'first',
         columns: [
           {
-            title: this.$t('page.sensitive.label_type'),
-            align: 'left',
-            width: 250,
-            ellipsis: true,
-            colKey: 'type',
-          },{
             title: this.$t('page.sensitive.label_content'),
             align: 'left',
             width: 250,
             ellipsis: true,
             colKey: 'content',
+          },
+          {
+            title: this.$t('page.sensitive.label_check_direction'),
+            align: 'left',
+            width: 100,
+            ellipsis: true,
+            colKey: 'check_direction',
+          },
+          {
+            title: this.$t('page.sensitive.label_action'),
+            align: 'left',
+            width: 100,
+            ellipsis: true,
+            colKey: 'action',
           },
           {
             title: this.$t('common.remarks'),
@@ -236,6 +260,32 @@
         //索引区域
         deleteIdx: -1,
         guardStatusIdx :-1,
+
+        //检测方向
+        check_direction_type: [{
+          label: this.$t('page.sensitive.check_direction_type.in'),
+          value: 'in'
+        },
+          {
+            label: this.$t('page.sensitive.check_direction_type.out'),
+            value: 'out'
+          },
+          {
+            label: this.$t('page.sensitive.check_direction_type.all'),
+            value: 'all'
+          },
+        ],
+        //执行类型
+        action_type: [{
+          label: this.$t('page.sensitive.action_type.deny'),
+          value: 'deny'
+        },
+          {
+            label: this.$t('page.sensitive.action_type.replace'),
+            value: 'replace'
+          },
+        ],
+        //end option
       };
     },
     computed: {
@@ -315,11 +365,7 @@
       },
       handleAddSensitive() {
         this.addFormVisible = true
-        this.formData =  {
-          type: '0',
-          content: '',
-          remarks: '',
-        };
+        this.formData =  { ...INITIAL_DATA };
       },
       onSubmit({
         result,

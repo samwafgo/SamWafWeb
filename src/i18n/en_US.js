@@ -512,7 +512,18 @@ export default {
       type_option_0: "Not Selected",
       type_option_1: "Type 1",
       type_option_2: "Type 2",
-      type_option_3: "Type 3"
+      type_option_3: "Type 3",
+      label_check_direction:"Detection Direction",
+      label_action:"Action",
+      check_direction_type:{
+        in:"Request",
+        out:"Response",
+        all:"All",
+      },
+      action_type:{
+        deny:"Deny",
+        replace:"Replace",
+      },
     },
     systemconfig: {
       new_system_configuration: "Add New System Configuration",

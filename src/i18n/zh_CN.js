@@ -514,6 +514,17 @@ export default {
       type_option_1:"类型1",
       type_option_2:"类型2",
       type_option_3:"类型3",
+      label_check_direction:"检测方向",
+      label_action:"执行动作",
+      check_direction_type:{
+        in:"请求",
+        out:"返回",
+        all:"所有",
+      },
+      action_type:{
+        deny:"阻止",
+        replace:"替换",
+      },
     },
     systemconfig:{
       new_system_configuration: "新建系统配置",
