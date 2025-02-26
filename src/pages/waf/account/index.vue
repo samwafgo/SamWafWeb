@@ -25,6 +25,7 @@
           :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickResetPwd(slotProps)">{{$t('page.account.reset_password')}}</a>
+            <a class="t-button-link" @click="handleClickResetOtp(slotProps)">{{$t('page.account.reset_otp')}}</a>
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{$t('common.edit')}}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{$t('common.delete')}}</a>
           </template>
@@ -131,7 +132,7 @@
     prefix
   } from '@/config/global';
   import {
-    account_list_api
+    account_list_api,account_reset_2fa_api
   } from '@/apis/account';
 
   const INITIAL_DATA = {
@@ -388,6 +389,23 @@
         this.resetPwdFormVisible = true
         this.getDetailModifyPwd(id)
       },
+      handleClickResetOtp(e) {
+        console.log(e)
+        const {
+          login_account
+        } = e.row
+        console.log(login_account)
+        account_reset_2fa_api({
+          login_account:login_account
+        }).then((res) => {
+          if (res.code === 0) {
+            this.$message.success(res.msg);
+            this.getList("")
+          } else {
+            this.$message.warning(res.msg);
+          }
+        })
+      },
       onSubmit({
         result,
         firstError
@@ -487,6 +505,43 @@
                 that.$message.success(resdata.msg);
                 that.resetPwdFormVisible = false;
                 that.pagination.current = 1
+                that.getList("")
+              } else {
+                that.$message.warning(resdata.msg);
+              }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            })
+            .finally(() => {});
+        } else {
+          console.log('Errors: ', result);
+          that.$message.warning(firstError);
+        }
+      },
+      /**
+       * 重置2FA
+       * @param result
+       * @param firstError
+       */
+      onSubmitResetOTP({
+                         result,
+                         firstError
+                       }): void {
+        let that = this
+        if (!firstError) {
+          let postdata = {
+            ...that.formResetPwdData
+          }
+          this.$request
+            .post('/account/resetotp', {
+              ...postdata
+            })
+            .then((res) => {
+              let resdata = res
+              console.log(resdata)
+              if (resdata.code === 0) {
+                that.$message.success(resdata.msg);
                 that.getList("")
               } else {
                 that.$message.warning(resdata.msg);

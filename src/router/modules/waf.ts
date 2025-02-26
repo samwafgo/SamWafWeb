@@ -173,7 +173,12 @@ export default [
           component: () => import('@/pages/waf/accountlog/index.vue'),
           meta: { title: 'menu.account.account_log_title'  },
        },
-
+       {
+         path: 'OTP',
+         name: 'OTP',
+         component: () => import('@/pages/waf/otp/index.vue'),
+         meta: { title: 'menu.account.otp_title' },
+       },
 
      ],
    },

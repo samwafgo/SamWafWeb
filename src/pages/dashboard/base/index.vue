@@ -6,6 +6,8 @@
           <template #operation="row">
             <span @click="handleCreateWebOperation" v-if="item.name==='emptyHost'" >{{$t('dashboard.tip_create_website_link')}}</span>
             <span @click="handleModifyDefaultPassWebOperation" v-if="item.name==='defaultAccount'" >{{$t('dashboard.tip_modify_pwd_link')}}</span>
+            <span @click="handleModify2FaWebOperation" v-if="item.name==='emptyOtp'" >{{$t('dashboard.tip_empty_otp_link')}}</span>
+
           </template>
         </t-alert>
       </t-swiper-item>
@@ -57,6 +59,12 @@ export default {
           message:'dashboard.tip_modify_pwd_title',
           tipsType:"error"
         },
+        {
+          name:"emptyOtp",
+          visable:false,
+          message:'dashboard.tip_empty_otp_title',
+          tipsType:"error"
+        },
       ]
     }
   },
@@ -80,7 +88,8 @@ export default {
           },
         },
       );
-    },//引导修改默认密码
+    },
+    //引导修改默认密码
     handleModifyDefaultPassWebOperation(){
       this.$router.push(
         {
@@ -91,12 +100,24 @@ export default {
         },
       );
     },
+    //引导用户去设置2fa
+    handleModify2FaWebOperation(){
+      this.$router.push(
+        {
+          path: '/account/otp',
+          query: {
+            sourcePage: "HomeFirst",
+          },
+        },
+      );
+    },
     loadSysInfo(){
       wafStatSysinfoapi({}).then((res)=>{
         console.log("home res",res.data)
         this.tips[0].visable = res.data.is_empty_host
         this.tips[1].visable = res.data.is_default_account
-        this.tipsVisable = this.tips[0].visable || this.tips[1].visable
+        this.tips[2].visable = res.data.is_empty_otp
+        this.tipsVisable = this.tips[0].visable || this.tips[1].visable || this.tips[2].visable
       } ).catch((e: Error) => {
         console.log(e);
       }).finally(() => {})

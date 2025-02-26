@@ -57,6 +57,7 @@ export default {
     login_online_document:"SamWaf在线文档",
     input_account_placeholder:"请输入账号：",
     input_password_placeholder:"请输入登录密码：",
+    input_secret_code_placeholder:"请输入安全码：",
     login_btn_title:"登录",
     rule:{
       phone:"手机号必填",
@@ -84,6 +85,8 @@ export default {
     tip_create_website_link:"马上创建",
     tip_modify_pwd_title:"您当前还是使用默认帐号和密码请尽快修改",
     tip_modify_pwd_link:"马上修改",
+    tip_empty_otp_title:"您当前尚未绑定双因素认证(2FA)，建议尽快绑定",
+    tip_empty_otp_link:"马上绑定",
     counter:{
       today_of_attack_count:"今日攻击数",
       all_visit_count:"今天总访问量",
@@ -144,6 +147,7 @@ export default {
     },
     account:{
       parent_title:"账号管理",
+      otp_title:"双因素认证(2FA)",
       account_list_title:"账号列表",
       account_log_title:"账号日志",
     },
@@ -165,6 +169,7 @@ export default {
       create_account: "新建账号",
       login_account_label: "登录帐号",
       reset_password: "重置密码",
+      reset_otp: "重置2FA",
       role: "角色",
       role_super_admin: "超级管理员",
       role_admin: "管理员",
@@ -174,6 +179,13 @@ export default {
       confirm_password: "确认密码",
       password_mismatch_warning: "两次输入的密码不相同，请检查",
       admin_delete_warning: "默认管理帐号不允许删除",
+    },
+    otp:{
+      alert_message: "SamWaf 双因素认证（ Two-Factor Authentication、缩写 2FA）是一种安全的登录验证技术。要求用户登录时除密码外，需要额外的身份验证信息从而提升帐号的安全性。",
+      secret_code: "输入安全码",
+      bind_success_tip:"您已经成功绑定，如果需要解绑，请点击更多展开",
+      bind: "绑定",
+      unbind: "解绑",
     },
     account_log:{
       export_logs: "导出日志",

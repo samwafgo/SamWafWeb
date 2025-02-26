@@ -17,3 +17,11 @@ export function account_log_list_api(params) {
     params: params
   })
 }
+// 重置2Fa
+export function account_reset_2fa_api(data) {
+  return request({
+    url: 'account/resetotp',
+    method: 'post',
+    data: data
+  })
+}

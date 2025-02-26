@@ -44,6 +44,15 @@
           </template>
         </t-input>
       </t-form-item>
+      <t-form-item name="secretCode" v-if="showSecretCode">
+        <t-input v-model="formData.secret_code" size="large" :type="'password'"  clearable  :placeholder="$t('login.input_secret_code_placeholder')" >
+          <template #prefix-icon>
+            <lock-on-icon />
+          </template>
+        </t-input>
+
+      </t-form-item>
+
     </template>
 
     <t-form-item v-if="type !== 'qrcode'" class="btn-container">
@@ -62,6 +71,7 @@ const INITIAL_DATA = {
   account: '',
   password: '',
   verifyCode: '',
+  secret_code: '',
   checked: false,
 };
 
@@ -88,6 +98,7 @@ export default Vue.extend({
       type: 'password',
       formData: { ...INITIAL_DATA },
       showPsw: false,
+      showSecretCode: false,
       countDown: 0,
       intervalTimer: null,
       /**语言问题**/
@@ -140,7 +151,7 @@ export default Vue.extend({
     },
      onSubmit({ validateResult }) {
       if (validateResult === true) {
-        loginapi({login_account:this.formData.account,login_password:this.formData.password})
+        loginapi({login_account:this.formData.account,login_password:this.formData.password,login_otp_secret_code:this.formData.secret_code})
         .then((res)=>{
             console.log(res)
             if(res.code==0){
@@ -153,6 +164,10 @@ export default Vue.extend({
                    this.$router.replace('/').catch(() => '');
                 },1000)
 
+            }else if(res.code==-2){
+                this.showSecretCode = true
+                this.formData.secretCode = ""
+                this.$message.error(res.msg);
             }else{
               this.$message.error(res.msg);
             }

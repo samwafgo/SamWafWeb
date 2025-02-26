@@ -57,6 +57,7 @@ export default {
     login_online_document: "SamWaf Online Documentation",
     input_account_placeholder: "Please enter your account:",
     input_password_placeholder: "Please enter your password:",
+    input_secret_code_placeholder: "Please enter your secret code:",
     login_btn_title: "Login",
     rule:{
       phone: "Phone number is required",
@@ -84,6 +85,8 @@ export default {
     tip_create_website_link: "Create now",
     tip_modify_pwd_title: "You are still using the default account and password, please change it soon",
     tip_modify_pwd_link: "Change now",
+    tip_empty_otp_title: "You have not bound 2FA yet. It is recommended to bind as soon as possible",
+    tip_empty_otp_link: "Bind Now",
     counter:{
       today_of_attack_count: "Today's Attack Count",
       all_visit_count: "Total Visits Today",
@@ -144,6 +147,7 @@ export default {
     },
     account:{
       parent_title: "Account",
+      otp_title:"Two-factor auth (2FA)",
       account_list_title: "Account List",
       account_log_title: "Account Logs",
     },
@@ -165,6 +169,7 @@ export default {
       create_account: "Create Account",
       login_account_label: "Login Account",
       reset_password: "Reset Password",
+      reset_otp: "Reset 2FA",
       role: "Role",
       role_super_admin: "Super Administrator",
       role_admin: "Administrator",
@@ -174,6 +179,13 @@ export default {
       confirm_password: "Confirm Password",
       password_mismatch_warning: "The passwords do not match, please check",
       admin_delete_warning: "The default admin account cannot be deleted",
+    },
+    otp:{
+      alert_message: "SamWaf Two-Factor Authentication (2FA) is a secure login verification technology. It requires users to provide additional authentication information during login, in addition to their password, to enhance account security.",
+      secret_code: "Enter Security Code",
+      bind_success_tip: "Successfully bound. If you need to unbind, please click More to expand",
+      bind: "Bind",
+      unbind: "Unbind",
     },
     account_log:{
       export_logs: "Export Logs",

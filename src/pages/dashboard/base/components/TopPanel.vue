@@ -112,7 +112,7 @@ export default {
       switch (title){
         case 0: //今日攻击数量
           this.$router.push({
-        		path: '/waf/wafattacklog',
+        		path: '/waf/wafvisitlog',
         		query: {
         			action: "阻止"
         		}
@@ -120,14 +120,14 @@ export default {
           break;
         case 1: //今天总访问量
         this.$router.push({
-        	path: '/waf/wafattacklog',
+        	path: '/waf/wafvisitlog',
         	query: {
 
         	}
         });break;
         case 2: //今天异常IP（个）
         this.$router.push({
-        	path: '/waf/wafattacklog',
+        	path: '/waf/wafvisitlog',
         	query: {
         		action: "禁止"
         	}
