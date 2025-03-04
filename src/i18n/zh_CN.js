@@ -290,6 +290,13 @@ export default {
           before_send_ai:"发送AI前确认信息",
           before_send_ai_tip:"发送给AI前，内容已经屏蔽常见的敏感信息：header:Authorization, Token,Api-Key, Secret, Access-Token,X-Api-Key,X-Access-Token, X-Secret,Session-Key, Set-Cookie  cookies:sessionid|auth|token|key|secret ，如果有其他字段请自行屏蔽，或者欢迎提交issue",
         },
+        time_cost:{
+          title: "耗时(ms)",
+          total_cost:"总耗时",
+          pre_check_cost:"请求处理耗时",
+          forward_cost:"转发耗时",
+          backend_check_cost:"响应处理耗时",
+        }
       }
     },
     attack_log:{

@@ -290,6 +290,13 @@ export default {
           before_send_ai :"Before you send content to ai",
           before_send_ai_tip:"Before you send content to ai,Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue. ",
         },
+        time_cost:{
+          title: "Time Cost(ms)",
+          total_cost:"Total Time Cost",
+          pre_check_cost:"Req Check Cost",
+          forward_cost:"Forward Cost",
+          backend_check_cost:"Response Check Cost",
+        }
        }
     },
     attack_log:{

@@ -120,6 +120,28 @@
       <t-textarea v-model="detail_data.res_body" :autosize="{ minRows: 5, maxRows: 10 }" readonly />
 
     </t-card>
+    <t-card :title="$t('page.visit_log.detail.time_cost.title')" >
+      <div class="info-block">
+        <div class="info-item">
+          <h1> {{ $t('page.visit_log.detail.time_cost.pre_check_cost') }}</h1>
+          <span>
+            {{ detail_data.pre_check_cost }}ms
+          </span>
+        </div>
+        <div class="info-item">
+          <h1> {{ $t('page.visit_log.detail.time_cost.forward_cost') }}</h1>
+          <span>
+            {{ detail_data.forward_cost }}ms
+          </span>
+        </div>
+        <div class="info-item">
+          <h1> {{ $t('page.visit_log.detail.time_cost.backend_check_cost') }}</h1>
+          <span>
+            {{ detail_data.backend_check_cost }}ms
+          </span>
+        </div>
+      </div>
+    </t-card>
 
     <t-dialog :header="$t('page.visit_log.detail.http_copy_mask')"  :visible.sync="httpCopyMaskVisible"
               @confirm="()=>{httpCopyMaskVisible=false}"
