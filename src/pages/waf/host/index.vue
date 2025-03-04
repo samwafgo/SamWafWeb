@@ -298,6 +298,15 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.dir_traversal_detection')">
+                <t-tooltip class="placement top center" :content="$t('page.host.dir_traversal_detection_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="hostDefenseData.traversal">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
             </t-tab-panel>
             <t-tab-panel :value="4">
               <template #label>
@@ -530,6 +539,15 @@
                   </t-radio-group>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.dir_traversal_detection')">
+                <t-tooltip class="placement top center" :content="$t('page.host.dir_traversal_detection_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="hostDefenseData.traversal">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
             </t-tab-panel>
             <t-tab-panel :value="4">
               <template #label>
@@ -685,7 +703,7 @@ const INITIAL_DATA = {
   remote_app: "默认",
   guard_status: '',
   remarks: '',
-  defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1}',
+  defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1,"traversal":1}',
   start_status: '0',
   exclude_url_log:'',
   is_enable_load_balance: '0',
@@ -755,6 +773,7 @@ export default Vue.extend({
         scan: "1",
         rce: "1",
         sensitive:"1",
+        traversal:"1",
       },
       rules: {
         host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
@@ -1223,6 +1242,7 @@ export default Vue.extend({
             that.hostDefenseData.scan = getOrDefault(defenseJson,"scan","1")
             that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
             that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
+            that.hostDefenseData.traversal = getOrDefault(defenseJson,"traversal","1")
           }
         })
         .catch((e: Error) => {
@@ -1282,7 +1302,8 @@ export default Vue.extend({
           xss: parseInt(this.hostDefenseData.xss),
           scan: parseInt(this.hostDefenseData.scan),
           rce: parseInt(this.hostDefenseData.rce),
-          sensitive: parseInt(this.hostDefenseData.sensitive)
+          sensitive: parseInt(this.hostDefenseData.sensitive),
+          traversal: parseInt(this.hostDefenseData.traversal)
         }
         postdata['defense_json'] = JSON.stringify(defenseData)
         addHost( {
@@ -1342,6 +1363,7 @@ export default Vue.extend({
           scan: parseInt(this.hostDefenseData.scan),
           rce: parseInt(this.hostDefenseData.rce),
           sensitive: parseInt(this.hostDefenseData.sensitive),
+          traversal: parseInt(this.hostDefenseData.traversal),
         }
         postdata['defense_json'] = JSON.stringify(defenseData)
         console.log('editHost',postdata)
@@ -1379,6 +1401,7 @@ export default Vue.extend({
         scan: "1",
         rce: "1",
         sensitive: "1",
+        traversal: "1",
       }
     },
     onClickCloseEditBtn(): void {
@@ -1391,6 +1414,7 @@ export default Vue.extend({
         scan: "1",
         rce: "1",
         sensitive: "1",
+        traversal: "1",
       }
     },
     handleClickDelete(row) {
@@ -1483,6 +1507,7 @@ export default Vue.extend({
             that.hostDefenseData.scan = getOrDefault(defenseJson,"scan","1")
             that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
             that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
+            that.hostDefenseData.traversal = getOrDefault(defenseJson,"traversal","1")
             console.log(that.hostDefenseData)
             console.log(that.formEditData)
           }

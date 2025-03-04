@@ -399,6 +399,8 @@ export default {
       rce_detection_tips: "RCE Remote Attack Detection",
       sensitive_detection: "Sensitive Detection",
       sensitive_detection_tips: "Sensitive Detection",
+      dir_traversal_detection: "Dir Traversal Detection",
+      dir_traversal_detection_tips: "Dir Traversal Detection",
       engine_protection: "Engine Built-in Protection",
       other_config: "Other Configurations",
       guard_status_confirm: "Protection Status Reminder",
