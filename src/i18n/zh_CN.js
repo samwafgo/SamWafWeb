@@ -186,6 +186,7 @@ export default {
       bind_success_tip:"您已经成功绑定，如果需要解绑，请点击更多展开",
       bind: "绑定",
       unbind: "解绑",
+      cannot_scan: "无法扫描二维码?",
     },
     account_log:{
       export_logs: "导出日志",

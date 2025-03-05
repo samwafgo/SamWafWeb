@@ -186,6 +186,7 @@ export default {
       bind_success_tip: "Successfully bound. If you need to unbind, please click More to expand",
       bind: "Bind",
       unbind: "Unbind",
+      cannot_scan: "Scan failed?",
     },
     account_log:{
       export_logs: "Export Logs",

@@ -18,6 +18,9 @@
         <t-form v-if="!isBind" :data="formData" ref="form" :rules="rules" @submit="onBindSubmit" :labelWidth="200">
           <t-form-item style="text-align: center">
             <qrcode-vue :value="formData.url" :size="qrSize" level="H" />
+            <t-popup :content="formData.secret">
+              <t-button variant="outline">{{ $t('page.otp.cannot_scan') }}</t-button>
+            </t-popup>
           </t-form-item>
           <t-form-item :label="$t('page.otp.secret_code')" name="secret_code">
             <t-input :style="{ width: '480px' }" v-model="formData.secret_code" ></t-input>
