@@ -12,7 +12,8 @@ const CODE = {
   LOGIN_TIMEOUT: 1000,
   REQUEST_SUCCESS: 0,
   REQUEST_FOBID: 1001,
-  AUTH_FAILURE :-999
+  AUTH_FAILURE :-999,
+  NEED_BIND_2FA :-3
 };
 
 const instance = axios.create({
@@ -99,7 +100,12 @@ instance.interceptors.response.use(
           });
           console.log("鉴权失败")
           router.replace({path: '/login'})
-        }else if(remoteBean  && data.code === CODE.AUTH_FAILURE){
+        }else if(!remoteBean  && data.code === CODE.NEED_BIND_2FA){
+
+          console.log("需要2Fa强制绑定")
+          router.replace({path: '/account/OTP'})
+        }
+        else if(remoteBean  && data.code === CODE.AUTH_FAILURE){
           remoteBean = JSON.parse(localStorage.getItem("current_server"))
           data.code = -1
           data.msg = remoteBean.client_server_name + " 远端鉴权失败"
