@@ -40,6 +40,7 @@
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #healthy_status="{ row }">
             <health-status
+              v-if="row.global_host!==1"
               :healthyStatus="row.healthy_status"
               :isLoadBalance="row.is_enable_load_balance === '1' || row.is_enable_load_balance === 1"
             />
