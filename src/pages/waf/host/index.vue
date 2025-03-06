@@ -38,18 +38,24 @@
                  @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"  @sort-change="onSortChange"
                  @filter-change="onFilterChange"
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
+          <template #healthy_status="{ row }">
+            <health-status
+              :healthyStatus="row.healthy_status"
+              :isLoadBalance="row.is_enable_load_balance === '1' || row.is_enable_load_balance === 1"
+            />
+          </template>
           <template #guard_status="{ row }">
-              <t-switch size="medium" v-model="row.guard_status ===1" :label="[$t('page.host.guard_status_on'), $t('page.host.guard_status_off')]"
-                   @change="changeGuardStatus($event,row)">
-              </t-switch>
+            <t-switch size="medium" v-model="row.guard_status ===1" :label="[$t('page.host.guard_status_on'), $t('page.host.guard_status_off')]"
+                      @change="changeGuardStatus($event,row)">
+            </t-switch>
           </template>
           <template #real_time="{ row }">
             <span :title="$t('page.host.real_qps')">{{row.real_time_qps}}</span> / <span :title="$t('page.host.real_active')">{{row.real_time_connect_cnt}}</span>
           </template>
           <template #start_status="{ row }">
-              <t-switch size="medium" v-model="row.start_status===0" :label="[$t('page.host.auto_start_on'), $t('page.host.auto_start_off')]"
-                        @change="changeStartStatus($event,row)">
-              </t-switch>
+            <t-switch size="medium" v-model="row.start_status===0" :label="[$t('page.host.auto_start_on'), $t('page.host.auto_start_off')]"
+                      @change="changeStartStatus($event,row)">
+            </t-switch>
           </template>
           <template #ssl="{ row }">
             <p v-if="row.ssl === SSL_STATUS.NOT_SSL">{{ $t('page.host.ssl_no') }}</p>
@@ -97,7 +103,7 @@
                 <t-tooltip class="placement top center"
                            :content="$t('page.host.bind_more_port_tips')"
                            placement="top" :overlay-style="{ width: '200px' }" show-arrow>
-                {{ $t('page.host.bind_more_port')  }} <t-input :style="{ width: '200px' }" v-model="formData.bind_more_port" :placeholder="$t('page.host.bind_more_port_placeholder')"></t-input>
+                  {{ $t('page.host.bind_more_port')  }} <t-input :style="{ width: '200px' }" v-model="formData.bind_more_port" :placeholder="$t('page.host.bind_more_port_placeholder')"></t-input>
                 </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.ssl')" name="ssl">
@@ -131,10 +137,10 @@
                 </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.auto_jump_https.label_autu_jump_https')" name="auto_jump_https"  v-if="formData.ssl=='1'">
-                  <t-radio-group v-model="formData.auto_jump_https">
-                    <t-radio value="0">{{ $t('page.host.auto_jump_https.label_autu_jump_https_off') }}</t-radio>
-                    <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
-                  </t-radio-group>
+                <t-radio-group v-model="formData.auto_jump_https">
+                  <t-radio value="0">{{ $t('page.host.auto_jump_https.label_autu_jump_https_off') }}</t-radio>
+                  <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
+                </t-radio-group>
               </t-form-item>
               <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
                 <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
@@ -196,10 +202,10 @@
                   placement="top"
                   :overlay-style="{ width: '200px' }"
                   show-arrow>
-                <t-radio-group v-model="formData.is_trans_back_domain">
-                  <t-radio value="0">{{ $t('common.off') }}</t-radio>
-                  <t-radio value="1">{{ $t('common.on') }}</t-radio>
-                </t-radio-group>
+                  <t-radio-group v-model="formData.is_trans_back_domain">
+                    <t-radio value="0">{{ $t('common.off') }}</t-radio>
+                    <t-radio value="1">{{ $t('common.on') }}</t-radio>
+                  </t-radio-group>
                 </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formData.is_enable_load_balance!='1'">
@@ -315,9 +321,9 @@
               <t-form-item :label="$t('page.host.exclude_url_log')" name="exclude_url_log">
                 <t-tooltip class="placement top center" :content="$t('page.host.exclude_url_log_tips')" placement="top"
                            :overlay-style="{ width: '200px' }" show-arrow>
-                <t-textarea :style="{ width: '480px' }" v-model="formData.exclude_url_log" :placeholder="$t('common.placeholder')"
-                            name="exclude_url_log">
-                </t-textarea>
+                  <t-textarea :style="{ width: '480px' }" v-model="formData.exclude_url_log" :placeholder="$t('common.placeholder')"
+                              name="exclude_url_log">
+                  </t-textarea>
                 </t-tooltip>
               </t-form-item>
             </t-tab-panel>
@@ -339,7 +345,71 @@
                 <http-auth-base  :propHostCode="formData.code"></http-auth-base>
               </t-form-item>
             </t-tab-panel>
+           <!-- 添加健康度检测标签页 -->
+           <t-tab-panel :value="6">
+              <template #label>
+                <t-icon name="health" style="margin-right: 4px;color:#00a870"/>
+                {{$t('page.host.tab_health_check')}}
+              </template>
 
+              <t-form-item :label="$t('page.host.health_check.is_enable_healthy')">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.is_enable_healthy_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="healthyConfigData.is_enable_healthy">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.check_method')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_method_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="healthyConfigData.check_method">
+                    <t-radio value="GET">GET</t-radio>
+                    <t-radio value="HEAD">HEAD</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.check_path')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_path_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.check_path" :placeholder="$t('page.host.health_check.check_path_placeholder')"></t-input>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.expected_codes')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.expected_codes_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.expected_codes" :placeholder="$t('page.host.health_check.expected_codes_placeholder')"></t-input>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.response_time')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.response_time_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.response_time" :min="1" :max="300"></t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.health_check.seconds')}}</span>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.fail_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.fail_count_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.fail_count" :min="1" :max="10"></t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.success_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.success_count_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.success_count" :min="1" :max="10"></t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
+                </t-tooltip>
+              </t-form-item>
+            </t-tab-panel>
           </t-tabs>
 
           <t-form-item style="float: right;margin-top:5px">
@@ -443,10 +513,10 @@
                   placement="top"
                   :overlay-style="{ width: '200px' }"
                   show-arrow>
-                <t-radio-group v-model="formEditData.is_trans_back_domain">
-                  <t-radio value="0">{{ $t('common.off') }}</t-radio>
-                  <t-radio value="1">{{ $t('common.on') }}</t-radio>
-                </t-radio-group>
+                  <t-radio-group v-model="formEditData.is_trans_back_domain">
+                    <t-radio value="0">{{ $t('common.off') }}</t-radio>
+                    <t-radio value="1">{{ $t('common.on') }}</t-radio>
+                  </t-radio-group>
                 </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formEditData.is_enable_load_balance!='1'">
@@ -563,8 +633,8 @@
                 </t-tooltip>
               </t-form-item>
               <t-form-item :label="$t('page.host.response_time_out')" name="response_time_out">
-                  <t-input-number min="0" :style="{ width: '150px' }" v-model="formEditData.response_time_out" :content="$t('page.host.response_time_out_tips')">
-                  </t-input-number>
+                <t-input-number min="0" :style="{ width: '150px' }" v-model="formEditData.response_time_out" :content="$t('page.host.response_time_out_tips')">
+                </t-input-number>
               </t-form-item>
             </t-tab-panel>
             <t-tab-panel :value="5">
@@ -582,6 +652,71 @@
               </t-form-item>
               <t-form-item >
                 <http-auth-base  :propHostCode="formEditData.code"></http-auth-base>
+              </t-form-item>
+            </t-tab-panel>
+            <!-- 添加健康度检测标签页 -->
+            <t-tab-panel :value="6">
+              <template #label>
+                <t-icon name="health" style="margin-right: 4px;color:#00a870"/>
+                {{$t('page.host.tab_health_check')}}
+              </template>
+
+              <t-form-item :label="$t('page.host.health_check.is_enable_healthy')">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.is_enable_healthy_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="healthyConfigData.is_enable_healthy">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.check_method')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_method_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="healthyConfigData.check_method">
+                    <t-radio value="GET">GET</t-radio>
+                    <t-radio value="HEAD">HEAD</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.check_path')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_path_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.check_path" :placeholder="$t('page.host.health_check.check_path_placeholder')"></t-input>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.expected_codes')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.expected_codes_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.expected_codes" :placeholder="$t('page.host.health_check.expected_codes_placeholder')"></t-input>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.response_time')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.response_time_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.response_time" :min="1" :max="300"></t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.health_check.seconds')}}</span>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.fail_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.fail_count_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.fail_count" :min="1" :max="10"></t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.health_check.success_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.health_check.success_count_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.success_count" :min="1" :max="10"></t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
+                </t-tooltip>
               </t-form-item>
             </t-tab-panel>
           </t-tabs>
@@ -669,7 +804,7 @@
     <t-dialog :header="$t('page.host.ssl_auto_apply')" :visible.sync="sslAutoApplyVisible" :width="900" :footer="false">
       <div slot="body">
         <ssl-order-list :src-host-code="currentHostCode"></ssl-order-list>
-        </div>
+      </div>
     </t-dialog>
   </div>
 </template>
@@ -691,6 +826,7 @@ import {
 } from '@/constants';
 import LoadBalance from "../loadbalance/index.vue";
 import HttpAuthBase from "../http_auth_base/index.vue"
+import HealthStatus from "@/components/health-status/HealthStatus.vue";
 
 const INITIAL_DATA = {
   host: 'www.baidu.com',
@@ -704,6 +840,7 @@ const INITIAL_DATA = {
   guard_status: '',
   remarks: '',
   defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1,"traversal":1}',
+  healthy_json: '{"is_enable_healthy":1,"fail_count":3,"success_count":3,"response_time":60,"check_method":"GET","check_path":"/","expected_codes":"200,"}',
   start_status: '0',
   exclude_url_log:'',
   is_enable_load_balance: '0',
@@ -724,6 +861,15 @@ const INITIAL_SSL_DATA = {
   cert_path: '',
   key_path: '',
 };
+const INITIAL_HEALTHY={
+    is_enable_healthy: "1",
+    fail_count: "3",
+    success_count: "3",
+    response_time: "5",
+    check_method: 'GET',
+    check_path: '/',
+    expected_codes: '200,',
+}
 export default Vue.extend({
   name: 'ListBase',
   components: {
@@ -733,12 +879,13 @@ export default Vue.extend({
     SslOrderList,
     LoadBalance,
     HttpAuthBase,
+    HealthStatus
   },
   data() {
     return {
       uploadParams:{
-          import_code_strategy: '0',//编码导入策略 0 新增自动生成 1 保留原有
-          import_table:"hosts",//导入到哪个表
+        import_code_strategy: '0',//编码导入策略 0 新增自动生成 1 保留原有
+        import_table:"hosts",//导入到哪个表
       },
       files: [],
       tips: this.$t('page.host.upload_file_limit_size'),
@@ -886,6 +1033,14 @@ export default Vue.extend({
       selectedRowKeys: [],
       value: 'first',
       columns: [
+        {
+          title: this.$t('page.host.healthy_status'),
+          colKey: 'healthy_status',
+          width: 100,
+          cell: {
+            col: 'healthy_status'
+          }
+        },
         {
           title: this.$t('page.host.host'),
           align: 'left',
@@ -1083,6 +1238,16 @@ export default Vue.extend({
       selectCanFilter:true,
       //当前选择的主机
       currentHostCode:"",
+      // 添加健康度检测配置数据
+      healthyConfigData: {
+        is_enable_healthy: "1",
+        fail_count: "3",
+        success_count: "3",
+        response_time: "5",
+        check_method: 'GET',
+        check_path: '/',
+        expected_codes: '200,',
+      },
     };
   },
   computed: {
@@ -1243,6 +1408,15 @@ export default Vue.extend({
             that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
             that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
             that.hostDefenseData.traversal = getOrDefault(defenseJson,"traversal","1")
+            if (that.detail_data.healthy_json!=""){
+              that.healthyConfigData = JSON.parse(that.detail_data.healthy_json)
+              that.healthyConfigData.is_enable_healthy = getOrDefault(this.healthyConfigData,"is_enable_healthy","1")
+              that.healthyConfigData.fail_count = getOrDefault(this.healthyConfigData,"fail_count","3")
+              that.healthyConfigData.success_count = getOrDefault(this.healthyConfigData,"success_count","3")
+              that.healthyConfigData.response_time = getOrDefault(this.healthyConfigData,"response_time","5")
+            }else{
+              that.healthyConfigData = {...INITIAL_HEALTHY }
+            }
           }
         })
         .catch((e: Error) => {
@@ -1283,8 +1457,8 @@ export default Vue.extend({
         }
         postdata.host = postdata.host.toLowerCase();
         if (postdata.host.indexOf("http://") >=0 || postdata.host.indexOf("https://") >=0) {
-           that.$message.warning(this.$t('page.host.host_rule_msg'));
-           return
+          that.$message.warning(this.$t('page.host.host_rule_msg'));
+          return
         }
         postdata.remote_host = "http://" + postdata.host
         postdata['ssl'] = Number(postdata['ssl'])
@@ -1306,9 +1480,20 @@ export default Vue.extend({
           traversal: parseInt(this.hostDefenseData.traversal)
         }
         postdata['defense_json'] = JSON.stringify(defenseData)
+
+        let healthyData= {
+            is_enable_healthy: parseInt(this.healthyConfigData.is_enable_healthy),
+            fail_count: parseInt(this.healthyConfigData.fail_count),
+            success_count:parseInt(this.healthyConfigData.success_count),
+            response_time: parseInt(this.healthyConfigData.response_time),
+            check_method: this.healthyConfigData.check_method,
+            check_path: this.healthyConfigData.check_path,
+            expected_codes: this.healthyConfigData.expected_codes,
+        }
+        postdata['healthy_json'] = JSON.stringify(healthyData)
         addHost( {
-            ...postdata
-          })
+          ...postdata
+        })
           .then((res) => {
             let resdata = res
             console.log(resdata)
@@ -1366,10 +1551,20 @@ export default Vue.extend({
           traversal: parseInt(this.hostDefenseData.traversal),
         }
         postdata['defense_json'] = JSON.stringify(defenseData)
+        let healthyData= {
+          is_enable_healthy: parseInt(this.healthyConfigData.is_enable_healthy),
+          fail_count: parseInt(this.healthyConfigData.fail_count),
+          success_count:parseInt(this.healthyConfigData.success_count),
+          response_time: parseInt(this.healthyConfigData.response_time),
+          check_method: this.healthyConfigData.check_method,
+          check_path: this.healthyConfigData.check_path,
+          expected_codes: this.healthyConfigData.expected_codes,
+        }
+        postdata['healthy_json'] = JSON.stringify(healthyData)
         console.log('editHost',postdata)
         editHost( {
-            ...postdata
-          })
+          ...postdata
+        })
           .then((res) => {
             let resdata = res
             console.log(resdata)
@@ -1403,6 +1598,9 @@ export default Vue.extend({
         sensitive: "1",
         traversal: "1",
       }
+      this.healthyConfigData = {
+        ...INITIAL_HEALTHY
+      }
     },
     onClickCloseEditBtn(): void {
       this.editFormVisible = false;
@@ -1415,6 +1613,9 @@ export default Vue.extend({
         rce: "1",
         sensitive: "1",
         traversal: "1",
+      }
+      this.healthyConfigData = {
+        ...INITIAL_HEALTHY
       }
     },
     handleClickDelete(row) {
@@ -1450,8 +1651,8 @@ export default Vue.extend({
       } = this.data[this.deleteIdx]
       let that = this
       delHost({
-            CODE: code,
-          })
+        CODE: code,
+      })
         .then((res) => {
           let resdata = res
           console.log(resdata)
@@ -1481,8 +1682,8 @@ export default Vue.extend({
     getDetail(id) {
       let that = this
       getHostDetail({
-            CODE: id,
-          })
+        CODE: id,
+      })
         .then((res) => {
           let resdata = res
           console.log(resdata)
@@ -1508,6 +1709,18 @@ export default Vue.extend({
             that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
             that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
             that.hostDefenseData.traversal = getOrDefault(defenseJson,"traversal","1")
+
+
+            if (that.detail_data.healthy_json!=""){
+              that.healthyConfigData = JSON.parse(that.detail_data.healthy_json)
+              that.healthyConfigData.is_enable_healthy = getOrDefault(this.healthyConfigData,"is_enable_healthy","1")
+              that.healthyConfigData.fail_count = getOrDefault(this.healthyConfigData,"fail_count","3")
+              that.healthyConfigData.success_count = getOrDefault(this.healthyConfigData,"success_count","3")
+              that.healthyConfigData.response_time = getOrDefault(this.healthyConfigData,"response_time","5")
+            }else{
+              that.healthyConfigData = {...INITIAL_HEALTHY }
+            }
+
             console.log(that.hostDefenseData)
             console.log(that.formEditData)
           }
@@ -1747,9 +1960,9 @@ export default Vue.extend({
       }
     },
     onSSLSubmit({
-               result,
-               firstError
-             }): void {
+                  result,
+                  firstError
+                }): void {
       let that = this;
       if (!firstError) {
         sslConfigAddApi({
@@ -1767,9 +1980,9 @@ export default Vue.extend({
       }
     },
     onSSLSubmitEdit({
-                  result,
-                  firstError
-                }): void {
+                      result,
+                      firstError
+                    }): void {
       let that = this;
       if (!firstError) {
         sslConfigEditApi({
@@ -1793,11 +2006,11 @@ export default Vue.extend({
         // 你可以在这里处理需要的逻辑，例如复制 selectedItem
         console.log('Selected SSL Item:', selectedItem);
         if(this.addFormVisible){
-            this.formData.certfile = selectedItem.cert_content
-            this.formData.keyfile = selectedItem.key_content
+          this.formData.certfile = selectedItem.cert_content
+          this.formData.keyfile = selectedItem.key_content
         }else if(this.editFormVisible){
-            this.formEditData.certfile = selectedItem.cert_content
-            this.formEditData.keyfile = selectedItem.key_content
+          this.formEditData.certfile = selectedItem.cert_content
+          this.formEditData.keyfile = selectedItem.key_content
         }
       }
     },
@@ -1854,11 +2067,11 @@ export default Vue.extend({
 .payment-col {
   display: flex;
 
-.trend-container {
-  display: flex;
-  align-items: center;
-  margin-left: 8px;
-}
+  .trend-container {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+  }
 
 }
 
@@ -1866,11 +2079,11 @@ export default Vue.extend({
   padding: 0 0 6px 0;
   margin-bottom: 16px;
 
-.selected-count {
-  display: inline-block;
-  margin-left: 8px;
-  color: var(--td-text-color-secondary);
-}
+  .selected-count {
+    display: inline-block;
+    margin-left: 8px;
+    color: var(--td-text-color-secondary);
+  }
 
 }
 
