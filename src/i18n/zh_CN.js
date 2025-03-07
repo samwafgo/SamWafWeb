@@ -389,6 +389,8 @@ export default {
       exclude_url_log_tips: "记录日志时排除URL开头的数据",
       response_time_out: "响应超时时间(单位秒)",
       response_time_out_tips: "如果填写0则无限等待，不建议",
+      insecure_skip_verify: '跳过HTTPS证书验证',
+      insecure_skip_verify_tips: '开启后将不验证后端HTTPS服务器的证书有效性，可能存在安全风险',
       bot_detection: "Bot检测",
       bot_detection_tips: "检测搜索引擎是否是伪装的",
       sql_injection_detection: "Sql注入检测",

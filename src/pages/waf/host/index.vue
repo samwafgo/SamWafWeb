@@ -327,6 +327,15 @@
                   </t-textarea>
                 </t-tooltip>
               </t-form-item>
+              <t-form-item :label="$t('page.host.insecure_skip_verify')" name="insecure_skip_verify">
+                <t-tooltip class="placement top center" :content="$t('page.host.insecure_skip_verify_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="formData.insecure_skip_verify">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
             </t-tab-panel>
 
             <t-tab-panel :value="5">
@@ -637,6 +646,15 @@
                 <t-input-number min="0" :style="{ width: '150px' }" v-model="formEditData.response_time_out" :content="$t('page.host.response_time_out_tips')">
                 </t-input-number>
               </t-form-item>
+              <t-form-item :label="$t('page.host.insecure_skip_verify')" name="insecure_skip_verify">
+                <t-tooltip class="placement top center" :content="$t('page.host.insecure_skip_verify_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="formEditData.insecure_skip_verify">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
             </t-tab-panel>
             <t-tab-panel :value="5">
               <template #label>
@@ -855,6 +873,7 @@ const INITIAL_DATA = {
   bind_more_port:'',//多端口情况
   is_enable_http_auth_base:"0",//是否激活Http Auth Base认证
   response_time_out:"60",//响应超时时间单位秒
+  insecure_skip_verify:"0",//是否跳过后端https证书有效性验证
 };
 const INITIAL_SSL_DATA = {
   cert_content: '',
@@ -1397,6 +1416,7 @@ export default Vue.extend({
             detail_data_tmp.is_trans_back_domain = detail_data_tmp.is_trans_back_domain.toString()
             detail_data_tmp.is_enable_http_auth_base = detail_data_tmp.is_enable_http_auth_base.toString()
             detail_data_tmp.response_time_out = detail_data_tmp.response_time_out.toString()
+            detail_data_tmp.insecure_skip_verify = detail_data_tmp.insecure_skip_verify.toString()
             that.formData= {
               ...detail_data_tmp
             }
@@ -1471,6 +1491,7 @@ export default Vue.extend({
         postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain'])
         postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base'])
         postdata['response_time_out'] = Number(postdata['response_time_out'])
+        postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify'])
         let defenseData = {
           bot: parseInt(this.hostDefenseData.bot),
           sqli: parseInt(this.hostDefenseData.sqli),
@@ -1539,6 +1560,7 @@ export default Vue.extend({
         postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain'])
         postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base'])
         postdata['response_time_out'] = Number(postdata['response_time_out'])
+        postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify'])
         if(postdata['ssl'] ==0){
           postdata['auto_jump_https'] = 0
         }
@@ -1699,6 +1721,7 @@ export default Vue.extend({
             that.detail_data.is_trans_back_domain = that.detail_data.is_trans_back_domain.toString()
             that.detail_data.is_enable_http_auth_base = that.detail_data.is_enable_http_auth_base.toString()
             that.detail_data.response_time_out = that.detail_data.response_time_out.toString()
+            that.detail_data.insecure_skip_verify = that.detail_data.insecure_skip_verify.toString()
             that.formEditData = {
               ...that.detail_data
             }
