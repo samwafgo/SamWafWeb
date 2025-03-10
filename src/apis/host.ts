@@ -77,3 +77,12 @@ export function editHost(data) {
     data: data
   })
 }
+
+//修改所有主机的防护状态
+export function modifyAllGuardStatus(data) {
+  return request({
+    url: 'wafhost/host/modfiyallstatus',
+    method: 'post',
+    data: data
+  })
+}

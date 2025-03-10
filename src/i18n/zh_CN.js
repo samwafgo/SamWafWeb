@@ -49,6 +49,9 @@ export default {
       name:"键名",
       value:"键值",
     },
+    success:"成功",
+    failed: "失败",
+    loading:"加载中",
   },
   login:{
     login_title:"登录",
@@ -503,6 +506,9 @@ export default {
       },
       is_enable_http_auth_base:"网站密码访问",
       is_enable_http_auth_base_tips:"开启后该网站都是使用密码进行访问，并请添加帐号和密码",
+      modify_all_guard_status: '一键防护开关',
+      confirm_modify_all_guard_status: '确定要修改所有网站的防护状态吗？',
+      select_guard_status: '请选择防护状态',
     },
     one_key_mod:{
       one_key_placeholder: "由于单台服务器只能一个程序使用Web(80端口，443端口)，所以如果需要让Waf变为前置，那么此处需要将80=》81 ，443=》444。\n" +

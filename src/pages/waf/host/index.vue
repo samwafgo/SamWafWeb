@@ -6,7 +6,7 @@
           <t-button @click="handleAddHost"> {{ $t('page.host.new_protection') }}</t-button>
           <t-button variant="base" theme="default" @click="HandleExportExcel()"> {{ $t('page.host.export_data') }}</t-button>
           <t-button variant="base" theme="default" @click="HandleImportExcel()"> {{ $t('page.host.import_data') }}</t-button>
-
+          <t-button variant="base" theme="warning" @click="handleModifyAllGuardStatus()"> {{ $t('page.host.modify_all_guard_status') }}</t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" colon   layout="inline" :style="{ marginBottom: '8px' }">
@@ -825,6 +825,18 @@
         <ssl-order-list :src-host-code="currentHostCode"></ssl-order-list>
       </div>
     </t-dialog>
+
+    <t-dialog :header="$t('page.host.modify_all_guard_status')" :visible.sync="guardAllConfirmVisible" @confirm="onGuardAllStatusConfirm"
+              :onCancel="onGuardAllStatusCancel">
+      <div slot="body">
+        <div>{{$t('page.host.confirm_modify_all_guard_status')}}</div>
+        <t-radio-group v-model="guardAllStatus" style="margin-top: 16px;">
+          <t-radio value="1">{{$t('page.host.guard_status_on')}}</t-radio>
+          <t-radio value="0">{{$t('page.host.guard_status_off')}}</t-radio>
+        </t-radio-group>
+      </div>
+    </t-dialog>
+
   </div>
 </template>
 <script lang="ts">
@@ -834,7 +846,7 @@ import {FileSafetyIcon, LinkIcon, SearchIcon} from 'tdesign-icons-vue';
 import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
-import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost} from '@/apis/host';
+import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost,modifyAllGuardStatus} from '@/apis/host';
 import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
 import SslOrderList from "@/pages/waf/sslorder/index.vue";
 import { v4 as uuidv4 } from 'uuid';
@@ -1268,6 +1280,8 @@ export default Vue.extend({
         check_path: '/',
         expected_codes: '200,',
       },
+      guardAllConfirmVisible: false, // 一键修改所有主机防护状态的确认对话框
+      guardAllStatus: "1", // 默认选择开启
     };
   },
   computed: {
@@ -1301,6 +1315,45 @@ export default Vue.extend({
   },
 
   methods: {
+    // 一键修改所有主机防护状态
+    handleModifyAllGuardStatus() {
+      this.guardAllConfirmVisible = true;
+    },
+
+    // 确认修改所有主机防护状态
+    onGuardAllStatusConfirm() {
+      this.modifyAllGuardStatus(this.guardAllStatus);
+      this.guardAllConfirmVisible = false;
+    },
+
+    // 取消修改所有主机防护状态
+    onGuardAllStatusCancel() {
+      this.guardAllConfirmVisible = false;
+    },
+
+    // 调用API修改所有主机防护状态
+    modifyAllGuardStatus(status) {
+      const loading = this.$loading({
+        fullscreen: true,
+        text: this.$t('common.loading'),
+      });
+
+      modifyAllGuardStatus({ guard_status: parseInt(status)})
+        .then(response => {
+          if (response.code === 0) {
+            this.$message.success(this.$t('common.success'));
+            this.getList('all'); // 刷新列表
+          } else {
+            this.$message.error(response.msg || this.$t('common.failed'));
+          }
+        })
+        .catch(() => {
+          this.$message.error(this.$t('common.failed'));
+        })
+        .finally(() => {
+          loading.hide();
+        });
+    },
     loadHostList() {
       return new Promise((resolve, reject) => {
         allhost()
