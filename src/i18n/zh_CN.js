@@ -787,6 +787,11 @@ export default {
         //options logic relation
         judge_logic_and:"并且",
         judge_logic_or:"或者",
+        //系统信息
+        variable_name: '变量名称',
+        variable_key: '变量键值',
+        tutorial_online:'立即访问在线教程(含视频+AI智能体自动生成)',
+        example_code: '规则示例代码',
       }
     },
     notice:{

@@ -779,7 +779,11 @@ export default {
         judge_has_prefix: "Judge if Starts With (Function)",
         judge_has_suffix: "Judge if Ends With (Function)",
         judge_logic_and: "And",
-        judge_logic_or: "Or"
+        judge_logic_or: "Or",
+        variable_name: 'Variable Name',
+        variable_key: 'Variable Key',
+        tutorial_online:'Online Tutorial',
+        example_code: 'Rule Example Code',
       }
     },
     notice: {

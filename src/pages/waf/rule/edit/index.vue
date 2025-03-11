@@ -269,26 +269,51 @@
 
     <!--Manual Rule-->
     <div v-if="formData.is_manual_rule=='1'">
-    <t-card :title="$t('page.rule.detail.write_rule')">
-      <writeRule>
-        :valuecontent="formData.rule_content"
-      	@edtinput="edtinput"
+      <t-card :title="$t('page.rule.detail.write_rule')">
+        <t-row >
+          <!-- 左侧代码编辑区域 -->
+          <t-col flex="auto">
+            <writeRule
+              :valuecontent="formData.rule_content"
+              @edtinput="edtinput"
+            ></writeRule>
+            <div class="rule-example-container">
+              <div class="rule-example-header">
+                <code-icon />
+                <span class="rule-example-title">{{ $t('page.rule.detail.example_code') }}</span>
+              </div>
+              <pre class="rule-example-code"> rule R80798f795d7947419ba6f593708b40d9 "禁止来自中国以外的访客访问" salience 10 {
+  when
+    MF.COUNTRY != "中国"
+  then
+    Retract("R80798f795d7947419ba6f593708b40d9");
+}</pre>
+              <t-link theme="danger" hover="color" href="https://update.samwaf.com/airule/auto_jump_url.html?v20250311" target="_blank">
+                <jump-icon slot="suffixIcon" />
+                {{$t('page.rule.detail.tutorial_online')}}
+              </t-link>
+            </div>
+          </t-col>
 
-      ></writeRule>
-    </t-card>
-
-
-      <t-collapse>
-        <t-collapse-panel :header="$t('page.rule.detail.system_variable')">
-           <t-list v-for=" (item, index) in attr_option ">
-                  <t-list-item>
-                    <t-list-item-meta :title="item.label" :description="item.value" />
-                  </t-list-item>
-          </t-list>
-        </t-collapse-panel>
-      </t-collapse>
+          <!-- 右侧系统变量参考区域 -->
+          <t-col flex="450px">
+            {{$t('page.rule.detail.system_variable')}}
+              <t-table
+                :data="attr_option"
+                :columns="[
+                  { colKey: 'label', title: $t('page.rule.detail.variable_name') },
+                  { colKey: 'value', title: $t('page.rule.detail.variable_key') }
+                ]"
+                size="small"
+                :pagination="{ pageSize: 10 }"
+                :rowKey="(row) => row.value"
+                stripe
+                hover
+              />
+          </t-col>
+        </t-row>
+      </t-card>
     </div>
-
 
       <t-form-item style="margin-left: 100px">
         <t-space size="10px">
@@ -305,6 +330,8 @@
   import {
     prefix
   } from '@/config/global';
+  import { JumpIcon ,CodeIcon} from 'tdesign-icons-vue';
+
   import {
     RULE,RULE_RELATION_DETAIL,RULE_DO_ASSIGNMENT,RULE_DO_METHOD,RULE_DO_METHOD_PARM
   } from '@/service/service-rule';
@@ -319,7 +346,9 @@
   export default {
     name: 'WafRuleEdit',
     components: {
-      writeRule
+      writeRule,
+      JumpIcon,
+      CodeIcon,
     },
     data() {
       return {
@@ -492,6 +521,9 @@
             this.formData.rule_base.rule_domain_code = this.$route.query.host_code
             this.fromSourcePoint = this.$route.query.sourcePoint
             this.setRuleContentByMode()
+        }else if(this.op_type=="add" && this.$route.query.sourcePoint== undefined){
+          this.fromSourcePoint = "url"
+          this.setRuleContentByMode()
         }
       }
     },
@@ -749,4 +781,39 @@
 </script>
 <style lang="less" scoped>
   @import './index';
+  .rule-example-container {
+    margin-top: 16px;
+    border: 1px solid #e7e7e7;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .rule-example-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e7e7e7;
+
+    .t-icon {
+      margin-right: 8px;
+      color: #0052d9;
+    }
+  }
+
+  .rule-example-title {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .rule-example-code {
+    margin: 0;
+    padding: 12px;
+    background-color: #fafafa;
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+  }
 </style>
