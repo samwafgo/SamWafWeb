@@ -300,6 +300,11 @@ export default {
           pre_check_cost:"Req Check Cost",
           forward_cost:"Forward Cost",
           backend_check_cost:"Response Check Cost",
+        },response:{
+          response_title: "Response Content",
+          response_body: "Response Body",
+          response_header: "Response Header",
+          response_status: "Response Status",
         }
        }
     },

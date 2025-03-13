@@ -116,9 +116,23 @@
         <t-textarea v-model="detail_data.post_form" :autosize="{ minRows: 3, maxRows: 5 }" readonly />
       </t-list>
     </t-card>
-    <t-card :title="$t('page.visit_log.detail.response_data')">
-      <t-textarea v-model="detail_data.res_body" :autosize="{ minRows: 5, maxRows: 10 }" readonly />
-
+    <t-card :title="$t('page.visit_log.detail.response.response_title')">
+      <t-list :split="true">
+        <t-list-item>
+          <t-list-item-meta :title="$t('page.visit_log.detail.response.response_header')"></t-list-item-meta>
+        </t-list-item>
+        <t-textarea v-model="detail_data.res_header" :autosize="{ minRows: 3, maxRows: 5 }" readonly />
+        <t-list-item>
+          <t-list-item-meta :title="$t('page.visit_log.detail.request_body')"></t-list-item-meta>
+        </t-list-item>
+        <t-textarea v-model="detail_data.res_body" :autosize="{ minRows: 3, maxRows: 5 }"  readonly />
+        <t-list-item>
+          <t-list-item-meta :title="$t('page.visit_log.detail.response_status')"></t-list-item-meta>
+        </t-list-item>
+        <span>
+            {{ detail_data.status_code }} ({{detail_data.status}} )
+        </span>
+      </t-list>
     </t-card>
     <t-card :title="$t('page.visit_log.detail.time_cost.title')" >
       <div class="info-block">

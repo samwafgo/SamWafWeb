@@ -300,6 +300,12 @@ export default {
           pre_check_cost:"请求处理耗时",
           forward_cost:"转发耗时",
           backend_check_cost:"响应处理耗时",
+        },
+        response:{
+          response_title: "响应信息",
+          response_body: "响应BODY",
+          response_header: "响应头",
+          response_status: "响应状态",
         }
       }
     },
