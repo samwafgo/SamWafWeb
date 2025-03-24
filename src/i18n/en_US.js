@@ -416,7 +416,7 @@ export default {
         unhealthy_servers: "Unhealthy Servers",
       },
       captcha: {
-        alert:"",
+        alert:"Note: For payment callbacks, refund notifications, open platform notifications, and other callback-related communications, please ensure the following IP addresses are added to your network whitelist or configure URL exceptions in your security/firewall settings",
         is_enable: 'Enable Captcha',
         is_enable_tips: 'Require captcha verification for website access',
         exclude_urls: 'Exclude URLs',
