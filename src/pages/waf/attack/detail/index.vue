@@ -1,7 +1,7 @@
 <template>
   <div class="detail-base">
 
-    <t-row justify="start" v-if="detail_data.status_code===403 || detail_data.risk_level>0">
+    <t-row justify="start" v-if="detail_data.rule!=''">
       <t-col :span="12">
         <t-alert theme="error" :message="detail_data.rule" />
         <t-link  @click="loadHttpCopyMask">{{ $t('page.visit_log.detail.http_copy_mask') }}</t-link>

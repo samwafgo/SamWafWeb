@@ -420,6 +420,49 @@
                 </t-tooltip>
               </t-form-item>
             </t-tab-panel>
+
+            <!-- 验证码配置标签页 -->
+            <t-tab-panel :value="7">
+              <template #label>
+                <t-icon name="lock-on" style="margin-right: 4px;color:#0052d9"/>
+                {{$t('page.host.tab_captcha')}}
+              </template>
+              <t-alert theme="warning" v-if="captchaConfigData.is_enable_captcha == '1'">
+                <template #message>{{ $t('page.host.captcha.alert') }} </template>
+              </t-alert>
+              <t-form-item :label="$t('page.host.captcha.is_enable')">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.is_enable_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="captchaConfigData.is_enable_captcha">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="captchaConfigData.is_enable_captcha == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-textarea :style="{ width: '480px' }"
+                              v-model="captchaConfigData.exclude_urls"
+                              :placeholder="$t('page.host.captcha.exclude_urls_placeholder')">
+                  </t-textarea>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.captcha.expire_time')" v-if="captchaConfigData.is_enable_captcha == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.expire_time_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }"
+                                  v-model="captchaConfigData.expire_time"
+                                  :min="1"
+                                  :max="720">
+                  </t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.captcha.hours')}}</span>
+                </t-tooltip>
+              </t-form-item>
+            </t-tab-panel>
+
           </t-tabs>
 
           <t-form-item style="float: right;margin-top:5px">
@@ -738,6 +781,47 @@
                 </t-tooltip>
               </t-form-item>
             </t-tab-panel>
+            <!-- 验证码配置标签页 -->
+            <t-tab-panel :value="7">
+              <template #label>
+                <t-icon name="lock-on" style="margin-right: 4px;color:#0052d9"/>
+                {{$t('page.host.tab_captcha')}}
+              </template>
+              <t-alert theme="warning" v-if="captchaConfigData.is_enable_captcha == '1'">
+                <template #message>{{ $t('page.host.captcha.alert') }} </template>
+              </t-alert>
+              <t-form-item :label="$t('page.host.captcha.is_enable')">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.is_enable_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="captchaConfigData.is_enable_captcha">
+                    <t-radio value="0">{{$t('common.off')}}</t-radio>
+                    <t-radio value="1">{{$t('common.on')}}</t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="captchaConfigData.is_enable_captcha == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-textarea :style="{ width: '480px' }"
+                              v-model="captchaConfigData.exclude_urls"
+                              :placeholder="$t('page.host.captcha.exclude_urls_placeholder')">
+                  </t-textarea>
+                </t-tooltip>
+              </t-form-item>
+
+              <t-form-item :label="$t('page.host.captcha.expire_time')" v-if="captchaConfigData.is_enable_captcha == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.expire_time_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-input-number :style="{ width: '150px' }"
+                                  v-model="captchaConfigData.expire_time"
+                                  :min="1"
+                                  :max="720">
+                  </t-input-number>
+                  <span style="margin-left: 8px;">{{$t('page.host.captcha.hours')}}</span>
+                </t-tooltip>
+              </t-form-item>
+            </t-tab-panel>
           </t-tabs>
           <t-form-item style="float: right;margin-top:5px">
             <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>
@@ -872,6 +956,7 @@ const INITIAL_DATA = {
   remarks: '',
   defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1,"traversal":1}',
   healthy_json: '{"is_enable_healthy":1,"fail_count":3,"success_count":3,"response_time":60,"check_method":"GET","check_path":"/","expected_codes":"200,"}',
+  captcha_json: '{"is_enable_captcha":1,"exclude_urls":[],"expire_time":24}',
   start_status: '0',
   exclude_url_log:'',
   is_enable_load_balance: '0',
@@ -902,6 +987,13 @@ const INITIAL_HEALTHY={
     check_path: '/',
     expected_codes: '200,',
 }
+
+const INITIAL_CAPTCHA={
+  is_enable_captcha: '0',
+  exclude_urls: [],
+  expire_time: 24
+}
+
 export default Vue.extend({
   name: 'ListBase',
   components: {
@@ -1282,6 +1374,12 @@ export default Vue.extend({
       },
       guardAllConfirmVisible: false, // 一键修改所有主机防护状态的确认对话框
       guardAllStatus: "1", // 默认选择开启
+      // 验证码配置数据
+      captchaConfigData: {
+        is_enable_captcha: '0',
+        exclude_urls: "",
+        expire_time: 24
+      },
     };
   },
   computed: {
@@ -1491,6 +1589,16 @@ export default Vue.extend({
             }else{
               that.healthyConfigData = {...INITIAL_HEALTHY }
             }
+
+            if (that.detail_data.captcha_json!=""){
+              that.captchaConfigData = JSON.parse(that.detail_data.captcha_json)
+              that.captchaConfigData.is_enable_captcha = getOrDefault(this.captchaConfigData,"is_enable_captcha","1")
+              //that.captchaConfigData.exclude_urls = getOrDefault(this.captchaConfigData,"exclude_urls","3")
+              that.captchaConfigData.expire_time = getOrDefault(this.captchaConfigData,"expire_time","24")
+            }else{
+              that.captchaConfigData = {...INITIAL_CAPTCHA }
+            }
+
           }
         })
         .catch((e: Error) => {
@@ -1566,6 +1674,14 @@ export default Vue.extend({
             expected_codes: this.healthyConfigData.expected_codes,
         }
         postdata['healthy_json'] = JSON.stringify(healthyData)
+
+        let captchaData= {
+          is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
+          exclude_urls: this.captchaConfigData.exclude_urls,
+          expire_time: this.captchaConfigData.expire_time
+        }
+        postdata['captcha_json'] = JSON.stringify(captchaData)
+
         addHost( {
           ...postdata
         })
@@ -1637,6 +1753,12 @@ export default Vue.extend({
           expected_codes: this.healthyConfigData.expected_codes,
         }
         postdata['healthy_json'] = JSON.stringify(healthyData)
+        let captchaData= {
+          is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
+          exclude_urls: this.captchaConfigData.exclude_urls,
+          expire_time: this.captchaConfigData.expire_time
+        }
+        postdata['captcha_json'] = JSON.stringify(captchaData)
         console.log('editHost',postdata)
         editHost( {
           ...postdata
@@ -1677,6 +1799,9 @@ export default Vue.extend({
       this.healthyConfigData = {
         ...INITIAL_HEALTHY
       }
+      this.captchaConfigData = {
+        ...INITIAL_CAPTCHA
+      }
     },
     onClickCloseEditBtn(): void {
       this.editFormVisible = false;
@@ -1692,6 +1817,9 @@ export default Vue.extend({
       }
       this.healthyConfigData = {
         ...INITIAL_HEALTHY
+      }
+      this.captchaConfigData = {
+        ...INITIAL_CAPTCHA
       }
     },
     handleClickDelete(row) {
@@ -1796,6 +1924,15 @@ export default Vue.extend({
               that.healthyConfigData.response_time = getOrDefault(this.healthyConfigData,"response_time","5")
             }else{
               that.healthyConfigData = {...INITIAL_HEALTHY }
+            }
+
+            if (that.detail_data.captcha_json!=""){
+              that.captchaConfigData = JSON.parse(that.detail_data.captcha_json)
+              that.captchaConfigData.is_enable_captcha = getOrDefault(this.captchaConfigData,"is_enable_captcha","1")
+              //that.captchaConfigData.exclude_urls = getOrDefault(this.captchaConfigData,"exclude_urls","3")
+              that.captchaConfigData.expire_time = getOrDefault(this.captchaConfigData,"expire_time","24")
+            }else{
+              that.captchaConfigData = {...INITIAL_CAPTCHA }
             }
 
             console.log(that.hostDefenseData)
