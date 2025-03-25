@@ -2,7 +2,7 @@
 import dayjs from 'dayjs';
 
 export const LAST_7_DAYS = [
-  dayjs().subtract(7, 'day').format('YYYY-MM-DD'),
+  dayjs().subtract(6, 'day').format('YYYY-MM-DD'),
   dayjs().format('YYYY-MM-DD'),
 ];
 

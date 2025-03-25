@@ -204,7 +204,7 @@ export function getLineChartDataSet({
     },
     grid: {
       left: '0',
-      right: '20px',
+      right: '40px',
       top: '5px',
       bottom: '36px',
       containLabel: true,

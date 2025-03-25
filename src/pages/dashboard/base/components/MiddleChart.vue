@@ -9,7 +9,7 @@
               theme="primary"
               mode="date"
               :default-value="LAST_7_DAYS"
-              @change="onCurrencyChange"
+              @change="onDateRangeChange"
             />
           </div>
         </template>
@@ -81,6 +81,7 @@ export default {
   mounted() {
     this.rangeStartDay = LAST_7_DAYS[0].replace(/-/g,"")
     this.rangeEndDay = LAST_7_DAYS[1].replace(/-/g,"")
+    console.log("Last_7_Days",LAST_7_DAYS)
     this.loadSumDayRange()
     this.$nextTick(() => {
       this.updateContainer();
@@ -95,7 +96,7 @@ export default {
       wafstatsumdayrangeapi({'start_day':this.rangeStartDay,'end_day':this.rangeEndDay})
           .then((res) => {
             let resdata = res
-            console.log(resdata.data)
+            console.log("wafstatsumdayrangeapi:",resdata.data)
             this.rangeDateTimeArray = []
             this.rangeAttackArray = []
             this.rangeSumAttackCount = 0
@@ -153,10 +154,10 @@ export default {
 
       return `${date.getFullYear()}-${startMonth}  至  ${date2.getFullYear()}-${endMonth}`;
     },
-    /** 资金走趋选择 */
-    onCurrencyChange(checkedValues) {
+    /** 正常请求和异常请求走趋选择 */
+    onDateRangeChange(checkedValues) {
       const { chartColors } = this.$store.state.setting;
-      console.log('onCurrencyChange',checkedValues)
+      console.log('onDateRangeChange',checkedValues)
       this.rangeStartDay = checkedValues[0].replace(/-/g,"")
       this.rangeEndDay = checkedValues[1].replace(/-/g,"")
       this.LAST_7_DAYS = checkedValues
@@ -187,14 +188,18 @@ export default {
     renderCharts() {
       const { chartColors } = this.$store.state.setting;
 
-      // 资金走势
+      // 攻击和访问走势
       if (!this.monitorContainer) {
         this.monitorContainer = document.getElementById('monitorContainer');
       }
       this.monitorChart = echarts.init(this.monitorContainer);
-      this.monitorChart.setOption(getLineChartDataSet({ dateTime: this.rangeDateTimeArray,  inchartarr:this.rangeAttackArray ,
-      outchartarr:this.rangeNormalArray,...chartColors }));
-
+      this.monitorChart.setOption(getLineChartDataSet(
+        {
+          dateTime: this.rangeDateTimeArray,
+          inchartarr:this.rangeAttackArray ,
+          outchartarr:this.rangeNormalArray,
+      ...chartColors }));
+      console.log("Last7Day Echart Data",this.rangeDateTimeArray,this.rangeAttackArray,this.rangeNormalArray)
       // 销售合同占比
       if (!this.countContainer) {
         this.countContainer = document.getElementById('countContainer');
