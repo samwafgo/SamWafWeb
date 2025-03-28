@@ -208,7 +208,7 @@ export default {
       selected_count: "已选 {count} 项",
       website: "网站",
       url: "URL",
-      rate: "速率",
+      rate: "时间窗口",
       limit: "限制访问次数",
       lock_minutes:"封禁时间(分钟)",
       samwaf_cc_protection: "SamWaf防护墙抵御CC攻击",

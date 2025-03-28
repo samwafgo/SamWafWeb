@@ -208,7 +208,7 @@ export default {
       selected_count: "Selected {count} items",
       website: "Website",
       url: "URL",
-      rate: "Rate",
+      rate: "Windows Size",
       limit: "Limit Access Times",
       lock_minutes:"Lock Time(Minutes)",
       samwaf_cc_protection: "SamWaf Firewall Resists CC Attacks",
