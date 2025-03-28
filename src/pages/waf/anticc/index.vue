@@ -36,6 +36,12 @@
             <span> {{host_dic[row.host_code]}}</span>
           </template>
 
+          <template #limit_mode="{ row }">
+            <t-tag theme="primary" v-if="row.limit_mode === 'rate'">{{ $t('page.cc.limit_mode_rate') }}</t-tag>
+            <t-tag theme="warning" v-else-if="row.limit_mode === 'window'">{{ $t('page.cc.limit_mode_window') }}</t-tag>
+            <t-tag v-else>{{ $t('page.cc.limit_mode_unknown') }}</t-tag>
+          </template>
+
           <template #op="slotProps">
              <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -65,8 +71,31 @@
           <t-form-item :label="$t('page.cc.limit')" name="limit">
             <t-input-number :style="{ width: '480px' }" v-model="formData.limit" :placeholder="$t('common.placeholder')+$t('page.cc.limit')"></t-input-number>
           </t-form-item>
-          <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_minutes">
-            <t-input-number :style="{ width: '480px' }" min="1" v-model="formData.lock_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
+
+          <t-form-item :label="$t('page.cc.limit_mode')" name="limit_mode">
+            <t-radio-group v-model="formData.limit_mode">
+              <t-radio value="rate">
+                <div>
+                  <div>{{ $t('page.cc.limit_mode_rate') }}</div>
+                  <div class="limit-mode-desc">{{ $t('page.cc.limit_mode_rate_desc') }}</div>
+                </div>
+              </t-radio>
+              <t-radio value="window">
+                <div>
+                  <div>{{ $t('page.cc.limit_mode_window') }}</div>
+                  <div class="limit-mode-desc">{{ $t('page.cc.limit_mode_window_desc') }}</div>
+                </div>
+              </t-radio>
+            </t-radio-group>
+          </t-form-item>
+
+          <!-- 添加效果提示 -->
+          <t-form-item>
+            <t-alert theme="info" :message="getLimitModeEffectTips(formData)" />
+          </t-form-item>
+
+          <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_ip_minutes">
+            <t-input-number :style="{ width: '480px' }" min="1" v-model="formData.lock_ip_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
           </t-form-item>
           <t-form-item :label="$t('common.remarks')"  name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks" :placeholder="$t('common.placeholder_content')" name="remarks">
@@ -98,8 +127,31 @@
           <t-form-item :label="$t('page.cc.limit')"  name="limit">
             <t-input-number :style="{ width: '480px' }" v-model="formEditData.limit" :placeholder="$t('common.placeholder')+$t('page.cc.limit')"></t-input-number>
           </t-form-item>
-          <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_minutes">
-            <t-input-number :style="{ width: '480px' }" min="1" v-model="formEditData.lock_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
+
+          <t-form-item :label="$t('page.cc.limit_mode')" name="limit_mode">
+            <t-radio-group v-model="formEditData.limit_mode">
+              <t-radio value="rate">
+                <div>
+                  <div>{{ $t('page.cc.limit_mode_rate') }}</div>
+                  <div class="limit-mode-desc">{{ $t('page.cc.limit_mode_rate_desc') }}</div>
+                </div>
+              </t-radio>
+              <t-radio value="window">
+                <div>
+                  <div>{{ $t('page.cc.limit_mode_window') }}</div>
+                  <div class="limit-mode-desc">{{ $t('page.cc.limit_mode_window_desc') }}</div>
+                </div>
+              </t-radio>
+            </t-radio-group>
+          </t-form-item>
+
+          <!-- 添加效果提示 -->
+          <t-form-item>
+            <t-alert theme="info" :message="getLimitModeEffectTips(formEditData)" />
+          </t-form-item>
+
+          <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_ip_minutes">
+            <t-input-number :style="{ width: '480px' }" min="1" v-model="formEditData.lock_ip_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks" :placeholder="$t('common.placeholder_content')" name="remarks">
@@ -146,7 +198,8 @@ import {
     url: '',
     rate: 1,
     limit: 30,
-    lock_minutes:10,//默认10分钟
+    limit_mode: 'window', // 默认使用滑动窗口速率模式
+    lock_ip_minutes:10,//默认10分钟
     remarks: '',
   };
   export default Vue.extend({
@@ -185,7 +238,7 @@ import {
             message: this.$t('page.cc.limit'),
             type: 'error'
           }],
-          lock_minutes: [{
+          lock_ip_minutes: [{
             required: true,
             message: this.$t('page.cc.lock_minutes'),
             type: 'error'
@@ -217,6 +270,12 @@ import {
             width: 200,
             ellipsis: true,
             colKey: 'limit',
+          },
+          {
+            title: this.$t('page.cc.limit_mode'),
+            width: 200,
+            ellipsis: true,
+            colKey: 'limit_mode',
           },
           {
             title: this.$t('common.create_time'),
@@ -275,6 +334,26 @@ import {
     },
 
     methods: {
+      // 根据限流模式和参数计算效果提示
+      getLimitModeEffectTips(formData) {
+        if (!formData.rate || !formData.limit) {
+          return this.$t('page.cc.limit_mode_effect_incomplete');
+        }
+
+        if (formData.limit_mode === 'window') {
+          return this.$t('page.cc.limit_mode_window_effect', {
+            rate: formData.rate,
+            limit: formData.limit
+          });
+        } else {
+          const ratePerSecond = (formData.limit / formData.rate).toFixed(2);
+          return this.$t('page.cc.limit_mode_rate_effect', {
+            rate: formData.rate,
+            limit: formData.limit,
+            ratePerSecond: ratePerSecond
+          });
+        }
+      },
       loadHostList() {
         return new Promise((resolve, reject) => {
           allhost()
@@ -352,13 +431,7 @@ import {
       },
       handleAddAntiCC() {
         this.addFormVisible = true
-        this.formData =  {
-          host_code: '',
-          url: '',
-          remarks: '',
-          rate:1,
-          limit:30
-        };
+        this.formData =  { ...INITIAL_DATA };
       },
       onSubmit({
         result,
@@ -404,6 +477,7 @@ import {
           let postdata = {
             ...that.formEditData
           }
+          console.log('edit cc ',postdata)
           wafAntiCCEditApi({
               ...postdata
             })
@@ -537,5 +611,11 @@ import {
 
   .t-button+.t-button {
     margin-left: @spacer;
+  }
+
+  .limit-mode-desc {
+    font-size: 12px;
+    color: var(--td-text-color-secondary);
+    margin-top: 4px;
   }
 </style>

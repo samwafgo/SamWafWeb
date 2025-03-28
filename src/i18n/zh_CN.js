@@ -218,6 +218,15 @@ export default {
       ban_remain_time:"封禁剩余时间",
       ban_ip_belong:"IP归属地",
       remove_ban_ip:"移除封禁IP",
+      limit_mode: '限流模式',
+      limit_mode_rate: '平均速率模式',
+      limit_mode_rate_desc: '将请求平均分配到每一秒，适合防止突发攻击',
+      limit_mode_window: '滑动窗口模式',
+      limit_mode_window_desc: '严格按照"N秒内最多M次"的规则限流，更符合直观理解',
+      limit_mode_unknown: '未知模式',
+      limit_mode_effect_incomplete: '请填写时间窗口和最大请求数以查看效果',
+      limit_mode_window_effect: '当前配置效果：在{rate}秒内，同一IP最多允许{limit}次请求，超出将被封禁',
+      limit_mode_rate_effect: '当前配置效果：在{rate}秒内，同一IP最多允许{limit}次请求，平均每秒{ratePerSecond}次，超出将被封禁'
     },
     visit_log:{
       visit_log: "防御日志",
@@ -267,6 +276,7 @@ export default {
         request_content_size: "请求内容大小",
         visitor_ip: "访问者IP",
         add_to_deny_list: "加入不允许访问",
+        visitor_net_ip: "访问者实际网络IP",
         visitor_port: "访问者端口",
         request_region: "请求地区",
         response_code: "响应编码",

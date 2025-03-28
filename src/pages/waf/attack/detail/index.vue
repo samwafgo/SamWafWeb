@@ -60,7 +60,8 @@
           <h1> {{ $t('page.visit_log.detail.visitor_ip') }}</h1>
           <span>
             {{ detail_data.src_ip }}
-            <t-button theme="primary" shape="round" size="small" @click="handleAddipblock">{{ $t('page.visit_log.detail.add_to_deny_list') }}</t-button>
+            <t-button theme="primary" shape="round" size="small" @click="handleAddipblock(detail_data.src_ip)">{{ $t('page.visit_log.detail.add_to_deny_list') }}</t-button>
+
           </span>
         </div>
         <div class="info-item">
@@ -79,6 +80,15 @@
           <h1> {{ $t('page.visit_log.detail.response_code') }}</h1>
           <span>
             {{ detail_data.status_code }} ({{detail_data.status}} )
+          </span>
+        </div>
+        <div class="info-item" v-if="detail_data.src_ip!=detail_data.net_src_ip" style="color: red">
+          <!--实际ip-->
+          <h1>  {{ $t('page.visit_log.detail.visitor_net_ip') }} </h1>
+          <span>
+              {{ detail_data.net_src_ip }}
+              <t-button theme="primary" shape="round" size="small" @click="handleAddipblock(detail_data.net_src_ip)">{{ $t('page.visit_log.detail.add_to_deny_list') }}</t-button>
+
           </span>
         </div>
       </div>
@@ -328,7 +338,7 @@
           })
           .finally(() => {});
       },
-      handleAddipblock() {
+      handleAddipblock(ip) {
 
         if(this.detail_data.host_code==""){
           this.$message.warning("当前网站不存在");
@@ -346,7 +356,7 @@
                    //add deny IP
                    let formData = {
                      host_code: this.detail_data.host_code,
-                     ip: this.detail_data.src_ip,
+                     ip: ip,
                      remarks: '手工增加',
                    };
                    wafIPBlockAddApi({
