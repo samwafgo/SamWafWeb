@@ -419,7 +419,7 @@ export default {
       healthy_status: "Health Status",
       healthy_status_normal: "Normal",
       healthy_status_abnormal: "Abnormal",
-      healthy_status_unknown: "UnStart",
+      healthy_status_unknown: "Off",
       healthy_status_detail: {
         ip: "Backend IP",
         port: "Backend Port",
