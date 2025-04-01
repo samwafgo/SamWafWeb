@@ -2,17 +2,17 @@
   <div>
     <!-- 负载均衡模式 -->
     <div v-if="isLoadBalance">
-      <load-balance-status 
-        v-if="healthyStatus && healthyStatus.length > 0" 
+      <load-balance-status
+        v-if="healthyStatus && healthyStatus.length > 0"
         :healthyStatusList="healthyStatus"
       />
       <t-tag v-else theme="default" variant="light">{{ $t('page.host.healthy_status_unknown') }}</t-tag>
     </div>
-    
+
     <!-- 单服务器模式 -->
     <div v-else>
-      <single-server-status 
-        v-if="healthyStatus && healthyStatus.length > 0" 
+      <single-server-status
+        v-if="healthyStatus && healthyStatus.length > 0"
         :healthyStatus="healthyStatus[0]"
       />
       <t-tag v-else theme="default" variant="light">{{ $t('page.host.healthy_status_unknown') }}</t-tag>

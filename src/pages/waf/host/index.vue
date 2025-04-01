@@ -361,64 +361,8 @@
                 <t-icon name="health" style="margin-right: 4px;color:#00a870"/>
                 {{$t('page.host.tab_health_check')}}
               </template>
-
-              <t-form-item :label="$t('page.host.health_check.is_enable_healthy')">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.is_enable_healthy_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="healthyConfigData.is_enable_healthy">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.check_method')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_method_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="healthyConfigData.check_method">
-                    <t-radio value="GET">GET</t-radio>
-                    <t-radio value="HEAD">HEAD</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.check_path')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_path_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.check_path" :placeholder="$t('page.host.health_check.check_path_placeholder')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.expected_codes')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.expected_codes_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.expected_codes" :placeholder="$t('page.host.health_check.expected_codes_placeholder')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.response_time')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.response_time_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.response_time" :min="1" :max="300"></t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.health_check.seconds')}}</span>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.fail_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.fail_count_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.fail_count" :min="1" :max="10"></t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.success_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.success_count_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.success_count" :min="1" :max="10"></t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
-                </t-tooltip>
-              </t-form-item>
+               <!-- 使用健康度检测组件 -->
+              <healthy-config :healthy-config="healthyConfigData" @update="val => healthyConfigData = val"></healthy-config>
             </t-tab-panel>
 
             <!-- 验证码配置标签页 -->
@@ -430,58 +374,9 @@
               <t-alert theme="warning" v-if="captchaConfigData.is_enable_captcha == '1'">
                 <template #message>{{ $t('page.host.captcha.alert') }} </template>
               </t-alert>
-              <t-form-item :label="$t('page.host.captcha.is_enable')">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.is_enable_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="captchaConfigData.is_enable_captcha">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
+              <!-- 使用验证码配置组件 -->
+              <captcha-config  :captcha-config="captchaConfigData" @update="val => captchaConfigData = val"></captcha-config>
 
-               <!-- 添加IP提取模式 -->
-               <t-form-item :label="$t('page.host.captcha.ip_mode')"  v-if="captchaConfigData.is_enable_captcha == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.ip_mode_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="captchaConfigData.ip_mode">
-                    <t-radio value="nic">
-                      <div>
-                        <div>{{ $t('page.host.captcha.ip_mode_nic') }}</div>
-                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_nic_desc') }}</div>
-                      </div>
-                    </t-radio>
-                    <t-radio value="proxy">
-                      <div>
-                        <div>{{ $t('page.host.captcha.ip_mode_proxy') }}</div>
-                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_proxy_desc') }}</div>
-                      </div>
-                    </t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="captchaConfigData.is_enable_captcha == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }"
-                              v-model="captchaConfigData.exclude_urls"
-                              :placeholder="$t('page.host.captcha.exclude_urls_placeholder')">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.captcha.expire_time')" v-if="captchaConfigData.is_enable_captcha == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.expire_time_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }"
-                                  v-model="captchaConfigData.expire_time"
-                                  :min="1"
-                                  :max="720">
-                  </t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.captcha.hours')}}</span>
-                </t-tooltip>
-              </t-form-item>
             </t-tab-panel>
 
           </t-tabs>
@@ -743,64 +638,7 @@
                 <t-icon name="health" style="margin-right: 4px;color:#00a870"/>
                 {{$t('page.host.tab_health_check')}}
               </template>
-
-              <t-form-item :label="$t('page.host.health_check.is_enable_healthy')">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.is_enable_healthy_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="healthyConfigData.is_enable_healthy">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.check_method')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_method_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="healthyConfigData.check_method">
-                    <t-radio value="GET">GET</t-radio>
-                    <t-radio value="HEAD">HEAD</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.check_path')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.check_path_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.check_path" :placeholder="$t('page.host.health_check.check_path_placeholder')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.expected_codes')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.expected_codes_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="healthyConfigData.expected_codes" :placeholder="$t('page.host.health_check.expected_codes_placeholder')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.response_time')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.response_time_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.response_time" :min="1" :max="300"></t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.health_check.seconds')}}</span>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.fail_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.fail_count_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.fail_count" :min="1" :max="10"></t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.health_check.success_count')" v-if="healthyConfigData.is_enable_healthy == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.health_check.success_count_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="healthyConfigData.success_count" :min="1" :max="10"></t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.health_check.times')}}</span>
-                </t-tooltip>
-              </t-form-item>
+              <healthy-config  :healthy-config="healthyConfigData" @update="val => healthyConfigData = val"></healthy-config>
             </t-tab-panel>
             <!-- 验证码配置标签页 -->
             <t-tab-panel :value="7">
@@ -811,58 +649,8 @@
               <t-alert theme="warning" v-if="captchaConfigData.is_enable_captcha == '1'">
                 <template #message>{{ $t('page.host.captcha.alert') }} </template>
               </t-alert>
-              <t-form-item :label="$t('page.host.captcha.is_enable')">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.is_enable_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="captchaConfigData.is_enable_captcha">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <!-- 添加IP提取模式 -->
-              <t-form-item :label="$t('page.host.captcha.ip_mode')"  v-if="captchaConfigData.is_enable_captcha == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.ip_mode_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="captchaConfigData.ip_mode">
-                    <t-radio value="nic">
-                      <div>
-                        <div>{{ $t('page.host.captcha.ip_mode_nic') }}</div>
-                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_nic_desc') }}</div>
-                      </div>
-                    </t-radio>
-                    <t-radio value="proxy">
-                      <div>
-                        <div>{{ $t('page.host.captcha.ip_mode_proxy') }}</div>
-                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_proxy_desc') }}</div>
-                      </div>
-                    </t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="captchaConfigData.is_enable_captcha == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }"
-                              v-model="captchaConfigData.exclude_urls"
-                              :placeholder="$t('page.host.captcha.exclude_urls_placeholder')">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.captcha.expire_time')" v-if="captchaConfigData.is_enable_captcha == '1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.captcha.expire_time_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }"
-                                  v-model="captchaConfigData.expire_time"
-                                  :min="1"
-                                  :max="720">
-                  </t-input-number>
-                  <span style="margin-left: 8px;">{{$t('page.host.captcha.hours')}}</span>
-                </t-tooltip>
-              </t-form-item>
+              <!-- 使用验证码配置组件 -->
+              <captcha-config  :captcha-config="captchaConfigData" @update="val => captchaConfigData = val"></captcha-config>
             </t-tab-panel>
           </t-tabs>
           <t-form-item style="float: right;margin-top:5px">
@@ -983,7 +771,10 @@ import {
 } from '@/constants';
 import LoadBalance from "../loadbalance/index.vue";
 import HttpAuthBase from "../http_auth_base/index.vue"
-import HealthStatus from "@/components/health-status/HealthStatus.vue";
+import HealthStatus from "./components/health-status/HealthStatus.vue";
+/*配置组件*/
+import HealthyConfig from './components/HealthyConfig.vue';
+import CaptchaConfig from './components/CaptchaConfig.vue';
 
 const INITIAL_DATA = {
   host: 'www.baidu.com',
@@ -1046,7 +837,9 @@ export default Vue.extend({
     SslOrderList,
     LoadBalance,
     HttpAuthBase,
-    HealthStatus
+    HealthStatus,
+    HealthyConfig,
+    CaptchaConfig,
   },
   data() {
     return {
