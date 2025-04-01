@@ -226,7 +226,13 @@ export default {
       limit_mode_unknown: '未知模式',
       limit_mode_effect_incomplete: '请填写时间窗口和最大请求数以查看效果',
       limit_mode_window_effect: '当前配置效果：在{rate}秒内，同一IP最多允许{limit}次请求，超出将被封禁',
-      limit_mode_rate_effect: '当前配置效果：在{rate}秒内，同一IP最多允许{limit}次请求，平均每秒{ratePerSecond}次，超出将被封禁'
+      limit_mode_rate_effect: '当前配置效果：在{rate}秒内，同一IP最多允许{limit}次请求，平均每秒{ratePerSecond}次，超出将被封禁',
+      ip_mode: 'IP提取模式',
+      ip_mode_nic: '网卡模式',
+      ip_mode_nic_desc: '直接从网络连接中获取客户端IP',
+      ip_mode_proxy: '代理模式',
+      ip_mode_proxy_desc: '从HTTP头部(X-Forwarded-For等)获取客户端真实IP',
+      ip_mode_unknown: '未知模式',
     },
     visit_log:{
       visit_log: "防御日志",
@@ -475,7 +481,13 @@ export default {
         exclude_urls_placeholder: '例如：/api',
         expire_time: '验证有效期',
         expire_time_tips: '验证通过后的有效时长',
-        hours: '小时'
+        hours: '小时',
+        ip_mode: 'IP提取模式',
+        ip_mode_tips: '选择如何从请求中提取客户端IP地址',
+        ip_mode_nic: '网卡模式',
+        ip_mode_nic_desc: '直接从网络连接中获取客户端IP',
+        ip_mode_proxy: '代理模式',
+        ip_mode_proxy_desc: '从HTTP头部(X-Forwarded-For等)获取客户端真实IP'
       },
       import_file: "导入文件",
       upload_file: "上传文件",

@@ -440,6 +440,27 @@
                 </t-tooltip>
               </t-form-item>
 
+               <!-- 添加IP提取模式 -->
+               <t-form-item :label="$t('page.host.captcha.ip_mode')"  v-if="captchaConfigData.is_enable_captcha == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.ip_mode_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="captchaConfigData.ip_mode">
+                    <t-radio value="nic">
+                      <div>
+                        <div>{{ $t('page.host.captcha.ip_mode_nic') }}</div>
+                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_nic_desc') }}</div>
+                      </div>
+                    </t-radio>
+                    <t-radio value="proxy">
+                      <div>
+                        <div>{{ $t('page.host.captcha.ip_mode_proxy') }}</div>
+                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_proxy_desc') }}</div>
+                      </div>
+                    </t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
               <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="captchaConfigData.is_enable_captcha == '1'">
                 <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
                            :overlay-style="{ width: '200px' }" show-arrow>
@@ -800,6 +821,27 @@
                 </t-tooltip>
               </t-form-item>
 
+              <!-- 添加IP提取模式 -->
+              <t-form-item :label="$t('page.host.captcha.ip_mode')"  v-if="captchaConfigData.is_enable_captcha == '1'">
+                <t-tooltip class="placement top center" :content="$t('page.host.captcha.ip_mode_tips')" placement="top"
+                           :overlay-style="{ width: '200px' }" show-arrow>
+                  <t-radio-group v-model="captchaConfigData.ip_mode">
+                    <t-radio value="nic">
+                      <div>
+                        <div>{{ $t('page.host.captcha.ip_mode_nic') }}</div>
+                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_nic_desc') }}</div>
+                      </div>
+                    </t-radio>
+                    <t-radio value="proxy">
+                      <div>
+                        <div>{{ $t('page.host.captcha.ip_mode_proxy') }}</div>
+                        <div class="mode-desc">{{ $t('page.host.captcha.ip_mode_proxy_desc') }}</div>
+                      </div>
+                    </t-radio>
+                  </t-radio-group>
+                </t-tooltip>
+              </t-form-item>
+
               <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="captchaConfigData.is_enable_captcha == '1'">
                 <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
                            :overlay-style="{ width: '200px' }" show-arrow>
@@ -956,7 +998,7 @@ const INITIAL_DATA = {
   remarks: '',
   defense_json: '{"bot":1,"sqli":1,"xss":1,"scan"1,"rce":1,"sensitive":1,"traversal":1}',
   healthy_json: '{"is_enable_healthy":1,"fail_count":3,"success_count":3,"response_time":60,"check_method":"GET","check_path":"/","expected_codes":"200,"}',
-  captcha_json: '{"is_enable_captcha":1,"exclude_urls":[],"expire_time":24}',
+  captcha_json: '{"is_enable_captcha":1,"exclude_urls":[],"expire_time":24,"ip_mode":"nic"}',
   start_status: '0',
   exclude_url_log:'',
   is_enable_load_balance: '0',
@@ -990,8 +1032,9 @@ const INITIAL_HEALTHY={
 
 const INITIAL_CAPTCHA={
   is_enable_captcha: '0',
-  exclude_urls: [],
-  expire_time: 24
+  exclude_urls: "",
+  expire_time: 24,
+  ip_mode: 'nic',
 }
 
 export default Vue.extend({
@@ -1378,7 +1421,8 @@ export default Vue.extend({
       captchaConfigData: {
         is_enable_captcha: '0',
         exclude_urls: "",
-        expire_time: 24
+        expire_time: 24,
+        ip_mode:"nic",
       },
     };
   },
@@ -1595,6 +1639,8 @@ export default Vue.extend({
               that.captchaConfigData.is_enable_captcha = getOrDefault(this.captchaConfigData,"is_enable_captcha","1")
               //that.captchaConfigData.exclude_urls = getOrDefault(this.captchaConfigData,"exclude_urls","3")
               that.captchaConfigData.expire_time = getOrDefault(this.captchaConfigData,"expire_time","24")
+              that.captchaConfigData.ip_mode = getOrDefault(this.captchaConfigData,"ip_mode","nic")
+
             }else{
               that.captchaConfigData = {...INITIAL_CAPTCHA }
             }
@@ -1684,8 +1730,7 @@ export default Vue.extend({
 
         addHost( {
           ...postdata
-        })
-          .then((res) => {
+        }).then((res) => {
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
@@ -1756,7 +1801,8 @@ export default Vue.extend({
         let captchaData= {
           is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
           exclude_urls: this.captchaConfigData.exclude_urls,
-          expire_time: this.captchaConfigData.expire_time
+          expire_time: this.captchaConfigData.expire_time,
+          ip_mode: this.captchaConfigData.ip_mode
         }
         postdata['captcha_json'] = JSON.stringify(captchaData)
         console.log('editHost',postdata)
@@ -1931,6 +1977,7 @@ export default Vue.extend({
               that.captchaConfigData.is_enable_captcha = getOrDefault(this.captchaConfigData,"is_enable_captcha","1")
               //that.captchaConfigData.exclude_urls = getOrDefault(this.captchaConfigData,"exclude_urls","3")
               that.captchaConfigData.expire_time = getOrDefault(this.captchaConfigData,"expire_time","24")
+              this.$set(that.captchaConfigData, 'ip_mode', getOrDefault(this.captchaConfigData,"ip_mode","nic"))
             }else{
               that.captchaConfigData = {...INITIAL_CAPTCHA }
             }

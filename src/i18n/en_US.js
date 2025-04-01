@@ -227,6 +227,12 @@ export default {
       limit_mode_effect_incomplete: 'Please fill in time window and request limit to see the effect',
       limit_mode_window_effect: 'Current effect: Within {rate} seconds, the same IP is allowed a maximum of {limit} requests, exceeding will be blocked',
       limit_mode_rate_effect: 'Current effect: Within {rate} seconds, the same IP is allowed a maximum of {limit} requests, averaging {ratePerSecond} per second, exceeding will be blocked',
+      ip_mode: 'IP Extraction Mode',
+      ip_mode_nic: 'NIC Mode',
+      ip_mode_nic_desc: 'Get client IP directly from network connection',
+      ip_mode_proxy: 'Proxy Mode',
+      ip_mode_proxy_desc: 'Get real client IP from HTTP headers (X-Forwarded-For, etc.)',
+      ip_mode_unknown: 'Unknown Mode',
     },
     visit_log:{
       visit_log: "Protection Logs",
@@ -434,7 +440,13 @@ export default {
         exclude_urls_placeholder: 'e.g.: /api/',
         expire_time: 'Verification Period',
         expire_time_tips: 'How long the verification remains valid',
-        hours: 'hours'
+        hours: 'hours',
+        ip_mode: 'IP Extraction Mode',
+        ip_mode_tips: 'Choose how to extract client IP address from requests',
+        ip_mode_nic: 'NIC Mode',
+        ip_mode_nic_desc: 'Get client IP directly from network connection',
+        ip_mode_proxy: 'Proxy Mode',
+        ip_mode_proxy_desc: 'Get real client IP from HTTP headers (X-Forwarded-For, etc.)'
       },
       keyfile: "Key String",
       keyfile_content: "Usually filename: *.key Content format: -----BEGIN RSA PRIVATE KEY----- Copy all and fill in",
