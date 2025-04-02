@@ -449,6 +449,18 @@
       value: {
         handler(newVal) {
           this.formData = JSON.parse(JSON.stringify(newVal));
+          // 将数字类型转换为字符串类型，确保不为空时才转换
+          this.formData.ssl = this.formData.ssl != null ? this.formData.ssl.toString() : "0"
+          this.formData.start_status = this.formData.start_status != null ? this.formData.start_status.toString() : "0"
+          this.formData.unrestricted_port = this.formData.unrestricted_port != null ? this.formData.unrestricted_port.toString() : "0"
+          this.formData.is_enable_load_balance = this.formData.is_enable_load_balance != null ? this.formData.is_enable_load_balance.toString() : "0"
+          this.formData.load_balance_stage = this.formData.load_balance_stage != null ? this.formData.load_balance_stage.toString() : "1"
+          this.formData.auto_jump_https = this.formData.auto_jump_https != null ? this.formData.auto_jump_https.toString() : "0"
+          this.formData.is_trans_back_domain = this.formData.is_trans_back_domain != null ? this.formData.is_trans_back_domain.toString() : "0"
+          this.formData.is_enable_http_auth_base = this.formData.is_enable_http_auth_base != null ? this.formData.is_enable_http_auth_base.toString() : "0"
+          this.formData.response_time_out = this.formData.response_time_out != null ? this.formData.response_time_out.toString() : "60"
+          this.formData.insecure_skip_verify = this.formData.insecure_skip_verify != null ? this.formData.insecure_skip_verify.toString() : "0"
+
 
           // 解析防御配置
           if (this.formData.defense_json) {

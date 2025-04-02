@@ -253,17 +253,6 @@ export default Vue.extend({
       sslformEditData: {
         ...INITIAL_SSL_DATA
       },
-      //主机防御细节
-      hostDefenseData: {
-        bot: "1",
-        sqli: "1",
-        xss: "1",
-        scan: "1",
-        rce: "1",
-        sensitive:"1",
-        traversal:"1",
-      },
-
       sslrules: {
         cert_content: [
           {
@@ -529,25 +518,8 @@ export default Vue.extend({
       selectCanFilter:true,
       //当前选择的主机
       currentHostCode:"",
-      // 添加健康度检测配置数据
-      healthyConfigData: {
-        is_enable_healthy: "1",
-        fail_count: "3",
-        success_count: "3",
-        response_time: "5",
-        check_method: 'GET',
-        check_path: '/',
-        expected_codes: '200,',
-      },
       guardAllConfirmVisible: false, // 一键修改所有主机防护状态的确认对话框
       guardAllStatus: "1", // 默认选择开启
-      // 验证码配置数据
-      captchaConfigData: {
-        is_enable_captcha: '0',
-        exclude_urls: "",
-        expire_time: 24,
-        ip_mode:"nic",
-      },
     };
   },
   computed: {
@@ -728,47 +700,10 @@ export default Vue.extend({
           console.log(resdata)
           if (resdata.code === 0) {
             let detail_data_tmp = resdata.data;
-            detail_data_tmp.ssl = detail_data_tmp.ssl.toString()
-            detail_data_tmp.start_status = detail_data_tmp.start_status.toString()
-            detail_data_tmp.unrestricted_port = detail_data_tmp.unrestricted_port.toString()
-            detail_data_tmp.auto_jump_https = detail_data_tmp.auto_jump_https.toString()
-            detail_data_tmp.is_trans_back_domain = detail_data_tmp.is_trans_back_domain.toString()
-            detail_data_tmp.is_enable_http_auth_base = detail_data_tmp.is_enable_http_auth_base.toString()
-            detail_data_tmp.response_time_out = detail_data_tmp.response_time_out.toString()
-            detail_data_tmp.insecure_skip_verify = detail_data_tmp.insecure_skip_verify.toString()
             that.formData= {
               ...detail_data_tmp
             }
             that.formData.code = uuidv4()
-            let defenseJson = JSON.parse(detail_data_tmp.defense_json)
-            that.hostDefenseData.bot = getOrDefault(defenseJson,"bot","1")
-            that.hostDefenseData.sqli = getOrDefault(defenseJson,"sqli","1")
-            that.hostDefenseData.xss = getOrDefault(defenseJson,"xss","1")
-            that.hostDefenseData.scan = getOrDefault(defenseJson,"scan","1")
-            that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
-            that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
-            that.hostDefenseData.traversal = getOrDefault(defenseJson,"traversal","1")
-            if (that.detail_data.healthy_json!=""){
-              that.healthyConfigData = JSON.parse(that.detail_data.healthy_json)
-              that.healthyConfigData.is_enable_healthy = getOrDefault(this.healthyConfigData,"is_enable_healthy","1")
-              that.healthyConfigData.fail_count = getOrDefault(this.healthyConfigData,"fail_count","3")
-              that.healthyConfigData.success_count = getOrDefault(this.healthyConfigData,"success_count","3")
-              that.healthyConfigData.response_time = getOrDefault(this.healthyConfigData,"response_time","5")
-            }else{
-              that.healthyConfigData = {...INITIAL_HEALTHY }
-            }
-
-            if (that.detail_data.captcha_json!=""){
-              that.captchaConfigData = JSON.parse(that.detail_data.captcha_json)
-              that.captchaConfigData.is_enable_captcha = getOrDefault(this.captchaConfigData,"is_enable_captcha","1")
-              //that.captchaConfigData.exclude_urls = getOrDefault(this.captchaConfigData,"exclude_urls","3")
-              that.captchaConfigData.expire_time = getOrDefault(this.captchaConfigData,"expire_time","24")
-              that.captchaConfigData.ip_mode = getOrDefault(this.captchaConfigData,"ip_mode","nic")
-
-            }else{
-              that.captchaConfigData = {...INITIAL_CAPTCHA }
-            }
-
           }
         })
         .catch((e: Error) => {
@@ -954,51 +889,9 @@ export default Vue.extend({
           console.log(resdata)
           if (resdata.code === 0) {
             that.detail_data = resdata.data;
-            that.detail_data.ssl = that.detail_data.ssl.toString()
-            that.detail_data.start_status = that.detail_data.start_status.toString()
-            that.detail_data.unrestricted_port = that.detail_data.unrestricted_port.toString()
-            that.detail_data.is_enable_load_balance = that.detail_data.is_enable_load_balance.toString()
-            that.detail_data.load_balance_stage = that.detail_data.load_balance_stage.toString()
-            that.detail_data.auto_jump_https = that.detail_data.auto_jump_https.toString()
-            that.detail_data.is_trans_back_domain = that.detail_data.is_trans_back_domain.toString()
-            that.detail_data.is_enable_http_auth_base = that.detail_data.is_enable_http_auth_base.toString()
-            that.detail_data.response_time_out = that.detail_data.response_time_out.toString()
-            that.detail_data.insecure_skip_verify = that.detail_data.insecure_skip_verify.toString()
             that.formEditData = {
               ...that.detail_data
             }
-            let defenseJson = JSON.parse(that.detail_data.defense_json)
-            that.hostDefenseData.bot = getOrDefault(defenseJson,"bot","1")
-            that.hostDefenseData.sqli = getOrDefault(defenseJson,"sqli","1")
-            that.hostDefenseData.xss = getOrDefault(defenseJson,"xss","1")
-            that.hostDefenseData.scan = getOrDefault(defenseJson,"scan","1")
-            that.hostDefenseData.rce = getOrDefault(defenseJson,"rce","1")
-            that.hostDefenseData.sensitive = getOrDefault(defenseJson,"sensitive","1")
-            that.hostDefenseData.traversal = getOrDefault(defenseJson,"traversal","1")
-
-
-            if (that.detail_data.healthy_json!=""){
-              that.healthyConfigData = JSON.parse(that.detail_data.healthy_json)
-              that.healthyConfigData.is_enable_healthy = getOrDefault(this.healthyConfigData,"is_enable_healthy","1")
-              that.healthyConfigData.fail_count = getOrDefault(this.healthyConfigData,"fail_count","3")
-              that.healthyConfigData.success_count = getOrDefault(this.healthyConfigData,"success_count","3")
-              that.healthyConfigData.response_time = getOrDefault(this.healthyConfigData,"response_time","5")
-            }else{
-              that.healthyConfigData = {...INITIAL_HEALTHY }
-            }
-
-            if (that.detail_data.captcha_json!=""){
-              that.captchaConfigData = JSON.parse(that.detail_data.captcha_json)
-              that.captchaConfigData.is_enable_captcha = getOrDefault(this.captchaConfigData,"is_enable_captcha","1")
-              //that.captchaConfigData.exclude_urls = getOrDefault(this.captchaConfigData,"exclude_urls","3")
-              that.captchaConfigData.expire_time = getOrDefault(this.captchaConfigData,"expire_time","24")
-              this.$set(that.captchaConfigData, 'ip_mode', getOrDefault(this.captchaConfigData,"ip_mode","nic"))
-            }else{
-              that.captchaConfigData = {...INITIAL_CAPTCHA }
-            }
-
-            console.log(that.hostDefenseData)
-            console.log(that.formEditData)
           }
         })
         .catch((e: Error) => {
