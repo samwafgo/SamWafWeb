@@ -85,580 +85,33 @@
         </t-link>
       </div>
       <div slot="body">
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="230">
-          <t-tabs :defaultValue="1">
-            <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
-              <t-form-item :label="$t('page.host.website')" name="host">
-                <t-tooltip class="placement top center" :content="$t('page.host.host_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="formData.host" :placeholder="$t('common.placeholder')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.port')" name="port">
-                <t-tooltip class="placement top center"
-                           :content="$t('page.host.port_tips')"
-                           placement="top" :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="formData.port" :placeholder="$t('page.host.port_placeholder')">
-                  </t-input-number>
-                </t-tooltip>
-                <t-tooltip class="placement top center"
-                           :content="$t('page.host.bind_more_port_tips')"
-                           placement="top" :overlay-style="{ width: '200px' }" show-arrow>
-                  {{ $t('page.host.bind_more_port')  }} <t-input :style="{ width: '200px' }" v-model="formData.bind_more_port" :placeholder="$t('page.host.bind_more_port_placeholder')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.ssl')" name="ssl">
-                <t-tooltip class="placement top center" :content="$t('page.host.ssl_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formData.ssl">
-                    <t-radio value="0">{{ $t('page.host.ssl_option_no') }}</t-radio>
-                    <t-radio value="1">{{ $t('page.host.ssl_option_yes') }}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formData.ssl=='1'">
-                <div style="display: flex; align-items: center;">
-                  <t-select @change="handleSslChange"  :filterable="selectCanFilter" v-model="formData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
-                    <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
-                    <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
-                  </t-select>
-
-                  <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
-                  <t-button @click="handleEditSsl('new')" style="margin-left: 10px;">{{$t('page.host.edit_ssl')}}</t-button>
-
-                </div>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.start_status')" name="start_status">
-                <t-tooltip class="placement top center" :content="$t('page.host.start_status_content')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formData.start_status">
-                    <t-radio value="0">{{ $t('page.host.auto_start_on') }}</t-radio>
-                    <t-radio value="1">{{ $t('page.host.auto_start_off') }}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.auto_jump_https.label_autu_jump_https')" name="auto_jump_https"  v-if="formData.ssl=='1'">
-                <t-radio-group v-model="formData.auto_jump_https">
-                  <t-radio value="0">{{ $t('page.host.auto_jump_https.label_autu_jump_https_off') }}</t-radio>
-                  <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
-                </t-radio-group>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
-                <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formData.unrestricted_port">
-                    <t-radio value="0">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_on') }}</t-radio>
-                    <t-radio value="1">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_off') }}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formData.ssl=='1'">
-                <t-tooltip class="placement top center"
-                           :content="$t('page.host.keyfile_content')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }" v-model="formData.keyfile" :placeholder="$t('common.placeholder')" name="keyfile">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formData.ssl=='1'">
-                <t-tooltip class="placement top center"
-                           :content="$t('page.host.certfile_content')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }" v-model="formData.certfile" :placeholder="$t('common.placeholder')"
-                              name="certfile">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_is_enable')" name="is_enable_load_balance">
-                <t-radio-group v-model="formData.is_enable_load_balance">
-                  <t-radio value="0">{{ $t('page.host.loadbalance.label_is_enable_load_balance_off') }} </t-radio>
-                  <t-radio value="1">{{ $t('page.host.loadbalance.label_is_enable_load_balance_on') }}</t-radio>
-                </t-radio-group>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_type')" name="load_balance_stage" v-if="formData.is_enable_load_balance=='1'">
-                <t-radio-group v-model="formData.load_balance_stage">
-                  <t-radio value="1">{{ $t('page.host.loadbalance.label_loadbalance_type_weight_round_robin') }} </t-radio>
-                  <t-radio value="2">{{ $t('page.host.loadbalance.label_loadbalance_type_ip_hash') }}</t-radio>
-                </t-radio-group>
-              </t-form-item>
-
-              <t-form-item   name="loadbalance"  v-if="formData.is_enable_load_balance=='1'">
-                <load-balance :propHostCode="formData.code"></load-balance>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.remote_host')" name="remote_host">
-                <t-tooltip
-                  class="placement top center"
-                  :content="$t('page.host.remote_host_content')"
-                  placement="top"
-                  :overlay-style="{ width: '200px' }"
-                  show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="formData.remote_host" :placeholder="$t('common.placeholder')+$t('page.host.remote_host')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.is_trans_back_domain')" name="is_trans_back_domain">
-                <t-tooltip
-                  class="placement top center"
-                  :content="$t('page.host.is_trans_back_domain_content')"
-                  placement="top"
-                  :overlay-style="{ width: '200px' }"
-                  show-arrow>
-                  <t-radio-group v-model="formData.is_trans_back_domain">
-                    <t-radio value="0">{{ $t('common.off') }}</t-radio>
-                    <t-radio value="1">{{ $t('common.on') }}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formData.is_enable_load_balance!='1'">
-                <t-tooltip class="placement top center" :content="$t('page.host.remote_ip_content')"
-                           placement="top" :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="formData.remote_ip" :placeholder="$t('common.placeholder')+$t('page.host.remote_ip')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.remote_port')"  name="remote_port" v-if="formData.is_enable_load_balance!='1'">
-                <t-tooltip class="placement top center"
-                           :content="$t('page.host.remote_port_content')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-input-number :style="{ width: '150px' }" v-model="formData.remote_port"
-                                  :placeholder="$t('page.host.port_placeholder')">
-                  </t-input-number>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('common.remarks')" name="remarks">
-                <t-textarea :style="{ width: '480px' }" v-model="formData.remarks" :placeholder="$t('common.placeholder_content')" name="remarks">
-                </t-textarea>
-              </t-form-item>
-            </t-tab-panel>
-            <t-tab-panel :value="2">
-              <template #label>
-                {{$t('page.host.tab_more_domain')}}
-              </template>
-              <t-form-item :label="$t('page.host.more_domain')" name="bind_more_host">
-                <t-tooltip class="placement top center" :content="$t('page.host.more_domain_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }" v-model="formData.bind_more_host" :placeholder="$t('common.placeholder')"
-                              name="bind_more_host">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-            </t-tab-panel>
-            <t-tab-panel :value="3">
-              <template #label>
-                <file-safety-icon style="margin-right: 4px;color:red"/>
-                {{$t('page.host.tab_engine')}}
-              </template>
-
-              <t-form-item :label="$t('page.host.bot_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.bot_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.bot">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.sql_injection_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.sql_injection_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.sqli">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.xss_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.xss_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.xss">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.scan_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.scan_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.scan">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.rce_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.rce_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.rce">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.sensitive_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.sensitive_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.sensitive">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.dir_traversal_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.dir_traversal_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.traversal">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-            </t-tab-panel>
-            <t-tab-panel :value="4">
-              <template #label>
-                {{$t('page.host.tab_other')}}
-              </template>
-              <t-form-item :label="$t('page.host.exclude_url_log')" name="exclude_url_log">
-                <t-tooltip class="placement top center" :content="$t('page.host.exclude_url_log_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }" v-model="formData.exclude_url_log" :placeholder="$t('common.placeholder')"
-                              name="exclude_url_log">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.insecure_skip_verify')" name="insecure_skip_verify">
-                <t-tooltip class="placement top center" :content="$t('page.host.insecure_skip_verify_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formData.insecure_skip_verify">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-            </t-tab-panel>
-
-            <t-tab-panel :value="5">
-              <template #label>
-                {{$t('page.host.tab_password')}}
-              </template>
-              <t-form-item :label="$t('page.host.is_enable_http_auth_base')" name="is_enable_http_auth_base">
-                <t-tooltip class="placement top center" :content="$t('page.host.is_enable_http_auth_base_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formData.is_enable_http_auth_base">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item >
-                <http-auth-base  :propHostCode="formData.code"></http-auth-base>
-              </t-form-item>
-            </t-tab-panel>
-           <!-- 添加健康度检测标签页 -->
-           <t-tab-panel :value="6">
-              <template #label>
-                <t-icon name="health" style="margin-right: 4px;color:#00a870"/>
-                {{$t('page.host.tab_health_check')}}
-              </template>
-               <!-- 使用健康度检测组件 -->
-              <healthy-config :healthy-config="healthyConfigData" @update="val => healthyConfigData = val"></healthy-config>
-            </t-tab-panel>
-
-            <!-- 验证码配置标签页 -->
-            <t-tab-panel :value="7">
-              <template #label>
-                <t-icon name="lock-on" style="margin-right: 4px;color:#0052d9"/>
-                {{$t('page.host.tab_captcha')}}
-              </template>
-              <t-alert theme="warning" v-if="captchaConfigData.is_enable_captcha == '1'">
-                <template #message>{{ $t('page.host.captcha.alert') }} </template>
-              </t-alert>
-              <!-- 使用验证码配置组件 -->
-              <captcha-config  :captcha-config="captchaConfigData" @update="val => captchaConfigData = val"></captcha-config>
-
-            </t-tab-panel>
-
-          </t-tabs>
-
-          <t-form-item style="float: right;margin-top:5px">
-            <t-button variant="outline" @click="onClickCloseBtn">{{ $t('common.close') }}</t-button>
-            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
-          </t-form-item>
-        </t-form>
+        <host-form
+          :value="formData"
+          :ssl-config-list="sslConfigList"
+          :select-can-filter="selectCanFilter"
+          @close="onClickCloseBtn"
+          @submit="onSubmit"
+          @add-ssl="handleAddNewSsl"
+          @edit-ssl="handleEditSsl('new')"
+          @ssl-change="handleSslChange"
+        ></host-form>
       </div>
     </t-dialog>
 
     <!-- Edit WebSite Dialog -->
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="700" :footer="false">
       <div slot="body">
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="230">
-          <t-tabs :defaultValue="1">
-            <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
-              <t-form-item :label="$t('page.host.website')" name="host">
-                <t-input :style="{ width: '480px' }" v-model="formEditData.host" :content="$t('page.host.host_tips')" disabled></t-input>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.port')" name="port">
-                <t-input-number :style="{ width: '150px' }" v-model="formEditData.port" :content="$t('page.host.port_tips')">
-                </t-input-number>
-                <t-tooltip class="placement top center"
-                           :content="$t('page.host.bind_more_port_tips')"
-                           placement="top" :overlay-style="{ width: '200px' }" show-arrow>
-                  {{ $t('page.host.bind_more_port')  }} <t-input  :style="{ width: '200px' }" v-model="formEditData.bind_more_port" :placeholder="$t('page.host.bind_more_port_placeholder')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.ssl')" name="ssl">
-                <t-radio-group v-model="formEditData.ssl">
-                  <t-radio value="0">{{ $t('page.host.ssl_option_no') }}</t-radio>
-                  <t-radio value="1">{{ $t('page.host.ssl_option_yes') }}</t-radio>
-                </t-radio-group>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formEditData.ssl=='1'">
-                <div style="display: flex; align-items: center;">
-                  <t-select @change="handleSslChange" :filterable="selectCanFilter" v-model="formEditData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
-                    <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
-                    <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
-                  </t-select>
-
-                  <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
-                  <t-button @click="handleEditSsl('edit')" style="margin-left: 10px;">{{$t('page.host.edit_ssl')}}</t-button>
-                </div>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.auto_jump_https.label_autu_jump_https')" name="auto_jump_https"  v-if="formEditData.ssl=='1'">
-                <t-radio-group v-model="formEditData.auto_jump_https">
-                  <t-radio value="0">{{ $t('page.host.auto_jump_https.label_autu_jump_https_off') }}</t-radio>
-                  <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
-                </t-radio-group>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
-                <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formEditData.unrestricted_port">
-                    <t-radio value="0">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_on') }}</t-radio>
-                    <t-radio value="1">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_off') }}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formEditData.ssl=='1' && formEditData.bind_ssl_id==''">
-                <t-textarea :style="{ width: '480px' }" v-model="formEditData.keyfile" :placeholder="$t('common.placeholder')"
-                            name="keyfile">
-                </t-textarea>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formEditData.ssl=='1' && formEditData.bind_ssl_id==''">
-                <t-textarea :style="{ width: '480px' }" v-model="formEditData.certfile" :placeholder="$t('common.placeholder')"
-                            name="certfile">
-                </t-textarea>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_is_enable')" name="is_enable_load_balance">
-                <t-radio-group v-model="formEditData.is_enable_load_balance">
-                  <t-radio value="0">{{ $t('page.host.loadbalance.label_is_enable_load_balance_off') }} </t-radio>
-                  <t-radio value="1">{{ $t('page.host.loadbalance.label_is_enable_load_balance_on') }}</t-radio>
-                </t-radio-group>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_type')" name="load_balance_stage" v-if="formEditData.is_enable_load_balance=='1'">
-                <t-radio-group v-model="formEditData.load_balance_stage">
-                  <t-radio value="1">{{ $t('page.host.loadbalance.label_loadbalance_type_weight_round_robin') }} </t-radio>
-                  <t-radio value="2">{{ $t('page.host.loadbalance.label_loadbalance_type_ip_hash') }}</t-radio>
-                </t-radio-group>
-              </t-form-item>
-
-              <t-form-item   name="loadbalance"  v-if="formEditData.is_enable_load_balance=='1'">
-                <load-balance :propHostCode="formEditData.code"></load-balance>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.remote_host')" name="remote_host">
-                <t-tooltip
-                  class="placement top center"
-                  :content="$t('page.host.remote_host_content')"
-                  placement="top"
-                  :overlay-style="{ width: '200px' }"
-                  show-arrow>
-                  <t-input :style="{ width: '480px' }" v-model="formEditData.remote_host" :placeholder="$t('common.placeholder')+$t('page.host.remote_host')"></t-input>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.is_trans_back_domain')" name="is_trans_back_domain">
-                <t-tooltip
-                  class="placement top center"
-                  :content="$t('page.host.is_trans_back_domain_content')"
-                  placement="top"
-                  :overlay-style="{ width: '200px' }"
-                  show-arrow>
-                  <t-radio-group v-model="formEditData.is_trans_back_domain">
-                    <t-radio value="0">{{ $t('common.off') }}</t-radio>
-                    <t-radio value="1">{{ $t('common.on') }}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.remote_ip')" name="remote_ip" v-if="formEditData.is_enable_load_balance!='1'">
-                <t-input :style="{ width: '480px' }" v-model="formEditData.remote_ip" :placeholder="$t('common.placeholder')+$t('page.host.remote_ip')"></t-input>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.remote_port')" name="remote_port" v-if="formEditData.is_enable_load_balance!='1'">
-                <t-input-number :style="{ width: '150px' }" v-model="formEditData.remote_port"
-                                :placeholder="$t('page.host.port_placeholder')"></t-input-number>
-              </t-form-item>
-
-              <t-form-item  :label="$t('common.remarks')"  name="remarks">
-                <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks" :placeholder="$t('common.placeholder_content')"
-                            name="remarks">
-                </t-textarea>
-              </t-form-item>
-
-            </t-tab-panel>
-            <t-tab-panel :value="2">
-              <template #label>
-                {{$t('page.host.tab_more_domain')}}
-              </template>
-              <t-form-item :label="$t('page.host.more_domain')" name="bind_more_host">
-                <t-tooltip class="placement top center" :content="$t('page.host.more_domain_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }" v-model="formEditData.bind_more_host" :placeholder="$t('common.placeholder')"
-                              name="bind_more_host">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-            </t-tab-panel>
-            <t-tab-panel :value="3">
-              <template #label>
-                <file-safety-icon style="margin-right: 4px;color:red"/>
-                {{$t('page.host.tab_engine')}}
-              </template>
-
-              <t-form-item :label="$t('page.host.bot_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.bot_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.bot">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.sql_injection_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.sql_injection_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.sqli">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-
-              <t-form-item :label="$t('page.host.xss_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.xss_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.xss">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.scan_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.scan_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.scan">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.rce_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.rce_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.rce">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.sensitive_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.sensitive_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.sensitive">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.dir_traversal_detection')">
-                <t-tooltip class="placement top center" :content="$t('page.host.dir_traversal_detection_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="hostDefenseData.traversal">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-            </t-tab-panel>
-            <t-tab-panel :value="4">
-              <template #label>
-                {{$t('page.host.tab_other')}}
-              </template>
-
-              <t-form-item :label="$t('page.host.exclude_url_log')" name="exclude_url_log">
-                <t-tooltip class="placement top center" :content="$t('page.host.exclude_url_log_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-textarea :style="{ width: '480px' }" v-model="formEditData.exclude_url_log" :placeholder="$t('common.placeholder')"
-                              name="exclude_url_log">
-                  </t-textarea>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.response_time_out')" name="response_time_out">
-                <t-input-number min="0" :style="{ width: '150px' }" v-model="formEditData.response_time_out" :content="$t('page.host.response_time_out_tips')">
-                </t-input-number>
-              </t-form-item>
-              <t-form-item :label="$t('page.host.insecure_skip_verify')" name="insecure_skip_verify">
-                <t-tooltip class="placement top center" :content="$t('page.host.insecure_skip_verify_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formEditData.insecure_skip_verify">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-            </t-tab-panel>
-            <t-tab-panel :value="5">
-              <template #label>
-                {{$t('page.host.tab_password')}}
-              </template>
-              <t-form-item :label="$t('page.host.is_enable_http_auth_base')" name="is_enable_http_auth_base">
-                <t-tooltip class="placement top center" :content="$t('page.host.is_enable_http_auth_base_tips')" placement="top"
-                           :overlay-style="{ width: '200px' }" show-arrow>
-                  <t-radio-group v-model="formEditData.is_enable_http_auth_base">
-                    <t-radio value="0">{{$t('common.off')}}</t-radio>
-                    <t-radio value="1">{{$t('common.on')}}</t-radio>
-                  </t-radio-group>
-                </t-tooltip>
-              </t-form-item>
-              <t-form-item >
-                <http-auth-base  :propHostCode="formEditData.code"></http-auth-base>
-              </t-form-item>
-            </t-tab-panel>
-            <!-- 添加健康度检测标签页 -->
-            <t-tab-panel :value="6">
-              <template #label>
-                <t-icon name="health" style="margin-right: 4px;color:#00a870"/>
-                {{$t('page.host.tab_health_check')}}
-              </template>
-              <healthy-config  :healthy-config="healthyConfigData" @update="val => healthyConfigData = val"></healthy-config>
-            </t-tab-panel>
-            <!-- 验证码配置标签页 -->
-            <t-tab-panel :value="7">
-              <template #label>
-                <t-icon name="lock-on" style="margin-right: 4px;color:#0052d9"/>
-                {{$t('page.host.tab_captcha')}}
-              </template>
-              <t-alert theme="warning" v-if="captchaConfigData.is_enable_captcha == '1'">
-                <template #message>{{ $t('page.host.captcha.alert') }} </template>
-              </t-alert>
-              <!-- 使用验证码配置组件 -->
-              <captcha-config  :captcha-config="captchaConfigData" @update="val => captchaConfigData = val"></captcha-config>
-            </t-tab-panel>
-          </t-tabs>
-          <t-form-item style="float: right;margin-top:5px">
-            <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>
-            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
-          </t-form-item>
-
-        </t-form>
+        <host-form
+        :value="formEditData"
+        :ssl-config-list="sslConfigList"
+        :select-can-filter="selectCanFilter"
+        :is-edit="true"
+        @close="onClickCloseEditBtn"
+        @submit="onSubmitEdit"
+        @add-ssl="handleAddNewSsl"
+        @edit-ssl="handleEditSsl('edit')"
+        @ssl-change="handleSslChange"
+        ></host-form>
       </div>
     </t-dialog>
 
@@ -690,47 +143,21 @@
 
     <t-dialog :header="$t('common.new')" :visible.sync="addSSLFormVisible" :width="750" :footer="false">
       <div slot="body">
-        <t-form :data="sslformData" ref="form" :rules="sslrules" @submit="onSSLSubmit" :labelWidth="220">
-          <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
-            <t-textarea v-model="sslformData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
-          </t-form-item>
-          <t-form-item :label="$t('page.ssl.label_key_content')" name="key_content">
-            <t-textarea v-model="sslformData.key_content" :style="{ width: '480px' }" rows="4"></t-textarea>
-          </t-form-item>
-          <t-form-item style="float: right">
-            <t-button variant="outline" @click="addSSLFormVisible = !addSSLFormVisible">{{ $t('common.close') }}</t-button>
-            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
-          </t-form-item>
-        </t-form>
+        <ssl-form
+          :value="sslformData"
+          @close="addSSLFormVisible = !addSSLFormVisible"
+          @submit="onSSLSubmit"
+        ></ssl-form>
       </div>
     </t-dialog>
     <t-dialog :header="$t('common.edit')" :visible.sync="editSSLFormVisible" :width="750" :footer="false">
       <div slot="body">
-
-        <t-form :data="sslformEditData" ref="form" :rules="sslrules" @submit="onSSLSubmitEdit" :labelWidth="220">
-          <t-form-item :label="$t('page.ssl.label_valid_to')" name="valid_to">
-            <span>{{sslformEditData.valid_to}} ({{sslformEditData.expiration_info}})</span>
-          </t-form-item>
-          <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
-            <t-textarea v-model="sslformEditData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
-          </t-form-item>
-          <t-form-item :label="$t('page.ssl.label_key_content')" name="key_content">
-            <t-textarea v-model="sslformEditData.key_content" :style="{ width: '480px' }" rows="4"></t-textarea>
-          </t-form-item>
-          <t-form-item>
-            <b>{{$t("page.ssl.label_auto_tip")}}</b>
-          </t-form-item>
-          <t-form-item :label="$t('page.ssl.label_auto_key_path')" name="key_path">
-            <t-textarea v-model="sslformEditData.key_path" :style="{ width: '480px' }" rows="4"></t-textarea>
-          </t-form-item>
-          <t-form-item :label="$t('page.ssl.label_auto_crt_path')" name="cert_path">
-            <t-textarea v-model="sslformEditData.cert_path" :style="{ width: '480px' }"   rows="4"></t-textarea>
-          </t-form-item>
-          <t-form-item style="float: right">
-            <t-button variant="outline" @click="editSSLFormVisible = !editSSLFormVisible">{{ $t('common.close') }}</t-button>
-            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
-          </t-form-item>
-        </t-form>
+        <ssl-form
+          :value="sslformEditData"
+          :is-edit="true"
+          @close="editSSLFormVisible = !editSSLFormVisible"
+          @submit="onSSLSubmitEdit"
+        ></ssl-form>
       </div>
     </t-dialog>
 
@@ -775,7 +202,8 @@ import HealthStatus from "./components/health-status/HealthStatus.vue";
 /*配置组件*/
 import HealthyConfig from './components/HealthyConfig.vue';
 import CaptchaConfig from './components/CaptchaConfig.vue';
-
+import HostForm from './components/HostForm.vue';
+import SslForm from './components/SslForm.vue';
 // 导入初始化常量
 import { INITIAL_DATA, INITIAL_SSL_DATA, INITIAL_HEALTHY, INITIAL_CAPTCHA } from './constants';
 
@@ -791,6 +219,8 @@ export default Vue.extend({
     HealthStatus,
     HealthyConfig,
     CaptchaConfig,
+    HostForm,
+    SslForm,
   },
   data() {
     return {
@@ -833,57 +263,7 @@ export default Vue.extend({
         sensitive:"1",
         traversal:"1",
       },
-      rules: {
-        host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
-          {
-            validator: (val) => {
 
-              const hostRegex = /^(?!https?:\/\/)[^\s]+$/;
-              const isValid = !!val && (hostRegex.test(val));
-
-              // 如果验证通过，则赋值
-              if (isValid) {
-                // 如果是 IPv6 地址，确保加上方括号
-                if (val.includes(":") && !val.startsWith("[")) {
-                  this.formData.remote_host = `http://[${val}]`;  // 处理 IPv6 地址
-                } else {
-                  this.formData.remote_host = `http://${val}`;  // 处理 IPv4 或域名
-                }
-              }else{
-                this.formData.remote_host = ""
-              }
-              return isValid;
-            },            message: this.$t('page.host.host_validation'),
-            type: 'error',
-          },
-        ],
-        port: [{
-          required: true,
-          message: this.$t('common.placeholder')+this.$t('page.host.port'),
-          type: 'error'
-        }],
-        remote_host: [
-          {required: true, message: this.$t('common.placeholder')+this.$t('page.host.remote_host'), type: 'error' },
-          {
-            validator: (val) => {
-              const regex = /^(http:\/\/|https:\/\/)[^\s]+$/; // 验证域名
-              return regex.test(val); // 返回是否有效
-            },
-            message: this.$t('page.host.remote_host_validation'),
-            type: 'error',
-          },
-        ],
-        remote_ip: [{
-          required: true,
-          message: this.$t('common.placeholder')+this.$t('page.host.remote_ip'),
-          type: 'error'
-        }],
-        remote_port: [{
-          required: true,
-          message: this.$t('common.placeholder')+this.$t('page.host.remote_port'),
-          type: 'error'
-        }],
-      },
       sslrules: {
         cert_content: [
           {
@@ -1417,162 +797,53 @@ export default Vue.extend({
       this.formData.code = uuidv4()
       console.log("新增主机code信息", this.formData.code)
     },
-    onSubmit({
-               result,
-               firstError
-             }): void {
+    onSubmit(data ): void {
+      console.log(data)
       let that = this
-      if (!firstError) {
+      addHost( {
+        ...data.result
+      }).then((res) => {
+          let resdata = res
+          console.log(resdata)
+          if (resdata.code === 0) {
+            that.$message.success(resdata.msg);
+            that.addFormVisible = false;
+            that.pagination.current = 1
 
-        let postdata = {
-          ...that.formData
-        }
-        postdata.host = postdata.host.toLowerCase();
-        if (postdata.host.indexOf("http://") >=0 || postdata.host.indexOf("https://") >=0) {
-          that.$message.warning(this.$t('page.host.host_rule_msg'));
-          return
-        }
-        postdata.remote_host = "http://" + postdata.host
-        postdata['ssl'] = Number(postdata['ssl'])
-        postdata['start_status'] = Number(postdata['start_status'])
-        postdata['unrestricted_port'] = Number(postdata['unrestricted_port'])
-        postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
-        postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
-        postdata['auto_jump_https'] = Number(postdata['auto_jump_https'])
-        postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain'])
-        postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base'])
-        postdata['response_time_out'] = Number(postdata['response_time_out'])
-        postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify'])
-        let defenseData = {
-          bot: parseInt(this.hostDefenseData.bot),
-          sqli: parseInt(this.hostDefenseData.sqli),
-          xss: parseInt(this.hostDefenseData.xss),
-          scan: parseInt(this.hostDefenseData.scan),
-          rce: parseInt(this.hostDefenseData.rce),
-          sensitive: parseInt(this.hostDefenseData.sensitive),
-          traversal: parseInt(this.hostDefenseData.traversal)
-        }
-        postdata['defense_json'] = JSON.stringify(defenseData)
-
-        let healthyData= {
-            is_enable_healthy: parseInt(this.healthyConfigData.is_enable_healthy),
-            fail_count: parseInt(this.healthyConfigData.fail_count),
-            success_count:parseInt(this.healthyConfigData.success_count),
-            response_time: parseInt(this.healthyConfigData.response_time),
-            check_method: this.healthyConfigData.check_method,
-            check_path: this.healthyConfigData.check_path,
-            expected_codes: this.healthyConfigData.expected_codes,
-        }
-        postdata['healthy_json'] = JSON.stringify(healthyData)
-
-        let captchaData= {
-          is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
-          exclude_urls: this.captchaConfigData.exclude_urls,
-          expire_time: this.captchaConfigData.expire_time
-        }
-        postdata['captcha_json'] = JSON.stringify(captchaData)
-
-        addHost( {
-          ...postdata
-        }).then((res) => {
-            let resdata = res
-            console.log(resdata)
-            if (resdata.code === 0) {
-              that.$message.success(resdata.msg);
-              that.addFormVisible = false;
-              that.pagination.current = 1
-
-              that.formData = { ...INITIAL_DATA };
-              that.getList("")
-            } else {
-              that.$message.warning(resdata.msg);
-            }
-          })
-          .catch((e: Error) => {
-            console.log(e);
-          })
-          .finally(() => {
-          });
-      } else {
-        console.log('Errors: ', result);
-        that.$message.warning(firstError);
-      }
-    },
-    onSubmitEdit({
-                   result,
-                   firstError
-                 }): void {
-      let that = this
-      if (!firstError) {
-
-        let postdata = {
-          ...that.formEditData
-        }
-
-        postdata['ssl'] = Number(postdata['ssl'])
-        postdata['start_status'] = Number(postdata['start_status'])
-        postdata['unrestricted_port'] = Number(postdata['unrestricted_port'])
-        postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance'])
-        postdata['load_balance_stage'] = Number(postdata['load_balance_stage'])
-        postdata['auto_jump_https'] = Number(postdata['auto_jump_https'])
-        postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain'])
-        postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base'])
-        postdata['response_time_out'] = Number(postdata['response_time_out'])
-        postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify'])
-        if(postdata['ssl'] ==0){
-          postdata['auto_jump_https'] = 0
-        }
-        let defenseData = {
-          bot: parseInt(this.hostDefenseData.bot),
-          sqli: parseInt(this.hostDefenseData.sqli),
-          xss: parseInt(this.hostDefenseData.xss),
-          scan: parseInt(this.hostDefenseData.scan),
-          rce: parseInt(this.hostDefenseData.rce),
-          sensitive: parseInt(this.hostDefenseData.sensitive),
-          traversal: parseInt(this.hostDefenseData.traversal),
-        }
-        postdata['defense_json'] = JSON.stringify(defenseData)
-        let healthyData= {
-          is_enable_healthy: parseInt(this.healthyConfigData.is_enable_healthy),
-          fail_count: parseInt(this.healthyConfigData.fail_count),
-          success_count:parseInt(this.healthyConfigData.success_count),
-          response_time: parseInt(this.healthyConfigData.response_time),
-          check_method: this.healthyConfigData.check_method,
-          check_path: this.healthyConfigData.check_path,
-          expected_codes: this.healthyConfigData.expected_codes,
-        }
-        postdata['healthy_json'] = JSON.stringify(healthyData)
-        let captchaData= {
-          is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
-          exclude_urls: this.captchaConfigData.exclude_urls,
-          expire_time: this.captchaConfigData.expire_time,
-          ip_mode: this.captchaConfigData.ip_mode
-        }
-        postdata['captcha_json'] = JSON.stringify(captchaData)
-        console.log('editHost',postdata)
-        editHost( {
-          ...postdata
+            that.formData = { ...INITIAL_DATA };
+            that.getList("")
+          } else {
+            that.$message.warning(resdata.msg);
+          }
         })
-          .then((res) => {
-            let resdata = res
-            console.log(resdata)
-            if (resdata.code === 0) {
-              that.$message.success(resdata.msg);
-              that.editFormVisible = false;
-              that.getList("")
-            } else {
-              that.$message.warning(resdata.msg);
-            }
-          })
-          .catch((e: Error) => {
-            console.log(e);
-          })
-          .finally(() => {
-          });
-      } else {
-        console.log('Errors: ', result);
-        that.$message.warning(firstError);
-      }
+        .catch((e: Error) => {
+          console.log(e);
+        })
+        .finally(() => {
+        });
+    },
+    onSubmitEdit(data): void {
+      let that = this
+      console.log('editHost',data)
+      editHost( {
+        ...data.result
+      })
+        .then((res) => {
+          let resdata = res
+          console.log(resdata)
+          if (resdata.code === 0) {
+            that.$message.success(resdata.msg);
+            that.editFormVisible = false;
+            that.getList("")
+          } else {
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        })
+        .finally(() => {
+        });
     },
     onClickCloseBtn(): void {
       this.addFormVisible = false;
@@ -1964,14 +1235,11 @@ export default Vue.extend({
         console.log("edit ssl", this.sslformEditData);
       }
     },
-    onSSLSubmit({
-                  result,
-                  firstError
-                }): void {
+    onSSLSubmit(data): void {
       let that = this;
-      if (!firstError) {
+      console.log("sslnew",data.result)
         sslConfigAddApi({
-          ...this.sslformData,
+          ...data.result,
         })
           .then((res) => {
             if (res.code === 0) {
@@ -1982,27 +1250,22 @@ export default Vue.extend({
               that.$message.warning(res.msg);
             }
           });
-      }
     },
-    onSSLSubmitEdit({
-                      result,
-                      firstError
-                    }): void {
+    onSSLSubmitEdit(data): void {
       let that = this;
-      if (!firstError) {
-        sslConfigEditApi({
-          ...this.sslformEditData,
-        })
-          .then((res) => {
-            if (res.code === 0) {
-              that.getSslFolderList()
-              that.$message.success('编辑成功');
-              that.editSSLFormVisible = false;
-            }else{
-              that.$message.warning(res.msg);
-            }
-          });
-      }
+      console.log("ssledit",data.result)
+      sslConfigEditApi({
+        ...data.result,
+      })
+        .then((res) => {
+          if (res.code === 0) {
+            that.getSslFolderList()
+            that.$message.success('编辑成功');
+            that.editSSLFormVisible = false;
+          }else{
+            that.$message.warning(res.msg);
+          }
+        });
     },
     handleSslChange(selectedId) {
       // 根据选中的 ID 从 sslConfigList 中找到对应的项
