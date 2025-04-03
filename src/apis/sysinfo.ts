@@ -26,3 +26,10 @@ export function DoUpdateApi(params) {
     params: params
   })
 }
+export function GetAnnouncementApi(params) {
+  return request({
+    url: 'sysinfo/announcement',
+    method: 'get',
+    params: params
+  })
+}
