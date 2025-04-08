@@ -396,23 +396,21 @@
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
               validator: (val) => {
-
                 const hostRegex = /^(?!https?:\/\/)[^\s]+$/;
                 const isValid = !!val && (hostRegex.test(val));
-
-                // 如果验证通过，则赋值
-                if (isValid) {
+                
+                // 只有当remote_host为空时才自动设置
+                if (isValid && (!this.formData.remote_host || this.formData.remote_host === '')) {
                   // 如果是 IPv6 地址，确保加上方括号
                   if (val.includes(":") && !val.startsWith("[")) {
                     this.formData.remote_host = `http://[${val}]`;  // 处理 IPv6 地址
                   } else {
                     this.formData.remote_host = `http://${val}`;  // 处理 IPv4 或域名
                   }
-                }else{
-                  this.formData.remote_host = ""
                 }
                 return isValid;
-              },            message: this.$t('page.host.host_validation'),
+              },            
+              message: this.$t('page.host.host_validation'),
               type: 'error',
             },
           ],
@@ -553,7 +551,11 @@
             this.$message.warning(this.$t('page.host.host_rule_msg'));
             return;
           }
-          postdata.remote_host = "http://" + postdata.host;
+          
+          // 只有当remote_host为空时才自动设置
+          if (!postdata.remote_host || postdata.remote_host === '') {
+            postdata.remote_host = "http://" + postdata.host;
+          }
 
           // 转换字符串为数字
           postdata['ssl'] = Number(postdata['ssl']);
