@@ -319,7 +319,7 @@ export default {
         },
         response:{
           response_title: "响应信息",
-          response_body: "响应BODY",
+          response_body: "响应内容",
           response_header: "响应头",
           response_status: "响应状态",
         }

@@ -133,7 +133,7 @@
         </t-list-item>
         <t-textarea v-model="detail_data.res_header" :autosize="{ minRows: 3, maxRows: 5 }" readonly />
         <t-list-item>
-          <t-list-item-meta :title="$t('page.visit_log.detail.request_body')"></t-list-item-meta>
+          <t-list-item-meta :title="$t('page.visit_log.detail.response.response_body')"></t-list-item-meta>
         </t-list-item>
         <t-textarea v-model="detail_data.res_body" :autosize="{ minRows: 3, maxRows: 5 }"  readonly />
         <t-list-item>
