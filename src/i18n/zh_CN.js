@@ -392,6 +392,7 @@ export default {
       tab_password:"网站密码访问",
       tab_health_check: '健康度检测',
       tab_captcha: '验证码配置',
+      tab_anti_leech: "防盗链配置",
       more_domain:"同时绑定多个域名",
       more_domain_tips:"填写多个域名回车换行,不要加端口",
       start_status: "启动状态",
@@ -488,6 +489,19 @@ export default {
         ip_mode_nic_desc: '直接从网络连接中获取客户端IP',
         ip_mode_proxy: '代理模式',
         ip_mode_proxy_desc: '从HTTP头部(X-Forwarded-For等)获取客户端真实IP'
+      },
+      anti_leech: {
+        is_enable: "是否开启防盗链",
+        file_types: "防盗链文件类型",
+        file_types_placeholder: "如：gif|jpg|jpeg|png|bmp|swf",
+        valid_referers: "允许的引用来源",
+        valid_referers_placeholder: "多个来源用分号(;)分隔，如：www.abc.com;www.def.com",
+        valid_referers_desc: "填写说明：none 表示允许引用为空，server_names 表示默认将本站加入白名单。也可以填写如：*.samwaf.com，多个用分号(;)分隔。",
+        action: "非法引用处理方式",
+        action_block: "直接阻止",
+        action_redirect: "重定向",
+        redirect_url: "重定向URL",
+        redirect_url_placeholder: "非法引用时跳转的URL"
       },
       import_file: "导入文件",
       upload_file: "上传文件",

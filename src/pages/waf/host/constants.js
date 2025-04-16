@@ -27,6 +27,7 @@ export const INITIAL_DATA = {
   is_enable_http_auth_base:"0",//是否激活Http Auth Base认证
   response_time_out:"60",//响应超时时间单位秒
   insecure_skip_verify:"0",//是否跳过后端https证书有效性验证
+  anti_leech_json: '{"is_enable_anti_leech":0,"file_types":"gif|jpg|jpeg|png|bmp|swf","valid_referers":"none;server_names","action":"block","redirect_url":""}', // 新增防盗链配置
 };
 
 // SSL配置初始化数据
@@ -54,4 +55,13 @@ export const INITIAL_CAPTCHA = {
   exclude_urls: "",
   expire_time: 24,
   ip_mode: 'nic',
+};
+
+// 防盗链配置初始化数据
+export const INITIAL_ANTILEECH = {
+  is_enable_anti_leech: '0',
+  file_types: 'gif|jpg|jpeg|png|bmp|swf',
+  valid_referers: 'none;server_names;',
+  action: 'block',
+  redirect_url: ''
 };

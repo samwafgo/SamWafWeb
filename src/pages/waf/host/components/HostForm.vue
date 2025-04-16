@@ -315,6 +315,13 @@
             </t-alert>
             <captcha-config :captcha-config="captchaConfigData" @update="val => captchaConfigData = val"></captcha-config>
           </t-tab-panel>
+          <t-tab-panel :value="8">
+            <template #label>
+              <t-icon name="link" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_anti_leech')}}
+            </template>
+            <anti-leech-config :anti-leech-config="antiLeechConfigData" @update="val => antiLeechConfigData = val"></anti-leech-config>
+          </t-tab-panel>
         </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
@@ -332,7 +339,8 @@
   import HttpAuthBase from "../../http_auth_base/index.vue";
   import HealthyConfig from '../components/HealthyConfig.vue';
   import CaptchaConfig from '../components/CaptchaConfig.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA } from '../constants';
+  import AntiLeechConfig from '../components/AntiLeechConfig.vue';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH } from '../constants';
   import {getOrDefault} from '@/utils/usuallytool';
   export default Vue.extend({
     name: 'HostForm',
@@ -342,6 +350,7 @@
       HttpAuthBase,
       HealthyConfig,
       CaptchaConfig,
+      AntiLeechConfig
     },
     props: {
       // 表单数据
@@ -391,7 +400,9 @@
         // 健康度检测配置
         healthyConfigData: { ...INITIAL_HEALTHY },
         // 验证码配置
-        captchaConfigData: { ...INITIAL_CAPTCHA },
+        captchaConfigData: { ...INITIAL_ANTILEECH },
+        // 防恶意链接配置
+        antiLeechConfigData: {...INITIAL_CAPTCHA },
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -526,6 +537,23 @@
             // 如果没有验证码配置，使用默认值
             this.captchaConfigData = { ...INITIAL_CAPTCHA };
           }
+
+          // 解析防盗链配置
+          if (this.formData.anti_leech_json) {
+            try {
+              let that = this;
+              if (that.formData.anti_leech_json != "") {
+                that.antiLeechConfigData = JSON.parse(that.formData.anti_leech_json);
+                that.antiLeechConfigData.is_enable_anti_leech = (that.antiLeechConfigData.is_enable_anti_leech || 0).toString();
+              } else {
+                that.antiLeechConfigData = { ...INITIAL_ANTILEECH };
+              }
+            } catch (e) {
+              this.antiLeechConfigData = { ...INITIAL_ANTILEECH };
+            }
+          } else {
+            this.antiLeechConfigData = { ...INITIAL_ANTILEECH };
+          }
         },
         immediate: true,
         deep: true
@@ -601,6 +629,16 @@
             ip_mode: this.captchaConfigData.ip_mode
           };
           postdata['captcha_json'] = JSON.stringify(captchaData);
+
+          // 处理防盗链配置
+          let antiLeechData = {
+            is_enable_anti_leech: parseInt(this.antiLeechConfigData.is_enable_anti_leech),
+            file_types: this.antiLeechConfigData.file_types,
+            valid_referers: this.antiLeechConfigData.valid_referers,
+            action: this.antiLeechConfigData.action,
+            redirect_url: this.antiLeechConfigData.redirect_url
+          };
+          postdata['anti_leech_json'] = JSON.stringify(antiLeechData);
 
           // 提交表单
           this.$emit('submit', { result: postdata });

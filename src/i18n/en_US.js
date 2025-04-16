@@ -391,6 +391,7 @@ export default {
       tab_password:"Web Password Visit",
       tab_health_check: 'Health Check',
       tab_captcha: 'Captcha Settings',
+      tab_anti_leech: "Anti-Leech Config",
       more_domain:"Bind More Domain",
       more_domain_tips:"Enter multiple domain names, each on a new line, without including the port.",
       start_status: "Start Status",
@@ -447,6 +448,19 @@ export default {
         ip_mode_nic_desc: 'Get client IP directly from network connection',
         ip_mode_proxy: 'Proxy Mode',
         ip_mode_proxy_desc: 'Get real client IP from HTTP headers (X-Forwarded-For, etc.)'
+      },
+      anti_leech: {
+        is_enable: "Enable Anti-Leech",
+        file_types: "File Types",
+        file_types_placeholder: "e.g. gif|jpg|jpeg|png|bmp|swf",
+        valid_referers: "Allowed Referers",
+        valid_referers_placeholder: "Separate multiple referers with semicolon(;), e.g. www.abc.com;www.def.com",
+        valid_referers_desc: "Instructions: 'none' allows empty referer, 'server_names' means the current site is whitelisted by default. You can also add domains like *.samwaf.com, separate multiple with semicolon (;).",
+        action: "Action for Illegal Referer",
+        action_block: "Block Directly",
+        action_redirect: "Redirect",
+        redirect_url: "Redirect URL",
+        redirect_url_placeholder: "URL to redirect when illegal referer"
       },
       keyfile: "Key String",
       keyfile_content: "Usually filename: *.key Content format: -----BEGIN RSA PRIVATE KEY----- Copy all and fill in",
