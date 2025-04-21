@@ -72,7 +72,12 @@ export default {
   },
   topNav:{
     update:{
-      has_new_version:"有新版本啦",
+      has_new_version:"有新版本啦", 
+      confirm_update:"确认更新",
+      update_danger_tips:"升级时候服务会中断几分钟,请注意安排在闲时更新",
+      version_label:"版本:",
+      desc_label:"描述:",
+      more_label:"更多",
     },
     contract:"联系SamWaf",
     help_document:"帮助文档",

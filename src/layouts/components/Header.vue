@@ -2,11 +2,31 @@
 
 
   <div :class="layoutCls">
-    <t-dialog :visible.sync="update_visible" @confirm="handleDoUpdate" :header="$t('topNav.update.has_new_version')">
-      <p>      <icon name="tangerinr" color="orange" />
-{{update_new_ver}}</p>
- <p>
-{{update_desc}}</p>
+    <t-dialog :visible.sync="update_visible" :header="$t('topNav.update.has_new_version')">
+      <template #confirmBtn> <t-button theme="warning" @click="handleDoUpdate">{{$t('topNav.update.confirm_update')}}</t-button>   </template>
+
+      <t-alert theme="warning">
+          <template #message>
+            {{$t('topNav.update.update_danger_tips')}}
+          </template>
+      </t-alert>
+      <div style="margin: 16px 0 0 0; line-height: 1.8;">
+        <div>
+          <strong>{{ $t('topNav.update.version_label') }}</strong>
+          {{ update_new_ver }}
+        </div>
+        <div>
+          <strong>{{ $t('topNav.update.desc_label') }}</strong>
+          {{ update_desc }}
+        </div>
+        <div> 
+          <t-link theme="primary" 
+          underline href="https://doc.samwaf.com/quickstart/Update.html"
+           target="black">{{ $t('topNav.update.more_label') }}</t-link>
+
+        </div>
+      </div>
+
     </t-dialog>
     <t-head-menu :class="menuCls" :theme="theme" expandType="popup" :value="active">
       <template #logo>

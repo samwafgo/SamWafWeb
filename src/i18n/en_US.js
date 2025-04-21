@@ -73,6 +73,11 @@ export default {
   topNav:{
     update:{
       has_new_version: "New version available",
+      confirm_update: "Confirm Update",
+      update_danger_tips:"Please note that the service will be interrupted for a few minutes during the upgrade. We recommend scheduling the update during off-peak hours.",
+      version_label:"Version:",
+      desc_label:"Description:",
+      more_label:"More information",
     },
     contract: "Contact SamWaf",
     help_document: "Help Document",
