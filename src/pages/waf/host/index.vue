@@ -86,14 +86,10 @@
       </div>
       <div slot="body">
         <host-form
-          :value="formData"
-          :ssl-config-list="sslConfigList"
+          :value="formData" 
           :select-can-filter="selectCanFilter"
           @close="onClickCloseBtn"
-          @submit="onSubmit"
-          @add-ssl="handleAddNewSsl"
-          @edit-ssl="handleEditSsl('new')"
-          @ssl-change="handleSslChange"
+          @submit="onSubmit" 
         ></host-form>
       </div>
     </t-dialog>
@@ -102,15 +98,11 @@
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="700" :footer="false">
       <div slot="body">
         <host-form
-        :value="formEditData"
-        :ssl-config-list="sslConfigList"
+        :value="formEditData" 
         :select-can-filter="selectCanFilter"
         :is-edit="true"
         @close="onClickCloseEditBtn"
-        @submit="onSubmitEdit"
-        @add-ssl="handleAddNewSsl"
-        @edit-ssl="handleEditSsl('edit')"
-        @ssl-change="handleSslChange"
+        @submit="onSubmitEdit" 
         ></host-form>
       </div>
     </t-dialog>
@@ -141,25 +133,7 @@
       <div>{{$t('page.host.start_status_confirm_content')}}</div>
     </t-dialog>
 
-    <t-dialog :header="$t('common.new')" :visible.sync="addSSLFormVisible" :width="750" :footer="false">
-      <div slot="body">
-        <ssl-form
-          :value="sslformData"
-          @close="addSSLFormVisible = !addSSLFormVisible"
-          @submit="onSSLSubmit"
-        ></ssl-form>
-      </div>
-    </t-dialog>
-    <t-dialog :header="$t('common.edit')" :visible.sync="editSSLFormVisible" :width="750" :footer="false">
-      <div slot="body">
-        <ssl-form
-          :value="sslformEditData"
-          :is-edit="true"
-          @close="editSSLFormVisible = !editSSLFormVisible"
-          @submit="onSSLSubmitEdit"
-        ></ssl-form>
-      </div>
-    </t-dialog>
+    
 
     <t-dialog :header="$t('page.host.ssl_auto_apply')" :visible.sync="sslAutoApplyVisible" :width="900" :footer="false">
       <div slot="body">
@@ -181,14 +155,14 @@
   </div>
 </template>
 <script lang="ts">
-import {AesDecrypt, getBaseUrl,getOrDefault} from '@/utils/usuallytool';
+import {AesDecrypt, getBaseUrl} from '@/utils/usuallytool';
 import Vue from 'vue';
 import {FileSafetyIcon, LinkIcon, SearchIcon} from 'tdesign-icons-vue';
 import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost,modifyAllGuardStatus} from '@/apis/host';
-import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
+ 
 import SslOrderList from "@/pages/waf/sslorder/index.vue";
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -198,14 +172,11 @@ import {
 } from '@/constants';
 import LoadBalance from "../loadbalance/index.vue";
 import HttpAuthBase from "../http_auth_base/index.vue"
-import HealthStatus from "./components/health-status/HealthStatus.vue";
-/*配置组件*/
-import HealthyConfig from './components/HealthyConfig.vue';
-import CaptchaConfig from './components/CaptchaConfig.vue';
+import HealthStatus from "./components/health-status/HealthStatus.vue"; 
 import HostForm from './components/HostForm.vue';
-import SslForm from './components/SslForm.vue';
+
 // 导入初始化常量
-import { INITIAL_DATA, INITIAL_SSL_DATA, INITIAL_HEALTHY, INITIAL_CAPTCHA } from './constants';
+import { INITIAL_DATA,  INITIAL_HEALTHY, INITIAL_CAPTCHA } from './constants';
 
 export default Vue.extend({
   name: 'ListBase',
@@ -216,11 +187,8 @@ export default Vue.extend({
     SslOrderList,
     LoadBalance,
     HttpAuthBase,
-    HealthStatus,
-    HealthyConfig,
-    CaptchaConfig,
+    HealthStatus, 
     HostForm,
-    SslForm,
   },
   data() {
     return {
@@ -236,9 +204,7 @@ export default Vue.extend({
       addFormVisible: false,
       editFormVisible: false,
       guardVisible: false,
-      confirmVisible: false,
-      addSSLFormVisible:false,
-      editSSLFormVisible:false,
+      confirmVisible: false, 
       sslAutoApplyVisible: false,
       ImportXlsxVisible: false,
       formData: {
@@ -246,29 +212,7 @@ export default Vue.extend({
       },
       formEditData: {
         ...INITIAL_DATA
-      },
-      sslformData: {
-        ...INITIAL_SSL_DATA
-      },
-      sslformEditData: {
-        ...INITIAL_SSL_DATA
-      },
-      sslrules: {
-        cert_content: [
-          {
-            required: true,
-            message: this.$t('common.select_placeholder') + this.$t('page.ssl.label_cert_content'),
-            type: 'error'
-          }
-        ],
-        key_content: [
-          {
-            required: true,
-            message: this.$t('common.select_placeholder') + this.$t('page.ssl.label_key_content'),
-            type: 'error'
-          }
-        ]
-      },
+      }, 
       remote_system_options: [{
         label: this.$t('page.host.back_system_type_baota'),
         value: '1'
@@ -511,9 +455,7 @@ export default Vue.extend({
           colKey: 'op',
           title: this.$t('common.op'),
         },
-      ],
-      //ssl证书夹
-      sslConfigList: [],
+      ], 
       //下拉框是否可以筛选
       selectCanFilter:true,
       //当前选择的主机
@@ -712,8 +654,7 @@ export default Vue.extend({
         .finally(() => {
         });
     },
-    handleClickEdit(e) {
-      this.getSslFolderList()
+    handleClickEdit(e) { 
       console.log(e)
       const {
         code, global_host
@@ -726,8 +667,7 @@ export default Vue.extend({
       this.editFormVisible = true
       this.getDetail(code)
     },
-    handleAddHost() {
-      this.getSslFolderList()
+    handleAddHost() { 
       this.addFormVisible = true
       this.formData.code = uuidv4()
       console.log("新增主机code信息", this.formData.code)
@@ -1068,113 +1008,7 @@ export default Vue.extend({
     onStartStatusCancel() {
       this.startConfirmVisible = false
       this.startStatusIdx = -1;
-    },
-    getSslFolderList() {
-      let that = this;
-      sslConfigListApi({
-        pageSize: 10000,
-        ...that.searchformData
-      })
-        .then((res) => {
-          let resdata = res;
-          if (resdata.code === 0) {
-            this.sslConfigList = resdata.data.list;
-          }
-        })
-        .catch((e: Error) => {
-          console.log(e);
-        })
-        .finally(() => {
-          this.dataLoading = false;
-        });
-      this.dataLoading = true;
-    },
-    handleAddNewSsl(){
-      this.addSSLFormVisible = true
-      this.sslformData ={...INITIAL_SSL_DATA}
-    },
-    handleEditSsl(source) {
-      let sslConfigItem;
-
-      if (source === "new") {
-        if (this.formData.bind_ssl_id === '') {
-          this.$message.warning(this.$t('page.host.bind_empty_ssl_tips'));
-          return;
-        }
-        sslConfigItem = this.sslConfigList.find(item => item.id === this.formData.bind_ssl_id);
-
-        if (!sslConfigItem) {
-          this.$message.warning(this.$t('page.host.ssl_not_found_tips')); // 提示未找到 SSL
-          return;
-        }
-
-        this.sslformEditData = { ...sslConfigItem };
-        this.editSSLFormVisible = true;
-
-      } else if (source === "edit") {
-        if (this.formEditData.bind_ssl_id === '') {
-          this.$message.warning(this.$t('page.host.bind_empty_ssl_tips'));
-          return;
-        }
-        sslConfigItem = this.sslConfigList.find(item => item.id === this.formEditData.bind_ssl_id);
-
-        if (!sslConfigItem) {
-          this.$message.warning(this.$t('page.host.ssl_not_found_tips'));
-          return;
-        }
-
-        this.sslformEditData = { ...sslConfigItem };
-        this.editSSLFormVisible = true;
-        console.log("edit ssl", this.sslformEditData);
-      }
-    },
-    onSSLSubmit(data): void {
-      let that = this;
-      console.log("sslnew",data.result)
-        sslConfigAddApi({
-          ...data.result,
-        })
-          .then((res) => {
-            if (res.code === 0) {
-              that.getSslFolderList()
-              that.$message.success('添加成功');
-              that.addSSLFormVisible = false;
-            }else{
-              that.$message.warning(res.msg);
-            }
-          });
-    },
-    onSSLSubmitEdit(data): void {
-      let that = this;
-      console.log("ssledit",data.result)
-      sslConfigEditApi({
-        ...data.result,
-      })
-        .then((res) => {
-          if (res.code === 0) {
-            that.getSslFolderList()
-            that.$message.success('编辑成功');
-            that.editSSLFormVisible = false;
-          }else{
-            that.$message.warning(res.msg);
-          }
-        });
-    },
-    handleSslChange(selectedId) {
-      // 根据选中的 ID 从 sslConfigList 中找到对应的项
-      const selectedItem = this.sslConfigList.find(item => item.id === selectedId);
-      if (selectedItem) {
-        // 你可以在这里处理需要的逻辑，例如复制 selectedItem
-        console.log('Selected SSL Item:', selectedItem);
-        if(this.addFormVisible){
-          this.formData.certfile = selectedItem.cert_content
-          this.formData.keyfile = selectedItem.key_content
-        }else if(this.editFormVisible){
-          this.formEditData.certfile = selectedItem.cert_content
-          this.formEditData.keyfile = selectedItem.key_content
-        }
-      }
-    },
+    },  
     /**
      * 筛选结果
      */

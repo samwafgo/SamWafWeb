@@ -1,5 +1,7 @@
 <template>
-    <div class="host-form">
+  <div>
+
+  <div class="host-form">
       <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="230">
         <t-tabs :defaultValue="1">
           <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
@@ -47,8 +49,8 @@
                   <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
                 </t-select>
 
-                <t-button @click="$emit('add-ssl')" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
-                <t-button @click="$emit('edit-ssl')" style="margin-left: 10px;">{{$t('page.host.edit_ssl')}}</t-button>
+                <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
+                <t-button @click="handleEditSsl" style="margin-left: 10px;">{{$t('page.host.edit_ssl')}}</t-button>
               </div>
             </t-form-item>
 
@@ -68,17 +70,6 @@
                 <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
               </t-radio-group>
             </t-form-item>
-
-
-
-            <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formData.ssl=='1'">
-              <t-tooltip class="placement top center"
-                       :content="$t('page.host.keyfile_content')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-textarea :style="{ width: '480px' }" v-model="formData.keyfile" :placeholder="$t('common.placeholder')" name="keyfile">
-                </t-textarea>
-              </t-tooltip>
-            </t-form-item>
             <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formData.ssl=='1'">
               <t-tooltip class="placement top center"
                        :content="$t('page.host.certfile_content')" placement="top"
@@ -88,7 +79,14 @@
                 </t-textarea>
               </t-tooltip>
             </t-form-item>
-
+            <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formData.ssl=='1'">
+              <t-tooltip class="placement top center"
+                         :content="$t('page.host.keyfile_content')" placement="top"
+                         :overlay-style="{ width: '200px' }" show-arrow>
+                <t-textarea :style="{ width: '480px' }" v-model="formData.keyfile" :placeholder="$t('common.placeholder')" name="keyfile">
+                </t-textarea>
+              </t-tooltip>
+            </t-form-item>
             <t-form-item :label="$t('page.host.loadbalance.label_loadbalance_is_enable')" name="is_enable_load_balance">
               <t-radio-group v-model="formData.is_enable_load_balance">
                 <t-radio value="0">{{ $t('page.host.loadbalance.label_is_enable_load_balance_off') }} </t-radio>
@@ -330,7 +328,29 @@
         </t-form-item>
       </t-form>
     </div>
-  </template>
+
+    <t-dialog :header="$t('common.new')" :visible.sync="addSSLFormVisible" :width="750" :footer="false">
+      <div slot="body">
+        <ssl-form
+          :value="sslformData"
+          @close="addSSLFormVisible = !addSSLFormVisible"
+          @submit="onSSLSubmit"
+        ></ssl-form>
+      </div>
+    </t-dialog>
+    <t-dialog :header="$t('common.edit')" :visible.sync="editSSLFormVisible" :width="750" :footer="false">
+      <div slot="body">
+        <ssl-form
+          :value="sslformEditData"
+          :is-edit="true"
+          @close="editSSLFormVisible = !editSSLFormVisible"
+          @submit="onSSLSubmitEdit"
+        ></ssl-form>
+      </div>
+    </t-dialog>
+
+  </div>
+</template>
 
   <script lang="ts">
   import Vue from 'vue';
@@ -340,7 +360,9 @@
   import HealthyConfig from '../components/HealthyConfig.vue';
   import CaptchaConfig from '../components/CaptchaConfig.vue';
   import AntiLeechConfig from '../components/AntiLeechConfig.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH } from '../constants';
+  import SslForm from '../components/SslForm.vue';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA } from '../constants';
+  import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   export default Vue.extend({
     name: 'HostForm',
@@ -350,7 +372,8 @@
       HttpAuthBase,
       HealthyConfig,
       CaptchaConfig,
-      AntiLeechConfig
+      AntiLeechConfig,
+      SslForm,
     },
     props: {
       // 表单数据
@@ -362,11 +385,6 @@
       isEdit: {
         type: Boolean,
         default: false
-      },
-      // SSL配置列表
-      sslConfigList: {
-        type: Array,
-        default: () => []
       },
       // 下拉框是否可筛选
       selectCanFilter: {
@@ -409,7 +427,7 @@
               validator: (val) => {
                 const hostRegex = /^(?!https?:\/\/)[^\s]+$/;
                 const isValid = !!val && (hostRegex.test(val));
-                
+
                 // 只有当remote_host为空时才自动设置
                 if (isValid && (!this.formData.remote_host || this.formData.remote_host === '')) {
                   // 如果是 IPv6 地址，确保加上方括号
@@ -420,7 +438,7 @@
                   }
                 }
                 return isValid;
-              },            
+              },
               message: this.$t('page.host.host_validation'),
               type: 'error',
             },
@@ -452,6 +470,34 @@
             type: 'error'
           }],
         },
+        //ssl
+        addSSLFormVisible:false,
+        editSSLFormVisible:false,
+        //ssl证书夹
+        sslConfigList: [],
+        sslformData: {
+          ...INITIAL_SSL_DATA
+        },
+        sslformEditData: {
+          ...INITIAL_SSL_DATA
+        },
+        sslrules: {
+          cert_content: [
+            {
+              required: true,
+              message: this.$t('common.select_placeholder') + this.$t('page.ssl.label_cert_content'),
+              type: 'error'
+            }
+          ],
+          key_content: [
+            {
+              required: true,
+              message: this.$t('common.select_placeholder') + this.$t('page.ssl.label_key_content'),
+              type: 'error'
+            }
+          ]
+        },
+
       };
     },
     watch: {
@@ -559,95 +605,200 @@
         deep: true
       }
     },
+    created() {
+      this.getSslFolderList();
+    },
     methods: {
+      getSslFolderList() {
+        let that = this;
+        sslConfigListApi({
+          pageSize: 10000,
+          remarks: "",
+          code: ""
+        })
+          .then((res) => {
+            let resdata = res;
+            if (resdata.code === 0) {
+              this.sslConfigList = resdata.data.list;
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+          .finally(() => {
+            this.dataLoading = false;
+          });
+        this.dataLoading = true;
+      },
       // 处理SSL选择变更
       handleSslChange(value) {
-        this.$emit('ssl-change', value);
+        // 查找选中的SSL配置
+        const selectedSsl = this.sslConfigList.find(item => item.id === value);
+        // 如果找到了SSL配置，直接在本地更新证书内容
+        if (selectedSsl) {
+          this.formData.certfile = selectedSsl.cert_content;
+          this.formData.keyfile = selectedSsl.key_content;
+        }
       },
+      handleAddNewSsl(){
+      this.addSSLFormVisible = true
+      this.sslformData ={...INITIAL_SSL_DATA}
+      },
+      handleEditSsl() {
+        let sslConfigItem;
 
-      // 表单提交
-      onSubmit({ validateResult, firstError }) {
-        console.log(validateResult, firstError);
-        if (validateResult === true) {
-          let postdata = {
-            ...this.formData
-          };
-
-          // 处理主机名
-          postdata.host = postdata.host.toLowerCase();
-          if (postdata.host.indexOf("http://") >= 0 || postdata.host.indexOf("https://") >= 0) {
-            this.$message.warning(this.$t('page.host.host_rule_msg'));
+        if (!this.isEdit) {
+          if (this.formData.bind_ssl_id === '') {
+            this.$message.warning(this.$t('page.host.bind_empty_ssl_tips'));
             return;
           }
-          
-          // 只有当remote_host为空时才自动设置
-          if (!postdata.remote_host || postdata.remote_host === '') {
-            postdata.remote_host = "http://" + postdata.host;
+          sslConfigItem = this.sslConfigList.find(item => item.id === this.formData.bind_ssl_id);
+
+          if (!sslConfigItem) {
+            this.$message.warning(this.$t('page.host.ssl_not_found_tips')); // 提示未找到 SSL
+            return;
           }
 
-          // 转换字符串为数字
-          postdata['ssl'] = Number(postdata['ssl']);
-          postdata['start_status'] = Number(postdata['start_status']);
-          postdata['unrestricted_port'] = Number(postdata['unrestricted_port']);
-          postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance']);
-          postdata['load_balance_stage'] = Number(postdata['load_balance_stage']);
-          postdata['auto_jump_https'] = Number(postdata['auto_jump_https']);
-          postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain']);
-          postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base']);
-          postdata['response_time_out'] = Number(postdata['response_time_out']);
-          postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify']);
+          this.sslformEditData = { ...sslConfigItem };
+          this.editSSLFormVisible = true;
 
-          // 处理防御配置
-          let defenseData = {
-            bot: parseInt(this.hostDefenseData.bot),
-            sqli: parseInt(this.hostDefenseData.sqli),
-            xss: parseInt(this.hostDefenseData.xss),
-            scan: parseInt(this.hostDefenseData.scan),
-            rce: parseInt(this.hostDefenseData.rce),
-            sensitive: parseInt(this.hostDefenseData.sensitive),
-            traversal: parseInt(this.hostDefenseData.traversal)
-          };
-          postdata['defense_json'] = JSON.stringify(defenseData);
+        } else if (this.isEdit) {
+          if (this.formData.bind_ssl_id === '') {
+            this.$message.warning(this.$t('page.host.bind_empty_ssl_tips'));
+            return;
+          }
+          sslConfigItem = this.sslConfigList.find(item => item.id === this.formData.bind_ssl_id);
 
-          // 处理健康检测配置
-          let healthyData = {
-            is_enable_healthy: parseInt(this.healthyConfigData.is_enable_healthy),
-            fail_count: parseInt(this.healthyConfigData.fail_count),
-            success_count: parseInt(this.healthyConfigData.success_count),
-            response_time: parseInt(this.healthyConfigData.response_time),
-            check_method: this.healthyConfigData.check_method,
-            check_path: this.healthyConfigData.check_path,
-            expected_codes: this.healthyConfigData.expected_codes,
-          };
-          postdata['healthy_json'] = JSON.stringify(healthyData);
+          if (!sslConfigItem) {
+            this.$message.warning(this.$t('page.host.ssl_not_found_tips'));
+            return;
+          }
 
-          // 处理验证码配置
-          let captchaData = {
-            is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
-            exclude_urls: this.captchaConfigData.exclude_urls,
-            expire_time: this.captchaConfigData.expire_time,
-            ip_mode: this.captchaConfigData.ip_mode
-          };
-          postdata['captcha_json'] = JSON.stringify(captchaData);
+          this.sslformEditData = { ...sslConfigItem };
+          this.editSSLFormVisible = true;
+          console.log("edit ssl", this.sslformEditData);
+        }
+      },
+      onSSLSubmit(data): void {
+        let that = this;
+        console.log("sslnew",data.result)
+          sslConfigAddApi({
+            ...data.result,
+          })
+            .then((res) => {
+              if (res.code === 0) {
+                that.getSslFolderList()
+                that.$message.success('添加成功');
+                that.addSSLFormVisible = false;
+              }else{
+                that.$message.warning(res.msg);
+              }
+            });
+      },
+      onSSLSubmitEdit(data): void {
+        let that = this;
+        console.log("ssledit",data.result)
+        sslConfigEditApi({
+          ...data.result,
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              that.getSslFolderList()
+              that.$message.success('编辑成功');
+              that.editSSLFormVisible = false;
+            }else{
+              that.$message.warning(res.msg);
+            }
+          });
+      },
+        // 表单提交
+        onSubmit({ validateResult, firstError }) {
+          console.log(validateResult, firstError);
+          if (validateResult === true) {
+            let postdata = {
+              ...this.formData
+            };
 
-          // 处理防盗链配置
-          let antiLeechData = {
-            is_enable_anti_leech: parseInt(this.antiLeechConfigData.is_enable_anti_leech),
-            file_types: this.antiLeechConfigData.file_types,
-            valid_referers: this.antiLeechConfigData.valid_referers,
-            action: this.antiLeechConfigData.action,
-            redirect_url: this.antiLeechConfigData.redirect_url
-          };
-          postdata['anti_leech_json'] = JSON.stringify(antiLeechData);
+            // 处理主机名
+            postdata.host = postdata.host.toLowerCase();
+            if (postdata.host.indexOf("http://") >= 0 || postdata.host.indexOf("https://") >= 0) {
+              this.$message.warning(this.$t('page.host.host_rule_msg'));
+              return;
+            }
 
-          // 提交表单
-          this.$emit('submit', { result: postdata });
-        } else {
-          console.log('Errors: ', validateResult);
-          this.$message.warning(firstError);
-          //this.$emit('submit', { result: validateResult, firstError });
+            // 只有当remote_host为空时才自动设置
+            if (!postdata.remote_host || postdata.remote_host === '') {
+              postdata.remote_host = "http://" + postdata.host;
+            }
+
+            // 转换字符串为数字
+            postdata['ssl'] = Number(postdata['ssl']);
+            postdata['start_status'] = Number(postdata['start_status']);
+            postdata['unrestricted_port'] = Number(postdata['unrestricted_port']);
+            postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance']);
+            postdata['load_balance_stage'] = Number(postdata['load_balance_stage']);
+            postdata['auto_jump_https'] = Number(postdata['auto_jump_https']);
+            postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain']);
+            postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base']);
+            postdata['response_time_out'] = Number(postdata['response_time_out']);
+            postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify']);
+
+            if (postdata['ssl'] === 0) {
+              postdata['bind_ssl_id'] = '';
+              postdata['certfile'] = '';
+              postdata['keyfile'] = '';
+            }
+            // 处理防御配置
+            let defenseData = {
+              bot: parseInt(this.hostDefenseData.bot),
+              sqli: parseInt(this.hostDefenseData.sqli),
+              xss: parseInt(this.hostDefenseData.xss),
+              scan: parseInt(this.hostDefenseData.scan),
+              rce: parseInt(this.hostDefenseData.rce),
+              sensitive: parseInt(this.hostDefenseData.sensitive),
+              traversal: parseInt(this.hostDefenseData.traversal)
+            };
+            postdata['defense_json'] = JSON.stringify(defenseData);
+
+            // 处理健康检测配置
+            let healthyData = {
+              is_enable_healthy: parseInt(this.healthyConfigData.is_enable_healthy),
+              fail_count: parseInt(this.healthyConfigData.fail_count),
+              success_count: parseInt(this.healthyConfigData.success_count),
+              response_time: parseInt(this.healthyConfigData.response_time),
+              check_method: this.healthyConfigData.check_method,
+              check_path: this.healthyConfigData.check_path,
+              expected_codes: this.healthyConfigData.expected_codes,
+            };
+            postdata['healthy_json'] = JSON.stringify(healthyData);
+
+            // 处理验证码配置
+            let captchaData = {
+              is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
+              exclude_urls: this.captchaConfigData.exclude_urls,
+              expire_time: this.captchaConfigData.expire_time,
+              ip_mode: this.captchaConfigData.ip_mode
+            };
+            postdata['captcha_json'] = JSON.stringify(captchaData);
+
+            // 处理防盗链配置
+            let antiLeechData = {
+              is_enable_anti_leech: parseInt(this.antiLeechConfigData.is_enable_anti_leech),
+              file_types: this.antiLeechConfigData.file_types,
+              valid_referers: this.antiLeechConfigData.valid_referers,
+              action: this.antiLeechConfigData.action,
+              redirect_url: this.antiLeechConfigData.redirect_url
+            };
+            postdata['anti_leech_json'] = JSON.stringify(antiLeechData);
+
+            // 提交表单
+            this.$emit('submit', { result: postdata });
+          } else {
+            console.log('Errors: ', validateResult);
+            this.$message.warning(firstError);
+            //this.$emit('submit', { result: validateResult, firstError });
+          }
         }
       }
-    }
   });
   </script>

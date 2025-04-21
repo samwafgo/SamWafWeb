@@ -1,7 +1,10 @@
 <template>
   <div class="ssl-form">
-    <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="220">
+    <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="350">
       <!-- 编辑模式下显示有效期 -->
+      <t-form-item :label="$t('page.ssl.label_domains')" name="domains" v-if="isEdit">
+        <span>{{formData.domains}}</span>
+      </t-form-item>
       <t-form-item :label="$t('page.ssl.label_valid_to')" name="valid_to" v-if="isEdit && formData.valid_to">
         <span>{{formData.valid_to}} ({{formData.expiration_info}})</span>
       </t-form-item>
@@ -18,12 +21,12 @@
       <template v-if="isEdit">
         <t-form-item>
           <b>{{$t("page.ssl.label_auto_tip")}}</b>
+        </t-form-item> 
+        <t-form-item :label="$t('page.ssl.label_auto_crt_path')" name="cert_path">
+          <t-textarea v-model="formData.cert_path" :style="{ width: '480px' }" rows="4"></t-textarea>
         </t-form-item>
         <t-form-item :label="$t('page.ssl.label_auto_key_path')" name="key_path">
           <t-textarea v-model="formData.key_path" :style="{ width: '480px' }" rows="4"></t-textarea>
-        </t-form-item>
-        <t-form-item :label="$t('page.ssl.label_auto_crt_path')" name="cert_path">
-          <t-textarea v-model="formData.cert_path" :style="{ width: '480px' }" rows="4"></t-textarea>
         </t-form-item>
       </template>
 
