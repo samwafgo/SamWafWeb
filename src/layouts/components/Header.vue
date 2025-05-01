@@ -3,7 +3,11 @@
 
   <div :class="layoutCls">
     <t-dialog :visible.sync="update_visible" :header="$t('topNav.update.has_new_version')">
-      <template #confirmBtn> <t-button theme="warning" @click="handleDoUpdate">{{$t('topNav.update.confirm_update')}}</t-button>   </template>
+      <template #confirmBtn> 
+        <t-button :theme="update_new_ver && update_new_ver.toLowerCase().includes('beta') ? 'danger' : 'warning'" @click="handleConfirmUpdate">
+          {{$t('topNav.update.confirm_update')}}
+        </t-button>   
+      </template>
 
       <t-alert theme="warning">
           <template #message>
@@ -15,9 +19,14 @@
           <strong>{{ $t('topNav.update.version_label') }}</strong>
           {{ update_new_ver }}
         </div>
+        <t-alert theme="error" v-if="update_new_ver && update_new_ver.toLowerCase().includes('beta')">
+          <template #message>
+            {{ $t('topNav.update.beta_version_warning') }}
+          </template>
+        </t-alert>
         <div>
           <strong>{{ $t('topNav.update.desc_label') }}</strong>
-          {{ update_desc }}
+          <div v-html="compiledMarkdown"></div>
         </div>
         <div> 
           <t-link theme="primary" 
@@ -137,6 +146,7 @@
   import {
     CheckVersionApi,DoUpdateApi
   } from '@/apis/sysinfo';
+  import { marked } from 'marked'; // 导入 marked
 
   import Notice from './Notice.vue';
   import Search from './Search.vue';
@@ -242,6 +252,9 @@
           [`${this.prefix}-header-menu-fixed-side-compact`]: this.layout === 'side' && this.isFixed && this
             .isCompact,
         }, ];
+      },
+      compiledMarkdown() {
+        return marked(this.update_desc || '');
       },
     },
     mounted() {
@@ -374,10 +387,38 @@
             }
           })
       },
+      handleConfirmUpdate() {
+        // 如果是beta版本，需要二次确认
+        if (this.update_new_ver && this.update_new_ver.toLowerCase().includes('beta')) {
+          this.$dialog.confirm({
+            header: this.$t('topNav.update.beta_confirm_title') || '确认更新测试版本',
+            body: this.$t('topNav.update.beta_confirm_content') || '您正在更新测试版本，该版本可能不稳定，确定要继续吗？',
+            confirmBtn: {
+              theme: 'danger',
+              content: this.$t('topNav.update.beta_confirm_yes') || '确认更新',
+            },
+            cancelBtn: {
+              theme: 'default',
+              content: this.$t('topNav.update.beta_confirm_no') || '取消',
+            },
+            onConfirm: () => {
+              this.handleDoUpdate();
+            },
+          });
+        } else {
+          // 非beta版本直接更新
+          this.handleDoUpdate();
+        }
+      },
       handleDoUpdate(){
-        //处理升级
+          //处理升级
           let that = this;
-          DoUpdateApi().then((res) => {
+          // 检查是否为beta版本，如果是则添加渠道参数
+          const params = that.update_new_ver && that.update_new_ver.toLowerCase().includes('beta') 
+            ? { channel: 'github' } 
+            : {channel: 'official'};
+            
+          DoUpdateApi(params).then((res) => {
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
