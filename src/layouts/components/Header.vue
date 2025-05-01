@@ -390,7 +390,7 @@
       handleConfirmUpdate() {
         // 如果是beta版本，需要二次确认
         if (this.update_new_ver && this.update_new_ver.toLowerCase().includes('beta')) {
-          this.$dialog.confirm({
+          const confirmDia = this.$dialog.confirm({
             header: this.$t('topNav.update.beta_confirm_title') || '确认更新测试版本',
             body: this.$t('topNav.update.beta_confirm_content') || '您正在更新测试版本，该版本可能不稳定，确定要继续吗？',
             confirmBtn: {
@@ -401,8 +401,9 @@
               theme: 'default',
               content: this.$t('topNav.update.beta_confirm_no') || '取消',
             },
-            onConfirm: () => {
+            onConfirm: () => { 
               this.handleDoUpdate();
+              confirmDia.destroy();
             },
           });
         } else {
@@ -423,7 +424,7 @@
             console.log(resdata)
             if (resdata.code === 0) {
               that.$message.success(resdata.msg);
-               that.update_visible = false
+              that.update_visible = false
             }else{
               that.$message.warning(resdata.msg);
             }
