@@ -411,6 +411,7 @@
       handleDoUpdate(){
           //处理升级
           let that = this;
+          that.isUpdateloading = true;
           // 检查是否为beta版本，如果是则添加渠道参数
           const params = that.update_new_ver && that.update_new_ver.toLowerCase().includes('beta')
             ? { channel: 'github' }
@@ -421,12 +422,17 @@
             console.log(resdata)
             if (resdata.code === 0) {
               that.$message.success(resdata.msg);
-              that.update_visible = false
+              that.update_visible = false   
+              
             }else{
               that.$message.warning(resdata.msg);
+               // 升级失败，关闭加载并显示错误信息
+              that.isUpdateloading = false;
             }
           })
           .catch((e: Error) => {
+             // 请求异常，关闭加载并显示错误信息
+            that.isUpdateloading = false;
             console.log(e);
         })
       }
