@@ -94,7 +94,7 @@ instance.interceptors.response.use(
 
         if(!remoteBean  && data.code === CODE.AUTH_FAILURE){
           Object.keys(localStorage).forEach(key => {
-            if (key !== "lang") {
+            if (key !== "lang" && key !== "lastUpdatePopupTime") {
               localStorage.removeItem(key);
             }
           });

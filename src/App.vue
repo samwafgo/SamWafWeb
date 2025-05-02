@@ -100,7 +100,7 @@ export default Vue.extend({
           this.$store.commit('notification/addMsgData', wsData.msg_data);
         }else if(wsData.msg_code=="-999"){
           Object.keys(localStorage).forEach(key => {
-            if (key !== "lang") {
+            if (key !== "lang" && key !== "lastUpdatePopupTime" ) {
               localStorage.removeItem(key);
             }
           });

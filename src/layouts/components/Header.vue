@@ -2,11 +2,11 @@
 
 
   <div :class="layoutCls">
-    <t-dialog :visible.sync="update_visible" :header="$t('topNav.update.has_new_version')">
-      <template #confirmBtn> 
+    <t-dialog width="600px" :visible.sync="update_visible" :header="$t('topNav.update.has_new_version')">
+      <template #confirmBtn>
         <t-button :theme="update_new_ver && update_new_ver.toLowerCase().includes('beta') ? 'danger' : 'warning'" @click="handleConfirmUpdate">
           {{$t('topNav.update.confirm_update')}}
-        </t-button>   
+        </t-button>
       </template>
 
       <t-alert theme="warning">
@@ -19,17 +19,14 @@
           <strong>{{ $t('topNav.update.version_label') }}</strong>
           {{ update_new_ver }}
         </div>
-        <t-alert theme="error" v-if="update_new_ver && update_new_ver.toLowerCase().includes('beta')">
-          <template #message>
-            {{ $t('topNav.update.beta_version_warning') }}
-          </template>
-        </t-alert>
+        <span style="color: red" v-if="update_new_ver && update_new_ver.toLowerCase().includes('beta')"> {{ $t('topNav.update.beta_version_warning') }} </span>
+
         <div>
           <strong>{{ $t('topNav.update.desc_label') }}</strong>
           <div v-html="compiledMarkdown"></div>
         </div>
-        <div> 
-          <t-link theme="primary" 
+        <div>
+          <t-link theme="primary"
           underline href="https://doc.samwaf.com/quickstart/Update.html"
            target="black">{{ $t('topNav.update.more_label') }}</t-link>
 
@@ -401,7 +398,7 @@
               theme: 'default',
               content: this.$t('topNav.update.beta_confirm_no') || '取消',
             },
-            onConfirm: () => { 
+            onConfirm: () => {
               this.handleDoUpdate();
               confirmDia.destroy();
             },
@@ -415,10 +412,10 @@
           //处理升级
           let that = this;
           // 检查是否为beta版本，如果是则添加渠道参数
-          const params = that.update_new_ver && that.update_new_ver.toLowerCase().includes('beta') 
-            ? { channel: 'github' } 
+          const params = that.update_new_ver && that.update_new_ver.toLowerCase().includes('beta')
+            ? { channel: 'github' }
             : {channel: 'official'};
-            
+
           DoUpdateApi(params).then((res) => {
             let resdata = res
             console.log(resdata)
