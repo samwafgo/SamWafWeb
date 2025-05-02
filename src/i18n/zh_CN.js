@@ -151,6 +151,7 @@ export default {
     analysis:{
       parent_title:"数据分析",
       analysis_title:"数据分析",
+      analysis_spider_title:"爬虫分析",
     },
     visit_log:{
       parent_title:"防护日志",
@@ -211,7 +212,11 @@ export default {
       operation_time: "添加时间"
     },
     analysis:{
-
+        analysis_spider:{
+          "spider_type": "爬虫类型",
+          "visit_count": "访问次数",
+          "percentage": "占比"
+        }
     },
     cc:{
       new_cc_protection: "新建CC防护",

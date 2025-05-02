@@ -59,7 +59,7 @@
   import worldchsname from '@/assets/mapjson/worldchsname.json'
   import {
     wafanalysisdaycountryrange
-  } from '@/apis/stats';
+  } from '@/apis/analysis';
   echarts.use([TooltipComponent, LegendComponent, PieChart, GridComponent, LineChart, CanvasRenderer, MapChart, VisualMapComponent]);
   import 'echarts-wordcloud';
 

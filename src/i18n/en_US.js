@@ -151,6 +151,7 @@ export default {
     analysis:{
       parent_title: "Data Analysis",
       analysis_title: "Data Analysis",
+      analysis_spider_title: "Spider Analysis",
     },
     visit_log:{
       parent_title: "Protection Logs",
@@ -211,7 +212,11 @@ export default {
       operation_time: "Operation Time"
     },
     analysis:{
-
+      analysis_spider:{
+        "spider_type": "Spider Type",
+        "visit_count": "Visit Count",
+        "percentage": "Percentage"
+      }
     },
     cc:{
       new_cc_protection: "New CC Protection",

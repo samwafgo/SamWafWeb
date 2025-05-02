@@ -123,6 +123,12 @@ export default [
          component: () => import('@/pages/waf/analysis/index.vue'),
          meta: { title:'menu.analysis.analysis_title' },
        },
+       {
+         path: 'wafanalysisSpiderlog',
+         name: 'WafAnalysisSpiderLog',
+         component: () => import('@/pages/waf/analysis/SpiderActive.vue'),
+         meta: { title:'menu.analysis.analysis_spider_title' },
+       },
      ],
    },
  {
