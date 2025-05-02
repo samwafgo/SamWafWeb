@@ -427,8 +427,8 @@
               validator: (val) => {
                 //debugger
                 const hostRegex = /^(?!https?:\/\/)[^\s]+$/;
-                const isValid = !!val && (hostRegex.test(val)); 
-                
+                const isValid = !!val && (hostRegex.test(val));
+
                 return isValid;
               },
               message: this.$t('page.host.host_validation'),
@@ -597,13 +597,17 @@
         deep: true
       },
       'formData.host': function(val) {
+          console.log("formData.host",val)
           const hostRegex = /^(?!https?:\/\/)[^\s]+$/;
           const isValid = !!val && (hostRegex.test(val));
           if ( isValid ) {
+            // 获取当前协议，如果已有remote_host则保留其协议，否则默认为http
+            const currentProtocol = this.formData.remote_host && this.formData.remote_host.startsWith('https://') ? 'https://' : 'http://';
+            
             if (val.includes(":") && !val.startsWith("[")) {
-              this.formData.remote_host = `http://[${val}]`;
+              this.formData.remote_host = `${currentProtocol}[${val}]`;
             } else {
-              this.formData.remote_host = `http://${val}`;
+              this.formData.remote_host = `${currentProtocol}${val}`;
             }
           }
         },
