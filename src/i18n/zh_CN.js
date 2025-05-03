@@ -75,7 +75,7 @@ export default {
       has_new_version:"有新版本啦",
       confirm_update:"确认更新",
       update_danger_tips:"升级时候服务会中断几分钟,请注意安排在闲时更新",
-      beta_version_warning: '请注意：1.即将升级的版本为测试版本，可能存在不稳定因素，不建议在生产环境使用。2.由于从github下载请确保网络畅通',
+      beta_version_warning: '请注意：即将升级的版本为测试版本，可能存在不稳定因素，不建议在生产环境使用',
       version_label:"版本:",
       desc_label:"描述:",
       more_label:"更多",
