@@ -53,10 +53,17 @@
           <search v-if="layout !== 'side'" :layout="layout" />
 
           <!-- 全局通知 -->
-          <notice />
           <t-tooltip placement="bottom" :content="$t('topNav.update.has_new_version')" v-show="hasNewVersion">
-            <t-button theme="default" shape="square" variant="text" @click="checkVersion('manual')">
+            <t-button theme="default" shape="square" variant="text" @click="checkVersion('manual')" style="position: relative; overflow: visible;">
               <NotificationErrorIcon />
+              <span v-if="update_new_ver && update_new_ver.toLowerCase().includes('beta')" 
+                    style="position: absolute; top: -6px; right: -18px; font-size: 10px; color: white; background: #ff4d4f; border-radius: 8px; padding: 0 4px; line-height: 16px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.2); white-space: nowrap; z-index: 10;">
+                Beta
+              </span>
+              <span v-else-if="hasNewVersion" 
+                    style="position: absolute; top: -6px; right: -18px; font-size: 10px; color: white; background: #52c41a; border-radius: 8px; padding: 0 4px; line-height: 16px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.2); white-space: nowrap; z-index: 10;">
+                New
+              </span>
             </t-button>
           </t-tooltip>
 
@@ -364,11 +371,17 @@
                 // 从本地存储获取上次显示弹窗的时间
                 const lastUpdatePopupTime = localStorage.getItem("lastUpdatePopupTime");
 
-                // 如果上次显示时间不存在或距离当前时间超过24小时，则显示弹窗
-                if (!lastUpdatePopupTime || Date.now() - lastUpdatePopupTime > 24 * 60 * 60 * 1000) {
-                  that.update_visible = true
-                  // 更新本地存储的上次显示时间为当前时间
-                  localStorage.setItem("lastUpdatePopupTime", Date.now());
+                // 如果是beta版本，不自动弹出提示
+                if (that.update_new_ver && that.update_new_ver.toLowerCase().includes('beta')) {
+                  // 只设置有新版本标志，但不弹窗
+                  that.hasNewVersion = true;
+                } else {
+                  // 如果上次显示时间不存在或距离当前时间超过24小时，则显示弹窗
+                  if (!lastUpdatePopupTime || Date.now() - lastUpdatePopupTime > 24 * 60 * 60 * 1000) {
+                    that.update_visible = true
+                    // 更新本地存储的上次显示时间为当前时间
+                    localStorage.setItem("lastUpdatePopupTime", Date.now());
+                  }
                 }
               }
 
