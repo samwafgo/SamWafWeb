@@ -53,14 +53,16 @@
           <search v-if="layout !== 'side'" :layout="layout" />
 
           <!-- 全局通知 -->
+          <notice />
+          <!-- 版本说明 -->
           <t-tooltip placement="bottom" :content="$t('topNav.update.has_new_version')" v-show="hasNewVersion">
             <t-button theme="default" shape="square" variant="text" @click="checkVersion('manual')" style="position: relative; overflow: visible;">
               <NotificationErrorIcon />
-              <span v-if="update_new_ver && update_new_ver.toLowerCase().includes('beta')" 
+              <span v-if="update_new_ver && update_new_ver.toLowerCase().includes('beta')"
                     style="position: absolute; top: -6px; right: -18px; font-size: 10px; color: white; background: #ff4d4f; border-radius: 8px; padding: 0 4px; line-height: 16px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.2); white-space: nowrap; z-index: 10;">
                 Beta
               </span>
-              <span v-else-if="hasNewVersion" 
+              <span v-else-if="hasNewVersion"
                     style="position: absolute; top: -6px; right: -18px; font-size: 10px; color: white; background: #52c41a; border-radius: 8px; padding: 0 4px; line-height: 16px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.2); white-space: nowrap; z-index: 10;">
                 New
               </span>
@@ -435,8 +437,8 @@
             console.log(resdata)
             if (resdata.code === 0) {
               that.$message.success(resdata.msg);
-              that.update_visible = false   
-              
+              that.update_visible = false
+
             }else{
               that.$message.warning(resdata.msg);
                // 升级失败，关闭加载并显示错误信息
