@@ -208,6 +208,12 @@ export default [
          meta: { title:  'menu.system.system_config_title' },
        },
       {
+        path: 'PrivateInfo',
+        name: 'PrivateInfo',
+        component: () => import('@/pages/waf/private_info/index.vue'),
+        meta: { title:  'menu.system.private_info_title' },
+      },
+      {
         path: 'RumtimeSysteminfo',
         name: 'RumtimeSysteminfo',
         component: () => import('@/pages/waf/sysruntime/index.vue'),

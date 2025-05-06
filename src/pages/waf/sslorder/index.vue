@@ -81,6 +81,30 @@
               </t-option>
             </t-select>
           </t-form-item>
+          <t-form-item v-if="formData.apply_method === 'dns01'" :label="$t('page.sslorder.label_apply_dns')" name="apply_dns">
+            <t-select v-model="formData.apply_dns" clearable :style="{ width: '480px' }">
+              <t-option v-for="item in sslorder_apply_dns_type" :value="item.value" :label="`${item.label}`">
+              </t-option>
+            </t-select>
+          </t-form-item>
+          
+          <!-- DNS服务商密钥配置信息 -->
+          <template v-if="formData.apply_method === 'dns01' && formData.apply_dns">
+            <t-form-item v-for="(item, index) in dns_env[formData.apply_dns]" :key="index" 
+                        :label="item.label">
+              <div style="display: flex; align-items: center;">
+                <t-tag theme="success" v-if="hasPrivateKey(item.value)">
+                  {{ $t('page.sslorder.key_configured') }}
+                </t-tag>
+                <t-tag theme="warning" v-else>
+                  {{ $t('page.sslorder.key_not_configured') }}
+                </t-tag>
+                <t-button theme="primary" variant="text" style="margin-left: 10px;" @click="handlePrivateInfo(item.value, hasPrivateKey(item.value) ? 'edit' : 'add')">
+                  {{ hasPrivateKey(item.value) ? $t('common.edit') : $t('common.add') }}
+                </t-button>
+              </div>
+            </t-form-item>
+          </template>
           <t-form-item :label="$t('page.sslorder.label_apply_email')" name="apply_email">
             <t-input :style="{ width: '480px' }" v-model="formData.apply_email" ></t-input>
           </t-form-item>
@@ -117,6 +141,29 @@
               </t-option>
             </t-select>
           </t-form-item>
+          <t-form-item v-if="formEditData.apply_method === 'dns01'" :label="$t('page.sslorder.label_apply_dns')" name="apply_dns">
+            <t-select v-model="formEditData.apply_dns" clearable :style="{ width: '480px' }">
+              <t-option v-for="item in sslorder_apply_dns_type" :value="item.value" :label="`${item.label}`">
+              </t-option>
+            </t-select>
+          </t-form-item>
+          <!-- DNS服务商密钥配置信息 -->
+          <template v-if="formEditData.apply_method === 'dns01' && formEditData.apply_dns">
+            <t-form-item v-for="(item, index) in dns_env[formEditData.apply_dns]" :key="index" 
+                        :label="item.label">
+              <div style="display: flex; align-items: center;">
+                <t-tag theme="success" v-if="hasPrivateKey(item.value)">
+                  {{ $t('page.sslorder.key_configured') }}
+                </t-tag>
+                <t-tag theme="warning" v-else>
+                  {{ $t('page.sslorder.key_not_configured') }}
+                </t-tag>
+                <t-button theme="primary" variant="text" style="margin-left: 10px;" @click="handlePrivateInfo(item.value, hasPrivateKey(item.value) ? 'edit' : 'add')">
+                  {{ hasPrivateKey(item.value) ? $t('common.edit') : $t('common.add') }}
+                </t-button>
+              </div>
+            </t-form-item>
+          </template>
           <t-form-item :label="$t('page.sslorder.label_apply_email')" name="apply_email">
             <t-input :style="{ width: '480px' }" v-model="formEditData.apply_email" ></t-input>
           </t-form-item>
@@ -135,6 +182,27 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
               :onCancel="onCancel">
     </t-dialog>
+
+    <!-- 添加/编辑私钥信息对话框 -->
+    <t-dialog :header="privateFormMode === 'add' ? $t('common.add') : $t('common.edit')" :visible.sync="privateFormVisible" :width="680" :footer="false">
+      <div slot="body">
+        <t-form :data="privateFormData" ref="privateForm" :rules="privateRules" @submit="onPrivateSubmit" :labelWidth="200">
+          <t-form-item :label="$t('page.private_info.private_key')" name="private_key">
+            <t-input v-model="privateFormData.private_key" :style="{ width: '480px' }" :disabled="privateFormMode === 'edit'"></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.private_info.private_value')" name="private_value">
+            <t-input v-model="privateFormData.private_value" :style="{ width: '480px' }"></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.private_info.remarks')" name="remarks">
+            <t-input v-model="privateFormData.remarks" :style="{ width: '480px' }"></t-input>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="privateFormVisible = false">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -150,6 +218,10 @@ import {
 import {
   sslOrderDetailApi,sslOrderAddApi,sslOrderDelApi,sslOrderEditApi,sslOrderListApi
 } from '@/apis/sslorder';
+
+import {
+    wafPrivateInfoListApi,wafPrivateInfoDelApi,wafPrivateInfoEditApi,wafPrivateInfoAddApi,wafPrivateInfoDetailApi
+  } from '@/apis/private_info.ts';
 import {
   allhost,alldomainbyhostcode
 } from '@/apis/host';
@@ -211,6 +283,28 @@ export default Vue.extend({
       },
       dataLoading: false,
       data: [], // 列表数据信息
+      private_data:[],// 私有信息
+
+      // 私钥信息表单
+      privateFormVisible: false,
+      privateFormMode: 'add', // 'add' 或 'edit'
+      privateFormData: {
+        private_key: '',
+        private_value: '',
+        remarks: ''
+      },
+      privateRules: {
+        private_key: [{
+          required: true,
+          message: this.$t('common.placeholder') + this.$t('page.private_info.label_private_key'),
+          type: 'error'
+        }],
+        private_value: [{
+          required: true,
+          message: this.$t('common.placeholder') + this.$t('page.private_info.label_private_value'),
+          type: 'error'
+        }]
+      }, 
       selectedRowKeys: [],
       columns: [
         {
@@ -253,6 +347,12 @@ export default Vue.extend({
           width: 200,
           ellipsis: true,
           colKey: 'apply_method',
+        },
+        {
+          title: this.$t('page.sslorder.label_apply_dns'),
+          width: 200,
+          ellipsis: true,
+          colKey: 'apply_dns',
         },
         {
           title: this.$t('page.sslorder.label_apply_email'),
@@ -336,7 +436,76 @@ export default Vue.extend({
           label: this.$t('page.sslorder.sslorder_apply_method_type.http01'),
           value: 'http01'
         },
+        {
+          label: this.$t('page.sslorder.sslorder_apply_method_type.dns01'),
+          value: 'dns01'
+        },
       ],
+      sslorder_apply_dns_type: [
+        {
+          label: this.$t('page.sslorder.sslorder_apply_dns_type.aliyun'),
+          value: 'alidns'
+        },
+        {
+          label: this.$t('page.sslorder.sslorder_apply_dns_type.huaweicloud'),
+          value: 'huaweicloud'
+        },
+        {
+          label: this.$t('page.sslorder.sslorder_apply_dns_type.tencentcloud'),
+          value: 'tencentcloud'
+        },
+        {
+          label: this.$t('page.sslorder.sslorder_apply_dns_type.cloudflare'),
+          value: 'cloudflare'
+        },
+       
+      ],
+      dns_env:{
+        alidns: [
+          {
+            value: 'ALICLOUD_ACCESS_KEY',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.alidns.access_key'),
+          },
+          {
+            value: 'ALICLOUD_SECRET_KEY',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.alidns.secret_key'),
+          },
+          {
+            value: 'ALICLOUD_SECURITY_TOKEN',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.alidns.security_token'),
+          }
+        ], 
+        huaweicloud: [
+          {
+            value: 'HUAWEICLOUD_ACCESS_KEY_ID',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.huaweicloud.access_key'),
+          },
+          {
+            value: 'HUAWEICLOUD_SECRET_ACCESS_KEY',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.huaweicloud.secret_key'),
+          },
+          {
+            value: 'HUAWEICLOUD_REGION',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.huaweicloud.region'),
+          }
+        ],
+        tencentcloud: [
+          {
+            value: 'TENCENTCLOUD_SECRET_ID',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.tencentcloud.secret_id'),
+          },{
+            value: 'TENCENTCLOUD_SECRET_KEY',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.tencentcloud.secret_key'),
+          }
+        ],
+        cloudflare: [
+          {
+            value: 'CF_DNS_API_TOKEN',
+            label: this.$t('page.sslorder.sslorder_apply_dns_config.cloudflare.dns_api_token'),
+          }
+        ]
+          
+      },
       //END Data
     };
   },
@@ -353,9 +522,103 @@ export default Vue.extend({
   mounted() {
     this.loadHostList().then(() => {
       this.getList("");
+      this.getPrivateList("")
     });
   },
   methods: {
+     // 处理私钥信息
+     handlePrivateInfo(keyName, action) {
+      console.log(`处理私钥信息: ${keyName}, 操作类型: ${action}`);
+      
+      if (action === 'edit') {
+        // 编辑现有私钥
+        const privateInfo = this.private_data.find(item => item.private_key === keyName);
+        if (privateInfo) {
+          this.privateFormMode = 'edit';
+          this.privateFormData = { ...privateInfo };
+          this.privateFormVisible = true;
+        } else {
+          this.$message.warning(this.$t('common.data_not_found'));
+        }
+      } else {
+        // 添加新私钥
+        this.privateFormMode = 'add';
+        this.privateFormData = {
+          private_key: keyName,
+          private_value: '',
+          remarks: ''
+        };
+        this.privateFormVisible = true;
+      }
+    },
+    
+    // 提交私钥信息表单
+    onPrivateSubmit({ result, firstError }) {
+      let that = this;
+      if (!firstError) {
+        if (this.privateFormMode === 'add') {
+          // 添加新私钥
+          wafPrivateInfoAddApi({...this.privateFormData})
+            .then((res) => {
+              if (res.code === 0) {
+                that.$message.success(res.msg);
+                that.privateFormVisible = false;
+                // 刷新私钥列表
+                that.getPrivateList("");
+              } else {
+                that.$message.warning(res.msg);
+              }
+            })
+            .catch((e) => {
+              console.log(e); 
+            });
+        } else {
+          // 编辑私钥
+          wafPrivateInfoEditApi({...this.privateFormData})
+            .then((res) => {
+              if (res.code === 0) {
+                that.$message.success(res.msg);
+                that.privateFormVisible = false;
+                // 刷新私钥列表
+                that.getPrivateList("");
+              } else {
+                that.$message.warning(res.msg);
+              }
+            })
+            .catch((e) => {
+              console.log(e); 
+            });
+        }
+      } else {
+        console.log('Errors: ', result);
+        that.$message.warning(firstError);
+      }
+    },
+    // 检查是否已配置特定的私有密钥
+    hasPrivateKey(keyName) {
+      return this.private_data.some(item => item.private_key === keyName);
+    },
+    getPrivateList(keyword) {
+        let that = this
+        wafPrivateInfoListApi( {
+              pageSize: 100,
+              pageIndex: 1, 
+          })
+          .then((res) => {
+            let resdata = res
+            console.log(resdata)
+            if (resdata.code === 0) {
+
+              that.private_data = resdata.data.list??[]; 
+              console.log("private_data",this.private_data)
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+          .finally(() => { 
+          }); 
+      },
     changeHostCode(hostCode){
       console.log("changeHostCode",hostCode)
       if(hostCode!=""){
@@ -452,11 +715,19 @@ export default Vue.extend({
       let that = this;
       if (!firstError) {
 
+        // 如果是http01方式,域名不能包含通配符
         if (this.formData.apply_method == "http01"){
            if( this.formData.apply_domain.indexOf("*")!=-1){
              that.$message.warning(that.$t('page.sslorder.error_domain_not_match_method'));
               return
            }
+        }
+        // 如果是dns方式,apply_dns不能为空
+        if (this.formData.apply_method == "dns01") {
+          if (!this.formData.apply_dns) {
+            that.$message.warning(that.$t('common.select_placeholder') + that.$t('page.sslorder.label_apply_dns'));
+            return
+          }
         }
         sslOrderAddApi({
           ...this.formData,

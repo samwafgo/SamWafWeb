@@ -172,6 +172,7 @@ export default {
       system_runtime_title: "Runtime Parameters",
       system_one_key_modify_title: "Quick Modification",
       task:"Task Manager",
+      private_info_title:"Private Manager",
     },
     pc:{
       parent_title: "Device",
@@ -715,6 +716,9 @@ export default {
       label_apply_method:"Application Method",
       label_apply_domain:"Application Domain",
       label_apply_email:"Application Mail",
+      label_apply_dns:"DNS Provider",
+      key_configured:"Key Configuration",
+      key_not_configured:"Key Not Configured",
       sslorder_status_type:{
         submitted: "Submitted",
         applying: "In Progress",
@@ -728,6 +732,32 @@ export default {
       },
       sslorder_apply_method_type:{
         http01: "File Verification Method",
+        dns01: "DNS Verification Method",
+      },
+      sslorder_apply_dns_type:{
+        aliyun: "Alibaba cloud",
+        huaweicloud: "Huawei cloud",
+        tencentcloud: "Tencent cloud",
+        cloudflare: "Cloudflare",
+      },
+      sslorder_apply_dns_config:{
+        alidns:{
+          access_key: "Access Key ID",
+          secret_key: "Access Key Secret",
+          security_token: "STS Security Token (optional)", 
+        },
+        huaweicloud:{
+          access_key: "Access Key",
+          secret_key: "Secret Key",
+          region: "Region",
+        },
+        tencentcloud:{
+          secret_id: "Access Key ID",
+          secret_key: "Access Key Secret", 
+        },
+        cloudflare:{
+          dns_api_token: "API token with DNS", 
+        }
       },
       error_domain_not_match_method: "Wildcard domains are not allowed under the file verification method",
     },
@@ -775,6 +805,13 @@ export default {
         hour:"Hour",
         day:"Day",
       }
+    },
+    private_info:{
+      alert_message: "SamWaf ",
+      button_add_private_info: "New",
+      private_key: "Key",
+      private_value: "Value",
+      remarks: "Remarks",
     },
     syslog: {
       syslog: "System Log",

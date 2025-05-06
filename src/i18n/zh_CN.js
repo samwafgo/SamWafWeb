@@ -172,6 +172,7 @@ export default {
       system_runtime_title:"运行参数",
       system_one_key_modify_title:"一键修改",
       task:"任务管理",
+      private_info_title:"密钥管理",
     },
     pc:{
       parent_title:"设备管理",
@@ -718,6 +719,10 @@ export default {
       label_apply_method:"申请方式",
       label_apply_domain:"申请域名",
       label_apply_email:"申请邮箱",
+      label_apply_dns:"dns服务商",
+      key_configured:"已配置",
+      key_not_configured:"未配置",
+ 
       sslorder_status_type:{
         submitted: "已提交",
         applying: "申请中",
@@ -731,8 +736,34 @@ export default {
       },
       sslorder_apply_method_type:{
         http01: "文件验证方式",
+        dns01: "DNS验证方式",
+      },
+      sslorder_apply_dns_type:{
+        aliyun: "阿里云",
+        huaweicloud: "华为云",
+        tencentcloud: "腾讯云",
+        cloudflare: "Cloudflare",
       },
       error_domain_not_match_method: "文件选择方式下不能是泛域名",
+      sslorder_apply_dns_config:{
+        alidns:{
+          access_key: "Access Key ID",
+          secret_key: "Access Key Secret",
+          security_token: "STS Security Token (optional)", 
+        },
+        huaweicloud:{
+          access_key: "Access Key",
+          secret_key: "Secret Key",
+          region: "Region",
+        },
+        tencentcloud:{
+          secret_id: "Access Key ID",
+          secret_key: "Access Key Secret", 
+        },
+        cloudflare:{
+          dns_api_token: "API token with DNS", 
+        }
+      }
     },
     ssl_expire:{
       alert_message: "SamWaf 域名证书检测到期情况，每天凌晨定时检测一次全部的域名",
@@ -778,6 +809,13 @@ export default {
         hour:"每小时",
         day:"每天",
       }
+    },
+    private_info:{
+      alert_message: "SamWaf 本页面提示信息",
+      button_add_private_info: "新建",
+      private_key: "密钥键",
+      private_value: "密钥值",
+      remarks: "备注",
     },
     syslog:{
       syslog:"系统日志",
