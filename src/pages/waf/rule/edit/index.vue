@@ -481,7 +481,7 @@
         formData: {
           ...RULE
         },
-
+        formCodemirrorContent: '',//代码传入值
         //主机列表
         host_options:[],
         //uuid标识
@@ -503,7 +503,7 @@
       console.log(RULE)
       this.$bus.$on('codeedit', (e) => {
          console.log('消息总线 来自子组件e', e)
-         this.formData.rule_content = e
+         this.formCodemirrorContent = e
       })
       //console.log(this.$route.params.req_uuid);
       if(this.$route.query.code != undefined){
@@ -590,6 +590,7 @@
 
               that.$nextTick(() => {
                   that.$bus.$emit("showcodeedit",resdata.data.rule_content)
+                  
               });
               console.log('返回的', that.formData )
             }
@@ -605,11 +606,12 @@
           let postdata = {}
           let url = ''
           if(that.op_type == "add"){
+             that.formData.rule_content = that.formCodemirrorContent
              url = '/wafhost/rule/add'
              postdata = {
                           RuleJson : JSON.stringify(that.formData),
                           is_manual_rule:parseInt( that.formData.is_manual_rule),
-                          rule_content:that.formData.rule_content,
+                          rule_content:that.formCodemirrorContent,
                           rule_code :that.ruleuuid
                         }
 
@@ -635,12 +637,15 @@
               })
           }else{
              url = '/wafhost/rule/edit'
+             that.formData.rule_content = that.formCodemirrorContent
              postdata = {
                Code:that.op_rule_no,
                RuleJson : JSON.stringify(that.formData),
                is_manual_rule:parseInt( that.formData.is_manual_rule),
-               rule_content:that.formData.rule_content,
+               rule_content:that.formCodemirrorContent,
              }
+             console.log("formCodemirrorContent",that.formCodemirrorContent)
+             console.log('edit postdata',postdata)
              wafRuleEditApi(postdata)
              .then((res) => {
                  let resdata = res

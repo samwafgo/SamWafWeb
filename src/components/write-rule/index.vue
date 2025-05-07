@@ -17,7 +17,7 @@ require('codemirror/addon/hint/sql-hint')
 
 export default {
   props: {
-    // 外部传入的内容，用于实现双向绑定
+    // 外部传入的内容 
     valuecontent:{
       type:String,
 
