@@ -104,7 +104,7 @@ export default {
         }
       })
       this.editor.on('inputRead', () => {
-        this.editor.showHint()
+       // this.editor.showHint()
       })
     },
   },

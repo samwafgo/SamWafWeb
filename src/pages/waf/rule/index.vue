@@ -140,6 +140,12 @@ export default Vue.extend({
         { title: this.$t('page.rule.label_rule_version'), colKey: 'rule_version', width: 70, cell: { col: 'version' } },
         { title: this.$t('page.rule.label_rule_status'), colKey: 'rule_status', width: 70, cell: { col: 'rule_status' } },
         {
+          title: this.$t('common.update_time'),
+          width: 200,
+          ellipsis: true,
+          colKey: 'update_time',
+        },
+        {
           title: this.$t('common.create_time'),
           width: 200,
           ellipsis: true,
