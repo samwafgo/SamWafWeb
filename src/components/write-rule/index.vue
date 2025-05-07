@@ -31,7 +31,6 @@ export default {
   watch: {
     valuecontent(newVal) {
       console.log('valuecontent',newVal)
-    	//父组件传过来的值，这个需求需要传入点击的数据库表名，默认展示“SELECT * FROM student”
        this.editor.setValue(newVal)
     },
   },

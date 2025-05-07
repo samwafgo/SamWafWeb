@@ -273,21 +273,27 @@
         <t-row >
           <!-- 左侧代码编辑区域 -->
           <t-col flex="auto">
+            <div class="rule-example-header">
+                <code-icon />
+                <span class="rule-example-title">{{ $t('page.rule.detail.manual_code_rule_edit') }}</span>
+              </div>
             <writeRule
               :valuecontent="formData.rule_content"
               @edtinput="edtinput"
             ></writeRule>
+            
             <div class="rule-example-container">
-              <div class="rule-example-header">
-                <code-icon />
-                <span class="rule-example-title">{{ $t('page.rule.detail.example_code') }}</span>
-              </div>
-              <pre class="rule-example-code"> rule R80798f795d7947419ba6f593708b40d9 "禁止来自中国以外的访客访问" salience 10 {
-  when
-    MF.COUNTRY != "中国"
-  then
-    Retract("R80798f795d7947419ba6f593708b40d9");
-}</pre>
+              <t-alert theme="info" :title="$t('page.rule.detail.example_code')" >
+                  <template #message>
+                    <pre> rule R80798f795d7947419ba6f593708b40d9 "禁止来自中国以外的访客访问" salience 10 {
+              when
+                MF.COUNTRY != "中国"
+              then
+                Retract("R80798f795d7947419ba6f593708b40d9");
+            }</pre>
+                  </template>
+                </t-alert>
+               
               <t-link theme="danger" hover="color" href="https://update.samwaf.com/airule/auto_jump_url.html?v20250311" target="_blank">
                 <jump-icon slot="suffixIcon" />
                 {{$t('page.rule.detail.tutorial_online')}}
@@ -306,7 +312,7 @@
                 ]"
                 size="small"
                 :pagination="{ pageSize: 10 }"
-                :rowKey="(row) => row.value"
+                rowKey="value"
                 stripe
                 hover
               />
@@ -588,10 +594,7 @@
 
               that.formData = JSON.parse(resdata.data.rule_content_json);
 
-              that.$nextTick(() => {
-                  that.$bus.$emit("showcodeedit",resdata.data.rule_content)
-                  
-              });
+               
               console.log('返回的', that.formData )
             }
           })
@@ -726,12 +729,12 @@
       },
       //切换模式触发
       changeManualRule(e){
-        let that = this
-        if(this.formData.rule_content!=""){
+        console.log("changeManualRule",e,this.formData.rule_content)
+        
+        /*if(this.formData.rule_content!=""){
           return
-        }
-        console.log(e)
-
+        }*/
+        console.log("changeManualRule",e) 
 
         //手工编排
         if(e=="1"){
@@ -761,7 +764,7 @@
         		Retract("R${rulename}");
         } `;
         this.$nextTick(() => {
-          that.$bus.$emit("showcodeedit",str)
+          that.$bus.$emit("showcodeedit",str) 
         });
       },
       //跳转界面
