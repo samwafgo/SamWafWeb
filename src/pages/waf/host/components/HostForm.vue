@@ -320,7 +320,14 @@
             </template>
             <anti-leech-config :anti-leech-config="antiLeechConfigData" @update="val => antiLeechConfigData = val"></anti-leech-config>
           </t-tab-panel>
-        </t-tabs>
+          <t-tab-panel :value="9">
+            <template #label>
+              <t-icon name="memory" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_cache')}}
+            </template>
+            <cache-config :cache-config="cacheConfigData" @update="val => cacheConfigData = val"></cache-config>
+          </t-tab-panel>
+          </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
           <t-button variant="outline" @click="$emit('close')">{{ $t('common.close') }}</t-button>
@@ -360,8 +367,9 @@
   import HealthyConfig from '../components/HealthyConfig.vue';
   import CaptchaConfig from '../components/CaptchaConfig.vue';
   import AntiLeechConfig from '../components/AntiLeechConfig.vue';
+  import CacheConfig from '../components/CacheConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   export default Vue.extend({
@@ -374,6 +382,7 @@
       CaptchaConfig,
       AntiLeechConfig,
       SslForm,
+      CacheConfig,
     },
     props: {
       // 表单数据
@@ -421,6 +430,7 @@
         captchaConfigData: { ...INITIAL_ANTILEECH },
         // 防恶意链接配置
         antiLeechConfigData: {...INITIAL_CAPTCHA },
+        cacheConfigData: { ...INITIAL_CACHE },
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -592,6 +602,25 @@
           } else {
             this.antiLeechConfigData = { ...INITIAL_ANTILEECH };
           }
+
+          // 解析缓存配置
+          if (this.formData.cache_json) {
+            try {
+              let that = this;
+              if (that.formData.cache_json != "") {
+                that.cacheConfigData = JSON.parse(that.formData.cache_json);
+                that.cacheConfigData.is_enable_cache = (that.cacheConfigData.is_enable_cache || 0).toString();
+                that.cacheConfigData.max_file_size_mb = (that.cacheConfigData.max_file_size_mb || 0).toString();
+                that.cacheConfigData.max_memory_size_mb = (that.cacheConfigData.max_memory_size_mb || 0).toString();
+              } else {
+                that.cacheConfigData = { ...INITIAL_CACHE };
+              }
+            } catch (e) {
+              this.cacheConfigData = { ...INITIAL_CACHE };
+            }
+          } else {
+            this.cacheConfigData = { ...INITIAL_CACHE };
+          }
         },
         immediate: true,
         deep: true
@@ -603,7 +632,7 @@
           if ( isValid ) {
             // 获取当前协议，如果已有remote_host则保留其协议，否则默认为http
             const currentProtocol = this.formData.remote_host && this.formData.remote_host.startsWith('https://') ? 'https://' : 'http://';
-            
+
             if (val.includes(":") && !val.startsWith("[")) {
               this.formData.remote_host = `${currentProtocol}[${val}]`;
             } else {
@@ -799,6 +828,15 @@
             };
             postdata['anti_leech_json'] = JSON.stringify(antiLeechData);
 
+            // 处理缓存配置
+            let cacheData = {
+              is_enable_cache: parseInt(this.cacheConfigData.is_enable_cache),
+              cache_location: this.cacheConfigData.cache_location,
+              cache_dir: this.cacheConfigData.cache_dir,
+              max_file_size_mb: parseFloat(this.cacheConfigData.max_file_size_mb),
+              max_memory_size_mb: parseFloat(this.cacheConfigData.max_memory_size_mb)
+            };
+            postdata['cache_json'] = JSON.stringify(cacheData);
             // 提交表单
             this.$emit('submit', { result: postdata });
           } else {

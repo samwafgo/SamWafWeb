@@ -147,6 +147,7 @@ export default {
       sslorder:"证书申请记录",
       ssl_expire:"证书过期批量检测",
       blocking_page:"自定义拦截响应界面",
+      cache_rule:"缓存规则",
     },
     analysis:{
       parent_title:"数据分析",
@@ -409,6 +410,7 @@ export default {
       tab_health_check: '健康度检测',
       tab_captcha: '验证码配置',
       tab_anti_leech: "防盗链配置",
+      tab_cache: "缓存配置",
       more_domain:"同时绑定多个域名",
       more_domain_tips:"填写多个域名回车换行,不要加端口",
       start_status: "启动状态",
@@ -518,6 +520,19 @@ export default {
         action_redirect: "重定向",
         redirect_url: "重定向URL",
         redirect_url_placeholder: "非法引用时跳转的URL"
+      },
+      cache: {
+        is_enable: "是否开启缓存",
+        cache_location: "缓存位置",
+        cache_location_memory: "内存",
+        cache_location_file: "文件",
+        cache_location_all: "内存和文件",
+        cache_dir: "缓存目录",
+        cache_dir_placeholder: "如：/tmp/cache",
+        max_file_size_mb: "最大缓存文件大小(MB)",
+        max_file_size_mb_placeholder: "0 表示不限制",
+        max_memory_size_mb: "最大内存缓存大小(MB)",
+        max_memory_size_mb_placeholder: "0 表示不限制"
       },
       import_file: "导入文件",
       upload_file: "上传文件",
@@ -722,7 +737,7 @@ export default {
       label_apply_dns:"dns服务商",
       key_configured:"已配置",
       key_not_configured:"未配置",
- 
+
       sslorder_status_type:{
         submitted: "已提交",
         applying: "申请中",
@@ -749,7 +764,7 @@ export default {
         alidns:{
           access_key: "Access Key ID",
           secret_key: "Access Key Secret",
-          security_token: "STS Security Token (optional)", 
+          security_token: "STS Security Token (optional)",
         },
         huaweicloud:{
           access_key: "Access Key",
@@ -758,10 +773,10 @@ export default {
         },
         tencentcloud:{
           secret_id: "Access Key ID",
-          secret_key: "Access Key Secret", 
+          secret_key: "Access Key Secret",
         },
         cloudflare:{
-          dns_api_token: "API token with DNS", 
+          dns_api_token: "API token with DNS",
         }
       }
     },
@@ -785,6 +800,36 @@ export default {
       response_code: "响应代码",
       response_header: "响应Header头信息",
       response_content: "响应内容",
+    },
+    cache_rule:{
+      alert_message: "SamWaf 本页面提示信息",
+      button_add_cache_rule: "新建",
+      host_code: "网站",
+      rule_name: "规则名称",
+      rule_type: "规则类型",
+      rule_content: "规则内容",
+      param_type: "参数处理",
+      cache_time: "缓存时间",
+      priority: "优先级",
+      request_method: "请求方法",
+      remarks: "备注",
+      rule_type_options: {
+        suffix_match: "后缀匹配",
+        specific_directory: "指定目录",
+        specific_file: "指定文件"
+      },
+      param_type_options: {
+        ignore_params: "忽略参数",
+        full_params: "完整参数"
+      },
+      rule_type_tips: "选择缓存规则的类型，不同类型适用于不同场景",
+      rule_content_placeholder: "例如：.jpg;.png;.gif 或 /images/ 或 /index.html",
+      rule_content_tips: "根据规则类型填写相应内容：后缀匹配填写文件后缀（如.jpg），指定目录填写目录路径（如/images/），指定文件填写文件路径（如/index.html）",
+      param_type_tips: "选择是否忽略URL参数。忽略参数时，带参数的URL将与不带参数的URL共用缓存",
+      cache_time_tips: "缓存的有效时间，单位为秒。默认3600秒（1小时）",
+      priority_tips: "规则优先级，数字越大优先级越高。默认为1",
+      request_method_placeholder: "例如：GET 或 GET;HEAD",
+      request_method_tips: "指定适用于哪些HTTP请求方法，多个方法用分号分隔。默认为GET",
     },
     http_auth_base:{
       alert_message: "开启网站密码后，请使用密码访问",

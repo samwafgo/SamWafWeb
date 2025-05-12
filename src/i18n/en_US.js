@@ -147,6 +147,7 @@ export default {
       sslorder:"SSL Apply Result",
       ssl_expire:"SSL Expire Check",
       blocking_page:"Custom Blocking Page",
+      cache_rule:"Cache Rule",
     },
     analysis:{
       parent_title: "Data Analysis",
@@ -408,6 +409,7 @@ export default {
       tab_health_check: 'Health Check',
       tab_captcha: 'Captcha Settings',
       tab_anti_leech: "Anti-Leech Config",
+      tab_cache: "Cache Config",
       more_domain:"Bind More Domain",
       more_domain_tips:"Enter multiple domain names, each on a new line, without including the port.",
       start_status: "Start Status",
@@ -477,6 +479,19 @@ export default {
         action_redirect: "Redirect",
         redirect_url: "Redirect URL",
         redirect_url_placeholder: "URL to redirect when illegal referer"
+      },
+      cache: {
+        is_enable: "Enable Cache",
+        cache_location: "Cache Location",
+        cache_location_memory: "Memory",
+        cache_location_file: "File",
+        cache_location_all: "Memory and File",
+        cache_dir: "Cache Directory",
+        cache_dir_placeholder: "e.g. /tmp/cache",
+        max_file_size_mb: "Max File Size (MB)",
+        max_file_size_mb_placeholder: "0 means no limit",
+        max_memory_size_mb: "Max Memory Size (MB)",
+        max_memory_size_mb_placeholder: "0 means no limit"
       },
       keyfile: "Key String",
       keyfile_content: "Usually filename: *.key Content format: -----BEGIN RSA PRIVATE KEY----- Copy all and fill in",
@@ -744,7 +759,7 @@ export default {
         alidns:{
           access_key: "Access Key ID",
           secret_key: "Access Key Secret",
-          security_token: "STS Security Token (optional)", 
+          security_token: "STS Security Token (optional)",
         },
         huaweicloud:{
           access_key: "Access Key",
@@ -753,10 +768,10 @@ export default {
         },
         tencentcloud:{
           secret_id: "Access Key ID",
-          secret_key: "Access Key Secret", 
+          secret_key: "Access Key Secret",
         },
         cloudflare:{
-          dns_api_token: "API token with DNS", 
+          dns_api_token: "API token with DNS",
         }
       },
       error_domain_not_match_method: "Wildcard domains are not allowed under the file verification method",
@@ -781,6 +796,37 @@ export default {
       response_code: "Response Code",
       response_header: "Response Header Information",
       response_content: "Response Content",
+    },
+    cache_rule:{
+      alert_message: "SamWaf Cache Rule",
+      button_add_cache_rule: "New",
+      host_code: "WebSite",
+      rule_name: "RuleName",
+      rule_type: "RuleType",
+      rule_content: "RuleContent",
+      param_type: "ParamType",
+      cache_time: "CacheTime",
+      priority: "Priority",
+      request_method: "RequestMethod",
+      remarks: "Remarks",
+      rule_type_options: {
+        suffix_match: "Suffix Match",
+        specific_directory: "Specific Directory",
+        specific_file: "Specific File"
+      },
+      param_type_options: {
+        ignore_params: "Ignore Parameters",
+        full_params: "Full Parameters"
+      },
+      rule_type_tips: "Select the type of cache rule, different types apply to different scenarios",
+      rule_content_placeholder: "e.g.: .jpg, .png, .gif or /images/ or /index.html",
+      rule_content_tips: "Fill in content according to rule type: suffix match for file extensions (like .jpg), specific directory for directory paths (like /images/), specific file for file paths (like /index.html)",
+      param_type_tips: "Choose whether to ignore URL parameters. When ignoring parameters, URLs with parameters will share cache with URLs without parameters",
+      cache_time_tips: "Cache validity period in seconds. Default is 3600 seconds (1 hour)",
+      priority_tips: "Rule priority, higher number means higher priority. Default is 1",
+      request_method_placeholder: "e.g.: GET or GET;HEAD",
+      request_method_tips: "Specify which HTTP request methods this rule applies to, separate multiple methods with semicolons. Default is GET",
+      remarks_tips: "Add remarks for easy identification",
     },
     http_auth_base:{
       alert_message: "After enabled website password, please access with the password.",
