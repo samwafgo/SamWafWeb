@@ -22,17 +22,28 @@
     <t-form-item :label="$t('page.host.cache.max_memory_size_mb')" v-if="localConfig.is_enable_cache == '1' && (localConfig.cache_location === 'memory' || localConfig.cache_location === 'all')">
       <t-input v-model="localConfig.max_memory_size_mb" @change="updateParent" :placeholder="$t('page.host.cache.max_memory_size_mb_placeholder')" />
     </t-form-item>
+    <t-form-item v-if="localConfig.is_enable_cache == '1'" class="cache-rule-container">
+      <cache-rule :prop-host-code="propHostCode"></cache-rule>
+    </t-form-item>
   </div>
 </template>
 
 <script lang="ts">
+import CacheRule from "@/pages/waf/cache_rule/index.vue";
 export default {
   name: 'CacheConfig',
   props: {
     cacheConfig: {
       type: Object,
       required: true
+    },
+    propHostCode:{
+      type:String,
+      required: true
     }
+  },
+  components:{
+    CacheRule
   },
   data() {
     return {
@@ -45,7 +56,7 @@ export default {
         this.localConfig = JSON.parse(JSON.stringify(newVal));
       },
       immediate: true
-    }
+    },
   },
   methods: {
     updateParent() {
@@ -54,3 +65,16 @@ export default {
   }
 };
 </script>
+
+<style lang="less" scoped>
+.cache-rule-container {
+  width: 100%;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.cache-rule-container :deep(.t-form__item-content) {
+  width: 100%;
+  overflow-x: auto;
+}
+</style>

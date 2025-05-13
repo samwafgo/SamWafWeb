@@ -218,6 +218,9 @@
   };
   export default Vue.extend({
     name: 'CacheRuleBase',
+    props:{
+      propHostCode: String,
+    },
     components: {
       SearchIcon,
       Trend,
@@ -266,11 +269,6 @@
         selectedRowKeys: [],
         value: 'first',
         columns: [
-            { title: this.$t('page.cache_rule.host_code'),
-                    width: 200,
-                    ellipsis: true,
-                    colKey: 'host_code',
-             },
 
 
             { title: this.$t('page.cache_rule.rule_name'),
@@ -279,59 +277,15 @@
                     colKey: 'rule_name',
              },
 
-
-            { title: this.$t('page.cache_rule.rule_type'),
-                    width: 200,
-                    ellipsis: true,
-                    colKey: 'rule_type',
-                    cell: (h, { row }) => {
-                    return this.rule_type_options.find(option => option.value === row.rule_type.toString())?.label || row.rule_type;
-                  }
-             },
-
-
             { title: this.$t('page.cache_rule.rule_content'),
                     width: 200,
                     ellipsis: true,
                     colKey: 'rule_content',
              },
-
-
-            { title: this.$t('page.cache_rule.param_type'),
-                    width: 200,
-                    ellipsis: true,
-                    colKey: 'param_type',
-                    cell: (h, { row }) => {
-                      return this.param_type_options.find(option => option.value === row.param_type.toString())?.label || row.param_type;
-                    }
-             },
-
-
             { title: this.$t('page.cache_rule.cache_time'),
-                    width: 200,
+                    width: 100,
                     ellipsis: true,
                     colKey: 'cache_time',
-             },
-
-
-            { title: this.$t('page.cache_rule.priority'),
-                    width: 200,
-                    ellipsis: true,
-                    colKey: 'priority',
-             },
-
-
-            { title: this.$t('page.cache_rule.request_method'),
-                    width: 200,
-                    ellipsis: true,
-                    colKey: 'request_method',
-             },
-
-
-            { title: this.$t('page.cache_rule.remarks'),
-                    width: 200,
-                    ellipsis: true,
-                    colKey: 'remarks',
              },
 
           {
@@ -355,7 +309,7 @@
         },
         //顶部搜索
         searchformData: {
-
+          host_code:"",
         },
         //索引区域
         deleteIdx: -1,
@@ -391,6 +345,13 @@
 
       };//end data
     },
+    watch:{
+      propHostCode(newVal) {
+        // 当 propHostCode 更新时，更新相应的数据
+        this.searchformData.host_code = newVal;
+        this.getList("")
+      }
+    },
     computed: {
       confirmBody() {
         if (this.deleteIdx > -1) {
@@ -410,7 +371,9 @@
         this.getList("");
       });
     },
-
+    created() {
+      this.searchformData.host_code = this.propHostCode;
+    },
     methods: {
       loadHostList() {
         return new Promise((resolve, reject) => {
@@ -489,6 +452,7 @@
       handleAdd() {
         this.addFormVisible = true
         this.formData = { ...INITIAL_DATA };
+        this.formData.host_code = this.propHostCode
       },
       onSubmit({
         result,

@@ -325,7 +325,7 @@
               <t-icon name="memory" style="margin-right: 4px;color:#0052d9"/>
               {{$t('page.host.tab_cache')}}
             </template>
-            <cache-config :cache-config="cacheConfigData" @update="val => cacheConfigData = val"></cache-config>
+            <cache-config :cache-config="cacheConfigData" :prop-host-code="formData.code" @update="val => cacheConfigData = val"></cache-config>
           </t-tab-panel>
           </t-tabs>
 

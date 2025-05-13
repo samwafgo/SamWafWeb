@@ -108,13 +108,6 @@ export default [
         meta: { title: 'menu.host.blocking_page' },
 
       }
-      ,{
-        path: 'wafCacheRulelist',
-        name: 'WafCacheRuleList',
-        component: () => import('@/pages/waf/cache_rule/index.vue'),
-        meta: { title: 'menu.host.cache_rule' },
-
-      }
     ],
   },
 

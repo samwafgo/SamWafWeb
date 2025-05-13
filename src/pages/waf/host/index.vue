@@ -76,7 +76,7 @@
     </t-card>
 
     <!-- New WebSite Dialog -->
-    <t-dialog :visible.sync="addFormVisible" :width="700" :footer="false">
+    <t-dialog :visible.sync="addFormVisible" :width="750" :footer="false">
       <div slot="header">
         {{ $t('common.new') }}
         <t-link theme="primary" :href="hostAddUrl" target="_blank">
@@ -86,23 +86,23 @@
       </div>
       <div slot="body">
         <host-form
-          :value="formData" 
+          :value="formData"
           :select-can-filter="selectCanFilter"
           @close="onClickCloseBtn"
-          @submit="onSubmit" 
+          @submit="onSubmit"
         ></host-form>
       </div>
     </t-dialog>
 
     <!-- Edit WebSite Dialog -->
-    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="700" :footer="false">
+    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="750" :footer="false">
       <div slot="body">
         <host-form
-        :value="formEditData" 
+        :value="formEditData"
         :select-can-filter="selectCanFilter"
         :is-edit="true"
         @close="onClickCloseEditBtn"
-        @submit="onSubmitEdit" 
+        @submit="onSubmitEdit"
         ></host-form>
       </div>
     </t-dialog>
@@ -133,7 +133,7 @@
       <div>{{$t('page.host.start_status_confirm_content')}}</div>
     </t-dialog>
 
-    
+
 
     <t-dialog :header="$t('page.host.ssl_auto_apply')" :visible.sync="sslAutoApplyVisible" :width="900" :footer="false">
       <div slot="body">
@@ -162,7 +162,7 @@ import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost,modifyAllGuardStatus} from '@/apis/host';
- 
+
 import SslOrderList from "@/pages/waf/sslorder/index.vue";
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -172,7 +172,7 @@ import {
 } from '@/constants';
 import LoadBalance from "../loadbalance/index.vue";
 import HttpAuthBase from "../http_auth_base/index.vue"
-import HealthStatus from "./components/health-status/HealthStatus.vue"; 
+import HealthStatus from "./components/health-status/HealthStatus.vue";
 import HostForm from './components/HostForm.vue';
 
 // 导入初始化常量
@@ -187,7 +187,7 @@ export default Vue.extend({
     SslOrderList,
     LoadBalance,
     HttpAuthBase,
-    HealthStatus, 
+    HealthStatus,
     HostForm,
   },
   data() {
@@ -204,7 +204,7 @@ export default Vue.extend({
       addFormVisible: false,
       editFormVisible: false,
       guardVisible: false,
-      confirmVisible: false, 
+      confirmVisible: false,
       sslAutoApplyVisible: false,
       ImportXlsxVisible: false,
       formData: {
@@ -212,7 +212,7 @@ export default Vue.extend({
       },
       formEditData: {
         ...INITIAL_DATA
-      }, 
+      },
       remote_system_options: [{
         label: this.$t('page.host.back_system_type_baota'),
         value: '1'
@@ -455,7 +455,7 @@ export default Vue.extend({
           colKey: 'op',
           title: this.$t('common.op'),
         },
-      ], 
+      ],
       //下拉框是否可以筛选
       selectCanFilter:true,
       //当前选择的主机
@@ -654,7 +654,7 @@ export default Vue.extend({
         .finally(() => {
         });
     },
-    handleClickEdit(e) { 
+    handleClickEdit(e) {
       console.log(e)
       const {
         code, global_host
@@ -667,7 +667,7 @@ export default Vue.extend({
       this.editFormVisible = true
       this.getDetail(code)
     },
-    handleAddHost() { 
+    handleAddHost() {
       this.addFormVisible = true
       this.formData.code = uuidv4()
       console.log("新增主机code信息", this.formData.code)
@@ -1008,7 +1008,7 @@ export default Vue.extend({
     onStartStatusCancel() {
       this.startConfirmVisible = false
       this.startStatusIdx = -1;
-    },  
+    },
     /**
      * 筛选结果
      */
