@@ -41,8 +41,7 @@
           <t-input-number :style="{ width: '150px' }"
                           v-model="localHealthyConfig.response_time"
                           @change="updateParent"
-                          :min="1"
-                          :max="60">
+                          :min="1">
           </t-input-number>
           <span style="margin-left: 8px;">{{$t('page.host.health_check.seconds')}}</span>
         </t-tooltip>
