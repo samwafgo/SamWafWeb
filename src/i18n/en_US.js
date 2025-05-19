@@ -593,6 +593,8 @@ export default {
       modify_all_guard_status: 'Batch Protection Switch',
       confirm_modify_all_guard_status: 'Are you sure you want to modify the protection status of all websites?',
       select_guard_status: 'Please select protection status',
+      default_encoding: 'Default Encoding',
+      default_encoding_auto: 'Auto Select',
     },
     one_key_mod: {
       one_key_placeholder: "Due to the fact that only one program can use Web (port 80, port 443) on a single server, if you need to set Waf as a proxy, you need to change 80 to 81 and 443 to 444 here.\nSamWaf has added a one-click modification of Baota Web port for user convenience. Available only on Linux.",

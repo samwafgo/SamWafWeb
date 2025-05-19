@@ -275,6 +275,13 @@
                 </t-input-number>
               </t-tooltip>
             </t-form-item>
+            <t-form-item :label="$t('page.host.default_encoding')" name="default_encoding">
+              <t-select v-model="formData.default_encoding" :style="{ width: '150px' }">
+                <t-option value="auto">{{$t('page.host.default_encoding_auto')}}</t-option>
+                <t-option value="utf-8">utf-8</t-option>
+                <t-option value="gbk">gbk</t-option>
+              </t-select>
+            </t-form-item>
           </t-tab-panel>
 
           <t-tab-panel :value="5">

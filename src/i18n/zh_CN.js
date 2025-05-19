@@ -594,6 +594,8 @@ export default {
       modify_all_guard_status: '一键防护开关',
       confirm_modify_all_guard_status: '确定要修改所有网站的防护状态吗？',
       select_guard_status: '请选择防护状态',
+      default_encoding: '默认编码',
+      default_encoding_auto: '自动选择',
     },
     one_key_mod:{
       one_key_placeholder: "由于单台服务器只能一个程序使用Web(80端口，443端口)，所以如果需要让Waf变为前置，那么此处需要将80=》81 ，443=》444。\n" +

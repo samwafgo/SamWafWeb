@@ -29,6 +29,7 @@ export const INITIAL_DATA = {
   insecure_skip_verify:"0",//是否跳过后端https证书有效性验证
   anti_leech_json: '{"is_enable_anti_leech":0,"file_types":"gif|jpg|jpeg|png|bmp|swf","valid_referers":"none;server_names","action":"block","redirect_url":""}', // 新增防盗链配置
   cache_json: '{"is_enable_cache":0,"cache_location":"memory","cache_dir":"./data/cache","max_file_size_mb":0,"max_memory_size_mb":0}', // 新增缓存配置
+  default_encoding:"auto",//默认编码 utf-8 或者 gbk auto字符串自动选择 
 };
 
 // SSL配置初始化数据
