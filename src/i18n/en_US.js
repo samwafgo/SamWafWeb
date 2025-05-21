@@ -338,7 +338,10 @@ export default {
           response_body: "Response Body",
           response_header: "Response Header",
           response_status: "Response Status",
-        }
+        },
+        ip_extract_issue: 'IP Extraction Issue?',
+        ip_extract_issue_desc: 'If there is a CDN in front, extract specific header data. If empty, extract connection IP',
+        ip_extract_issue_tips: 'If empty, extract connection IP, otherwise extract the value of the specified HTTP header as the source IP',
        }
     },
     attack_log:{

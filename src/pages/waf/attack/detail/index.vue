@@ -60,6 +60,10 @@
           <h1> {{ $t('page.visit_log.detail.visitor_ip') }}</h1>
           <span>
             {{ detail_data.src_ip }}
+            
+            <t-button theme="primary" variant="text" style="margin-left: 10px;" @click="handleIPExtractIssue">
+              {{ $t('page.visit_log.detail.ip_extract_issue') }}
+              </t-button>
             <t-button theme="primary" shape="round" size="small" @click="handleAddipblock(detail_data.src_ip)">{{ $t('page.visit_log.detail.add_to_deny_list') }}</t-button>
 
           </span>
@@ -181,6 +185,25 @@
       <t-textarea v-model="httpAiMask" :autosize="{ minRows: 5, maxRows: 10 }"  />
     </t-dialog>
 
+    <!-- IP提取问题对话框 -->
+    <t-dialog :header="$t('page.visit_log.detail.ip_extract_issue')" :visible.sync="ipExtractDialogVisible" :width="680" :footer="false">
+      <div slot="body">
+        <p>{{ $t('page.visit_log.detail.ip_extract_issue_desc') }}</p>
+        <t-form :data="ipExtractFormData" ref="ipExtractForm" :rules="ipExtractRules" @submit="onSubmitIPExtract" :labelWidth="150">
+          <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
+            <t-input :style="{ width: '480px' }" v-model="ipExtractFormData.item" disabled></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.systemconfig.label_configuration_value')" name="value">
+            <t-input :style="{ width: '480px' }" v-model="ipExtractFormData.value"></t-input>
+            <div class="form-item-tips">{{ $t('page.visit_log.detail.ip_extract_issue_tips') }}</div>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="ipExtractDialogVisible = false">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -194,6 +217,7 @@
     wafIPBlockAddApi
   } from '@/apis/ipblock';
   import { getHeaderCopyDetail ,geWebLogDetail} from '@/apis/waflog/attacklog';
+  import { get_detail_by_item_api, edit_system_config_api } from '@/apis/systemconfig';
   export default {
     name: 'WafAttackLogDetail',
     components:{
@@ -223,6 +247,16 @@
         httpCopyMaskVisible:false,
         httpAiMask:'',
         httpAiMaskVisible:false,
+        ipExtractDialogVisible: false,
+        ipExtractFormData: {
+          item: 'gwaf_proxy_header',
+          value: '',
+          remarks: '获取访客IP头信息（按照顺序）'
+        },
+        ipExtractRules: {
+          item: [{ required: true, message: this.$t('page.systemconfig.label_configuration_item') , type: 'error' }],
+          value: [{ required: false, message: this.$t('page.systemconfig.label_configuration_value') , type: 'error' }]
+        }
       };
     },
     beforeRouteUpdate(to, from) {
@@ -262,6 +296,31 @@
       },
     },
     methods: {
+      handleIPExtractIssue() {
+        this.ipExtractDialogVisible = true;
+        // 获取当前配置
+        get_detail_by_item_api({ item: 'gwaf_proxy_header' }).then(res => {
+          if (res.code === 0 && res.data) {
+            this.ipExtractFormData = res.data;
+          }
+        }).catch(err => {
+           
+        });
+      },
+      onSubmitIPExtract({ validateResult }) {
+        if (validateResult === true) {
+          edit_system_config_api(this.ipExtractFormData).then(res => {
+            if (res.code === 0) {
+              this.$message.success(res.msg);
+              this.ipExtractDialogVisible = false;
+            } else {
+              this.$message.error( res.msg);
+            }
+          }).catch(err => {
+            this.$message.error(err.message);
+          });
+        }
+      },
       handelToAi(){
         console.log("handelToAi",this.httpAiMask)
         this.$bus.$emit("sendAi",  this.httpAiMask)

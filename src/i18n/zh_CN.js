@@ -339,7 +339,10 @@ export default {
           response_body: "响应内容",
           response_header: "响应头",
           response_status: "响应状态",
-        }
+        },
+        ip_extract_issue: 'IP提取有问题？',
+        ip_extract_issue_desc: '如果存在CDN前置的提取特定头数据，为空就是提取连接IP',
+        ip_extract_issue_tips: '为空则提取连接IP，否则提取指定HTTP头的值作为源IP (如：X-Forwarded-For)',
       }
     },
     attack_log:{

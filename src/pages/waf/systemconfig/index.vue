@@ -101,7 +101,7 @@
     prefix
   } from '@/config/global';
   import {
-    system_config_list_api
+    system_config_list_api,get_detail_by_id_api,get_detail_by_item_api,add_system_config_api,edit_system_config_api,del_detail_api
   } from '@/apis/systemconfig';
 
 
@@ -303,11 +303,9 @@
           let postdata = {
             ...that.formData
           }
-          this.$request
-            .post('/systemconfig/add', {
-              ...postdata
-            })
-            .then((res) => {
+          add_system_config_api({
+            ...postdata
+          }).then((res) => {
               let resdata = res
               console.log(resdata)
               if (resdata.code === 0) {
@@ -338,11 +336,9 @@
           let postdata = {
             ...that.formEditData
           }
-          this.$request
-            .post('/systemconfig/edit', {
-              ...postdata
-            })
-            .then((res) => {
+          edit_system_config_api({
+           ...postdata
+          }).then((res) => {
               let resdata = res
               console.log(resdata)
               if (resdata.code === 0) {
@@ -383,13 +379,9 @@
           id
         } = this.data[this.deleteIdx]
         let that = this
-        this.$request
-          .get('/systemconfig/del', {
-            params: {
-              id: id,
-            }
-          })
-          .then((res) => {
+        del_detail_api({ 
+           id: id,
+        }).then((res) => {
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
@@ -415,13 +407,9 @@
       },
       getDetail(id) {
         let that = this
-        this.$request
-          .get('/systemconfig/detail', {
-            params: {
-              id: id,
-            }
-          })
-          .then((res) => {
+        get_detail_by_id_api({ 
+           id: id,
+        }).then((res) => {
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
