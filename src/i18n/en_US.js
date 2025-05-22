@@ -52,6 +52,11 @@ export default {
     success: "Success",
     failed: "Fail",
     loading: "Loading...",
+    required:"Required",
+    status_runtime_option:{
+      running: "Running",
+      stopped: "Stopped", 
+    }
   },
   login:{
     login_title: "Login",
@@ -160,6 +165,11 @@ export default {
       visit_detail_title: "Protection Details",
       attack_title: "Attack Logs",
     },
+    tunnel:{
+      parent_title: "Tunnel Protection",
+      list_title: "Tunnel Protection",
+      tunnel_detail_title: "Tunnel Details",
+    },
     account:{
       parent_title: "Account",
       otp_title:"Two-factor auth (2FA)",
@@ -181,6 +191,34 @@ export default {
     }
   },
   page:{
+    tunnel: {
+      alert_message: "The tunnel feature is currently experimental, mainly providing external protection for remote connections, database connections, Redis connections, etc.",
+      button_add_tunnel: "New",
+      code: "Code", 
+      name: "Tunnel Name",
+      port: "Port",
+      protocol: "Protocol",
+      remote_port: "Remote Port",
+      remote_ip: "Remote IP",
+      allow_ip: "Allow IP List (comma separated)",
+      deny_ip: "Deny IP List (comma separated)", 
+      start_status: "Start Status",
+      conn_timeout: "Connection Timeout",
+      read_timeout: "Read Timeout",
+      write_timeout: "Write Timeout",
+      max_in_connect: "Max Input Connections",
+      max_out_connect: "Max Output Connections",
+      remark: "Remarks", 
+      show_connections: 'View Connections',
+      view_connections: 'Connections',
+      new_tunnel: 'New Tunnel',
+      tcp_source_count: "TCP Source Connections",
+      tcp_target_count: "TCP Target Connections",
+      udp_source_count: "UDP Source Connections",
+      udp_target_count: "UDP Target Connections",
+      ip_address: "IP Address",
+      region: "Region"
+    },
     account: {
       create_account: "Create Account",
       login_account_label: "Login Account",

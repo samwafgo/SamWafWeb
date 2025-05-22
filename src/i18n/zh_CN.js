@@ -52,6 +52,11 @@ export default {
     success:"成功",
     failed: "失败",
     loading:"加载中",
+    required:"必填",
+    status_runtime_option:{ 
+      running:"运行",
+      stopped:"停止", 
+    },
   },
   login:{
     login_title:"登录",
@@ -160,6 +165,11 @@ export default {
       visit_detail_title:"防护详情",
       attack_title:"风险日志",
     },
+    tunnel:{
+      parent_title:"隧道防护",
+      list_title:"隧道管理",
+      tunnel_detail:"隧道详情",
+    },
     account:{
       parent_title:"账号管理",
       otp_title:"双因素认证(2FA)",
@@ -180,7 +190,35 @@ export default {
       pc_list_title:"设备列表",
     }
   },
-  page:{
+  page: {
+    tunnel: {
+      alert_message: "隧道功能当前为实验功能，主要是为了远程连接、数据库连接、Redis连接等提供一个外置防护",
+      button_add_tunnel: "新建",
+      code: "Code",
+      name: "隧道名称",
+      port: "端口(,号隔开)",
+      protocol: "协议",
+      remote_port: "远程端口",
+      remote_ip: "远程IP",
+      allow_ip: "允许IP列表(,号隔开)",
+      deny_ip: "禁止IP列表(,号隔开)",
+      start_status: "开启状态",
+      conn_timeout: "连接超时设置",
+      read_timeout: "读取超时设置",
+      write_timeout: "写入超时设置",
+      max_in_connect: "最大输入连接数",
+      max_out_connect: "最大输出连接数",
+      remark: "备注",
+      show_connections: "查看连接数据",
+      view_connections: "查看连接",
+      new_tunnel: "新建隧道",
+      tcp_source_count: "TCP源连接数",
+      tcp_target_count: "TCP目标连接数",
+      udp_source_count: "UDP源连接数",
+      udp_target_count: "UDP目标连接数",
+      ip_address: "IP地址",
+      region: "地区"
+    },
     account: {
       create_account: "新建账号",
       login_account_label: "登录帐号",

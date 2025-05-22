@@ -1,4 +1,5 @@
-import { UserSafetyIcon,SystemSettingIcon,UsergroupIcon,SystemLogIcon,ApplicationIcon,LightingCircleIcon ,ServerIcon} from 'tdesign-icons-vue';
+import { UserSafetyIcon,SystemSettingIcon,UsergroupIcon,SystemLogIcon,ApplicationIcon,LightingCircleIcon ,
+  ServerIcon ,ForkIcon} from 'tdesign-icons-vue';
 import Layout from '@/layouts/index.vue';
 
 export default [
@@ -158,6 +159,21 @@ export default [
         ,
 
       },
+    ],
+  },
+  {
+    path: '/tunnel',
+    name: 'tunnel',
+    component: Layout,
+    redirect: '/tunnel',
+    meta: { title: 'menu.tunnel.parent_title', icon: ForkIcon },
+    children: [
+      {
+        path: 'Tunnel',
+        name: 'Tunnel',
+        component: () => import('@/pages/waf/tunnel/index.vue'),
+        meta: { title: 'menu.tunnel.list_title' },
+      },  
     ],
   },
   {

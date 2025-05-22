@@ -849,7 +849,6 @@
           } else {
             console.log('Errors: ', validateResult);
             this.$message.warning(firstError);
-            //this.$emit('submit', { result: validateResult, firstError });
           }
         }
       }
