@@ -116,6 +116,64 @@ instance.interceptors.response.use(
     }
   },
   (err) => {
+    // 处理403错误，直接显示禁止访问页面
+    if (err.response && err.response.status === 403) {
+      const accessDeniedHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Access denied</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              background-color: #f5f5f5;
+              color: #333;
+              text-align: center;
+              padding: 50px;
+              margin: 0;
+            }
+            .container {
+              background-color: #fff;
+              border-radius: 5px;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              padding: 40px;
+              max-width: 600px;
+              margin: 0 auto;
+            }
+            h1 {
+              color: #e74c3c;
+              margin-bottom: 20px;
+            }
+            p {
+              font-size: 18px;
+              line-height: 1.6;
+              margin-bottom: 30px;
+            }
+            .icon {
+              font-size: 80px;
+              color: #e74c3c;
+              margin-bottom: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">⛔</div>
+            <h1>Access denied</h1> 
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // 创建一个新的HTML文档并替换当前页面内容
+      document.open();
+      document.write(accessDeniedHtml);
+      document.close();
+      
+      // 阻止错误继续传播
+      return new Promise(() => {});
+    }
     const { config } = err;
 
     if (!config || !config.retry) return Promise.reject(err);

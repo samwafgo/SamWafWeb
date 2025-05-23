@@ -17,6 +17,7 @@ export default {
     new: "新建",
     add:"添加",
     copy: "复制",
+    save: "保存",
     edit: "编辑",
     delete: "删除",
     reset: "重置",
@@ -57,6 +58,11 @@ export default {
       running:"运行",
       stopped:"停止", 
     },
+    tips:{
+      api_error:"请求错误",
+      save_success:"保存成功",
+      save_failed:"保存失败",
+    }
   },
   login:{
     login_title:"登录",
@@ -177,6 +183,7 @@ export default {
       account_log_title:"账号日志",
     },
     system:{
+      vpconfig_title:"管理配置",
       parent_title:"系统设置",
       system_log_title:"系统日志",
       system_config_title:"参数设置",
@@ -724,6 +731,14 @@ export default {
       new_system_configuration: "新建系统配置",
       label_configuration_item: "配置项",
       label_configuration_value: "配置值",
+    },
+    vpconfig: {
+      title: "系统配置管理",
+      description: "管理系统配置参数，包括IP白名单等",
+      ip_whitelist: "IP白名单",
+      ip_whitelist_placeholder: "请输入IP白名单",
+      ip_whitelist_tips: "IP白名单用于限制可以访问系统的IP地址，多个IP地址请用,分隔",
+      save_confirm: "数据会即时生效，确定要保存这些更改吗？"
     },
     ssl:{
       alert_message:"SamWaf 管理所有证书信息",

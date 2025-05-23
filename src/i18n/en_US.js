@@ -16,6 +16,7 @@ export default {
     details: "Details",
     new: "New",
     add:"Add",
+    save: "Save",
     copy: "Copy",
     edit: "Edit",
     delete: "Delete",
@@ -56,6 +57,11 @@ export default {
     status_runtime_option:{
       running: "Running",
       stopped: "Stopped", 
+    },
+    tips:{
+      api_error:"API error",
+      save_success:"Save success",
+      save_failed:"Save failed",
     }
   },
   login:{
@@ -178,6 +184,7 @@ export default {
     },
     system:{
       parent_title: "System Settings",
+      vpconfig_title:"Manage Configuration",
       system_log_title: "System Logs",
       system_config_title: "Parameter Settings",
       system_runtime_title: "Runtime Parameters",
@@ -722,6 +729,14 @@ export default {
       new_system_configuration: "Add New System Configuration",
       label_configuration_item: "Configuration Item",
       label_configuration_value: "Configuration Value"
+    },
+    vpconfig: {
+      title: "System Configuration",
+      description: "Manage system configuration parameters, including IP whitelist",
+      ip_whitelist: "IP Whitelist",
+      ip_whitelist_placeholder: "Please enter IP whitelist",
+      ip_whitelist_tips: "IP whitelist is used to restrict which IP addresses can access the system",
+      save_confirm: "Are you sure you want to save these changes?",
     },
     ssl: {
       alert_message: "SamWaf manages all certificate information",

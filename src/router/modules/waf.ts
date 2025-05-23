@@ -212,6 +212,14 @@ export default [
     meta: { title:'menu.system.parent_title', icon: SystemSettingIcon },
     children: [
       {
+        path: 'VpConfig',
+        name: 'VpConfig',
+        component: () => import('@/pages/waf/vpconfig/index.vue'),
+        meta: {
+          title: 'menu.system.vpconfig_title', 
+        }
+      },
+      {
          path: 'SysLog',
          name: 'SysLog',
          component: () => import('@/pages/waf/syslog/index.vue'),
