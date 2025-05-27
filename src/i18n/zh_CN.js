@@ -795,6 +795,11 @@ export default {
       label_apply_dns:"dns服务商",
       key_configured:"已配置",
       key_not_configured:"未配置",
+      ssl_http_check_setting: "证书文件失败？可设置验证方式",
+      ssl_http_check_desc: "设置证书文件验证方式是否要严控后端.well-known响应代码必须是404 301 302",
+      ssl_http_check_tips: "1表示严格控制响应代码必须是404 301 302，0表示不控制",
+      ssl_http_check_strict: "严格控制(1)",
+      ssl_http_check_loose: "不控制(0)",
 
       sslorder_status_type:{
         submitted: "已提交",

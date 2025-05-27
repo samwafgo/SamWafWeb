@@ -21,7 +21,10 @@
       </t-row>
       <t-alert theme="info" :message="$t('page.sslorder.alert_message')" close>
         <template #operation>
-          <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
+          <t-space>
+            <span @click="handleSslHttpCheck" class="highlight-link">{{ $t('page.sslorder.ssl_http_check_setting') }}</span>
+            <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span> 
+          </t-space>
         </template>
       </t-alert>
       <div class="table-container">
@@ -203,6 +206,29 @@
         </t-form>
       </div>
     </t-dialog>
+
+    <!-- 证书文件验证方式设置对话框 -->
+    <t-dialog :header="$t('page.sslorder.ssl_http_check_setting')" :visible.sync="sslHttpCheckDialogVisible" :width="680" :footer="false">
+      <div slot="body">
+        <p>{{ $t('page.sslorder.ssl_http_check_desc') }}</p>
+        <t-form :data="sslHttpCheckFormData" ref="sslHttpCheckForm" :rules="sslHttpCheckRules" @submit="onSubmitSslHttpCheck" :labelWidth="150">
+          <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
+            <t-input :style="{ width: '480px' }" v-model="sslHttpCheckFormData.item" disabled></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.systemconfig.label_configuration_value')" name="value">
+            <t-select v-model="sslHttpCheckFormData.value" :style="{ width: '480px' }">
+              <t-option value="1" :label="$t('page.sslorder.ssl_http_check_strict')"></t-option>
+              <t-option value="0" :label="$t('page.sslorder.ssl_http_check_loose')"></t-option>
+            </t-select>
+            <div class="form-item-tips">{{ $t('page.sslorder.ssl_http_check_tips') }}</div>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="sslHttpCheckDialogVisible = false">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -225,7 +251,7 @@ import {
 import {
   allhost,alldomainbyhostcode
 } from '@/apis/host';
-
+import { get_detail_by_item_api, edit_system_config_api } from '@/apis/systemconfig';
 const INITIAL_DATA = {
   host_code:"",
   apply_platform:"letsencrypt",
@@ -397,6 +423,16 @@ export default Vue.extend({
       deleteIdx: -1,
       //主机字典
       host_dic:{},
+      sslHttpCheckDialogVisible: false,
+      sslHttpCheckFormData: {
+        item: 'sslhttp_check',
+        value: '1',
+        remarks: '证书文件验证方式是否要严控后端.well-known响应代码'
+      },
+      sslHttpCheckRules: {
+        item: [{ required: true, message: this.$t('page.systemconfig.label_configuration_item'), type: 'error' }],
+        value: [{ required: true, message: this.$t('page.systemconfig.label_configuration_value'), type: 'error' }]
+      },
       //订单状态
       sslorder_status_type: [
         {
@@ -526,6 +562,43 @@ export default Vue.extend({
     });
   },
   methods: {
+    // 处理证书文件验证方式设置
+    handleSslHttpCheck() {
+      // 获取当前配置
+      get_detail_by_item_api({ item: 'sslhttp_check' }).then(res => {
+        if (res.code === 0 && res.data) {
+          this.sslHttpCheckFormData = res.data;
+        } else {
+          // 如果没有找到配置，使用默认值
+          this.sslHttpCheckFormData = {
+            item: 'sslhttp_check',
+            value: '1',
+            remarks: '证书文件验证方式是否要严控后端.well-known响应代码'
+          };
+        }
+        this.sslHttpCheckDialogVisible = true;
+      }).catch(err => {
+        console.error('获取证书文件验证方式配置失败:', err);
+        this.$message.error(this.$t('common.tips.api_error'));
+      });
+    },
+    
+    // 提交证书文件验证方式设置
+    onSubmitSslHttpCheck({ validateResult }) {
+      if (validateResult === true) {
+        edit_system_config_api(this.sslHttpCheckFormData).then(res => {
+          if (res.code === 0) {
+            this.$message.success(this.$t('common.tips.save_success'));
+            this.sslHttpCheckDialogVisible = false;
+          } else {
+            this.$message.error(res.msg || this.$t('common.tips.save_failed'));
+          }
+        }).catch(err => {
+          console.error('保存证书文件验证方式配置失败:', err);
+          this.$message.error(this.$t('common.tips.save_failed'));
+        });
+      }
+    },
      // 处理私钥信息
      handlePrivateInfo(keyName, action) {
       console.log(`处理私钥信息: ${keyName}, 操作类型: ${action}`);
@@ -820,5 +893,14 @@ export default Vue.extend({
 }
 .search-input {
   width: 200px;
+}
+.highlight-link {
+  color: #e34d59; /* 红色 */
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.highlight-link:hover {
+  text-decoration: underline;
 }
 </style>

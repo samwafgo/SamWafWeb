@@ -792,6 +792,11 @@ export default {
       label_apply_dns:"DNS Provider",
       key_configured:"Key Configuration",
       key_not_configured:"Key Not Configured",
+      ssl_http_check_setting: "SSL File Verification Method Setting",
+      ssl_http_check_desc: "Set whether the certificate file verification method strictly controls the backend .well-known response code must be 404 301 302",
+      ssl_http_check_tips: "1 means strict control of response codes must be 404 301 302, 0 means no control",
+      ssl_http_check_strict: "Strict Control(1)",
+      ssl_http_check_loose: "No Control(0)",
       sslorder_status_type:{
         submitted: "Submitted",
         applying: "In Progress",
