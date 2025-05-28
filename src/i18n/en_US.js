@@ -790,6 +790,8 @@ export default {
       label_apply_domain:"Application Domain",
       label_apply_email:"Application Mail",
       label_apply_dns:"DNS Provider",
+      label_private_group: 'Key Group',
+      label_private_group_add: 'same cloud  multiple accounts?',
       key_configured:"Key Configuration",
       key_not_configured:"Key Not Configured",
       ssl_http_check_setting: "SSL File Verification Method Setting",
@@ -915,9 +917,17 @@ export default {
         day:"Day",
       }
     },
+    private_group: {
+      alert_message: "SamWaf Key Group Management",
+      button_add_private_group: "Add Key Group",
+      private_group_name: "Group Name",
+      private_group_belong_cloud: "Cloud Provider"
+    },
     private_info:{
       alert_message: "SamWaf ",
       button_add_private_info: "New",
+      private_group_name: "GroupName",
+      private_group_belong_cloud:"GroupBelongCloud",
       private_key: "Key",
       private_value: "Value",
       remarks: "Remarks",

@@ -793,6 +793,8 @@ export default {
       label_apply_domain:"申请域名",
       label_apply_email:"申请邮箱",
       label_apply_dns:"dns服务商",
+      label_private_group: '密钥分组',
+      label_private_group_add: '相同云有不同账号？',
       key_configured:"已配置",
       key_not_configured:"未配置",
       ssl_http_check_setting: "证书文件失败？可设置验证方式",
@@ -918,9 +920,17 @@ export default {
         day:"每天",
       }
     },
+    private_group: {
+      alert_message: "SamWaf 密钥分组管理",
+      button_add_private_group: "新建密钥分组",
+      private_group_name: "分组名称",
+      private_group_belong_cloud: "分组归属云"
+    },
     private_info:{
       alert_message: "SamWaf 本页面提示信息",
       button_add_private_info: "新建",
+      private_group_name: "分组名称",
+      private_group_belong_cloud:"分组归属云",
       private_key: "密钥键",
       private_value: "密钥值",
       remarks: "备注",
