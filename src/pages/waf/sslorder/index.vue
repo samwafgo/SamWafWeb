@@ -86,7 +86,7 @@
           </t-form-item>
           <t-form-item v-if="formData.apply_method === 'dns01'" :label="$t('page.sslorder.label_apply_dns')"
             name="apply_dns">
-            <t-select v-model="formData.apply_dns" clearable :style="{ width: '480px' }">
+            <t-select v-model="formData.apply_dns" clearable :style="{ width: '480px' }"  @change="handleDnsChange">
               <t-option v-for="item in sslorder_apply_dns_type" :value="item.value" :label="`${item.label}`">
               </t-option>
             </t-select>
@@ -724,6 +724,11 @@ export default Vue.extend({
         if (res.code === 0) {
           this.privateGroupList = res.data.list || [];
           console.log("getPrivateGroupList", this.privateGroupList);
+          if (this.privateGroupList.length > 0) {
+            // 如果分组列表不为空，默认选择第一个分组
+            this.formData.private_group_name = this.privateGroupList[0].private_group_name;
+            this.formEditData.private_group_name = this.privateGroupList[0].private_group_name;
+          }
         } else {
           this.$message.warning(res.msg || this.$t('common.tips.get_failed'));
         }
