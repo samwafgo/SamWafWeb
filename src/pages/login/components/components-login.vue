@@ -66,6 +66,7 @@ import Vue from 'vue';
 import QrcodeVue from 'qrcode.vue';
 import { UserIcon, LockOnIcon, BrowseOffIcon, BrowseIcon, RefreshIcon } from 'tdesign-icons-vue';
 import { loginapi } from '@/apis/login';
+import { getSafeRedirectUrl } from '@/constants';
 const INITIAL_DATA = {
   phone: '',
   account: '',
@@ -149,33 +150,42 @@ export default Vue.extend({
       this.type = val;
       this.$refs.form.reset();
     },
-     onSubmit({ validateResult }) {
+    onSubmit({ validateResult }) {
       if (validateResult === true) {
-        loginapi({login_account:this.formData.account,login_password:this.formData.password,login_otp_secret_code:this.formData.secret_code})
-        .then((res)=>{
-            console.log(res)
-            if(res.code==0){
-                localStorage.setItem("access_token",res.data.access_token)
-                localStorage.setItem("current_account",this.formData.account)
-                this.$store.dispatch('user/login', this.formData);
-
-                this.$message.success( this.$t('login.login_success'));
-                setTimeout(()=>{
-                   this.$router.replace('/').catch(() => '');
-                },1000)
-
-            }else if(res.code==-2){
-                this.showSecretCode = true
-                this.formData.secretCode = ""
-                this.$message.error(res.msg);
-            }else{
-              this.$message.error(res.msg);
-            }
-
-        }).catch((err)=>{
-            console.log(err)
+        loginapi({
+          login_account: this.formData.account,
+          login_password: this.formData.password,
+          login_otp_secret_code: this.formData.secret_code
         })
+        .then((res) => {
+          console.log(res);
+          if (res.code == 0) {
+            localStorage.setItem("access_token", res.data.access_token);
+            localStorage.setItem("current_account", this.formData.account);
+            this.$store.dispatch('user/login', this.formData);
 
+            this.$message.success(this.$t('login.login_success'));
+            
+            setTimeout(() => {
+              // 获取安全的重定向URL
+              const redirectUrl = getSafeRedirectUrl();
+              console.log('重定向到:', redirectUrl);
+              
+              // 安全跳转
+              this.$router.replace(redirectUrl).catch(() => '');
+            }, 1000);
+
+          } else if (res.code == -2) {
+            this.showSecretCode = true;
+            this.formData.secretCode = "";
+            this.$message.error(res.msg);
+          } else {
+            this.$message.error(res.msg);
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
       }
     },
     handleCounter() {

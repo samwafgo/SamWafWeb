@@ -1,7 +1,8 @@
 import axios from 'axios';
 import proxy from '../config/host';
 import router from '../router/index';
-import  {AesDecrypt,AesEncrypt,isObject,isInList} from './usuallytool'
+import { AesDecrypt, AesEncrypt, isObject, isInList } from './usuallytool'
+import { clearLocalStorageExceptPreserved,saveCurrentUrl } from '@/constants';
 
 const env = import.meta.env.MODE || 'development';
 
@@ -12,8 +13,8 @@ const CODE = {
   LOGIN_TIMEOUT: 1000,
   REQUEST_SUCCESS: 0,
   REQUEST_FOBID: 1001,
-  AUTH_FAILURE :-999,
-  NEED_BIND_2FA :-3
+  AUTH_FAILURE: -999,
+  NEED_BIND_2FA: -3
 };
 
 const instance = axios.create({
@@ -26,10 +27,10 @@ const instance = axios.create({
       if (isObject(data)) {
         // 一、请求参数加密
         //if (process.env.VUE_APP_RUNTIME === 'prod') {
-          data = JSON.stringify(data)
-          //headers["keyCipher"] = rsaEncrypt(aesKey) // 传输 aes key 密文
-          data = AesEncrypt(data) // 加密请求参数
-       // }
+        data = JSON.stringify(data)
+        //headers["keyCipher"] = rsaEncrypt(aesKey) // 传输 aes key 密文
+        data = AesEncrypt(data) // 加密请求参数
+        // }
         return data
       }
       return data
@@ -44,22 +45,22 @@ instance.interceptors.retry = 3;
 
 
 instance.interceptors.request.use(
-  (config:any) => {
+  (config: any) => {
 
-    let token:string =localStorage.getItem("access_token")? localStorage.getItem("access_token"):"" //此处换成自己获取回来的token，通常存在在cookie或者store里面
+    let token: string = localStorage.getItem("access_token") ? localStorage.getItem("access_token") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
     if (token) {
       // 让每个请求携带token-- ['X-Token']为自定义key 请根据实际情况自行修改
       config.headers['X-Token'] = token
       //config.headers.Authorization =  + token
     }
     //如果有远控机器
-    let remoteBean =localStorage.getItem("current_server")? localStorage.getItem("current_server"):"" //此处换成自己获取回来的token，通常存在在cookie或者store里面
+    let remoteBean = localStorage.getItem("current_server") ? localStorage.getItem("current_server") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
 
-    if (remoteBean && !isInList(config.url,noVisitClientList) ) {
+    if (remoteBean && !isInList(config.url, noVisitClientList)) {
       console.log(config)
       remoteBean = JSON.parse(localStorage.getItem("current_server"))
       // 让每个请求携带token-- ['X-Token']为自定义key 请根据实际情况自行修改
-      config.headers['Remote-Waf-User-Id'] =  remoteBean.client_tenant_id+"@"+remoteBean.client_user_code
+      config.headers['Remote-Waf-User-Id'] = remoteBean.client_tenant_id + "@" + remoteBean.client_user_code
       //config.headers.Authorization =  + token
     }
     /*if(config.headers['Content-Type'] !=undefined && config.headers['Content-Type']=="application/json" ){
@@ -81,31 +82,30 @@ instance.interceptors.response.use(
     if (response.status === 200) {
       const { data } = response;
       if (data.code === CODE.REQUEST_SUCCESS) {
-        console.log("解密前",data)
+        console.log("解密前", data)
         let tmpSrcContent = AesDecrypt(data.data)
         data.data = JSON.parse(tmpSrcContent)
-        console.log("解密后",data)
+        console.log("解密后", data)
 
         //console.log("再加密后",AesEncrypt(tmpSrcContent))
         return data;
-      }else {
+      } else {
         //如果有远控机器
-        let remoteBean =localStorage.getItem("current_server")? localStorage.getItem("current_server"):"" //此处换成自己获取回来的token，通常存在在cookie或者store里面
+        let remoteBean = localStorage.getItem("current_server") ? localStorage.getItem("current_server") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
 
-        if(!remoteBean  && data.code === CODE.AUTH_FAILURE){
-          Object.keys(localStorage).forEach(key => {
-            if (key !== "lang" && key !== "lastUpdatePopupTime") {
-              localStorage.removeItem(key);
-            }
-          });
+        if (!remoteBean && data.code === CODE.AUTH_FAILURE) {
+          // 保存当前访问的URL
+          saveCurrentUrl();
+          clearLocalStorageExceptPreserved();
+
           console.log("鉴权失败")
-          router.replace({path: '/login'})
-        }else if(!remoteBean  && data.code === CODE.NEED_BIND_2FA){
+          router.replace({ path: '/login' })
+        } else if (!remoteBean && data.code === CODE.NEED_BIND_2FA) {
 
           console.log("需要2Fa强制绑定")
-          router.replace({path: '/account/OTP'})
+          router.replace({ path: '/account/OTP' })
         }
-        else if(remoteBean  && data.code === CODE.AUTH_FAILURE){
+        else if (remoteBean && data.code === CODE.AUTH_FAILURE) {
           remoteBean = JSON.parse(localStorage.getItem("current_server"))
           data.code = -1
           data.msg = remoteBean.client_server_name + " 远端鉴权失败"
@@ -165,14 +165,14 @@ instance.interceptors.response.use(
         </body>
         </html>
       `;
-      
+
       // 创建一个新的HTML文档并替换当前页面内容
       document.open();
       document.write(accessDeniedHtml);
       document.close();
-      
+
       // 阻止错误继续传播
-      return new Promise(() => {});
+      return new Promise(() => { });
     }
     const { config } = err;
 

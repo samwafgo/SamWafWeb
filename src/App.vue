@@ -8,6 +8,7 @@ import config from '@/config/style';
 import websocket from "@/utils/websocket.js";
 import { DialogPlugin } from 'tdesign-vue';
 import  {AesDecrypt} from './utils/usuallytool'
+import { clearLocalStorageExceptPreserved } from '@/constants';
 const env = import.meta.env.MODE || 'development';
 
 export default Vue.extend({
@@ -99,12 +100,10 @@ export default Vue.extend({
           }
           this.$store.commit('notification/addMsgData', wsData.msg_data);
         }else if(wsData.msg_code=="-999"){
-          Object.keys(localStorage).forEach(key => {
-            if (key !== "lang" && key !== "lastUpdatePopupTime" ) {
-              localStorage.removeItem(key);
-            }
-          });
-          console.log("鉴权失败")
+          // 保存当前访问的URL
+          saveCurrentUrl();
+          clearLocalStorageExceptPreserved();
+          console.log("鉴权失败");
         }
       },
       wsOnClose() {

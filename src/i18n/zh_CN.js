@@ -62,7 +62,15 @@ export default {
       api_error:"请求错误",
       save_success:"保存成功",
       save_failed:"保存失败",
-    }
+    },
+    column_config: '列配置',
+    save_column_config: "保存列配置",
+    reset_column_config: "重置列配置",
+    column_config_saved: "列配置已保存",
+    column_config_save_failed: "保存列配置失败",
+    column_config_reset_success: "列配置已重置为默认设置",
+    column_config_reset_confirm: "确定要重置列配置为默认设置吗？",
+    column_config_load_failed: "加载列配置失败"
   },
   login:{
     login_title:"登录",

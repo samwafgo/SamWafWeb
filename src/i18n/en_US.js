@@ -62,7 +62,15 @@ export default {
       api_error:"API error",
       save_success:"Save success",
       save_failed:"Save failed",
-    }
+    },
+    column_config: 'Column Config',
+    save_column_config: "Save Column Config",
+    reset_column_config: "Reset Column Config",
+    column_config_saved: "Column configuration saved",
+    column_config_save_failed: "Failed to save column configuration",
+    column_config_reset_success: "Column configuration reset to default",
+    column_config_reset_confirm: "Are you sure you want to reset column configuration to default?",
+    column_config_load_failed: "Failed to load column configuration"
   },
   login:{
     login_title: "Login",
