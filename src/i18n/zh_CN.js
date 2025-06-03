@@ -775,6 +775,7 @@ export default {
       label_batch_source_type: "来源类型",
       label_batch_source: "来源值",
       label_batch_execute_method: "执行方式",
+      label_batch_trigger_type: "触发类型",
       label_remark: "备注",
       label_btn_manual: "手工触发",
       label_confirm_message: "确认要手工触发吗？",
@@ -789,6 +790,10 @@ export default {
       batch_execute_method:{
         append: "添加",
         overwrite: "覆盖",
+      },
+      batch_trigger_type:{
+        cron: "定时任务",
+        manual: "手动任务",
       },
     },
     sslorder:{

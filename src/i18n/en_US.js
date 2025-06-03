@@ -772,6 +772,7 @@ export default {
       label_batch_source_type: "Source Type",
       label_batch_source: "Source Value",
       label_batch_execute_method: "Execution Method",
+      label_batch_trigger_type: "Trigger Type",
       label_remark: "Remarks",
       label_btn_manual: "Manual Trigger",
       label_confirm_message: "Are you sure you want to trigger manually?",
@@ -786,6 +787,10 @@ export default {
       batch_execute_method: {
         append: "Append",
         overwrite: "Overwrite",
+      },
+      batch_trigger_type: {
+        cron: "Scheduled Task",
+        manual: "Manual Task",
       },
     },
     sslorder:{

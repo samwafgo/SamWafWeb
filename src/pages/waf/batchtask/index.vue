@@ -24,7 +24,7 @@
         </template>
       </t-alert>
       <div class="table-container">
-        <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
+        <t-table :columns="columns" :data="data"  size="small" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
                  :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
                  @page-change="rehandlePageChange"
                  :headerAffixedTop="true" >
@@ -50,6 +50,13 @@
             <p>
               {{
                 batch_execute_method.find(option => option.value === row.batch_execute_method)?.label || row.batch_execute_method
+              }}
+            </p>
+          </template>
+          <template #batch_trigger_type="{ row }">
+            <p>
+              {{
+                batch_trigger_type.find(option => option.value === row.batch_trigger_type)?.label || row.batch_trigger_type
               }}
             </p>
           </template>
@@ -97,6 +104,11 @@
           <t-option  v-for="item in batch_execute_method" :value="item.value" :label="`${item.label}`" ></t-option>
         </t-select>
       </t-form-item>
+      <t-form-item :label="$t('page.batchtask.label_batch_trigger_type')" name="batch_trigger_type">
+        <t-select v-model="formData.batch_trigger_type" :style="{ width: '480px' }">
+          <t-option  v-for="item in batch_trigger_type" :value="item.value" :label="`${item.label}`" ></t-option>
+        </t-select>
+      </t-form-item>
       <t-form-item :label="$t('page.batchtask.label_remark')" name="remark">
         <t-textarea v-model="formData.remark" :style="{ width: '480px' }" rows="4"></t-textarea>
       </t-form-item>
@@ -140,6 +152,11 @@
               <t-option  v-for="item in batch_execute_method" :value="item.value" :label="`${item.label}`" ></t-option>
             </t-select>
           </t-form-item>
+          <t-form-item :label="$t('page.batchtask.label_batch_trigger_type')" name="batch_trigger_type">
+            <t-select v-model="formEditData.batch_trigger_type" :style="{ width: '480px' }">
+              <t-option  v-for="item in batch_trigger_type" :value="item.value" :label="`${item.label}`" ></t-option>
+            </t-select>
+          </t-form-item>
           <t-form-item :label="$t('page.batchtask.label_remark')" name="remark">
             <t-textarea v-model="formEditData.remark" :style="{ width: '480px' }" rows="4"></t-textarea>
           </t-form-item>
@@ -180,6 +197,7 @@ const INITIAL_DATA = {
   batch_source_type: 'local',
   batch_source: '',
   batch_execute_method: 'append',
+  batch_trigger_type: 'cron', // 新增字段，默认值为定时任务
   remark: '',
 };
 
@@ -241,6 +259,13 @@ export default Vue.extend({
             type: 'error'
           }
         ],
+        batch_trigger_type: [
+          {
+            required: true,
+            message: this.$t('common.select_placeholder') + this.$t('page.batchtask.label_batch_trigger_type'),
+            type: 'error'
+          }
+        ],
         remark: [
           {
             required: false,
@@ -260,24 +285,32 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'batch_host_code',
           fixed: 'left',
+        }, 
+        {
+          align: 'left',
+          width: 300,
+          colKey: 'op',
+          fixed: 'left',
+          title: this.$t('common.op'),
         },
         {
           title: this.$t('page.batchtask.label_batch_task_name'),
           align: 'left',
           width: 250,
           ellipsis: true,
+          fixed: 'left',
           colKey: 'batch_task_name',
         },
         {
           title: this.$t('page.batchtask.label_batch_type'),
           align: 'left',
-          width: 250,
+          width: 200,
           ellipsis: true,
           colKey: 'batch_type',
         },
         {
           title: this.$t('page.batchtask.label_batch_source_type'),
-          width: 200,
+          width: 150,
           ellipsis: true,
           colKey: 'batch_source_type',
         },
@@ -289,21 +322,21 @@ export default Vue.extend({
         },
         {
           title: this.$t('page.batchtask.label_batch_execute_method'),
-          width: 200,
+          width: 150,
           ellipsis: true,
           colKey: 'batch_execute_method',
         },
         {
-          title: this.$t('page.batchtask.label_remark'),
-          width: 250,
+          title: this.$t('page.batchtask.label_batch_trigger_type'),
+          width: 150,
           ellipsis: true,
-          colKey: 'remark',
+          colKey: 'batch_trigger_type',
         },
         {
-          align: 'left',
-          width: 300,
-          colKey: 'op',
-          title: this.$t('common.op'),
+          title: this.$t('page.batchtask.label_remark'),
+          width: 200,
+          ellipsis: true,
+          colKey: 'remark',
         },
       ],
       rowKey: 'id',
@@ -349,6 +382,16 @@ export default Vue.extend({
             label: this.$t('page.batchtask.batch_execute_method.overwrite'),
             value: 'overwrite'
        },
+      ],
+      //触发类型
+      batch_trigger_type:[
+        {
+            label: this.$t('page.batchtask.batch_trigger_type.manual'),
+            value: 'manual'
+        },{
+            label: this.$t('page.batchtask.batch_trigger_type.cron'),
+            value:'cron'
+        }
       ],
        //主机字典
       host_dic:{},
