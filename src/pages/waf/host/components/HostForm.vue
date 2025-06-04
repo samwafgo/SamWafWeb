@@ -334,6 +334,13 @@
             </template>
             <cache-config :cache-config="cacheConfigData" :prop-host-code="formData.code" @update="val => cacheConfigData = val"></cache-config>
           </t-tab-panel>
+          <t-tab-panel :value="10">
+            <template #label>
+              <t-icon name="folder" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_static_site')}}
+            </template>
+            <static-site-config :static-site-config="staticSiteConfigData" @update="val => staticSiteConfigData = val"></static-site-config>
+          </t-tab-panel>
           </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
@@ -373,10 +380,12 @@
   import HttpAuthBase from "../../http_auth_base/index.vue";
   import HealthyConfig from '../components/HealthyConfig.vue';
   import CaptchaConfig from '../components/CaptchaConfig.vue';
+  import StaticSiteConfig from '../components/StaticSiteConfig.vue';
+
   import AntiLeechConfig from '../components/AntiLeechConfig.vue';
   import CacheConfig from '../components/CacheConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   export default Vue.extend({
@@ -390,6 +399,7 @@
       AntiLeechConfig,
       SslForm,
       CacheConfig,
+      StaticSiteConfig,
     },
     props: {
       // 表单数据
@@ -438,6 +448,7 @@
         // 防恶意链接配置
         antiLeechConfigData: {...INITIAL_CAPTCHA },
         cacheConfigData: { ...INITIAL_CACHE },
+        staticSiteConfigData: {...INITIAL_STATIC_SITE},
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -628,6 +639,25 @@
           } else {
             this.cacheConfigData = { ...INITIAL_CACHE };
           }
+          // 解析静态网站配置
+          if (this.formData.static_site_json) {
+            try {
+              let that = this;
+              if (that.formData.static_site_json != "") {
+                that.staticSiteConfigData = JSON.parse(that.formData.static_site_json);
+                that.staticSiteConfigData.is_enable_static_site = (that.staticSiteConfigData.is_enable_static_site || 0).toString();
+              } else {
+                that.staticSiteConfigData = { ...INITIAL_STATIC_SITE };
+              }
+            } catch (e) {
+              this.staticSiteConfigData = { ...INITIAL_STATIC_SITE };
+            }
+          } else {
+            this.staticSiteConfigData = { ...INITIAL_STATIC_SITE };
+          }
+
+            
+        
         },
         immediate: true,
         deep: true
@@ -768,7 +798,7 @@
               this.$message.warning(this.$t('page.host.host_rule_msg'));
               return;
             }
-        console.log("处理前",postdata)
+            console.log("处理前",postdata)
             // 处理远程主机名
             // 只有当remote_host为空时才自动设置
             if (!postdata.remote_host || postdata.remote_host === '') {
@@ -844,6 +874,15 @@
               max_memory_size_mb: parseFloat(this.cacheConfigData.max_memory_size_mb)
             };
             postdata['cache_json'] = JSON.stringify(cacheData);
+
+            // 处理静态网站配置
+            let staticSiteData = {
+              is_enable_static_site: parseInt(this.staticSiteConfigData.is_enable_static_site),
+              static_site_path: this.staticSiteConfigData.static_site_path,
+              static_site_prefix: this.staticSiteConfigData.static_site_prefix
+            };
+            postdata['static_site_json'] = JSON.stringify(staticSiteData);
+            
             // 提交表单
             this.$emit('submit', { result: postdata });
           } else {

@@ -467,6 +467,7 @@ export default {
       tab_captcha: '验证码配置',
       tab_anti_leech: "防盗链配置",
       tab_cache: "缓存配置",
+      tab_static_site: "静态网站",
       more_domain:"同时绑定多个域名",
       more_domain_tips:"填写多个域名回车换行,不要加端口",
       start_status: "启动状态",
@@ -589,6 +590,15 @@ export default {
         max_file_size_mb_placeholder: "0 表示不限制",
         max_memory_size_mb: "最大内存缓存大小(MB)",
         max_memory_size_mb_placeholder: "0 表示不限制"
+      },
+      static_site: {
+        is_enable: "启用静态网站",
+        static_site_path: "静态文件路径",
+        static_site_path_placeholder: "请输入静态文件存储路径",
+        static_site_path_tips: "静态文件在服务器上的存储路径，例如：/var/www/html",
+        static_site_prefix: "URL前缀",
+        static_site_prefix_placeholder: "请输入URL访问前缀",
+        static_site_prefix_tips: "静态文件的URL访问前缀，例如：/static 表示通过 /static/xxx 访问静态文件"
       },
       import_file: "导入文件",
       upload_file: "上传文件",

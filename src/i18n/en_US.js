@@ -466,6 +466,7 @@ export default {
       tab_captcha: 'Captcha Settings',
       tab_anti_leech: "Anti-Leech Config",
       tab_cache: "Cache Config",
+      tab_static_site: "Static Site",
       more_domain:"Bind More Domain",
       more_domain_tips:"Enter multiple domain names, each on a new line, without including the port.",
       start_status: "Start Status",
@@ -548,6 +549,15 @@ export default {
         max_file_size_mb_placeholder: "0 means no limit",
         max_memory_size_mb: "Max Memory Size (MB)",
         max_memory_size_mb_placeholder: "0 means no limit"
+      },
+      static_site: {
+        is_enable: "Enable Static Site",
+        static_site_path: "Static File Path",
+        static_site_path_placeholder: "Please enter static file storage path",
+        static_site_path_tips: "The storage path of static files on the server, e.g.: /var/www/html",
+        static_site_prefix: "URL Prefix",
+        static_site_prefix_placeholder: "Please enter URL access prefix",
+        static_site_prefix_tips: "URL access prefix for static files, e.g.: /static means accessing static files via /static/xxx"
       },
       keyfile: "Key String",
       keyfile_content: "Usually filename: *.key Content format: -----BEGIN RSA PRIVATE KEY----- Copy all and fill in",
