@@ -636,7 +636,7 @@
           console.log("formData.host",val)
           const hostRegex = /^(?!https?:\/\/)[^\s]+$/;
           const isValid = !!val && (hostRegex.test(val));
-          if ( isValid ) {
+          if ( isValid && !this.isEdit) {
             // 获取当前协议，如果已有remote_host则保留其协议，否则默认为http
             const currentProtocol = this.formData.remote_host && this.formData.remote_host.startsWith('https://') ? 'https://' : 'http://';
 
