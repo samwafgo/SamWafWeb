@@ -779,9 +779,12 @@ export default {
       label_remark: "备注",
       label_btn_manual: "手工触发",
       label_confirm_message: "确认要手工触发吗？",
+      label_batch_extra_config: "额外配置",
+      batch_extra_config_placeholder: "请输入JSON格式的配置",
       batch_type:{
         add_ipallow: "添加白名单IP",
         add_ipdeny: "添加黑名单IP",
+        add_sensitive: "添加敏感词",
       },
       batch_source_type:{
           local: "本地路径",

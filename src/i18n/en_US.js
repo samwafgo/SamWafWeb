@@ -776,9 +776,12 @@ export default {
       label_remark: "Remarks",
       label_btn_manual: "Manual Trigger",
       label_confirm_message: "Are you sure you want to trigger manually?",
+      label_batch_extra_config: "Extra Config",
+      batch_extra_config_placeholder: "Please enter JSON format configuration",
       batch_type: {
-        add_ipallow: "Add Whitelist IP",
-        add_ipdeny: "Add DenyList IP",
+        add_ipallow: "Add IP Whitelist",
+        add_ipdeny: "Add IP Blacklist",
+        add_sensitive: "Add Sensitive Words",
       },
       batch_source_type: {
         local: "Local Path",

@@ -87,10 +87,23 @@
             </t-select>
       </t-form-item>
       <t-form-item :label="$t('page.batchtask.label_batch_type')" name="batch_type">
-         <t-select v-model="formData.batch_type" :style="{ width: '480px' }">
+         <t-select v-model="formData.batch_type" :style="{ width: '480px' }" @change="onBatchTypeChange">
           <t-option v-for="item in batch_task_type" :value="item.value" :label="`${item.label}`"></t-option>
         </t-select>
       </t-form-item>
+      <t-form-item :label="$t('page.batchtask.label_batch_extra_config')" name="batch_extra_config">
+            <div>
+              <t-textarea 
+                v-model="formData.batch_extra_config" 
+                :style="{ width: '480px' }" 
+                rows="6"
+                :placeholder="$t('page.batchtask.batch_extra_config_placeholder')"
+              ></t-textarea>
+              <div style="margin-top: 8px; font-size: 12px; color: #666; white-space: pre-line;">
+                {{ getCurrentConfigDescription('add') }}
+              </div>
+            </div>
+          </t-form-item>
       <t-form-item :label="$t('page.batchtask.label_batch_source_type')" name="batch_source_type">
         <t-select v-model="formData.batch_source_type" :style="{ width: '480px' }">
           <t-option  v-for="item in batch_source_type" :value="item.value" :label="`${item.label}`" ></t-option>
@@ -135,9 +148,22 @@
             </t-select>
           </t-form-item>
           <t-form-item :label="$t('page.batchtask.label_batch_type')" name="batch_type">
-            <t-select v-model="formEditData.batch_type" :style="{ width: '480px' }">
+            <t-select v-model="formEditData.batch_type" :style="{ width: '480px' }" @change="onBatchTypeChangeEdit">
               <t-option v-for="item in batch_task_type" :value="item.value" :label="`${item.label}`"></t-option>
             </t-select>
+          </t-form-item>
+          <t-form-item :label="$t('page.batchtask.label_batch_extra_config')" name="batch_extra_config">
+            <div>
+              <t-textarea 
+                v-model="formEditData.batch_extra_config" 
+                :style="{ width: '480px' }" 
+                rows="6"
+                :placeholder="$t('page.batchtask.batch_extra_config_placeholder')"
+              ></t-textarea>
+              <div style="margin-top: 8px; font-size: 12px; color: #666; white-space: pre-line;">
+                {{ getCurrentConfigDescription('edit') }}
+              </div>
+            </div>
           </t-form-item>
           <t-form-item :label="$t('page.batchtask.label_batch_source_type')" name="batch_source_type">
                <t-select v-model="formEditData.batch_source_type" :style="{ width: '480px' }">
@@ -197,7 +223,8 @@ const INITIAL_DATA = {
   batch_source_type: 'local',
   batch_source: '',
   batch_execute_method: 'append',
-  batch_trigger_type: 'cron', // 新增字段，默认值为定时任务
+  batch_trigger_type: 'cron',
+  batch_extra_config: '{}', // 新增字段
   remark: '',
 };
 
@@ -235,6 +262,26 @@ export default Vue.extend({
           {
             required: true,
             message: this.$t('common.select_placeholder') + this.$t('page.batchtask.label_batch_type'),
+            type: 'error'
+          }
+        ],
+        batch_extra_config: [
+          {
+            required: false,
+            message: this.$t('common.select_placeholder') + this.$t('page.batchtask.label_batch_extra_config'),
+            type: 'error'
+          },
+          {
+            validator: (val) => {
+              if (!val) return true;
+              try {
+                JSON.parse(val);
+                return true;
+              } catch (e) {
+                return false;
+              }
+            },
+            message: '请输入有效的JSON格式',
             type: 'error'
           }
         ],
@@ -352,16 +399,40 @@ export default Vue.extend({
         batch_task_name: '',
       },
       deleteIdx: -1,
+      // 任务类型配置模板
+      batchTypeConfigs: {
+        ipallow: {
+          template: {
+          },
+          description: "无"
+        },
+        ipdeny: {
+          template: { 
+          },
+          description: "无"
+        },
+        sensitive: {
+          template: {
+            "check_direction": "out",
+            "action": "replace"
+          },
+          description: "敏感词检测配置\n- check_direction: 检测方向(in=入站, out=出站, all=双向)\n- action: 检测后动作(deny=拒绝, replace=替换)"
+        }
+      },
       //任务类型
       batch_task_type: [
         {
             label: this.$t('page.batchtask.batch_type.add_ipallow'),
             value: 'ipallow'
-       },
+        },
         {
         label: this.$t('page.batchtask.batch_type.add_ipdeny'),
         value: 'ipdeny'
-         },
+         }, 
+        {
+          label: this.$t('page.batchtask.batch_type.add_sensitive'),
+          value: 'sensitive'
+        }
       ],
       //来源类型
       batch_source_type: [
@@ -414,6 +485,27 @@ export default Vue.extend({
       });
   },
   methods: {
+    // 当任务类型改变时，自动填充默认配置
+    onBatchTypeChange(value) {
+      const config = this.batchTypeConfigs[value];
+      if (config) {
+        this.formData.batch_extra_config = JSON.stringify(config.template, null, 2);
+      }
+    },
+    
+    onBatchTypeChangeEdit(value) {
+      const config = this.batchTypeConfigs[value];
+      if (config) {
+        this.formEditData.batch_extra_config = JSON.stringify(config.template, null, 2);
+      }
+    },
+    
+    // 获取当前选中类型的配置说明
+    getCurrentConfigDescription(formType = 'add') {
+      const currentType = formType === 'add' ? this.formData.batch_type : this.formEditData.batch_type;
+      const config = this.batchTypeConfigs[currentType];
+      return config ? config.description : '';
+    },
     loadHostList() {
         return new Promise((resolve, reject) => {
           allhost()
