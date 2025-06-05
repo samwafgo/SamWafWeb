@@ -646,6 +646,10 @@
               if (that.formData.static_site_json != "") {
                 that.staticSiteConfigData = JSON.parse(that.formData.static_site_json);
                 that.staticSiteConfigData.is_enable_static_site = (that.staticSiteConfigData.is_enable_static_site || 0).toString();
+                that.staticSiteConfigData.sensitive_paths = that.staticSiteConfigData.sensitive_paths || "";
+                that.staticSiteConfigData.sensitive_extensions = that.staticSiteConfigData.sensitive_extensions || "";
+                that.staticSiteConfigData.allowed_extensions = that.staticSiteConfigData.allowed_extensions || "";
+                that.staticSiteConfigData.sensitive_patterns = that.staticSiteConfigData.sensitive_patterns || "";
               } else {
                 that.staticSiteConfigData = { ...INITIAL_STATIC_SITE };
               }
@@ -879,10 +883,14 @@
             let staticSiteData = {
               is_enable_static_site: parseInt(this.staticSiteConfigData.is_enable_static_site),
               static_site_path: this.staticSiteConfigData.static_site_path,
-              static_site_prefix: this.staticSiteConfigData.static_site_prefix
+              static_site_prefix: this.staticSiteConfigData.static_site_prefix,
+              sensitive_paths: this.staticSiteConfigData.sensitive_paths,
+              sensitive_extensions: this.staticSiteConfigData.sensitive_extensions,
+              allowed_extensions: this.staticSiteConfigData.allowed_extensions,
+              sensitive_patterns: this.staticSiteConfigData.sensitive_patterns
             };
             postdata['static_site_json'] = JSON.stringify(staticSiteData);
-            
+
             // 提交表单
             this.$emit('submit', { result: postdata });
           } else {
