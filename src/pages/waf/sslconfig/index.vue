@@ -49,9 +49,15 @@
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="220">
           <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
             <t-textarea v-model="formData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+            <t-button theme="default" size="small" @click="importCertFile('add')" :style="{ marginTop: '8px' }">
+              {{ $t('page.ssl.import_cert_file') }}
+            </t-button>
           </t-form-item>
           <t-form-item :label="$t('page.ssl.label_key_content')" name="key_content">
             <t-textarea v-model="formData.key_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+            <t-button theme="default" size="small" @click="importKeyFile('add')" :style="{ marginTop: '8px' }">
+              {{ $t('page.ssl.import_key_file') }}
+            </t-button>
           </t-form-item>
           <t-form-item style="float: right">
             <t-button variant="outline" @click="onClickCloseBtn">{{ $t('common.close') }}</t-button>
@@ -69,9 +75,15 @@
           </t-form-item>
           <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
             <t-textarea v-model="formEditData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+            <t-button theme="default" size="small" @click="importCertFile('edit')" :style="{ marginTop: '8px' }">
+              {{ $t('page.ssl.import_cert_file') }}
+            </t-button>
           </t-form-item>
           <t-form-item :label="$t('page.ssl.label_key_content')" name="key_content">
             <t-textarea v-model="formEditData.key_content" :style="{ width: '480px' }" rows="4"></t-textarea>
+            <t-button theme="default" size="small" @click="importKeyFile('edit')" :style="{ marginTop: '8px' }">
+              {{ $t('page.ssl.import_key_file') }}
+            </t-button>
           </t-form-item>
           <t-form-item>
             <b>{{$t("page.ssl.label_auto_tip")}}</b>
@@ -90,6 +102,9 @@
       </div>
     </t-dialog>
 
+    <!-- 隐藏的文件输入框 -->
+    <input ref="certFileInput" type="file" accept=".crt" style="display: none" @change="handleCertFileChange" />
+    <input ref="keyFileInput" type="file" accept=".key" style="display: none" @change="handleKeyFileChange" />
 
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
               :onCancel="onCancel">
@@ -227,6 +242,8 @@ export default Vue.extend({
         domains: '',
       },
       deleteIdx: -1,
+      currentImportMode: '', // 'add' 或 'edit'
+      currentImportType: '', // 'cert' 或 'key'
     };
   },
   computed: {
@@ -364,6 +381,58 @@ export default Vue.extend({
     },
     onClickCloseEditBtn() {
       this.editFormVisible = false;
+    },
+    // 导入证书文件
+    importCertFile(mode) {
+      this.currentImportMode = mode;
+      this.currentImportType = 'cert';
+      this.$refs.certFileInput.click();
+    },
+    // 导入密钥文件
+    importKeyFile(mode) {
+      this.currentImportMode = mode;
+      this.currentImportType = 'key';
+      this.$refs.keyFileInput.click();
+    },
+    // 处理证书文件变化
+    handleCertFileChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+          const content = e.target.result;
+          console.log("file:",content,"this.currentImportMode：",this.currentImportMode)
+          if (this.currentImportMode === 'add') {
+            console.log("file:add ",content)
+            this.$set(this.formData, 'cert_content', content);
+          } else {
+            this.$set(this.formEditData, 'cert_content', content);
+          }
+          this.$message.success(this.$t('page.ssl.import_cert_success'));
+        };
+        reader.readAsText(file);
+      }
+      // 清空文件输入框
+      event.target.value = '';
+    },
+    // 处理密钥文件变化
+    handleKeyFileChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          if (this.currentImportMode === 'add') {
+            this.$set(this.formData, 'key_content', content);
+          } else {
+            this.$set(this.formEditData, 'key_content', content);
+          }
+          this.$message.success(this.$t('page.ssl.import_key_success'));
+        };
+        reader.readAsText(file);
+      }
+      // 清空文件输入框
+      event.target.value = '';
     },
   },
 });

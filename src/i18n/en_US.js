@@ -785,6 +785,10 @@ export default {
       label_auto_tip: "SamWaf will automatically extract the certificate information from the SSL file storage path below at 3 AM every day and back up the current certificate.",
       label_auto_key_path: "Key File Path",
       label_auto_crt_path: "Crt File Path",
+      import_cert_file: "Import Certificate File",
+      import_key_file: "Import Key File",
+      import_cert_success: "Certificate file imported successfully",
+      import_key_success: "Key file imported successfully",
     },
     batchtask: {
       alert_message: "Automatically execute some batch operations, sequentially executed daily at 5 AM",

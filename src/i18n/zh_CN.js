@@ -788,6 +788,10 @@ export default {
       label_auto_path: "自动提取证书路径",
       label_auto_key_path: "key文件路径",
       label_auto_crt_path: "crt文件路径",
+      import_cert_file: "导入证书文件",
+      import_key_file: "导入密钥文件",
+      import_cert_success: "证书文件导入成功",
+      import_key_success: "密钥文件导入成功",
     },
     batchtask:{
       alert_message:"自动执行一些批量化操作,每日5点依次执行",
