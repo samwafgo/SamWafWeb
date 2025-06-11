@@ -220,6 +220,14 @@ export default [
         }
       },
       {
+        path: 'FileManage',
+        name: 'FileManage',
+        component: () => import('@/pages/waf/filemanage/index.vue'),
+        meta: {
+          title: 'menu.system.filemanage_title', 
+        }
+      },
+      {
          path: 'SysLog',
          name: 'SysLog',
          component: () => import('@/pages/waf/syslog/index.vue'),

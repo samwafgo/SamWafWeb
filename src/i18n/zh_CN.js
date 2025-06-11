@@ -192,6 +192,7 @@ export default {
     },
     system:{
       vpconfig_title:"管理配置",
+      filemanage_title:"文件管理",
       parent_title:"系统设置",
       system_log_title:"系统日志",
       system_config_title:"参数设置",
@@ -1075,6 +1076,24 @@ export default {
         chat_placeholder:"请输入内容",
         chat_send:"发送",
       }
+    },
+    filemanage: {
+      label_name: "文件名",
+      label_path: "文件路径",
+      label_size: "文件大小",
+      label_size_bytes: "字节大小",
+      label_description: "描述",
+      label_can_delete: "可删除",
+      label_mod_time: "修改时间",
+      can_delete: "可删除",
+      cannot_delete: "不可删除",
+      alert_message: "文件管理页面，显示系统中的文件信息，支持删除可删除的文件",
+      delete_confirm_content: "确认删除文件 {name} 吗？删除后无法恢复！",
+      delete_success: "文件删除成功",
+      delete_failed: "文件删除失败",
+      filter_name_placeholder: "过滤文件名",
+      filter_path_placeholder: "过滤路径",
+      filter_description_placeholder: "过滤描述" 
     },
     right_setting:{
       page_setting: "页面配置",

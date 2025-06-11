@@ -193,6 +193,7 @@ export default {
     system:{
       parent_title: "System Settings",
       vpconfig_title:"Manage Configuration",
+      filemanage_title: "File Management",
       system_log_title: "System Logs",
       system_config_title: "Parameter Settings",
       system_runtime_title: "Runtime Parameters",
@@ -1066,6 +1067,24 @@ export default {
         chat_placeholder: "Enter Content",
         chat_send:"Send",
       }
+    },
+    filemanage: {
+      label_name: "File Name",
+      label_path: "File Path",
+      label_size: "File Size",
+      label_size_bytes: "Size Bytes",
+      label_description: "Description",
+      label_can_delete: "Can Delete",
+      label_mod_time: "Modified Time",
+      can_delete: "Deletable",
+      cannot_delete: "Non-deletable",
+      alert_message: "File management page, displays system file information, supports deleting deletable files",
+      delete_confirm_content: "Are you sure to delete file {name}? It cannot be recovered after deletion!",
+      delete_success: "File deleted successfully",
+      delete_failed: "File deletion failed",
+      filter_name_placeholder: "Filter by name",
+      filter_path_placeholder: "Filter by path", 
+      filter_description_placeholder: "Filter by description"
     },
     right_setting: {
       page_setting: "Page Configuration",
