@@ -592,6 +592,20 @@
                 that.captchaConfigData.is_enable_captcha = getOrDefault(that.captchaConfigData, "is_enable_captcha", "0");
                 that.captchaConfigData.expire_time = getOrDefault(that.captchaConfigData, "expire_time", 24);
                 that.captchaConfigData.ip_mode = getOrDefault(that.captchaConfigData, "ip_mode", "nic");
+                that.captchaConfigData.engine_type = getOrDefault(that.captchaConfigData, "engine_type", "default");
+                if ( that.captchaConfigData.cap_js_config == null){
+                  that.captchaConfigData.cap_js_config = {
+                    challengeCount: 50,
+                    challengeSize: 32,
+                    challengeDifficulty: 4,
+                    expiresMs: 600000
+                  } 
+                }else{
+                  that.captchaConfigData.cap_js_config.challengeCount = getOrDefault(that.captchaConfigData.cap_js_config, "challengeCount", 50);
+                  that.captchaConfigData.cap_js_config.challengeSize = getOrDefault(that.captchaConfigData.cap_js_config, "challengeSize", 32);
+                  that.captchaConfigData.cap_js_config.challengeDifficulty = getOrDefault(that.captchaConfigData.cap_js_config, "challengeDifficulty", 4);
+                  that.captchaConfigData.cap_js_config.expiresMs = getOrDefault(that.captchaConfigData.cap_js_config, "expiresMs", 600000);
+                }
               } else {
                 that.captchaConfigData = { ...INITIAL_CAPTCHA };
               }
@@ -600,7 +614,7 @@
               this.captchaConfigData = { ...INITIAL_CAPTCHA };
             }
           } else {
-            // 如果没有验证码配置，使用默认值
+            // 如果验证码配置，使用默认值
             this.captchaConfigData = { ...INITIAL_CAPTCHA };
           }
 
@@ -855,7 +869,9 @@
               is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
               exclude_urls: this.captchaConfigData.exclude_urls,
               expire_time: this.captchaConfigData.expire_time,
-              ip_mode: this.captchaConfigData.ip_mode
+              ip_mode: this.captchaConfigData.ip_mode,
+              engine_type: this.captchaConfigData.engine_type,
+              cap_js_config: this.captchaConfigData.cap_js_config 
             };
             postdata['captcha_json'] = JSON.stringify(captchaData);
 

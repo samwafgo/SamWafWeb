@@ -1,7 +1,7 @@
 <template>
   <div class="captcha-config">
     <t-form-item :label="$t('page.host.captcha.is_enable')">
-      <t-tooltip class="placement top center" :content="$t('page.host.captcha.is_enable_captcha_tips')" placement="top"
+      <t-tooltip class="placement top center" :content="$t('page.host.captcha.is_enable_tips')" placement="top"
                  :overlay-style="{ width: '200px' }" show-arrow>
         <t-radio-group v-model="localCaptchaConfig.is_enable_captcha" @change="updateParent">
           <t-radio value="0">{{ $t('common.off') }}</t-radio>
@@ -10,7 +10,16 @@
       </t-tooltip>
     </t-form-item>
 
-    <!-- 其他表单项也类似修改，添加@change="updateParent" -->
+    <t-form-item :label="$t('page.host.captcha.engine_type')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+      <t-tooltip class="placement top center" :content="$t('page.host.captcha.engine_type_tips')" placement="top"
+                 :overlay-style="{ width: '200px' }" show-arrow>
+        <t-radio-group v-model="localCaptchaConfig.engine_type" @change="updateParent">
+          <t-radio value="traditional">{{ $t('page.host.captcha.engine_traditional') }}</t-radio>
+          <t-radio value="capJs">{{ $t('page.host.captcha.engine_capjs') }}</t-radio>
+        </t-radio-group>
+      </t-tooltip>
+    </t-form-item>
+
     <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
       <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
                  :overlay-style="{ width: '200px' }" show-arrow>
@@ -22,7 +31,79 @@
       </t-tooltip>
     </t-form-item>
 
-    <!-- 其他表单项也类似修改 -->
+    <t-form-item :label="$t('page.host.captcha.expire_time')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+      <t-tooltip class="placement top center" :content="$t('page.host.captcha.expire_time_tips')" placement="top"
+                 :overlay-style="{ width: '200px' }" show-arrow>
+        <t-input-number :style="{ width: '150px' }"
+                        v-model="localCaptchaConfig.expire_time"
+                        @change="updateParent"
+                        :placeholder="$t('page.host.captcha.expire_time_placeholder')">
+        </t-input-number>
+      </t-tooltip>
+    </t-form-item>
+
+    <t-form-item :label="$t('page.host.captcha.ip_mode')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+      <t-tooltip class="placement top center" :content="$t('page.host.captcha.ip_mode_tips')" placement="top"
+                 :overlay-style="{ width: '200px' }" show-arrow>
+        <t-select v-model="localCaptchaConfig.ip_mode" @change="updateParent" :style="{ width: '150px' }">
+          <t-option value="nic">{{ $t('page.host.captcha.ip_mode_nic') }}</t-option>
+          <t-option value="header">{{ $t('page.host.captcha.ip_mode_header') }}</t-option>
+        </t-select>
+      </t-tooltip>
+    </t-form-item>
+
+    <!-- capJS配置部分 -->
+    <div v-if="localCaptchaConfig.is_enable_captcha == '1' && localCaptchaConfig.engine_type == 'capJs'">
+      <t-divider>{{ $t('page.host.captcha.capjs_config') }}</t-divider>
+      
+      <t-form-item :label="$t('page.host.captcha.challenge_count')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.challenge_count_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-input-number :style="{ width: '150px' }"
+                          v-model="localCaptchaConfig.cap_js_config.challengeCount"
+                          @change="updateParent"
+                          :min="1"
+                          :max="100">
+          </t-input-number>
+        </t-tooltip>
+      </t-form-item>
+
+      <t-form-item :label="$t('page.host.captcha.challenge_size')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.challenge_size_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-input-number :style="{ width: '150px' }"
+                          v-model="localCaptchaConfig.cap_js_config.challengeSize"
+                          @change="updateParent"
+                          :min="16"
+                          :max="64">
+          </t-input-number>
+        </t-tooltip>
+      </t-form-item>
+
+      <t-form-item :label="$t('page.host.captcha.challenge_difficulty')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.challenge_difficulty_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-input-number :style="{ width: '150px' }"
+                          v-model="localCaptchaConfig.cap_js_config.challengeDifficulty"
+                          @change="updateParent"
+                          :min="1"
+                          :max="10">
+          </t-input-number>
+        </t-tooltip>
+      </t-form-item>
+
+      <t-form-item :label="$t('page.host.captcha.expires_ms')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.expires_ms_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-input-number :style="{ width: '150px' }"
+                          v-model="localCaptchaConfig.cap_js_config.expiresMs"
+                          @change="updateParent"
+                          :min="60000"
+                          :max="3600000">
+          </t-input-number>
+        </t-tooltip>
+      </t-form-item>
+    </div>
   </div>
 </template>
 
@@ -47,6 +128,18 @@ export default {
       handler(newVal) {
         // 避免直接引用，使用深拷贝
         this.localCaptchaConfig = JSON.parse(JSON.stringify(newVal));
+        // 确保新字段有默认值
+        if (!this.localCaptchaConfig.engine_type) {
+          this.localCaptchaConfig.engine_type = 'traditional';
+        }
+        if (!this.localCaptchaConfig.cap_js_config) {
+          this.localCaptchaConfig.cap_js_config = {
+            challengeCount: 50,
+            challengeSize: 32,
+            challengeDifficulty: 4,
+            expiresMs: 600000
+          };
+        }
       },
       immediate: true
     }
@@ -54,7 +147,7 @@ export default {
   methods: {
     // 当本地数据变化时通知父组件
     updateParent() {
-      console.log("CaptchaConfig",JSON.parse(JSON.stringify(this.localCaptchaConfig)))
+      console.log("CaptchaConfig", JSON.parse(JSON.stringify(this.localCaptchaConfig)))
       // 创建新对象避免直接修改props
       this.$emit('update', JSON.parse(JSON.stringify(this.localCaptchaConfig)));
     }
