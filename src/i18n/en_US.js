@@ -1010,7 +1010,7 @@ export default {
         base_info: "Basic Information",
         rule_name: "Rule Name",
         rule_domain_code: "Protected Website",
-        rule_salience: "Protection Level",
+        rule_salience: "Rule Priority",
         rule_manual: "Protection Arrangement Method",
         rule_dyn_add: "Add New",
         relation: "Relation",

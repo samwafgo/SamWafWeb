@@ -609,7 +609,13 @@
           let postdata = {}
           let url = ''
           if(that.op_type == "add"){
+             that.formData.rule_base.salience = parseInt(that.formData.rule_base.salience)
              that.formData.rule_content = that.formCodemirrorContent
+             // 使用正则替换rule_content中的salience值
+              that.formData.rule_content = that.formData.rule_content.replace(
+                /salience\s+\d+/g, 
+                `salience ${that.formData.rule_base.salience}`
+              )
              url = '/wafhost/rule/add'
              postdata = {
                           RuleJson : JSON.stringify(that.formData),
@@ -641,6 +647,12 @@
           }else{
              url = '/wafhost/rule/edit'
              that.formData.rule_content = that.formCodemirrorContent
+             that.formData.rule_base.salience = parseInt(that.formData.rule_base.salience)
+             // 使用正则替换rule_content中的salience值
+              that.formData.rule_content = that.formData.rule_content.replace(
+                /salience\s+\d+/g, 
+                `salience ${that.formData.rule_base.salience}`
+              )
              postdata = {
                Code:that.op_rule_no,
                RuleJson : JSON.stringify(that.formData),
@@ -745,7 +757,7 @@
         let that = this
         let rulename =  this.ruleuuid .replace(/-/g,"")// 这个全局替换查找到的字符
                 let ruleremark = this.formData.rule_base.rule_name
-                 let rule_salience = this.formData.rule_base.salience
+                 let rule_salience = parseInt(this.formData.rule_base.salience)
                  let bean = "USER_AGENT";
                  switch(this.fromSourcePoint){
                    case "url":bean = "URL";break

@@ -1014,7 +1014,7 @@ export default {
         base_info: "基本信息",
         rule_name: "规则名称",
         rule_domain_code: "防护网站",
-        rule_salience: "防护级别",
+        rule_salience: "规则优先级",
         rule_manual: "防护编排方式",
         rule_dyn_add: "新建",
         relation: "关系",
