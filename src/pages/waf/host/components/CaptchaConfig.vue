@@ -92,8 +92,8 @@
         </t-tooltip>
       </t-form-item>
 
-      <t-form-item :label="$t('page.host.captcha.expires_ms')">
-        <t-tooltip class="placement top center" :content="$t('page.host.captcha.expires_ms_tips')" placement="top"
+      <t-form-item :label="$t('page.host.captcha.capjs_expires_ms')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.capjs_expires_ms_tips')" placement="top"
                    :overlay-style="{ width: '200px' }" show-arrow>
           <t-input-number :style="{ width: '150px' }"
                           v-model="localCaptchaConfig.cap_js_config.expiresMs"
@@ -101,6 +101,50 @@
                           :min="60000"
                           :max="3600000">
           </t-input-number>
+        </t-tooltip>
+      </t-form-item>
+
+      <t-form-item :label="$t('page.host.captcha.capjs_info_title_zh')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.capjs_info_title_zh_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-input :style="{ width: '300px' }"
+                   v-model="localCaptchaConfig.cap_js_config.infoTitle.zh"
+                   @change="updateParent"
+                   :placeholder="$t('page.host.captcha.capjs_info_title_zh_placeholder')">
+          </t-input>
+        </t-tooltip>
+      </t-form-item>
+
+      <t-form-item :label="$t('page.host.captcha.capjs_info_text_zh')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.capjs_info_text_zh_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-textarea :style="{ width: '400px' }"
+                      v-model="localCaptchaConfig.cap_js_config.infoText.zh"
+                      @change="updateParent"
+                      :placeholder="$t('page.host.captcha.capjs_info_text_zh_placeholder')">
+          </t-textarea>
+        </t-tooltip>
+      </t-form-item>
+      
+      <t-form-item :label="$t('page.host.captcha.capjs_info_title_en')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.capjs_info_title_en_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-input :style="{ width: '300px' }"
+                   v-model="localCaptchaConfig.cap_js_config.infoTitle.en"
+                   @change="updateParent"
+                   :placeholder="$t('page.host.captcha.capjs_info_title_en_placeholder')">
+          </t-input>
+        </t-tooltip>
+      </t-form-item>
+ 
+      <t-form-item :label="$t('page.host.captcha.capjs_info_text_en')">
+        <t-tooltip class="placement top center" :content="$t('page.host.captcha.capjs_info_text_en_tips')" placement="top"
+                   :overlay-style="{ width: '200px' }" show-arrow>
+          <t-textarea :style="{ width: '400px' }"
+                      v-model="localCaptchaConfig.cap_js_config.infoText.en"
+                      @change="updateParent"
+                      :placeholder="$t('page.host.captcha.capjs_info_text_en_placeholder')">
+          </t-textarea>
         </t-tooltip>
       </t-form-item>
     </div>
@@ -137,7 +181,15 @@ export default {
             challengeCount: 50,
             challengeSize: 32,
             challengeDifficulty: 4,
-            expiresMs: 600000
+            expiresMs: 600000,
+            infoTitle: {
+              zh: "验证码验证",
+              en: "Captcha Verification"
+            },
+            infoText: {
+              zh: "请完成以下验证以继续访问",
+              en: "Please complete the following verification to continue"
+            }
           };
         }
       },

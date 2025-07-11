@@ -12,7 +12,7 @@ export const INITIAL_DATA = {
   remarks: '',
   defense_json: '{"bot":1,"sqli":1,"xss":1,"scan":1,"rce":1,"sensitive":1,"traversal":1}',
   healthy_json: '{"is_enable_healthy":1,"fail_count":3,"success_count":3,"response_time":60,"check_method":"GET","check_path":"/","expected_codes":"200,"}',
-  captcha_json: '{"is_enable_captcha":0,"exclude_urls":[],"expire_time":24,"ip_mode":"nic","engine_type":"traditional","cap_js_config":{"challengeCount":50,"challengeSize":32,"challengeDifficulty":4,"expiresMs":600000}}',
+  captcha_json: '{"is_enable_captcha":0,"exclude_urls":[],"expire_time":24,"ip_mode":"nic","engine_type":"traditional","cap_js_config":{"challengeCount":50,"challengeSize":32,"challengeDifficulty":4,"expiresMs":600000,"infoTitle":{"en":"","zh":""},"infoText":{"en":"","zh":""}}}',
   start_status: '0',
   exclude_url_log:'',
   is_enable_load_balance: '0',
@@ -63,7 +63,15 @@ export const INITIAL_CAPTCHA = {
     challengeCount: 50,
     challengeSize: 32,
     challengeDifficulty: 4,
-    expiresMs: 600000
+    expiresMs: 600000,
+    infoTitle: {
+      en: "",
+      zh: ""
+    },
+    infoText: {
+      en: "",
+      zh: ""
+    }
   }
 };
 

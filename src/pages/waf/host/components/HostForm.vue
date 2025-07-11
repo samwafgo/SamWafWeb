@@ -598,13 +598,35 @@
                     challengeCount: 50,
                     challengeSize: 32,
                     challengeDifficulty: 4,
-                    expiresMs: 600000
+                    expiresMs: 600000,
+                    infoTitle: {
+                      zh: "验证码验证",
+                      en: "Captcha Verification"
+                    },
+                    infoText: {
+                      zh: "请完成以下验证以继续访问",
+                      en: "Please complete the following verification to continue"
+                    }
                   } 
                 }else{
                   that.captchaConfigData.cap_js_config.challengeCount = getOrDefault(that.captchaConfigData.cap_js_config, "challengeCount", 50);
                   that.captchaConfigData.cap_js_config.challengeSize = getOrDefault(that.captchaConfigData.cap_js_config, "challengeSize", 32);
                   that.captchaConfigData.cap_js_config.challengeDifficulty = getOrDefault(that.captchaConfigData.cap_js_config, "challengeDifficulty", 4);
                   that.captchaConfigData.cap_js_config.expiresMs = getOrDefault(that.captchaConfigData.cap_js_config, "expiresMs", 600000);
+                  
+                  // 确保 infoTitle 和 infoText 有默认值
+                  if (!that.captchaConfigData.cap_js_config.infoTitle) {
+                    that.captchaConfigData.cap_js_config.infoTitle = {
+                      zh: "验证码验证",
+                      en: "Captcha Verification"
+                    };
+                  }
+                  if (!that.captchaConfigData.cap_js_config.infoText) {
+                    that.captchaConfigData.cap_js_config.infoText = {
+                      zh: "请完成以下验证以继续访问",
+                      en: "Please complete the following verification to continue"
+                    };
+                  }
                 }
               } else {
                 that.captchaConfigData = { ...INITIAL_CAPTCHA };
