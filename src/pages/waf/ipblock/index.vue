@@ -4,6 +4,18 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddipblock"> {{ $t('page.ipblock.button_add_ip') }} </t-button>
+          <t-button 
+            theme="danger" 
+            variant="outline" 
+            @click="handleBatchDelete"
+            :disabled="selectedRowKeys.length === 0">
+            {{ $t('page.ipblock.button_batch_delete') }}
+          </t-button>
+          <t-button 
+            theme="danger" 
+            @click="handleClearAll" >
+            {{ $t('page.ipblock.button_clear_all') }}
+          </t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -108,6 +120,24 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
       :onCancel="onCancel">
     </t-dialog>
+
+    <!-- 批量删除确认对话框 -->
+    <t-dialog 
+      :header="$t('page.ipblock.confirm_batch_delete')" 
+      :body="$t('common.data_delete_warning')" 
+      :visible.sync="batchDeleteConfirmVisible" 
+      @confirm="onConfirmBatchDelete"
+      :onCancel="onCancelBatchDelete">
+    </t-dialog>
+
+    <!-- 清空所有确认对话框 -->
+    <t-dialog 
+      :header="$t('page.ipblock.confirm_clear_all')" 
+      :body="$t('common.data_delete_warning')" 
+      :visible.sync="clearAllConfirmVisible" 
+      @confirm="onConfirmClearAll"
+      :onCancel="onCancelClearAll">
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -123,7 +153,7 @@
     allhost
   } from '@/apis/host';
   import {
-    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi
+    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi
   } from '@/apis/ipblock';
   import {
     SSL_STATUS,
@@ -150,6 +180,8 @@
         addFormVisible: false,
         editFormVisible: false,
         confirmVisible: false,
+        batchDeleteConfirmVisible: false,
+        clearAllConfirmVisible: false,
         formData: {
           ...INITIAL_DATA
         },
@@ -176,6 +208,7 @@
         selectedRowKeys: [],
         value: 'first',
         columns: [
+           { colKey: 'row-select', type: 'multiple', width: 64, fixed: 'left' },
           {
             title: this.$t('page.ipblock.label_website'),
             align: 'left',
@@ -209,7 +242,7 @@
             title: this.$t('common.op'),
           },
         ],
-        rowKey: 'code',
+        rowKey: 'id',
         tableLayout: 'auto',
         verticalAlign: 'top',
         hover: true,
@@ -474,6 +507,74 @@
       handleJumpOnlineUrl(){
         window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/IPBlack.html");
       },
+      // 批量删除处理
+      handleBatchDelete() {
+        if (this.selectedRowKeys.length === 0) {
+          this.$message.warning(this.$t('page.ipblock.no_data_selected'));
+          return;
+        }
+        this.batchDeleteConfirmVisible = true;
+      },
+
+      // 清空所有处理
+      handleClearAll() { 
+        this.clearAllConfirmVisible = true;
+      },
+
+      // 确认批量删除
+      onConfirmBatchDelete() {
+        this.batchDeleteConfirmVisible = false;
+        let that = this;
+        
+        wafIPBlockBatchDelApi({
+          ids: this.selectedRowKeys
+        })
+        .then((res) => {
+          let resdata = res;
+          if (resdata.code === 0) {
+            that.getList("");
+            that.$message.success(that.$t('page.ipblock.batch_delete_success'));
+            that.selectedRowKeys = []; // 清空选中项
+          } else {
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        });
+      },
+
+      // 确认清空所有
+      onConfirmClearAll() {
+        this.clearAllConfirmVisible = false;
+        let that = this;
+        
+        wafIPBlockDelAllApi({
+          host_code: this.searchformData.host_code
+        })
+        .then((res) => {
+          let resdata = res;
+          if (resdata.code === 0) {
+            that.getList("");
+            that.$message.success(that.$t('page.ipblock.clear_all_success'));
+          } else {
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        });
+      },
+
+      // 取消批量删除
+      onCancelBatchDelete() {
+        this.batchDeleteConfirmVisible = false;
+      },
+
+      // 取消清空所有
+      onCancelClearAll() {
+        this.clearAllConfirmVisible = false;
+      }, 
     },
   });
 </script>
@@ -499,3 +600,5 @@
     margin-left: @spacer;
   }
 </style>
+
+  

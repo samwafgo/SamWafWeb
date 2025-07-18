@@ -726,9 +726,17 @@ export default {
     },
     ipblock:{
       button_add_ip: "新建黑名单IP",
+      button_batch_delete: "批量删除",
+      button_clear_all: "清空所有",
       label_website: "网站",
       label_ip: "Ip",
       alert_message: "SamWaf防护墙会阻止在黑名单内的IP/网段的访问",
+      confirm_batch_delete: "确认删除选中的数据？",
+      confirm_clear_all: "确认清空当前网站的所有IP黑名单数据？",
+      batch_delete_success: "批量删除成功",
+      clear_all_success: "清空成功",
+      no_data_selected: "请先选择要删除的数据",
+      no_website_selected: "请先选择网站",
     },
     ldpurl:{
       new_privacy_url: "新建隐私保护Url",

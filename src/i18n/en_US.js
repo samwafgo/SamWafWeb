@@ -723,9 +723,17 @@ export default {
     },
     ipblock: {
       button_add_ip: "Add Blocklist IP",
+      button_batch_delete: "Batch Delete",
+      button_clear_all: "Clear All",
       label_website: "Website",
       label_ip: "IP",
-      alert_message: "SamWaf firewall will block access from IPs or CIDR in the blocklist."
+      alert_message: "SamWaf firewall will block access from IPs or CIDR in the blocklist.",
+      confirm_batch_delete: "Confirm to delete selected data?",
+      confirm_clear_all: "Confirm to clear all IP blocklist data for the current website?",
+      batch_delete_success: "Batch delete successful",
+      clear_all_success: "Clear all successful",
+      no_data_selected: "Please select data to delete first",
+      no_website_selected: "Please select a website first",
     },
     ldpurl: {
       new_privacy_url: "Add New Privacy Protection URL",

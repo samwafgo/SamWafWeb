@@ -39,3 +39,19 @@ export function wafIPBlockDetailApi(params) {
     params: params
   })
 }
+//批量删除IP黑名单
+export function wafIPBlockBatchDelApi(params) {
+  return request({
+    url: '/wafhost/ipblock/batch/del',
+    method: 'post',
+    data: params
+  })
+}
+//清空所有IP黑名单
+export function wafIPBlockDelAllApi(params) {
+  return request({
+    url: '/wafhost/ipblock/delall',
+    method: 'post',
+    data: params
+  })
+}
