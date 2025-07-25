@@ -260,6 +260,12 @@ export default [
         name: 'Task',
         component: () => import('@/pages/waf/task/index.vue'),
         meta: { title: 'menu.system.task' },
+      },
+      {
+        path: 'monitor',
+        name: 'Monitor',
+        component: () => import('@/pages/waf/monitor/index.vue'),
+        meta: { title: 'menu.system.monitor_title' },
       }
     ],
   },

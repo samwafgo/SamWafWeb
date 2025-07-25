@@ -52,6 +52,9 @@
           <!-- 搜索框 -->
           <search v-if="layout !== 'side'" :layout="layout" />
 
+          <!-- 系统监控 -->
+          <system-monitor />
+
           <!-- 全局通知 -->
           <notice />
           <!-- 版本说明 -->
@@ -143,7 +146,8 @@
     Icon,
     MailIcon,
     NotificationErrorIcon,
-    ArrowUpDownCircleIcon
+    ArrowUpDownCircleIcon,
+    AddIcon
   } from 'tdesign-icons-vue';
   import {
     prefix
@@ -157,6 +161,7 @@
   import Notice from './Notice.vue';
   import Search from './Search.vue';
   import MenuContent from './MenuContent.vue';
+  import SystemMonitor from './SystemMonitor.vue';
   import {logoutapi} from '@/apis/login'
   export default Vue.extend({
     components: {
@@ -164,6 +169,7 @@
       LogoFull,
       Notice,
       Search,
+      SystemMonitor,
       ViewListIcon,
       LogoGithubIcon,
       HelpCircleIcon,
@@ -175,7 +181,8 @@
       Icon,
       MailIcon,
       NotificationErrorIcon,
-      ArrowUpDownCircleIcon
+      ArrowUpDownCircleIcon,
+      AddIcon
     },
     props: {
       theme: String,
@@ -466,6 +473,7 @@
     display: flex;
     align-items: center;
     margin-right: 12px;
+    overflow: visible; /* 确保下拉面板不被裁剪 */
 
     .t-popup__reference {
       display: flex;
@@ -488,6 +496,12 @@
         margin-right: 16px;
       }
     }
+  }
+
+  /* 确保头部菜单容器也不会裁剪下拉内容 */
+  .t-head-menu__inner {
+    border-bottom: 1px solid var(--td-border-level-1-color);
+    overflow: visible; /* 确保下拉面板不被裁剪 */
   }
 
   .header-operate-left {
