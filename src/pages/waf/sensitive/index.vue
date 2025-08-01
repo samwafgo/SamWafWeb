@@ -4,6 +4,24 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddSensitive"> {{ $t('page.sensitive.button_add_sensitive') }} </t-button>
+          <t-button 
+            theme="danger" 
+            variant="outline" 
+            @click="handleBatchDelete"
+            :disabled="selectedRowKeys.length === 0"
+          > 
+            {{ $t('page.sensitive.button_batch_delete') }} 
+          </t-button>
+          <t-button 
+            theme="danger" 
+            :disabled="data.length === 0"
+            @click="handleClearAll"
+          > 
+            {{ $t('page.sensitive.button_clear_all') }} 
+          </t-button>
+          <span v-if="selectedRowKeys.length > 0" class="selected-count">
+            {{ $t('common.selected_count', { count: selectedRowKeys.length }) }}
+          </span>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -125,6 +143,24 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
       :onCancel="onCancel">
     </t-dialog>
+
+    <!-- 批量删除确认对话框 -->
+    <t-dialog 
+      :header="$t('page.sensitive.button_batch_delete')" 
+      :body="$t('page.sensitive.confirm_batch_delete')" 
+      :visible.sync="batchDeleteVisible" 
+      @confirm="onConfirmBatchDelete"
+      :onCancel="onCancelBatchDelete">
+    </t-dialog>
+
+    <!-- 清空所有确认对话框 -->
+    <t-dialog 
+      :header="$t('page.sensitive.button_clear_all')" 
+      :body="$t('page.sensitive.confirm_clear_all')" 
+      :visible.sync="clearAllVisible" 
+      @confirm="onConfirmClearAll"
+      :onCancel="onCancelClearAll">
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -137,7 +173,8 @@
     prefix
   } from '@/config/global';
   import {
-    wafSensitiveListApi,  wafSensitiveDelApi,wafSensitiveEditApi,wafSensitiveAddApi,wafSensitiveDetailApi
+    wafSensitiveListApi,  wafSensitiveDelApi,wafSensitiveEditApi,wafSensitiveAddApi,wafSensitiveDetailApi,
+    wafSensitiveBatchDelApi, wafSensitiveDelAllApi
   } from '@/apis/sensitive';
 
   const INITIAL_DATA = {
@@ -158,6 +195,8 @@
         editFormVisible: false,
         guardVisible: false,
         confirmVisible: false,
+        batchDeleteVisible: false,
+        clearAllVisible: false,
         formData: {
           ...INITIAL_DATA
         },
@@ -201,6 +240,7 @@
         selectedRowKeys: [],
         value: 'first',
         columns: [
+          { colKey: 'row-select', type: 'multiple', width: 64, fixed: 'left' },
           {
             title: this.$t('page.sensitive.label_content'),
             align: 'left',
@@ -241,7 +281,7 @@
             title: this.$t('common.op'),
           },
         ],
-        rowKey: 'code',
+        rowKey: 'id',
         tableLayout: 'auto',
         verticalAlign: 'top',
         hover: true,
@@ -507,6 +547,72 @@
       },
       handleJumpOnlineUrl(){
         window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/Sensitive.html");
+      },
+      handleBatchDelete() {
+        if (this.selectedRowKeys.length === 0) {
+          this.$message.warning(this.$t('page.sensitive.no_data_selected'));
+          return;
+        }
+        this.batchDeleteVisible = true;
+      },
+
+      handleClearAll() {
+        this.clearAllVisible = true;
+      },
+
+      onConfirmBatchDelete() {
+        this.batchDeleteVisible = false;
+        const ids = this.selectedRowKeys.map(key => {
+          const item = this.data.find(d => d[this.rowKey] === key);
+          return item ? item.id : null;
+        }).filter(id => id !== null);
+
+        if (ids.length === 0) {
+          this.$message.warning(this.$t('page.sensitive.no_data_selected'));
+          return;
+        }
+
+        wafSensitiveBatchDelApi({ ids })
+          .then((res) => {
+            if (res.code === 0) {
+              this.$message.success(this.$t('page.sensitive.batch_delete_success'));
+              this.selectedRowKeys = [];
+              this.getList("");
+            } else {
+              this.$message.warning(res.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            this.$message.error(this.$t('common.operation_failed'));
+          });
+      },
+
+      onConfirmClearAll() {
+        this.clearAllVisible = false;
+        
+        wafSensitiveDelAllApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.$message.success(this.$t('page.sensitive.clear_all_success'));
+              this.selectedRowKeys = [];
+              this.getList("");
+            } else {
+              this.$message.warning(res.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            this.$message.error(this.$t('common.operation_failed'));
+          });
+      },
+
+      onCancelBatchDelete() {
+        this.batchDeleteVisible = false;
+      },
+
+      onCancelClearAll() {
+        this.clearAllVisible = false;
       },
     },
   });

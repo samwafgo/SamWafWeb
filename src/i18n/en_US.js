@@ -28,6 +28,7 @@ export default {
     remarks: "Remarks",
     renew:"Renew",
     select_placeholder: "Please select ",
+    selected_count: "Selected {count} items",
     placeholder: "Please enter ",
     placeholder_content: "Please enter content ",
     debug: "Debug",
@@ -778,6 +779,8 @@ export default {
     },
     sensitive:{
       button_add_sensitive: "Add Sensitive Word",
+      button_batch_delete: "Batch Delete",
+      button_clear_all: "Clear All",
       label_type: "Type",
       label_content: "Content",
       alert_message: "SamWaf firewall will block sensitive content",
@@ -796,6 +799,11 @@ export default {
         deny:"Deny",
         replace:"Replace",
       },
+      confirm_batch_delete: "Confirm to delete selected data?",
+      confirm_clear_all: "Confirm to clear all sensitive word data?",
+      batch_delete_success: "Batch delete successful",
+      clear_all_success: "Clear all successful",
+      no_data_selected: "Please select data to delete first",
     },
     systemconfig: {
       new_system_configuration: "Add New System Configuration",

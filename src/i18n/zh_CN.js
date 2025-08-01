@@ -28,6 +28,7 @@ export default {
     remarks: "备注",
     renew:"续期",
     select_placeholder: "请选择",
+    selected_count: "已选 {count} 项",
     placeholder: "请输入",
     placeholder_content: "请输入内容",
     debug:'调试',
@@ -781,6 +782,8 @@ export default {
     },
     sensitive:{
       button_add_sensitive: "新建敏感词",
+      button_batch_delete: "批量删除",
+      button_clear_all: "清空所有",
       label_type: "类型",
       label_content: "内容",
       alert_message: "SamWaf防护墙会阻止敏感词内容",
@@ -799,6 +802,11 @@ export default {
         deny:"阻止",
         replace:"替换",
       },
+      confirm_batch_delete: "确认删除选中的数据？",
+      confirm_clear_all: "确认清空所有敏感词数据？",
+      batch_delete_success: "批量删除成功",
+      clear_all_success: "清空成功",
+      no_data_selected: "请先选择要删除的数据",
     },
     systemconfig:{
       new_system_configuration: "新建系统配置",
