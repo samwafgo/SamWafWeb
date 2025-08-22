@@ -4,6 +4,12 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddurlblock"> {{ $t('page.urlblock.button_add_url') }} </t-button>
+          <t-button theme="danger" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+            {{ $t('page.urlblock.button_batch_delete') }}
+          </t-button>
+          <t-button theme="danger" @click="handleClearAll" :disabled="data.length === 0">
+            {{ $t('page.urlblock.button_clear_all') }}
+          </t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -123,6 +129,19 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
       :onCancel="onCancel">
     </t-dialog>
+     <t-dialog :header="$t('page.urlblock.confirm_batch_delete')" :visible.sync="batchDeleteVisible" 
+      @confirm="onConfirmBatchDelete" @cancel="onCancelBatchDelete">
+      <div slot="body">
+        {{ $t('page.urlblock.confirm_batch_delete') }}
+      </div>
+    </t-dialog>
+    
+    <t-dialog :header="$t('page.urlblock.confirm_clear_all')" :visible.sync="clearAllVisible" 
+      @confirm="onConfirmClearAll" @cancel="onCancelClearAll">
+      <div slot="body">
+        {{ $t('page.urlblock.confirm_clear_all') }}
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -138,7 +157,8 @@
     allhost
   } from '@/apis/host';
   import {
-    wafURLBlockListApi,wafURLBlockDelApi,wafURLBlockEditApi,wafURLBlockAddApi,wafURLBlockDetailApi
+    wafURLBlockListApi,wafURLBlockDelApi,wafURLBlockEditApi,wafURLBlockAddApi,wafURLBlockDetailApi,
+    wafURLBlockBatchDelApi,wafURLBlockDelAllApi
   } from '@/apis/urlblock';
   import {
     SSL_STATUS,
@@ -167,6 +187,8 @@
         editFormVisible: false,
         guardVisible: false,
         confirmVisible: false,
+        batchDeleteVisible: false,
+        clearAllVisible: false,
         formData: {
           ...INITIAL_DATA
         },
@@ -177,6 +199,11 @@
           host_code: [{
             required: true,
             message: this.$t('common.select_placeholder')+this.$t('page.urlblock.label_website'),
+            type: 'error'
+          }],
+          compare_type: [{
+            required: true,
+            message: this.$t('common.select_placeholder'),
             type: 'error'
           }],
           url: [{
@@ -211,6 +238,7 @@
         selectedRowKeys: [],
         value: 'first',
         columns: [
+          { colKey: 'row-select', type: 'multiple', width: 64, fixed: 'left' },
           {
             title: this.$t('page.urlblock.label_website'),
             align: 'left',
@@ -250,7 +278,7 @@
             title: this.$t('common.op'),
           },
         ],
-        rowKey: 'code',
+        rowKey: 'id',
         tableLayout: 'auto',
         verticalAlign: 'top',
         hover: true,
@@ -511,9 +539,75 @@
           })
           .finally(() => {});
       },
+      handleBatchDelete() {
+        if (this.selectedRowKeys.length === 0) {
+          this.$message.warning(this.$t('page.urlblock.no_data_selected'));
+          return;
+        }
+        this.batchDeleteVisible = true;
+      },
+      
+      handleClearAll() { 
+        this.clearAllVisible = true;
+      },
+      
+      onConfirmBatchDelete() {
+        this.batchDeleteVisible = false;
+        let that = this;
+ 
+        const ids = this.selectedRowKeys.map(key => {
+          const item = this.data.find(d => d.id === key);
+          return item ? item.id : null;
+        }).filter(id => id !== null);
+
+        wafURLBlockBatchDelApi({ ids: ids })
+        .then((res) => {
+          let resdata = res;
+          if (resdata.code === 0) {
+            that.$message.success(this.$t('page.urlblock.batch_delete_success'));
+            that.selectedRowKeys = [];
+            that.getList("");
+          } else {
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        });
+      },
+      
+      onConfirmClearAll() {
+        this.clearAllVisible = false;
+        let that = this;
+        wafURLBlockDelAllApi({
+          host_code: this.searchformData.host_code
+        })
+        .then((res) => {
+          let resdata = res;
+          if (resdata.code === 0) {
+            that.$message.success(this.$t('page.urlblock.clear_all_success'));
+            that.selectedRowKeys = [];
+            that.getList("");
+          } else {
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        });
+      },
+      
+      onCancelBatchDelete() {
+        this.batchDeleteVisible = false;
+      },
+      
+      onCancelClearAll() {
+        this.clearAllVisible = false;
+      },
       handleJumpOnlineUrl(){
         window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/UrlBlack.html");
       },
+      
     },
   });
 </script>

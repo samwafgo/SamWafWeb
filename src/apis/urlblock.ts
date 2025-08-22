@@ -39,3 +39,19 @@ export function wafURLBlockDetailApi(params) {
     params: params
   })
 }
+//批量删除URL黑名单
+export function wafURLBlockBatchDelApi(params) {
+  return request({
+    url: '/wafhost/urlblock/batchdel',
+    method: 'post',
+    data: params
+  })
+}
+//清空所有URL黑名单
+export function wafURLBlockDelAllApi(params) {
+  return request({
+    url: '/wafhost/urlblock/delall',
+    method: 'post',
+    data: params
+  })
+}

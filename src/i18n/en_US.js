@@ -791,7 +791,15 @@ export default {
       compare_type_option_equal: "Equal",
       compare_type_option_pre: "Prefix Match",
       compare_type_option_end: "Suffix Match",
-      compare_type_option_contain: "Contains Match"
+      compare_type_option_contain: "Contains Match",
+      button_batch_delete: "Batch Delete",
+      button_clear_all: "Clear All",
+      confirm_batch_delete: "Confirm to delete selected data?",
+      confirm_clear_all: "Confirm to clear all URL blocklist data?",
+      batch_delete_success: "Batch delete successful",
+      clear_all_success: "Clear all successful",
+      no_data_selected: "Please select data to delete first",
+      no_website_selected: "Please select a website first"
     },
     sensitive:{
       button_add_sensitive: "Add Sensitive Word",
