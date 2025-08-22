@@ -4,6 +4,21 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddUrlWhite"> {{ $t('page.urlallow.button_add_url') }} </t-button>
+          <t-button 
+            theme="danger" 
+            variant="outline" 
+            @click="handleBatchDelete"
+            :disabled="selectedRowKeys.length === 0"
+          >
+            {{ $t('page.urlallow.button_batch_delete') }}
+          </t-button>
+          <t-button 
+            theme="danger" 
+            :disabled="data.length === 0"
+            @click="handleClearAll"
+          >
+            {{ $t('page.urlallow.button_clear_all') }}
+          </t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -125,6 +140,27 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
       :onCancel="onCancel">
     </t-dialog>
+    <t-dialog 
+      :header="$t('page.urlallow.confirm_batch_delete')" 
+      :visible.sync="batchDeleteVisible" 
+      @confirm="onConfirmBatchDelete"
+      @cancel="onCancelBatchDelete"
+    >
+      <div slot="body">
+        {{ $t('page.urlallow.confirm_batch_delete') }}
+      </div>
+    </t-dialog>
+
+    <t-dialog 
+      :header="$t('page.urlallow.confirm_clear_all')" 
+      :visible.sync="clearAllVisible" 
+      @confirm="onConfirmClearAll"
+      @cancel="onCancelClearAll"
+    >
+      <div slot="body">
+        {{ $t('page.urlallow.confirm_clear_all') }}
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -140,7 +176,8 @@
     allhost
   } from '@/apis/host';
   import {
-    wafURLWhiteListApi,wafURLWhiteDelApi,wafURLWhiteEditApi,wafURLWhiteAddApi,wafURLWhiteDetailApi
+    wafURLWhiteListApi,wafURLWhiteDelApi,wafURLWhiteEditApi,wafURLWhiteAddApi,wafURLWhiteDetailApi,
+    wafURLWhiteBatchDelApi,wafURLWhiteDelAllApi
   } from '@/apis/urlwhite';
   import {
     SSL_STATUS,
@@ -169,6 +206,8 @@
         editFormVisible: false,
         guardVisible: false,
         confirmVisible: false,
+        batchDeleteVisible: false,
+        clearAllVisible: false,
         formData: {
           ...INITIAL_DATA
         },
@@ -212,6 +251,7 @@
         selectedRowKeys: [],
         value: 'first',
         columns: [
+          { colKey: 'row-select', type: 'multiple', width: 64, fixed: 'left' }, 
           {
             title: this.$t('page.urlallow.label_website'),
             align: 'left',
@@ -250,7 +290,7 @@
             title: this.$t('common.op'),
           },
         ],
-        rowKey: 'code',
+        rowKey: 'id',
         tableLayout: 'auto',
         verticalAlign: 'top',
         hover: true,
@@ -513,6 +553,75 @@
       },
       handleJumpOnlineUrl(){
         window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/UrlWhite.html");
+      },
+      handleBatchDelete() {
+        if (this.selectedRowKeys.length === 0) {
+          this.$message.warning(this.$t('page.urlallow.no_data_selected'));
+          return;
+        }
+        this.batchDeleteVisible = true;
+      },
+      
+      handleClearAll() { 
+        this.clearAllVisible = true;
+      },
+      
+      onConfirmBatchDelete() {
+        this.batchDeleteVisible = false;
+        const that = this;
+        const ids = this.selectedRowKeys.map(key => {
+          const item = this.data.find(d => d.id === key);
+          return item ? item.id : null;
+        }).filter(id => id !== null);
+        
+        wafURLWhiteBatchDelApi({ ids: ids })
+          .then((res) => {
+            const resdata = res;
+            console.log(resdata);
+            if (resdata.code === 0) {
+              that.getList("");
+              that.selectedRowKeys = [];
+              that.$message.success(that.$t('page.urlallow.batch_delete_success'));
+            } else {
+              that.$message.warning(resdata.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            that.$message.error('批量删除失败');
+          })
+          .finally(() => {});
+      },
+      
+      onConfirmClearAll() {
+        this.clearAllVisible = false;
+        const that = this;
+        
+        wafURLWhiteDelAllApi({ host_code: this.searchformData.host_code })
+          .then((res) => {
+            const resdata = res;
+            console.log(resdata);
+            if (resdata.code === 0) {
+              that.getList("");
+              that.selectedRowKeys = [];
+              that.$message.success(that.$t('page.urlallow.clear_all_success'));
+            } else {
+              that.$message.warning(resdata.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            that.$message.error('清空失败');
+          })
+          .finally(() => {});
+      },
+      
+      onCancelBatchDelete() {
+        this.batchDeleteVisible = false;
+      },
+      
+      onCancelClearAll() {
+        this.clearAllVisible = false;
       },
     },
   });

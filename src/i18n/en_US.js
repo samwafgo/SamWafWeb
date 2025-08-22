@@ -765,6 +765,8 @@ export default {
     },
     urlallow: {
       button_add_url: "Add Allowlist URL",
+      button_batch_delete: "Batch Delete",
+      button_clear_all: "Clear All",
       label_website: "Website",
       label_url: "URL",
       label_compare_type: "Match Type",
@@ -772,7 +774,13 @@ export default {
       compare_type_option_equal: "Equal",
       compare_type_option_pre: "Prefix Match",
       compare_type_option_end: "Suffix Match",
-      compare_type_option_contain: "Contains Match"
+      compare_type_option_contain: "Contains Match",
+      confirm_batch_delete: "Confirm to delete selected data?",
+      confirm_clear_all: "Confirm to clear all URL allowlist data?",
+      batch_delete_success: "Batch delete successful",
+      clear_all_success: "Clear all successful",
+      no_data_selected: "Please select data to delete first",
+      no_website_selected: "Please select a website first",
     },
     urlblock: {
       button_add_url: "Add Blocklist URL",

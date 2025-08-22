@@ -14,6 +14,7 @@
           </t-button>
           <t-button 
             theme="danger" 
+            :disabled="data.length === 0"
             @click="handleClearAll"
           >
             {{ $t('page.ipallow.button_clear_all') }}
