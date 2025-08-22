@@ -765,6 +765,14 @@ export default {
       compare_type_option_pre:"前缀匹配",
       compare_type_option_end:"后缀匹配",
       compare_type_option_contain:"包含匹配",
+      button_batch_delete: "批量删除",
+      button_clear_all: "清空所有",
+      confirm_batch_delete: "确认删除选中的数据？",
+      confirm_clear_all: "确认清空所有隐私保护URL数据？",
+      batch_delete_success: "批量删除成功",
+      clear_all_success: "清空所有成功",
+      no_data_selected: "请先选择要删除的数据",
+      no_website_selected: "请先选择网站"
     },
     urlallow:{
       button_add_url: "新建白名单URL",

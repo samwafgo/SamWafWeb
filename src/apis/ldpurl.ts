@@ -39,3 +39,19 @@ export function wafLdpURLDetailApi(params) {
     params: params
   })
 }
+//批量删除隐私保护URL
+export function wafLdpURLBatchDelApi(params) {
+  return request({
+    url: '/wafhost/ldpurl/batchdel',
+    method: 'post',
+    data: params
+  })
+}
+//清空所有隐私保护URL
+export function wafLdpURLDelAllApi(params) {
+  return request({
+    url: '/wafhost/ldpurl/delall',
+    method: 'post',
+    data: params
+  })
+}

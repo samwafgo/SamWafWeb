@@ -220,6 +220,11 @@
             message: this.$t('common.select_placeholder')+this.$t('page.urlallow.label_website'),
             type: 'error'
           }],
+          compare_type: [{
+            required: true,
+            message: this.$t('common.select_placeholder'),
+            type: 'error'
+          }],
           url: [{
             required: true,
             message: this.$t('common.select_placeholder')+this.$t('page.urlallow.label_url'),

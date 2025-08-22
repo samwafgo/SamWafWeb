@@ -4,6 +4,15 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddLdpUrl"> {{ $t('page.ldpurl.new_privacy_url') }} </t-button>
+          <t-button theme="danger" variant="outline" @click="handleBatchDelete" :disabled="selectedRowKeys.length === 0">
+            {{ $t('page.ldpurl.button_batch_delete') }}
+          </t-button>
+          <t-button theme="danger" @click="handleClearAll" :disabled="data.length === 0">
+            {{ $t('page.ldpurl.button_clear_all') }}
+          </t-button>
+          <span v-if="selectedRowKeys.length > 0" class="selected-count">
+            {{ $t('common.selected_count', { count: selectedRowKeys.length }) }}
+          </span>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -35,7 +44,8 @@
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
           @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
-          :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
+          :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }"
+          row-selection-type="multiple">
           <template #host_code="{ row }">
             <span> {{host_dic[row.host_code]}}</span>
           </template>
@@ -121,6 +131,14 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
       :onCancel="onCancel">
     </t-dialog>
+
+    <t-dialog :header="$t('page.ldpurl.confirm_batch_delete')" :visible.sync="batchDeleteVisible" @confirm="onConfirmBatchDelete" @cancel="onCancelBatchDelete">
+      <p>{{ $t('page.ldpurl.confirm_batch_delete') }}</p>
+    </t-dialog>
+
+    <t-dialog :header="$t('page.ldpurl.confirm_clear_all')" :visible.sync="clearAllVisible" @confirm="onConfirmClearAll" @cancel="onCancelClearAll">
+      <p>{{ $t('page.ldpurl.confirm_clear_all') }}</p>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -136,7 +154,8 @@
     allhost
   } from '@/apis/host';
   import {
-    wafLdpURLListApi,wafLdpURLDelApi,wafLdpURLEditApi,wafLdpURLAddApi,wafLdpURLDetailApi
+    wafLdpURLListApi,wafLdpURLDelApi,wafLdpURLEditApi,wafLdpURLAddApi,wafLdpURLDetailApi,
+    wafLdpURLBatchDelApi,wafLdpURLDelAllApi
   } from '@/apis/ldpurl';
   import {
     SSL_STATUS,
@@ -165,6 +184,8 @@
         editFormVisible: false,
         guardVisible: false,
         confirmVisible: false,
+        batchDeleteVisible: false,
+        clearAllVisible: false,
         formData: {
           ...INITIAL_DATA
         },
@@ -194,6 +215,11 @@
             message: this.$t('common.placeholder')+this.$t('page.ldpurl.label_website'),
             type: 'error'
           }],
+          compare_type: [{
+            required: true,
+            message: this.$t('common.select_placeholder'),
+            type: 'error'
+          }],
           url: [{
             required: true,
             message: this.$t('common.placeholder')+this.$t('page.ldpurl.label_url'),
@@ -208,6 +234,7 @@
         selectedRowKeys: [],
         value: 'first',
         columns: [
+          { colKey: 'row-select', type: 'multiple', width: 64, fixed: 'left' },
           {
             title: this.$t('page.ldpurl.label_website'),
             align: 'left',
@@ -247,7 +274,7 @@
             title: this.$t('common.op'),
           },
         ],
-        rowKey: 'code',
+        rowKey: 'id',
         tableLayout: 'auto',
         verticalAlign: 'top',
         hover: true,
@@ -508,6 +535,63 @@
             console.log(e);
           })
           .finally(() => {});
+      },
+      handleBatchDelete() {
+        if (this.selectedRowKeys.length === 0) {
+          this.$message.warning(this.$t('page.ldpurl.no_data_selected'));
+          return;
+        }
+        this.batchDeleteVisible = true;
+      },
+      handleClearAll() {
+        this.clearAllVisible = true;
+      },
+      onConfirmBatchDelete() {
+        const that = this;
+        const ids = this.selectedRowKeys;
+        wafLdpURLBatchDelApi({ ids: ids })
+          .then((res) => {
+            const resdata = res;
+            if (resdata.code === 0) {
+              that.$message.success(that.$t('page.ldpurl.batch_delete_success'));
+              that.selectedRowKeys = [];
+              that.getList('');
+            } else {
+              that.$message.warning(resdata.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+          .finally(() => {
+            that.batchDeleteVisible = false;
+          });
+      },
+      onConfirmClearAll() {
+        const that = this;
+        wafLdpURLDelAllApi({})
+          .then((res) => {
+            const resdata = res;
+            if (resdata.code === 0) {
+              that.$message.success(that.$t('page.ldpurl.clear_all_success'));
+              that.selectedRowKeys = [];
+              that.getList('');
+            } else {
+              that.$message.warning(resdata.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+          .finally(() => {
+            that.clearAllVisible = false;
+          });
+      },
+      onCancelBatchDelete() {
+        this.batchDeleteVisible = false;
+      },
+      onCancelClearAll() {
+        this.clearAllVisible = false;
       },
       //跳转界面
       handleJumpOnlineUrl(){
