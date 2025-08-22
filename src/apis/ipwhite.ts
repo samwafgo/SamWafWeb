@@ -39,3 +39,19 @@ export function wafIPWhiteDetailApi(params) {
     params: params
   })
 }
+//批量删除IP白名单
+export function wafIPWhiteBatchDelApi(params) {
+  return request({
+    url: '/wafhost/ipwhite/batchdel',
+    method: 'post',
+    data: params
+  })
+}
+//清空所有IP白名单
+export function wafIPWhiteDelAllApi(params) {
+  return request({
+    url: '/wafhost/ipwhite/delall',
+    method: 'post',
+    data: params
+  })
+}
