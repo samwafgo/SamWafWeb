@@ -4,6 +4,21 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddRule"> {{ $t('page.rule.button_add_rule') }} </t-button>
+          <t-button 
+            theme="danger" 
+            variant="outline" 
+            @click="handleBatchDelete"
+            :disabled="selectedRowKeys.length === 0"
+          >
+            {{ $t('page.rule.button_batch_delete') }}
+          </t-button>
+          <t-button 
+            theme="danger" 
+            :disabled="data.length === 0"
+            @click="handleClearAll"
+          >
+            {{ $t('page.rule.button_clear_all') }}
+          </t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -76,6 +91,27 @@
       :onCancel="onCancel"
     >
     </t-dialog>
+    <t-dialog 
+      :header="$t('page.rule.confirm_batch_delete')" 
+      :visible.sync="batchDeleteVisible" 
+      @confirm="onConfirmBatchDelete"
+      @cancel="onCancelBatchDelete"
+    >
+      <div slot="body">
+        {{ $t('page.rule.confirm_batch_delete') }}
+      </div>
+    </t-dialog>
+
+    <t-dialog 
+      :header="$t('page.rule.confirm_clear_all')" 
+      :visible.sync="clearAllVisible" 
+      @confirm="onConfirmClearAll"
+      @cancel="onCancelClearAll"
+    >
+      <div slot="body">
+        {{ $t('page.rule.confirm_clear_all') }}
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -83,7 +119,7 @@ import Vue from 'vue';
 import { SearchIcon } from 'tdesign-icons-vue';
 import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
-import { wafRuleListApi,wafRuleDelApi } from '@/apis/rules';
+import { wafRuleListApi,wafRuleDelApi,wafRuleBatchDelApi,wafRuleDelAllApi } from '@/apis/rules';
 import { allhost } from '@/apis/host';
 import { RULE_STATUS,CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
 
@@ -108,6 +144,8 @@ export default Vue.extend({
     return {
       addFormVisible:false,
       editFormVisible:false,
+      batchDeleteVisible: false,
+      clearAllVisible: false,
       formData: { ...INITIAL_DATA },
       formEditData: { ...INITIAL_DATA },
       rules: {
@@ -330,6 +368,81 @@ export default Vue.extend({
     },
     resetIdx() {
       this.deleteIdx = -1;
+    },
+    // 批量删除处理
+    handleBatchDelete() {
+      if (this.selectedRowKeys.length === 0) {
+        this.$message.warning(this.$t('page.rule.no_data_selected'));
+        return;
+      }
+      this.batchDeleteVisible = true;
+    },
+
+    // 清空所有处理
+    handleClearAll() { 
+      this.clearAllVisible = true;
+    },
+
+    // 确认批量删除
+    onConfirmBatchDelete() {
+      this.batchDeleteVisible = false;
+      const that = this;
+      const codes = this.selectedRowKeys.map(key => {
+        const item = this.data.find(d => d.rule_code === key);
+        return item ? item.rule_code : null;
+      }).filter(rule_code => rule_code !== null);
+      
+      wafRuleBatchDelApi({ codes: codes })
+        .then((res) => {
+          const resdata = res;
+          console.log(resdata);
+          if (resdata.code === 0) {
+            that.getList("");
+            that.selectedRowKeys = [];
+            that.$message.success(that.$t('page.rule.batch_delete_success'));
+          } else {
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+          that.$message.error('批量删除失败');
+        })
+        .finally(() => {});
+    },
+    
+    // 确认清空所有
+    onConfirmClearAll() {
+      this.clearAllVisible = false;
+      const that = this;
+      
+      wafRuleDelAllApi({ host_code: this.searchformData.host_code })
+        .then((res) => {
+          const resdata = res;
+          console.log(resdata);
+          if (resdata.code === 0) {
+            that.getList("");
+            that.selectedRowKeys = [];
+            that.$message.success(that.$t('page.rule.clear_all_success'));
+          } else {
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+          that.$message.error('清空失败');
+        })
+        .finally(() => {});
+    },
+    
+    // 取消批量删除
+    onCancelBatchDelete() {
+      this.batchDeleteVisible = false;
+    },
+    
+    // 取消清空所有
+    onCancelClearAll() {
+      this.clearAllVisible = false;
     },
     //跳转界面
     handleJumpOnlineUrl(){

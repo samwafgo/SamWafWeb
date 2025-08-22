@@ -39,3 +39,19 @@ export function wafRuleDetailApi(params) {
     params: params
   })
 }
+//批量删除规则
+export function wafRuleBatchDelApi(params) {
+  return request({
+    url: '/wafhost/rule/batchdel',
+    method: 'post',
+    data: params
+  })
+}
+//清空所有规则
+export function wafRuleDelAllApi(params) {
+  return request({
+    url: '/wafhost/rule/delall',
+    method: 'post',
+    data: params
+  })
+}
