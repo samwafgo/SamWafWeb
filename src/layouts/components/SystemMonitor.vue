@@ -116,12 +116,12 @@
             {{ getMemoryUsage() }}%
           </span>
         </div>
-        <div class="monitor-item-inline" v-if="getMaxDiskUsage() > 0">
-          <span class="label">{{ $t('topNav.disk') }}</span>
-          <span class="value" :style="{ color: getUsageColor(getMaxDiskUsage()) }">
-            {{ getMaxDiskUsage() }}%
-          </span>
-        </div>
+        <div class="monitor-item-inline" v-if="getAverageDiskUsage() > 0">
+  <span class="label">{{ $t('topNav.disk') }}</span>
+  <span class="value" :style="{ color: getUsageColor(getAverageDiskUsage()) }">
+    {{ getAverageDiskUsage() }}%
+  </span>
+</div>
       </div>
       <div class="status-indicator" :class="getOverallStatusClass()"></div>
     </div>
@@ -250,16 +250,17 @@ export default Vue.extend({
       return '#00a870';  // 绿色
     },
 
-    // 获取最大磁盘使用率
-    getMaxDiskUsage() {
+    // 获取平均磁盘使用率
+    getAverageDiskUsage() {
       const diskList = this.getDiskList();
       if (diskList.length === 0) return 0;
-      return Math.max(...diskList.map(disk => this.getDiskUsage(disk)));
+      const totalUsage = diskList.reduce((sum, disk) => sum + this.getDiskUsage(disk), 0);
+      return Math.round(totalUsage / diskList.length);
     },
 
     // 获取整体状态类
     getOverallStatusClass() {
-      const maxUsage = Math.max(this.getCpuUsage(), this.getMemoryUsage(), this.getMaxDiskUsage());
+      const maxUsage = Math.max(this.getCpuUsage(), this.getMemoryUsage(), this.getAverageDiskUsage());
       if (maxUsage >= 90) return 'overall-critical';
       if (maxUsage >= 70) return 'overall-warning';
       if (maxUsage >= 50) return 'overall-caution';
