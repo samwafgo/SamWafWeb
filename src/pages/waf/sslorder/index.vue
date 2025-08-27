@@ -3,7 +3,10 @@
     <t-card class="list-card-container">
       <t-row justify="space-between">
         <div class="left-operation-container">
-          <t-button @click="handleAdd" theme="success"> {{ $t('common.new') }} </t-button>
+          <t-button @click="handleAdd" theme="success"> {{ $t('common.new') }} </t-button> 
+          <t-button theme="primary" @click="handleCaServerMaintenance" style="margin-left: 15px;">
+            {{ $t('page.ca_server_info.title') }}
+          </t-button>
           <span v-if="srcHostCode != ''"> {{ host_dic[srcHostCode] }} </span>
         </div>
         <div class="right-operation-container">
@@ -73,10 +76,16 @@
             </t-select>
           </t-form-item>
           <t-form-item :label="$t('page.sslorder.label_apply_platform')" name="apply_platform">
-            <t-select v-model="formData.apply_platform" clearable :style="{ width: '480px' }">
-              <t-option v-for="item in sslorder_platform_type" :value="item.value" :label="`${item.label}`">
-              </t-option>
-            </t-select>
+            <div style="display: flex; align-items: center;">
+              <t-select v-model="formData.apply_platform" clearable :style="{ width: '250px' }">
+                <t-option v-for="item in sslorder_platform_type" :value="item.value" :label="`${item.label}`">
+                </t-option>
+              </t-select>
+              <t-button theme="primary" variant="text" style="margin-left: 10px;"
+                @click="handleCaServerMaintenance">
+                {{ $t('page.sslorder.maintenance_platform') }}
+              </t-button>
+            </div>
           </t-form-item>
           <t-form-item :label="$t('page.sslorder.label_apply_method')" name="apply_method">
             <t-select v-model="formData.apply_method" clearable :style="{ width: '480px' }">
@@ -149,10 +158,16 @@
             </t-select>
           </t-form-item>
           <t-form-item :label="$t('page.sslorder.label_apply_platform')" name="apply_platform">
-            <t-select v-model="formEditData.apply_platform" clearable :style="{ width: '480px' }">
-              <t-option v-for="item in sslorder_platform_type" :value="item.value" :label="`${item.label}`">
-              </t-option>
-            </t-select>
+            <div style="display: flex; align-items: center;">
+              <t-select v-model="formEditData.apply_platform" clearable :style="{ width: '250px' }">
+                <t-option v-for="item in sslorder_platform_type" :value="item.value" :label="`${item.label}`">
+                </t-option>
+              </t-select>
+              <t-button theme="primary" variant="text" style="margin-left: 10px;"
+                @click="handleCaServerMaintenance">
+                {{ $t('page.sslorder.maintenance_platform') }}
+              </t-button>
+            </div>
           </t-form-item>
           <t-form-item :label="$t('page.sslorder.label_apply_method')" name="apply_method">
             <t-select v-model="formEditData.apply_method" clearable :style="{ width: '480px' }">
@@ -297,6 +312,52 @@
         </t-form>
       </div>
     </t-dialog>
+
+    <!-- CA服务器维护对话框 -->
+    <t-dialog :header="$t('page.ca_server_info.title')" :visible.sync="caServerMaintenanceVisible" 
+      :width="900" :footer="false">
+      <div slot="body">
+        <div style="margin-bottom: 16px;">
+          <t-button @click="handleAddCaServer" theme="success">{{ $t('common.new') }}</t-button>
+        </div>
+        
+        <!-- CA服务器列表表格 -->
+        <t-table :columns="caServerColumns" :data="caServerList" :rowKey="'id'" 
+          :loading="caServerLoading">
+          <template #op="{ row }">
+            <a class="t-button-link" @click="handleEditCaServer(row)">{{ $t('common.edit') }}</a>
+            <a class="t-button-link" @click="handleDeleteCaServer(row)">{{ $t('common.delete') }}</a>
+          </template>
+        </t-table>
+        
+        <div style="text-align: right; margin-top: 16px;">
+          <t-button variant="outline" @click="caServerMaintenanceVisible = false">{{ $t('common.close') }}</t-button>
+        </div>
+      </div>
+    </t-dialog>
+    <!-- 添加/编辑CA服务器对话框 -->
+    <t-dialog :header="caServerFormMode === 'add' ? $t('common.add') : $t('common.edit')"
+      :visible.sync="caServerFormVisible" :width="680" :footer="false">
+      <div slot="body">
+        <t-form :data="caServerFormData" ref="caServerForm" :rules="caServerRules" 
+          @submit="onCaServerSubmit" :labelWidth="200">
+          <t-form-item :label="$t('page.ca_server_info.ca_server_name')" name="ca_server_name">
+            <t-input v-model="caServerFormData.ca_server_name" :style="{ width: '480px' }"
+              :disabled="caServerFormMode === 'edit'"></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.ca_server_info.ca_server_address')" name="ca_server_address">
+            <t-input v-model="caServerFormData.ca_server_address" :style="{ width: '480px' }"></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.ca_server_info.ca_server_remarks')" name="remarks">
+            <t-input v-model="caServerFormData.remarks" :style="{ width: '480px' }"></t-input>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="caServerFormVisible = false">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -323,6 +384,9 @@ import { get_detail_by_item_api, edit_system_config_api } from '@/apis/systemcon
 import {
   wafPrivateGroupListByBelongCloudApi, wafPrivateGroupAddApi
 } from '@/apis/private_group.ts';
+import {
+   wafCaServerInfoListApi, wafCaServerInfoDelApi, wafCaServerInfoEditApi, wafCaServerInfoAddApi, wafCaServerInfoDetailApi
+} from '@/apis/ca_server_info.ts';
 
 const INITIAL_DATA = {
   host_code: "",
@@ -560,12 +624,7 @@ export default Vue.extend({
         },
       ],
       //平台类型
-      sslorder_platform_type: [
-        {
-          label: this.$t('page.sslorder.sslorder_platform_type.letsencrypt'),
-          value: 'letsencrypt'
-        },
-      ],
+      sslorder_platform_type: [ ],
       //申请方式
       sslorder_apply_method_type: [
         {
@@ -642,6 +701,60 @@ export default Vue.extend({
         ]
 
       },
+      // CA服务器维护相关 
+      caServerMaintenanceVisible: false, 
+      caServerFormVisible: false,
+      caServerFormMode: 'add', // 'add' 或 'edit'
+      caServerList: [],
+      caServerLoading: false,
+      caServerFormData: {
+        ca_server_name: '',
+        ca_server_address: '',
+        remarks: ''
+      },
+      caServerRules: {
+        ca_server_name: [{
+          required: true,
+          message: this.$t('common.placeholder') + this.$t('page.ca_server_info.ca_server_name'),
+          type: 'error'
+        }],
+        ca_server_address: [{
+          required: true,
+          message: this.$t('common.placeholder') + this.$t('page.ca_server_info.ca_server_address'),
+          type: 'error'
+        }],
+        remarks: [{
+          required: true,
+          message: this.$t('common.placeholder') + this.$t('page.ca_server_info.ca_server_remarks'),
+          type: 'error'
+        }]
+      },
+      caServerColumns: [
+        {
+          align: 'left',
+          width: 120,
+          colKey: 'op',
+          title: this.$t('common.op'),
+        },
+        {
+          title: this.$t('page.ca_server_info.ca_server_name'),
+          align: 'left',
+          width: 200,
+          colKey: 'ca_server_name',
+        },
+        {
+          title: this.$t('page.ca_server_info.ca_server_address'),
+          align: 'left',
+          width: 300,
+          colKey: 'ca_server_address',
+        },
+        {
+          title: this.$t('page.ca_server_info.ca_server_remarks'),
+          align: 'left',
+          width: 200,
+          colKey: 'remarks',
+        }
+      ],
       //END Data
     };
   },
@@ -659,9 +772,207 @@ export default Vue.extend({
     this.loadHostList().then(() => {
       this.getList("");
       this.getPrivateList("")
+      // 加载CA服务器信息
+      this.loadCaServerList();
     });
   },
+  watch: {
+    // 监听srcHostCode变化，重新加载数据
+    srcHostCode: {
+      handler(newVal, oldVal) {
+        if (newVal !== oldVal) {
+          console.log('srcHostCode changed:', oldVal, '->', newVal);
+          // 重置分页到第一页
+          this.pagination.current = 1;
+          // 重新加载数据
+          this.getList("");
+        }
+      },
+      immediate: false // 不需要立即执行，因为mounted已经会执行一次
+    }
+  },
   methods: {
+    // 处理CA服务器维护
+    handleCaServerMaintenance() {
+      this.loadCaServerListForMaintenance();
+      this.caServerMaintenanceVisible = true;
+    },
+
+    // 加载CA服务器列表用于维护
+    loadCaServerListForMaintenance() {
+      this.caServerLoading = true;
+      wafCaServerInfoListApi({
+        pageSize: 100,
+        pageIndex: 1
+      })
+      .then((res) => {
+        if (res.code === 0 && res.data && res.data.list) {
+          this.caServerList = res.data.list;
+        } else {
+          this.caServerList = [];
+          this.$message.warning(res.msg || this.$t('common.tips.get_failed'));
+        }
+      })
+      .catch((e) => {
+        console.error('获取CA服务器列表失败:', e);
+        this.caServerList = [];
+        this.$message.error(this.$t('common.tips.api_error'));
+      })
+      .finally(() => {
+        this.caServerLoading = false;
+      });
+    },
+    // 处理添加CA服务器
+    handleAddCaServer() {
+      this.caServerFormMode = 'add';
+      this.caServerFormData = {
+        ca_server_name: '',
+        ca_server_address: '',
+        remarks: ''
+      };
+      this.caServerFormVisible = true;
+    },
+
+    // 处理编辑CA服务器
+    handleEditCaServer(row) {
+      this.caServerFormMode = 'edit';
+      this.caServerFormData = { ...row };
+      this.caServerFormVisible = true;
+    },
+
+    // 处理删除CA服务器
+    handleDeleteCaServer(row) {
+      // 检查是否为letsencrypt，不允许删除
+      if (row.ca_server_name === 'letsencrypt') {
+        this.$message.warning(this.$t('page.sslorder.ca_server_letsencrypt_cannot_op'));
+        return;
+      }
+      
+      const confirmDialog = this.$dialog.confirm({
+        header: this.$t('common.confirm_delete'),
+        body: this.$t('common.data_delete_warning'),
+        confirmBtn: {
+          theme: 'danger',
+          content: this.$t('common.confirm')
+        },
+        cancelBtn: {
+          theme: 'default', 
+          content: this.$t('common.cancel')
+        },
+        onConfirm: () => {
+          this.deleteCaServer(row.id);
+          confirmDialog.hide(); // 手动关闭弹窗
+        }
+      });
+    },
+
+    // 删除CA服务器
+    deleteCaServer(id) {
+      wafCaServerInfoDelApi({ id })
+        .then((res) => {
+          if (res.code === 0) {
+            this.$message.success(res.msg || this.$t('common.tips.delete_success'));
+            this.loadCaServerListForMaintenance();
+            this.loadCaServerList(); // 刷新下拉选项
+          } else {
+            this.$message.warning(res.msg || this.$t('common.tips.delete_failed'));
+          }
+        })
+        .catch((e) => {
+          console.error('删除CA服务器失败:', e);
+          this.$message.error(this.$t('common.tips.delete_failed'));
+        });
+    },
+
+    // 提交CA服务器表单
+    onCaServerSubmit({ result, firstError }) {
+      if (!firstError) {
+        if (this.caServerFormMode === 'add') {
+          // 添加新CA服务器
+          wafCaServerInfoAddApi({ ...this.caServerFormData })
+            .then((res) => {
+              if (res.code === 0) {
+                this.$message.success(res.msg || this.$t('common.tips.save_success'));
+                this.caServerFormVisible = false; 
+                this.loadCaServerListForMaintenance();
+                this.loadCaServerList(); // 刷新下拉选项
+              } else {
+                this.$message.warning(res.msg || this.$t('common.tips.save_failed'));
+              }
+            })
+            .catch((e) => {
+              console.error('添加CA服务器失败:', e);
+              this.$message.error(this.$t('common.tips.save_failed'));
+            });
+        } else {
+          // 编辑CA服务器
+          wafCaServerInfoEditApi({ ...this.caServerFormData })
+            .then((res) => {
+              if (res.code === 0) {
+                this.$message.success(res.msg || this.$t('common.tips.save_success'));
+                this.caServerFormVisible = false; 
+                this.loadCaServerListForMaintenance();
+                this.loadCaServerList(); // 刷新下拉选项
+              } else {
+                this.$message.warning(res.msg || this.$t('common.tips.save_failed'));
+              }
+            })
+            .catch((e) => {
+              console.error('编辑CA服务器失败:', e);
+              this.$message.error(this.$t('common.tips.save_failed'));
+            });
+        }
+      } else {
+        console.log('Errors: ', result);
+        this.$message.warning(firstError);
+      }
+    },
+    // 加载CA服务器列表
+    loadCaServerList() {
+      let that = this;
+      wafCaServerInfoListApi({
+        pageSize: 100,
+        pageIndex: 1
+      })
+      .then((res) => {
+        if (res.code === 0 && res.data && res.data.list) {
+          // 将CA服务器信息转换为下拉选项格式
+          that.sslorder_platform_type = res.data.list.map(item => ({
+            value: item.ca_server_name, // 使用ca_server_name作为键值
+            label: item.remarks || item.ca_server_name // 使用remarks作为显示文本，如果remarks为空则使用ca_server_name
+          }));
+          
+          // 如果没有CA服务器数据，保留默认的letsencrypt选项
+          if (that.sslorder_platform_type.length === 0) {
+            that.sslorder_platform_type = [
+              {
+                label: that.$t('page.sslorder.sslorder_platform_type.letsencrypt'),
+                value: 'letsencrypt'
+              }
+            ];
+          }
+        } else {
+          console.error('获取CA服务器列表失败:', res.msg);
+          // 失败时使用默认选项
+          that.sslorder_platform_type = [
+            {
+              label: that.$t('page.sslorder.sslorder_platform_type.letsencrypt'),
+              value: 'letsencrypt'
+            }
+          ];
+        }
+      })
+      .catch((e) => {
+        console.error('获取CA服务器列表异常:', e);
+        // 异常时使用默认选项
+        that.sslorder_platform_type = [
+          {
+            label: that.$t('page.sslorder.sslorder_platform_type.letsencrypt'),
+            value: 'letsencrypt'
+          }
+        ];
+      });
+    },
     // 处理添加密钥分组
     handleAddPrivateGroup(cloudType) {
       this.privateGroupFormData = {

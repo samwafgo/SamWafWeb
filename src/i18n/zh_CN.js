@@ -927,7 +927,8 @@ export default {
       ssl_http_check_tips: "1表示严格控制响应代码必须是404 301 302，0表示不控制",
       ssl_http_check_strict: "严格控制(1)",
       ssl_http_check_loose: "不控制(0)",
-
+      maintenance_platform: "维护平台",
+      ca_server_letsencrypt_cannot_op: "letsencrypt不支持维护",
       sslorder_status_type:{
         submitted: "已提交",
         applying: "申请中",
@@ -968,6 +969,38 @@ export default {
         cloudflare:{
           dns_api_token: "API token with DNS",
         }
+      }
+    },
+    ca_server_info: {
+      alert_message: "CA服务器信息管理，用于配置证书申请时使用的CA服务器",
+      title: "CA服务器",
+      button_add_ca_server: "新增CA服务器",
+      button_edit_ca_server: "编辑CA服务器",
+      button_maintain_ca_server: "维护",
+      ca_server_name: "CA服务器名称",
+      ca_server_address: "CA服务器地址",
+      ca_server_remarks: "备注",
+      dialog_title_add: "新增CA服务器信息",
+      dialog_title_edit: "编辑CA服务器信息",
+      form_validation: {
+        ca_server_name_required: "CA服务器名称不能为空",
+        ca_server_address_required: "CA服务器地址不能为空"
+      },
+      operation_success: {
+        add_success: "CA服务器信息添加成功",
+        edit_success: "CA服务器信息编辑成功",
+        delete_success: "CA服务器信息删除成功"
+      },
+      operation_failed: {
+        add_failed: "CA服务器信息添加失败",
+        edit_failed: "CA服务器信息编辑失败",
+        delete_failed: "CA服务器信息删除失败"
+      },
+      confirm_delete: "确认删除该CA服务器信息？",
+      placeholder: {
+        ca_server_name: "请输入CA服务器名称",
+        ca_server_address: "请输入CA服务器地址",
+        ca_server_remarks: "请输入备注信息"
       }
     },
     ssl_expire:{

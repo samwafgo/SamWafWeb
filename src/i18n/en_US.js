@@ -923,6 +923,8 @@ export default {
       ssl_http_check_tips: "1 means strict control of response codes must be 404 301 302, 0 means no control",
       ssl_http_check_strict: "Strict Control(1)",
       ssl_http_check_loose: "No Control(0)",
+      maintenance_platform: "Maintenance Platform",
+      ca_server_letsencrypt_cannot_op: "letsencrypt does not support maintenance",
       sslorder_status_type:{
         submitted: "Submitted",
         applying: "In Progress",
@@ -964,6 +966,38 @@ export default {
         }
       },
       error_domain_not_match_method: "Wildcard domains are not allowed under the file verification method",
+    },
+    ca_server_info: {
+      alert_message: "CA Server Information Management, used to configure CA servers for certificate applications",
+      title: "CA Server",
+      button_add_ca_server: "Add CA Server",
+      button_edit_ca_server: "Edit CA Server",
+      button_maintain_ca_server: "Maintain",
+      ca_server_name: "CA Server Name",
+      ca_server_address: "CA Server Address",
+      ca_server_remarks: "Remarks",
+      dialog_title_add: "Add CA Server Information",
+      dialog_title_edit: "Edit CA Server Information",
+      form_validation: {
+        ca_server_name_required: "CA Server Name is required",
+        ca_server_address_required: "CA Server Address is required"
+      },
+      operation_success: {
+        add_success: "CA Server information added successfully",
+        edit_success: "CA Server information updated successfully",
+        delete_success: "CA Server information deleted successfully"
+      },
+      operation_failed: {
+        add_failed: "Failed to add CA Server information",
+        edit_failed: "Failed to update CA Server information",
+        delete_failed: "Failed to delete CA Server information"
+      },
+      confirm_delete: "Are you sure to delete this CA Server information?",
+      placeholder: {
+        ca_server_name: "Please enter CA Server name",
+        ca_server_address: "Please enter CA Server address",
+        ca_server_remarks: "Please enter remarks"
+      }
     },
     ssl_expire:{
       alert_message: "SamWaf domain certificate expiration check, scheduled to check all domains once every day at midnight.",
