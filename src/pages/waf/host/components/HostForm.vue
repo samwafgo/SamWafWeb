@@ -63,6 +63,15 @@
                 </t-radio-group>
               </t-tooltip>
             </t-form-item>
+            <t-form-item :label="$t('page.host.log_only_mode')" name="log_only_mode">
+              <t-tooltip class="placement top center" :content="$t('page.host.log_only_mode_tips')" placement="top"
+                       :overlay-style="{ width: '200px' }" show-arrow>
+              <t-radio-group v-model="formData.log_only_mode">
+                <t-radio value="0">{{ $t('page.host.log_only_mode_off') }}</t-radio>
+                <t-radio value="1">{{ $t('page.host.log_only_mode_on') }}</t-radio>
+              </t-radio-group>
+              </t-tooltip>
+            </t-form-item>
 
             <t-form-item :label="$t('page.host.auto_jump_https.label_autu_jump_https')" name="auto_jump_https" v-if="formData.ssl=='1'">
               <t-radio-group v-model="formData.auto_jump_https">
@@ -535,7 +544,7 @@
           this.formData.is_enable_http_auth_base = this.formData.is_enable_http_auth_base != null ? this.formData.is_enable_http_auth_base.toString() : "0"
           this.formData.response_time_out = this.formData.response_time_out != null ? this.formData.response_time_out.toString() : "60"
           this.formData.insecure_skip_verify = this.formData.insecure_skip_verify != null ? this.formData.insecure_skip_verify.toString() : "0"
-
+          this.formData.log_only_mode = this.formData.log_only_mode != null ? this.formData.log_only_mode.toString() : "0"
 
           // 解析防御配置
           if (this.formData.defense_json) {
@@ -856,6 +865,7 @@
             postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base']);
             postdata['response_time_out'] = Number(postdata['response_time_out']);
             postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify']);
+            postdata['log_only_mode'] = Number(postdata['log_only_mode']);
 
             if (postdata['ssl'] === 0) {
               postdata['bind_ssl_id'] = '';

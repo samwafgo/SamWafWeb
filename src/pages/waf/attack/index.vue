@@ -102,6 +102,11 @@
           <template #rule="{ row }">
             <t-tag v-if="row.rule !== ''" shape="round" theme="primary" variant="outline">{{ row.rule }}</t-tag>
           </template>
+          <template #log_only_mode="{ row }">
+            <t-tag :theme="row.log_only_mode == '1' ? 'danger' : 'success'" variant="light-outline">
+              {{ row.log_only_mode == '1' ? $t('page.visit_log.log_only_mode_on') : $t('page.visit_log.log_only_mode_off') }}
+            </t-tag>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickIPDetail(slotProps)" v-if="attack_ip == ''">{{
               $t('common.search')
@@ -257,7 +262,7 @@ export default Vue.extend({
       tempDisplayColumns: [], // 临时存储列配置
       // 默认显示的列配置
       defaultDisplayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country']),
-      displayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country']),
+      displayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country', 'log_only_mode']),
       columns: [
         {
           title: this.$t('page.visit_log.guest_identity'),
@@ -294,6 +299,12 @@ export default Vue.extend({
           width: 60,
           ellipsis: true,
           colKey: 'action',
+        },
+        {
+          title: this.$t('page.visit_log.log_only_mode'),
+          width: 120,
+          ellipsis: true,
+          colKey: 'log_only_mode',
         },
         {
           title: this.$t('page.visit_log.trigger_rule'),
@@ -407,6 +418,7 @@ export default Vue.extend({
         unix_add_time_begin: "",
         unix_add_time_end: "",
         current_db_name: "local_log.db",
+        log_only_mode: "",
       },
       //table 字段
       table: {
@@ -452,7 +464,8 @@ export default Vue.extend({
         { value: 'status', label: this.$t('page.visit_log.response_code') },
         { value: 'risk_level', label: this.$t('page.visit_log.risk_level') },
         { value: 'guest_identification', label: this.$t('page.visit_log.guest_identity') },
-        { value: 'time_spent', label: this.$t('page.visit_log.time_spent') }
+        { value: 'time_spent', label: this.$t('page.visit_log.time_spent') },
+        { value: 'log_only_mode', label: this.$t('page.visit_log.log_only_mode') }
       ];
     }
   },

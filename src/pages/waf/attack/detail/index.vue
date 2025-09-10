@@ -1,12 +1,16 @@
 <template>
   <div class="detail-base">
 
+    <t-tag v-if="detail_data.rule!='' && detail_data.log_only_mode!='0' " :theme="detail_data.log_only_mode == '1' ? 'danger' : 'success'" variant="light-outline">
+      {{$t("page.visit_log.log_only_mode")}} : {{ detail_data.log_only_mode == '1' ? $t('page.visit_log.log_only_mode_on') : $t('page.visit_log.log_only_mode_off') }}
+    </t-tag>
     <t-row justify="start" v-if="detail_data.rule!=''">
       <t-col :span="12">
         <t-alert theme="error" :message="detail_data.rule" />
         <t-link  @click="loadHttpCopyMask">{{ $t('page.visit_log.detail.http_copy_mask') }}</t-link>
       </t-col>
     </t-row>
+
     <t-card :title="$t('page.visit_log.detail.ai.title')" class="container-base-margin-top">
       <t-space size="24px">
         <t-button theme="primary" @click="beforeSendAi">
