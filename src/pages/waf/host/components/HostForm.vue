@@ -350,6 +350,13 @@
             </template>
             <static-site-config :static-site-config="staticSiteConfigData" @update="val => staticSiteConfigData = val"></static-site-config>
           </t-tab-panel>
+          <t-tab-panel :value="11">
+            <template #label>
+              <t-icon name="internet" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_transport')}}
+            </template>
+            <transport-config :transport-config="transportConfigData" @update="val => transportConfigData = val"></transport-config>
+          </t-tab-panel>
           </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
@@ -390,11 +397,12 @@
   import HealthyConfig from '../components/HealthyConfig.vue';
   import CaptchaConfig from '../components/CaptchaConfig.vue';
   import StaticSiteConfig from '../components/StaticSiteConfig.vue';
+  import TransportConfig from '../components/TransportConfig.vue';
 
   import AntiLeechConfig from '../components/AntiLeechConfig.vue';
   import CacheConfig from '../components/CacheConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   export default Vue.extend({
@@ -409,6 +417,7 @@
       SslForm,
       CacheConfig,
       StaticSiteConfig,
+      TransportConfig,
     },
     props: {
       // 表单数据
@@ -458,6 +467,7 @@
         antiLeechConfigData: {...INITIAL_CAPTCHA },
         cacheConfigData: { ...INITIAL_CACHE },
         staticSiteConfigData: {...INITIAL_STATIC_SITE},
+        transportConfigData: {...INITIAL_TRANSPORT},
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -638,17 +648,41 @@
                   }
                 }
               } else {
-                that.captchaConfigData = { ...INITIAL_CAPTCHA };
+                that.captchaConfigData = { ...INITIAL_ANTILEECH };
               }
             } catch (e) {
               console.error("解析captcha_json失败", e);
-              this.captchaConfigData = { ...INITIAL_CAPTCHA };
+              this.captchaConfigData = { ...INITIAL_ANTILEECH };
             }
           } else {
             // 如果验证码配置，使用默认值
-            this.captchaConfigData = { ...INITIAL_CAPTCHA };
+            this.captchaConfigData = { ...INITIAL_ANTILEECH };
           }
 
+          // 解析transport配置
+          if (this.formData.transport_json) {
+            try {
+              let that = this;
+              if (that.formData.transport_json != "") {
+                that.transportConfigData = JSON.parse(that.formData.transport_json);
+                // 设置默认值为0
+                that.transportConfigData.max_idle_conns = getOrDefault(that.transportConfigData, "max_idle_conns", INITIAL_TRANSPORT.max_idle_conns);
+                that.transportConfigData.max_idle_conns_per_host = getOrDefault(that.transportConfigData, "max_idle_conns_per_host", INITIAL_TRANSPORT.max_idle_conns_per_host);
+                that.transportConfigData.max_conns_per_host = getOrDefault(that.transportConfigData, "max_conns_per_host", INITIAL_TRANSPORT.max_conns_per_host);
+                that.transportConfigData.idle_conn_timeout = getOrDefault(that.transportConfigData, "idle_conn_timeout", INITIAL_TRANSPORT.idle_conn_timeout);
+                that.transportConfigData.tls_handshake_timeout = getOrDefault(that.transportConfigData, "tls_handshake_timeout", INITIAL_TRANSPORT.tls_handshake_timeout);
+                that.transportConfigData.expect_continue_timeout = getOrDefault(that.transportConfigData, "expect_continue_timeout", INITIAL_TRANSPORT.expect_continue_timeout);
+              } else {
+                that.transportConfigData = { ...INITIAL_TRANSPORT };
+              }
+            } catch (e) {
+              console.error("解析transport_json失败", e);
+              this.transportConfigData = { ...INITIAL_TRANSPORT };
+            }
+          } else {
+            // 如果transport配置为空，使用默认值
+            this.transportConfigData = { ...INITIAL_TRANSPORT };
+          }
           // 解析防盗链配置
           if (this.formData.anti_leech_json) {
             try {
@@ -939,6 +973,18 @@
             };
             postdata['static_site_json'] = JSON.stringify(staticSiteData);
 
+            // 处理transport配置
+            let transportData = {
+              // 将传输配置数据转换为整数类型
+              max_idle_conns: parseInt(this.transportConfigData.max_idle_conns || INITIAL_TRANSPORT.max_idle_conns),
+              max_idle_conns_per_host: parseInt(this.transportConfigData.max_idle_conns_per_host || INITIAL_TRANSPORT.max_idle_conns_per_host), 
+              idle_conn_timeout: parseInt(this.transportConfigData.idle_conn_timeout || INITIAL_TRANSPORT.idle_conn_timeout),
+              tls_handshake_timeout: parseInt(this.transportConfigData.tls_handshake_timeout || INITIAL_TRANSPORT.tls_handshake_timeout),
+              expect_continue_timeout: parseInt(this.transportConfigData.expect_continue_timeout || INITIAL_TRANSPORT.expect_continue_timeout),
+              max_conns_per_host: parseInt(this.transportConfigData.max_conns_per_host || INITIAL_TRANSPORT.max_conns_per_host),
+              
+            };
+            postdata['transport_json'] = JSON.stringify(transportData);
             // 提交表单
             this.$emit('submit', { result: postdata });
           } else {

@@ -71,7 +71,8 @@ export default {
     column_config_save_failed: "Failed to save column configuration",
     column_config_reset_success: "Column configuration reset to default",
     column_config_reset_confirm: "Are you sure you want to reset column configuration to default?",
-    column_config_load_failed: "Failed to load column configuration"
+    column_config_load_failed: "Failed to load column configuration",
+    seconds: "seconds"
   },
   login:{
     login_title: "Login",
@@ -485,6 +486,7 @@ export default {
       tab_anti_leech: "Anti-Leech Config",
       tab_cache: "Cache Config",
       tab_static_site: "Static Site",
+      tab_transport: "Transport Config",
       more_domain:"Bind More Domain",
       more_domain_tips:"Enter multiple domain names, each on a new line, without including the port.",
       start_status: "Start Status",
@@ -716,6 +718,27 @@ export default {
       select_guard_status: 'Please select protection status',
       default_encoding: 'Default Encoding',
       default_encoding_auto: 'Auto Select',
+      transport: {
+        max_idle_conns: 'Max Idle Connections',
+        max_idle_conns_tips: 'Maximum number of idle connections in the connection pool. 0 means no limit',
+        max_idle_conns_placeholder: 'Enter max idle connections',
+        max_idle_conns_per_host: 'Max Idle Connections Per Host',
+        max_idle_conns_per_host_tips: 'Maximum number of idle connections per host. 0 means no limit',
+        max_idle_conns_per_host_placeholder: 'Enter max idle connections per host',
+        max_conns_per_host: 'Max Connections Per Host',
+        max_conns_per_host_tips: 'Maximum number of connections per host. 0 means no limit',
+        max_conns_per_host_placeholder: 'Enter max connections per host',
+        idle_conn_timeout: 'Idle Connection Timeout',
+        idle_conn_timeout_tips: 'Maximum time an idle connection can remain open. 0 means no timeout',
+        idle_conn_timeout_placeholder: 'Enter idle connection timeout',
+        tls_handshake_timeout: 'TLS Handshake Timeout',
+        tls_handshake_timeout_tips: 'Maximum time to wait for TLS handshake completion. 0 means no timeout',
+        tls_handshake_timeout_placeholder: 'Enter TLS handshake timeout',
+        expect_continue_timeout: 'Expect Continue Timeout',
+        expect_continue_timeout_tips: 'Maximum time to wait for 100-continue response. 0 means no timeout',
+        expect_continue_timeout_placeholder: 'Enter expect continue timeout',
+        config_note: 'Transport configuration allows fine-tuning of HTTP client connection parameters. Setting values to 0 will use system defaults. These settings help optimize connection pooling and timeout behavior for better performance and resource management.'
+      }
     },
     one_key_mod: {
       one_key_placeholder: "Due to the fact that only one program can use Web (port 80, port 443) on a single server, if you need to set Waf as a proxy, you need to change 80 to 81 and 443 to 444 here.\nSamWaf has added a one-click modification of Baota Web port for user convenience. Available only on Linux.",

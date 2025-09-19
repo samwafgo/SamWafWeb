@@ -71,7 +71,8 @@ export default {
     column_config_save_failed: "保存列配置失败",
     column_config_reset_success: "列配置已重置为默认设置",
     column_config_reset_confirm: "确定要重置列配置为默认设置吗？",
-    column_config_load_failed: "加载列配置失败"
+    column_config_load_failed: "加载列配置失败",
+    seconds: "秒"
   },
   login:{
     login_title:"登录",
@@ -486,6 +487,7 @@ export default {
       tab_anti_leech: "防盗链配置",
       tab_cache: "缓存配置",
       tab_static_site: "静态网站",
+      tab_transport: "传输配置",
       more_domain:"同时绑定多个域名",
       more_domain_tips:"填写多个域名回车换行,不要加端口",
       start_status: "启动状态",
@@ -718,6 +720,27 @@ export default {
       select_guard_status: '请选择防护状态',
       default_encoding: '默认编码',
       default_encoding_auto: '自动选择',
+      transport: {
+        max_idle_conns: '最大空闲连接数',
+        max_idle_conns_tips: '连接池中最大空闲连接数。0表示无限制',
+        max_idle_conns_placeholder: '请输入最大空闲连接数',
+        max_idle_conns_per_host: '每个主机最大空闲连接数',
+        max_idle_conns_per_host_tips: '每个主机的最大空闲连接数。0表示无限制',
+        max_idle_conns_per_host_placeholder: '请输入每个主机最大空闲连接数',
+        max_conns_per_host: '每个主机最大连接数',
+        max_conns_per_host_tips: '每个主机的最大连接数。0表示无限制',
+        max_conns_per_host_placeholder: '请输入每个主机最大连接数',
+        idle_conn_timeout: '空闲连接超时时间',
+        idle_conn_timeout_tips: '空闲连接保持打开的最长时间。0表示无超时',
+        idle_conn_timeout_placeholder: '请输入空闲连接超时时间',
+        tls_handshake_timeout: 'TLS握手超时时间',
+        tls_handshake_timeout_tips: '等待TLS握手完成的最长时间。0表示无超时',
+        tls_handshake_timeout_placeholder: '请输入TLS握手超时时间',
+        expect_continue_timeout: 'Expect Continue超时时间',
+        expect_continue_timeout_tips: '等待100-continue响应的最长时间。0表示无超时',
+        expect_continue_timeout_placeholder: '请输入Expect Continue超时时间',
+        config_note: '传输配置允许精细调整HTTP客户端连接参数。将值设置为0将使用系统默认值。这些设置有助于优化连接池和超时行为，以获得更好的性能和资源管理。'
+      }
     },
     one_key_mod:{
       one_key_placeholder: "由于单台服务器只能一个程序使用Web(80端口，443端口)，所以如果需要让Waf变为前置，那么此处需要将80=》81 ，443=》444。\n" +
