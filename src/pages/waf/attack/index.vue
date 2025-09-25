@@ -20,6 +20,10 @@
             <t-input v-model="searchformData.rule" class="form-item-content" type="search"
               :placeholder="$t('common.placeholder') + $t('page.visit_log.rule_name')" :style="{ minWidth: '134px' }" />
           </t-form-item>
+          <t-form-item :label="$t('page.visit_log.req_uuid')" name="req_uuid">
+            <t-input v-model="searchformData.req_uuid" class="form-item-content" type="search"
+              :placeholder="$t('common.placeholder') + $t('page.visit_log.req_uuid')" :style="{ minWidth: '200px' }" />
+          </t-form-item>
           <t-form-item :label="$t('page.visit_log.access_status')" name="action">
             <t-select v-model="searchformData.action" class="form-item-content`" :options="action_options"
               :placeholder="$t('common.select_placeholder') + $t('page.visit_log.access_status')"
@@ -261,8 +265,8 @@ export default Vue.extend({
       columnControllerVisible: false, // 控制列配置弹窗显示
       tempDisplayColumns: [], // 临时存储列配置
       // 默认显示的列配置
-      defaultDisplayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country']),
-      displayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country', 'log_only_mode']),
+      defaultDisplayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country','log_only_mode','req_uuid']),
+      displayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country' ]),
       columns: [
         {
           title: this.$t('page.visit_log.guest_identity'),
@@ -357,6 +361,23 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'city',
         },
+        { 
+          title: this.$t('page.visit_log.req_uuid'),
+          width: 160,
+          ellipsis: true,
+          colKey: 'req_uuid',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            // 按下 Enter 键时也触发确认搜索
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            // 是否显示重置取消按钮，一般情况不需要显示
+            showConfirmAndReset: true,
+          },
+        }, 
         {
           title: this.$t('page.visit_log.access_url'),
           width: 160,
@@ -410,6 +431,7 @@ export default Vue.extend({
       //顶部搜索
       searchformData: {
         rule: "",
+        req_uuid: "",
         action: "",
         src_ip: "",
         host_code: "",
@@ -465,7 +487,9 @@ export default Vue.extend({
         { value: 'risk_level', label: this.$t('page.visit_log.risk_level') },
         { value: 'guest_identification', label: this.$t('page.visit_log.guest_identity') },
         { value: 'time_spent', label: this.$t('page.visit_log.time_spent') },
-        { value: 'log_only_mode', label: this.$t('page.visit_log.log_only_mode') }
+        { value: 'log_only_mode', label: this.$t('page.visit_log.log_only_mode') },
+        { value: 'req_uuid',label:this.$t('page.visit_log.req_uuid')}
+
       ];
     }
   },
@@ -820,6 +844,16 @@ export default Vue.extend({
         this.filters.filter_by = "guest_identification";
         this.filters.filter_value = e.guest_identification;
       }
+      //请求ID
+      if (e.req_uuid != undefined && e.req_uuid != "") {
+        if (this.filters.filter_by == "") {
+          this.filters.filter_by = "req_uuid";
+          this.filters.filter_value = e.req_uuid;
+        } else {
+          this.filters.filter_by = this.filters.filter_by + "|req_uuid";
+          this.filters.filter_value = this.filters.filter_value + "|" + e.req_uuid;
+        }
+      }
       //header
       if (e.header != undefined && e.header != "") {
         if (this.filters.filter_by == "") {
@@ -830,6 +864,7 @@ export default Vue.extend({
           this.filters.filter_value = this.filters.filter_value + "|" + e.header;
         }
       }
+       
       this.getList("")
     },
     resetState() {
