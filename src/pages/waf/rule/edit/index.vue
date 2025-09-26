@@ -72,7 +72,7 @@
               <div>
                 <t-form-item :label="$t('page.rule.detail.scope')" name="attr">
                   <t-select clearable :style="{ width: '480px' }" v-model="condition_item.attr">
-                    <t-option v-for="(item, index) in attr_option" :value="item.value" :label="item.label" :key="index">
+                    <t-option v-for="(item, index) in attr_option.filter(option => !option.value.toLowerCase().startsWith('get'))" :value="item.value" :label="item.label" :key="index">
                       {{ item.label }}
                     </t-option>
                   </t-select>
@@ -155,7 +155,7 @@
                 <div>
                   <t-form-item :label="$t('page.rule.detail.scope')" name="attr">
                     <t-select clearable :style="{ width: '480px' }" v-model="do_assignment_item.attr">
-                      <t-option v-for="(item, index) in attr_option" :value="item.value" :label="item.label"
+                      <t-option v-for="(item, index) in attr_option.filter(option => !option.value.toLowerCase().startsWith('get'))" :value="item.value" :label="item.label"
                         :key="index">
                         {{ item.label }}
                       </t-option>
@@ -293,6 +293,17 @@
             }</pre>
                   </template>
                 </t-alert>
+
+                <t-alert theme="info" :title="$t('page.rule.detail.example_code')" >
+                  <template #message>
+                    <pre> rule R80798f795d7947419ba6f593708b4012 "禁止满足条件的Header访客访问" salience 10 {
+              when
+                MF.GetHeaderValue("Accept").Contains("text/plain") == True
+              then
+                Retract("R80798f795d7947419ba6f593708b4012");
+            }</pre>
+                  </template>
+                </t-alert>
                
               <t-link theme="danger" hover="color" href="https://update.samwaf.com/airule/auto_jump_url.html?v20250311" target="_blank">
                 <jump-icon slot="suffixIcon" />
@@ -426,7 +437,11 @@
           },{
             label: this.$t('page.rule.detail.inner_option_city'),
             value: 'CITY'
-          },
+          },{
+            label: this.$t('page.rule.detail.inner_option_getheadervalue'),
+            value:'GetHeaderValue("HeaderKeyName")'
+          }
+
         ],
         attr_type_option: [{
             label: this.$t('page.rule.detail.attr_type_text'),
