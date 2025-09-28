@@ -653,6 +653,10 @@ export default Vue.extend({
           label: this.$t('page.sslorder.sslorder_apply_dns_type.cloudflare'),
           value: 'cloudflare'
         },
+        {
+          label: this.$t('page.sslorder.sslorder_apply_dns_type.baiducloud'),
+          value:'baiducloud'
+        }
 
       ],
       dns_env: {
@@ -698,8 +702,17 @@ export default Vue.extend({
             value: 'CF_DNS_API_TOKEN',
             label: this.$t('page.sslorder.sslorder_apply_dns_config.cloudflare.dns_api_token'),
           }
+        ],
+        baiducloud:[
+          {
+            value:'BAIDUCLOUD_ACCESS_KEY_ID',
+            label:this.$t('page.sslorder.sslorder_apply_dns_config.baiducloud.access_key')
+          },
+          {
+            value:'BAIDUCLOUD_SECRET_ACCESS_KEY',
+            label:this.$t('page.sslorder.sslorder_apply_dns_config.baiducloud.secret_key')
+          }
         ]
-
       },
       // CA服务器维护相关 
       caServerMaintenanceVisible: false, 
@@ -769,12 +782,7 @@ export default Vue.extend({
   created() {
   },
   mounted() {
-    this.loadHostList().then(() => {
-      this.getList("");
-      this.getPrivateList("")
-      // 加载CA服务器信息
-      this.loadCaServerList();
-    });
+    this.reloadInitData();
   },
   watch: {
     // 监听srcHostCode变化，重新加载数据
@@ -785,13 +793,22 @@ export default Vue.extend({
           // 重置分页到第一页
           this.pagination.current = 1;
           // 重新加载数据
-          this.getList("");
+          this.reloadInitData();
         }
       },
       immediate: false // 不需要立即执行，因为mounted已经会执行一次
     }
   },
   methods: {
+    //初始化数据
+    reloadInitData(){
+        this.loadHostList().then(() => {
+              this.getList("");
+              this.getPrivateList("")
+              // 加载CA服务器信息
+              this.loadCaServerList();
+        });
+    },
     // 处理CA服务器维护
     handleCaServerMaintenance() {
       this.loadCaServerListForMaintenance();
@@ -1199,7 +1216,7 @@ export default Vue.extend({
                 .map(item => item.label) // 提取所有label
                 .filter(label => label); // 过滤掉空字符串或不存在的值
               // 将所有的非空label用逗号连接起来
-              let labelsString = labels.join(', ');
+              let labelsString = labels.join(',');
               this.formData.apply_domain = labelsString;
             } else {
               this.$message.warning(res.msg);

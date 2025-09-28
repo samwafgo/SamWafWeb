@@ -682,6 +682,17 @@ export default Vue.extend({
           console.log(resdata)
           if (resdata.code === 0) {
             that.$message.success(resdata.msg);
+
+            
+            console.log("submit host data",data)
+            if(data.result.ssl_config_mode === "auto_apply"){
+               that.loadHostList().then(() => {
+                    that.sslAutoApplyVisible = true;
+                    that.currentHostCode = resdata.data
+                    console.log("auto_apply code", resdata.data)
+                });
+            }
+
             that.addFormVisible = false;
             that.pagination.current = 1
 
@@ -778,9 +789,12 @@ export default Vue.extend({
       if (global_host === 1) {
         this.$message.warning("全局网站不能申请");
       }
-      this.sslAutoApplyVisible = true;
-      this.currentHostCode = code
-      console.log("code,global_host",code,global_host)
+      this.loadHostList().then(() => {
+          this.sslAutoApplyVisible = true;
+          this.currentHostCode = code
+          console.log("code,global_host",code,global_host)
+      });
+      
     },
     onConfirmDelete() {
       this.confirmVisible = false;

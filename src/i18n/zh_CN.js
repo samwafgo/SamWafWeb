@@ -470,6 +470,9 @@ export default {
       ssl_not_found_tips:"未找到关联的证书信息",
       ssl_option_yes:"加密证书（需上传证书）",
       ssl_option_no:"非加密",
+      ssl_config_mode: "SSL配置模式",
+      ssl_config_existing: "已有证书",
+      ssl_config_auto_apply: "稍后配置自动申请证书",
       guard_status_on: "已防护",
       guard_status_off: "未防护",
       log_only_mode:"仅记录模式",
@@ -981,6 +984,7 @@ export default {
         huaweicloud: "华为云",
         tencentcloud: "腾讯云",
         cloudflare: "Cloudflare",
+        baiducloud: "百度云",
       },
       error_domain_not_match_method: "文件选择方式下不能是泛域名",
       sslorder_apply_dns_config:{
@@ -1000,6 +1004,10 @@ export default {
         },
         cloudflare:{
           dns_api_token: "API token with DNS",
+        },
+        baiducloud:{
+          access_key: "Access Key ID",
+          secret_key: "Access Key Secret",
         }
       }
     },

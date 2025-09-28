@@ -468,7 +468,10 @@ export default {
       bind_empty_ssl_tips:"Current Cannot Bind SSL",
       ssl_not_found_tips:"Ssl Not Found",
       ssl_option_yes: "Encryption Certificate (requires certificate upload)",
-      ssl_option_no: "Non-encrypted",
+      ssl_option_no: "Non-encrypted", 
+      ssl_config_mode: "SSL Configuration Mode",
+      ssl_config_existing: "Existing Certificate",
+      ssl_config_auto_apply: "Configure Auto Certificate Application Later",
       guard_status_on: "Protected",
       guard_status_off: "Not Protected",
       auto_start_on: "Auto Start",
@@ -977,6 +980,7 @@ export default {
         huaweicloud: "Huawei cloud",
         tencentcloud: "Tencent cloud",
         cloudflare: "Cloudflare",
+        baiducloud: "Baidu cloud",
       },
       sslorder_apply_dns_config:{
         alidns:{
@@ -995,7 +999,12 @@ export default {
         },
         cloudflare:{
           dns_api_token: "API token with DNS",
-        }
+        },
+        baiducloud:{
+          access_key: "Access Key ID",
+          secret_key: "Access Key Secret",
+        },
+        
       },
       error_domain_not_match_method: "Wildcard domains are not allowed under the file verification method",
     },

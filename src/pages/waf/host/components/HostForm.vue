@@ -10,6 +10,15 @@
                        :overlay-style="{ width: '200px' }" show-arrow>
                 <t-input :style="{ width: '480px' }" v-model="formData.host" :placeholder="$t('common.placeholder')" :disabled="isEdit"></t-input>
               </t-tooltip>
+            </t-form-item> 
+            <t-form-item :label="$t('page.host.ssl')" name="ssl">
+              <t-tooltip class="placement top center" :content="$t('page.host.ssl_tips')" placement="top"
+                       :overlay-style="{ width: '200px' }" show-arrow>
+                <t-radio-group v-model="formData.ssl">
+                  <t-radio value="0">{{ $t('page.host.ssl_option_no') }}</t-radio>
+                  <t-radio value="1">{{ $t('page.host.ssl_option_yes') }}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
             </t-form-item>
             <t-form-item :label="$t('page.host.port')" name="port">
               <t-tooltip class="placement top center"
@@ -24,15 +33,6 @@
                 {{ $t('page.host.bind_more_port')  }} <t-input  :style="{ width: '200px' }" v-model="formData.bind_more_port" :placeholder="$t('page.host.bind_more_port_placeholder')"></t-input>
               </t-tooltip>
             </t-form-item>
-            <t-form-item :label="$t('page.host.ssl')" name="ssl">
-              <t-tooltip class="placement top center" :content="$t('page.host.ssl_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="formData.ssl">
-                  <t-radio value="0">{{ $t('page.host.ssl_option_no') }}</t-radio>
-                  <t-radio value="1">{{ $t('page.host.ssl_option_yes') }}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
             <t-form-item :label="$t('page.host.unrestricted_port.label_unrestricted_port_is_enable')" name="unrestricted_port">
               <t-tooltip class="placement top center" :content="$t('page.host.unrestricted_port.unrestricted_port_tip')" placement="top"
                          :overlay-style="{ width: '200px' }" show-arrow>
@@ -42,7 +42,16 @@
                 </t-radio-group>
               </t-tooltip>
             </t-form-item>
-            <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formData.ssl=='1'">
+            <!-- SSL配置模式选择 (仅在新增模式且选择SSL时显示) -->
+            <t-form-item :label="$t('page.host.ssl_config_mode')" name="ssl_config_mode" v-if="formData.ssl=='1' && !isEdit">
+              <t-radio-group v-model="formData.ssl_config_mode">
+                <t-radio value="existing">{{ $t('page.host.ssl_config_existing') }}</t-radio>
+                <t-radio value="auto_apply">{{ $t('page.host.ssl_config_auto_apply') }}</t-radio>
+              </t-radio-group>
+            </t-form-item>
+            
+            <!-- 已有证书选择 (仅在选择"已有证书"模式时显示) -->
+            <t-form-item :label="$t('page.host.ssl_folder')" name="bind_ssl_id" v-if="formData.ssl=='1' && (isEdit || formData.ssl_config_mode === 'existing')">
               <div style="display: flex; align-items: center;">
                 <t-select @change="handleSslChange" :filterable="selectCanFilter" v-model="formData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
                   <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
@@ -79,7 +88,7 @@
                 <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
               </t-radio-group>
             </t-form-item>
-            <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formData.ssl=='1'">
+            <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formData.ssl=='1' && (isEdit || formData.ssl_config_mode === 'existing')">
               <t-tooltip class="placement top center"
                        :content="$t('page.host.certfile_content')" placement="top"
                        :overlay-style="{ width: '200px' }" show-arrow>
@@ -88,7 +97,7 @@
                 </t-textarea>
               </t-tooltip>
             </t-form-item>
-            <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formData.ssl=='1'">
+            <t-form-item :label="$t('page.host.keyfile')" name="keyfile" v-if="formData.ssl=='1' && (isEdit || formData.ssl_config_mode === 'existing')">
               <t-tooltip class="placement top center"
                          :content="$t('page.host.keyfile_content')" placement="top"
                          :overlay-style="{ width: '200px' }" show-arrow>
@@ -448,7 +457,11 @@
     },
     data() {
       return {
-        formData: JSON.parse(JSON.stringify(this.value)),
+        formData: {
+          ...JSON.parse(JSON.stringify(this.value)),
+          // SSL配置模式字段，默认为已有证书
+          ssl_config_mode: 'existing'
+        },
         // 主机防御细节
         hostDefenseData: {
           bot: "1",
@@ -542,7 +555,11 @@
     watch: {
       value: {
         handler(newVal) {
-          this.formData = JSON.parse(JSON.stringify(newVal));
+          this.formData = {
+            ...JSON.parse(JSON.stringify(newVal)),
+            // 确保ssl_config_mode字段存在
+            ssl_config_mode: newVal.ssl_config_mode || 'existing'
+          };
           // 将数字类型转换为字符串类型，确保不为空时才转换
           this.formData.ssl = this.formData.ssl != null ? this.formData.ssl.toString() : "0"
           this.formData.start_status = this.formData.start_status != null ? this.formData.start_status.toString() : "0"
@@ -760,6 +777,37 @@
             }
           }
         },
+        // 监听SSL状态变化，自动设置端口和重置SSL配置模式
+      'formData.ssl': {
+        handler(newVal, oldVal) {
+          // 只在非编辑模式下且SSL状态确实发生变化时才自动设置端口
+          if (!this.isEdit && oldVal !== undefined && newVal !== oldVal) {
+            if (newVal === "1") {
+              // 选择SSL：重置SSL配置模式为已有证书
+              this.formData.ssl_config_mode = 'existing';
+              // 只有当端口为空或为默认的80时才设置为443
+              if (!this.formData.port || this.formData.port === 80) {
+                this.formData.port = 443;
+              }
+              // 只有当bind_more_port为空时才设置为80
+              if (!this.formData.bind_more_port || this.formData.bind_more_port === '') {
+                this.formData.bind_more_port = '80';
+              }
+            } else if (newVal === "0") {
+              // 取消SSL：清除SSL配置模式
+              this.formData.ssl_config_mode = 'existing';
+              // 只有当端口为443时才设置为80
+              if (this.formData.port === 443) {
+                this.formData.port = 80;
+              }
+              // 只有当bind_more_port为'80'时才清空
+              if (this.formData.bind_more_port === '80') {
+                this.formData.bind_more_port = '';
+              }
+            }
+          }
+        }
+      },
     },
     created() {
       this.getSslFolderList();
