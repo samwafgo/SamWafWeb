@@ -47,7 +47,7 @@
                  :overlay-style="{ width: '200px' }" show-arrow>
         <t-select v-model="localCaptchaConfig.ip_mode" @change="updateParent" :style="{ width: '150px' }">
           <t-option value="nic">{{ $t('page.host.captcha.ip_mode_nic') }}</t-option>
-          <t-option value="header">{{ $t('page.host.captcha.ip_mode_header') }}</t-option>
+          <t-option value="header">{{ $t('page.host.captcha.ip_mode_proxy') }}</t-option>
         </t-select>
       </t-tooltip>
     </t-form-item>
