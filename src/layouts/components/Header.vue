@@ -39,7 +39,7 @@
     <t-dialog width="800px" :visible.sync="wechat_visible" :header="$t('topNav.wechat')" :confirmBtn="null" :cancelBtn="null">
       <div class="wechat-qr-container">
         <div class="qr-image-wrapper">
-          <img :src="wechatQrImage"  class="qr-image" />
+          <img src="@/assets/assets-mp-samwaf.png"  class="qr-image" />
         </div>
         <div class="qr-description">
           <p></p>
@@ -244,8 +244,7 @@
         update_desc:"",
         current_account:"not login",
         /**微信二维码对话框**/
-        wechat_visible: false,
-        wechatQrImage: require('@/assets/mp_samwaf.png'),
+        wechat_visible: false, 
         /**控制中心相关**/
         hasClientServer:false,
         current_server:"",
