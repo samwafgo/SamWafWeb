@@ -34,6 +34,19 @@
       </div>
 
     </t-dialog>
+    
+    <!-- 微信公众号二维码对话框 -->
+    <t-dialog width="800px" :visible.sync="wechat_visible" :header="$t('topNav.wechat')" :confirmBtn="null" :cancelBtn="null">
+      <div class="wechat-qr-container">
+        <div class="qr-image-wrapper">
+          <img :src="wechatQrImage"  class="qr-image" />
+        </div>
+        <div class="qr-description">
+          <p></p>
+        </div>
+      </div>
+    </t-dialog>
+    
     <t-head-menu :class="menuCls" :theme="theme" expandType="popup" :value="active">
       <template #logo>
         <span v-if="showLogo" class="header-logo-container" @click="handleNav('/dashboard/base')">
@@ -72,6 +85,11 @@
             </t-button>
           </t-tooltip>
 
+          <t-tooltip placement="bottom" :content="$t('topNav.wechat')">
+            <t-button theme="default" shape="square" variant="text" @click="openWechat">
+              <LogoWechatStrokeIcon />
+            </t-button>
+          </t-tooltip>
           <t-tooltip placement="bottom" :content="$t('topNav.contract')">
             <t-button theme="default" shape="square" variant="text" @click="sendMail">
               <MailIcon />
@@ -147,7 +165,8 @@
     MailIcon,
     NotificationErrorIcon,
     ArrowUpDownCircleIcon,
-    AddIcon
+    AddIcon,
+    LogoWechatStrokeIcon
   } from 'tdesign-icons-vue';
   import {
     prefix
@@ -182,7 +201,8 @@
       MailIcon,
       NotificationErrorIcon,
       ArrowUpDownCircleIcon,
-      AddIcon
+      AddIcon,
+      LogoWechatStrokeIcon
     },
     props: {
       theme: String,
@@ -223,6 +243,9 @@
         update_new_ver:"",
         update_desc:"",
         current_account:"not login",
+        /**微信二维码对话框**/
+        wechat_visible: false,
+        wechatQrImage: require('@/assets/mp_samwaf.png'),
         /**控制中心相关**/
         hasClientServer:false,
         current_server:"",
@@ -364,6 +387,9 @@
       sendMail(){
         const email = 'samwafgo@gmail.com'; // 设置收件人地址
         window.location.href = `mailto:${email}`;
+      },
+      openWechat(){
+        this.wechat_visible = true;
       },
       checkVersion(method){
           let that = this;
@@ -606,6 +632,32 @@
     &:last-child {
       .t-dropdown__item {
         margin-bottom: 8px;
+      }
+    }
+  }
+
+  /* 微信二维码对话框样式 */
+  .wechat-qr-container {
+    text-align: center;
+    padding: 20px;
+    
+    .qr-image-wrapper {
+      margin-bottom: 16px;
+      
+      .qr-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    }
+    
+    .qr-description {
+      p {
+        margin: 0;
+        color: var(--td-text-color-secondary);
+        font-size: 14px;
+        line-height: 1.5;
       }
     }
   }

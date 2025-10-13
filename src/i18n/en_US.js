@@ -105,6 +105,7 @@ export default {
       beta_confirm_yes: 'Confirm Update',
       beta_confirm_no: 'Cancel',
     },
+    wechat: "SamWaf Wechat Account",
     contract: "Contact SamWaf",
     help_document: "Help Document",
     current_server: "Current Server",

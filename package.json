@@ -28,7 +28,7 @@
     "marked": "^15.0.7",
     "nprogress": "^0.2.0",
     "qrcode.vue": "^1.7.0",
-    "tdesign-icons-vue": "^0.2.5",
+    "tdesign-icons-vue": "^0.4.1",
     "tdesign-vue": "^1.10.5",
     "tvision-color": "~1.6.0",
     "typescript": "^4.2.4",

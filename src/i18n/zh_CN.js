@@ -106,6 +106,7 @@ export default {
       beta_confirm_no: '取消',
     },
     contract:"联系SamWaf",
+    wechat:"SamWaf微信公众账号",
     help_document:"帮助文档",
     current_server:"当前 服务器",
     system_config:"系统设置",
