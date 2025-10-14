@@ -1185,6 +1185,8 @@ export default {
         parameter: "传参",
         write_rule: "规则编排",
         system_variable: "系统变量",
+        system_judge_symbol:"系统判断符号",
+        system_relation_symbol:"系统关系符号",
         ui_rule_edit:"界面编排",
         manual_code_rule_edit:"手工代码编排",
         //options

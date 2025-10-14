@@ -1183,6 +1183,8 @@ export default {
         parameter: "Parameters",
         write_rule: "Rule Arrangement",
         system_variable: "System Variable",
+        system_judge_symbol:"System Judgment Symbol",
+        system_relation_symbol:"System Relation Symbol",
         ui_rule_edit: "UI Arrangement",
         manual_code_rule_edit: "Manual Code Arrangement",
         mf_option_default: "Default",

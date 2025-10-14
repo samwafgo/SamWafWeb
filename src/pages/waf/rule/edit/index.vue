@@ -327,6 +327,34 @@
                 stripe
                 hover
               />
+               <br>
+               {{$t('page.rule.detail.system_judge_symbol')}}
+              <t-table
+                :data="attr_judge_option"
+                :columns="[
+                  { colKey: 'label', title: $t('page.rule.detail.variable_name') },
+                  { colKey: 'value', title: $t('page.rule.detail.variable_key') }
+                ]"
+                size="small"
+                :pagination="{ pageSize: 10 }"
+                rowKey="value"
+                stripe
+                hover
+              />
+              <br>
+              {{$t('page.rule.detail.system_relation_symbol')}}
+              <t-table
+                :data="relation_symbol_option"
+                :columns="[
+                  { colKey: 'label', title: $t('page.rule.detail.variable_name') },
+                  { colKey: 'value', title: $t('page.rule.detail.variable_key') }
+                ]"
+                size="small"
+                :pagination="{ pageSize: 10 }"
+                rowKey="value"
+                stripe
+                hover
+              />
           </t-col>
         </t-row>
       </t-card>
@@ -500,7 +528,7 @@
           },
         ],
         formData: {
-          ...RULE
+          ...copyObj(RULE)
         },
         formCodemirrorContent: '',//代码传入值
         //主机列表
@@ -567,8 +595,7 @@
     },
     watch: {
       '$route.query.type'(newVal, oldVal) {
-        console.log('route.query.type changed', newVal, oldVal)
-        //this.getDetail(newVal)
+        console.log('route.query.type changed', newVal, oldVal) 
         this.op_type = newVal
       },
       '$route.query.code'(newVal, oldVal) {
@@ -578,6 +605,28 @@
       },
     },
     methods: {
+      // 重置表单数据
+      resetFormData() {
+        console.log('重置表单数据')
+        // 重新生成UUID
+        this.ruleuuid = uuidv4()
+
+        console.log("重置表单数据 before",this.formData)
+        // 重置表单数据为初始状态
+        this.formData = {
+          ...copyObj(RULE)
+        }
+         console.log("重置表单数据 after",this.formData)
+
+          console.log("重置表单数据 rule",RULE)
+        // 重置代码编辑器内容
+        this.formCodemirrorContent = ''
+        // 重置其他相关数据
+        this.fromLogContentStr = ""
+        this.fromSourcePoint = ""
+        // 清空操作规则号
+        this.op_rule_no = ""
+      },
       backPage(){
         　history.go(-1)
       },
@@ -646,6 +695,7 @@
                   console.log(resdata)
                   if (resdata.code === 0) {
                     that.$message.success(resdata.msg);
+                    that.resetFormData()
                     this.$router.push(
                       {
                         path:'/waf-host/wafrule',
@@ -682,6 +732,7 @@
                  console.log(resdata)
                  if (resdata.code === 0) {
                    that.$message.success(resdata.msg);
+                   that.resetFormData()
                    this.$router.push(
                      {
                        path:'/waf-host/wafrule',
