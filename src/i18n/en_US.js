@@ -655,6 +655,8 @@ export default {
       sensitive_detection_tips: "Sensitive Detection",
       dir_traversal_detection: "Dir Traversal Detection",
       dir_traversal_detection_tips: "Dir Traversal Detection",
+      owaspset_detection: "OWASP Set Detection",
+      owaspset_detection_tips: "OWASP Set Detection",
       engine_protection: "Engine Built-in Protection",
       other_config: "Other Configurations",
       guard_status_confirm: "Protection Status Reminder",

@@ -532,6 +532,8 @@ export default {
       sensitive_detection_tips: "敏感词检测",
       dir_traversal_detection: "目录穿越检测",
       dir_traversal_detection_tips: "目录穿越检测",
+      owaspset_detection: "OWASP集检测",
+      owaspset_detection_tips: "OWASP集检测",
       engine_protection: "引擎自带防护",
       other_config: "其他配置",
       guard_status_confirm: "防护状态提示",
