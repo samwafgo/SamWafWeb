@@ -231,6 +231,7 @@
       propHostCode(newVal) {
         // 当 propHostCode 更新时，更新相应的数据
         this.searchformData.host_code = newVal;
+        console.log("loadbalance host code",newVal)
         this.getList("")
       }
     },
@@ -252,6 +253,11 @@
       this.searchformData.host_code = this.propHostCode;
     },
     mounted() {
+      // 初始化 propHostCode
+      if (this.propHostCode) {
+        this.searchformData.host_code = this.propHostCode;
+        console.log("loadbalance mounted with host code", this.propHostCode);
+      }
       this.loadHostList().then(() => {
         this.getList("");
       });
@@ -286,7 +292,7 @@
           ...that.searchformData
         }
         postdata['remote_port'] = Number(postdata['remote_port'])
-        console.log('getList',postdata)
+        console.log('loadbalance getList parms',postdata)
         wafLoadBalanceListApi( {...postdata})
           .then((res) => {
             let resdata = res

@@ -99,6 +99,13 @@
 
           </span>
         </div>
+        <div class="info-item" v-if="detail_data.is_balance == 1" >
+          <!--负载均衡信息-->
+          <h1>  {{ $t('page.visit_log.detail.balance_info') }} </h1>
+          <span>
+              {{ detail_data.balance_info }} 
+          </span>
+        </div>
       </div>
     </t-card>
     <t-card :title="$t('page.visit_log.detail.more_info')" class="container-base-margin-top">

@@ -370,6 +370,7 @@ export default {
         add_to_deny_list: "加入不允许访问",
         visitor_net_ip: "访问者实际网络IP",
         visitor_port: "访问者端口",
+        balance_info: "负载均衡信息",
         request_region: "请求地区",
         response_code: "响应编码",
         more_info:"更多信息",

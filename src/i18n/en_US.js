@@ -371,6 +371,7 @@ export default {
         add_to_deny_list: "Add to Block List",
         visitor_net_ip: "Visitor Net IP",
         visitor_port: "Visitor Port",
+        balance_info: "Load Balancing Info",
         request_region: "Request Region",
         response_code: "Response Code",
         more_info:"More Information",

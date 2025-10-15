@@ -645,7 +645,7 @@ export default Vue.extend({
             that.formData= {
               ...detail_data_tmp
             }
-            that.formData.code = uuidv4()
+            that.$set(that.formData, 'code', uuidv4());
           }
         })
         .catch((e: Error) => {
@@ -668,9 +668,9 @@ export default Vue.extend({
       this.getDetail(code)
     },
     handleAddHost() {
-      this.addFormVisible = true
-      this.formData.code = uuidv4()
+      this.$set(this.formData, 'code', uuidv4());
       console.log("新增主机code信息", this.formData.code)
+      this.addFormVisible = true
     },
     onSubmit(data ): void {
       console.log(data)
@@ -683,7 +683,7 @@ export default Vue.extend({
           if (resdata.code === 0) {
             that.$message.success(resdata.msg);
 
-            
+
             console.log("submit host data",data)
             if(data.result.ssl_config_mode === "auto_apply"){
                that.loadHostList().then(() => {
@@ -742,6 +742,7 @@ export default Vue.extend({
         rce: "1",
         sensitive: "1",
         traversal: "1",
+        owaspset: "0"
       }
       this.healthyConfigData = {
         ...INITIAL_HEALTHY
@@ -761,6 +762,7 @@ export default Vue.extend({
         rce: "1",
         sensitive: "1",
         traversal: "1",
+        owaspset:"0"
       }
       this.healthyConfigData = {
         ...INITIAL_HEALTHY
@@ -794,7 +796,7 @@ export default Vue.extend({
           this.currentHostCode = code
           console.log("code,global_host",code,global_host)
       });
-      
+
     },
     onConfirmDelete() {
       this.confirmVisible = false;
