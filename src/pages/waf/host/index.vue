@@ -7,6 +7,7 @@
           <t-button variant="base" theme="default" @click="HandleExportExcel()"> {{ $t('page.host.export_data') }}</t-button>
           <t-button variant="base" theme="default" @click="HandleImportExcel()"> {{ $t('page.host.import_data') }}</t-button>
           <t-button variant="base" theme="warning" @click="handleModifyAllGuardStatus()"> {{ $t('page.host.modify_all_guard_status') }}</t-button>
+          <t-button variant="base" theme="primary" @click="handleBatchCopyConfig()"> {{ $t('page.host.batch_copy_config') }}</t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" colon   layout="inline" :style="{ marginBottom: '8px' }">
@@ -152,6 +153,139 @@
       </div>
     </t-dialog>
 
+    <!-- 批量复制配置弹窗 -->
+    <t-dialog 
+      :header="$t('page.host.batch_copy.title')" 
+      :visible.sync="batchCopyVisible" 
+      :confirm-btn="{ content: $t('page.host.batch_copy.execute_copy'), loading: batchCopyLoading }"
+      :cancel-btn="{ content: $t('common.cancel') }"
+      @confirm="executeBatchCopy"
+      @cancel="cancelBatchCopy"
+      width="600px"
+    >
+      <div slot="body">
+        <!-- 源站点选择 -->
+        <div class="batch-copy-section">
+          <label class="batch-copy-label">{{ $t('page.host.batch_copy.source_host') }}：</label>
+          <t-select 
+            v-model="batchCopyForm.sourceHost" 
+            :placeholder="$t('page.host.batch_copy.select_source_host')"
+            style="width: 100%;"
+          >
+            <t-option 
+              v-for="(hostLabel, hostCode) in host_dic" 
+              :key="hostCode" 
+              :value="hostCode" 
+              :label="hostLabel"
+              v-if="hostLabel !== '全局网站:0'"
+            >
+              {{ hostLabel }}
+            </t-option>
+          </t-select>
+        </div>
+
+        <!-- 功能模块选择 -->
+        <div class="batch-copy-section">
+          <label class="batch-copy-label">{{ $t('page.host.batch_copy.copy_modules') }}：</label>
+          <div class="module-checkboxes">
+            <t-checkbox 
+              v-for="module in availableModules" 
+              :key="module.value"
+              :checked="batchCopyForm.modules.includes(module.value)"
+              @change="(checked) => handleModuleChange(module.value, checked)"
+              class="module-checkbox"
+            >
+              {{ module.label }}
+            </t-checkbox>
+          </div>
+        </div>
+
+        <!-- 目标站点选择 -->
+        <div class="batch-copy-section">
+          <label class="batch-copy-label">{{ $t('page.host.batch_copy.target_hosts') }}：</label>
+          <div class="target-hosts-container">
+            <div class="select-all-container">
+              <t-checkbox 
+                :checked="isAllTargetsSelected"
+                :indeterminate="batchCopyForm.targetHosts.length > 0 && !isAllTargetsSelected"
+                @change="toggleSelectAllTargets"
+              >
+                {{ $t('page.host.batch_copy.select_all') }}
+              </t-checkbox>
+            </div>
+            <div class="target-hosts-list">
+              <t-checkbox 
+                v-for="host in availableTargetHosts" 
+                :key="host.code"
+                :checked="batchCopyForm.targetHosts.includes(host.code)"
+                @change="(checked) => handleTargetHostChange(host.code, checked)"
+                class="target-host-checkbox"
+              >
+                {{ host.host }}
+              </t-checkbox>
+            </div>
+          </div>
+        </div>
+
+        <!-- 选择统计 -->
+        <div class="batch-copy-summary">
+          <t-tag theme="primary" variant="light">
+            {{ $t('page.host.batch_copy.selected_modules', { count: batchCopyForm.modules.length }) }}
+          </t-tag>
+          <t-tag theme="success" variant="light" style="margin-left: 8px;">
+            {{ $t('page.host.batch_copy.selected_targets', { count: batchCopyForm.targetHosts.length }) }}
+          </t-tag>
+        </div>
+      </div>
+    </t-dialog>
+
+    <!-- 批量复制进度弹窗 -->
+    <t-dialog 
+      :header="$t('page.host.batch_copy.progress_title')" 
+      :visible.sync="batchCopyProgress.visible"
+      :show-overlay="true"
+      :close-on-overlay-click="false"
+      :close-btn="false"
+      width="500px"
+    >
+      <div slot="body">
+        <div class="progress-container">
+          <!-- 进度条 -->
+          <t-progress 
+            :percentage="Math.round((batchCopyProgress.current / batchCopyProgress.total) * 100)"
+            :status="batchCopyProgress.status === 'error' ? 'warning' : 'active'"
+            :show-info="true"
+            style="margin-bottom: 16px;"
+          />
+          
+          <!-- 进度信息 -->
+          <div class="progress-info">
+            <div class="progress-text">
+              <span v-if="batchCopyProgress.status === 'processing'">
+                {{ $t('page.host.batch_copy.copying_to') }} {{ batchCopyProgress.currentHost }}
+              </span>
+              <span v-else-if="batchCopyProgress.status === 'success'" class="success-text">
+                {{ $t('page.host.batch_copy.copy_completed') }}
+              </span>
+              <span v-else-if="batchCopyProgress.status === 'error'" class="error-text">
+                {{ $t('page.host.batch_copy.copy_error') }}
+              </span>
+            </div>
+            <div class="progress-count">
+              {{ batchCopyProgress.current }} / {{ batchCopyProgress.total }}
+            </div>
+          </div>
+          
+          <!-- 完成后的操作按钮 -->
+          <div v-if="batchCopyProgress.status !== 'processing'" class="progress-actions">
+            <t-button theme="primary" @click="closeBatchCopyProgress">
+              {{ $t('common.close') }}
+            </t-button>
+          </div>
+        </div>
+      </div>
+    </t-dialog>
+
   </div>
 </template>
 <script lang="ts">
@@ -161,7 +295,7 @@ import {FileSafetyIcon, LinkIcon, SearchIcon} from 'tdesign-icons-vue';
 import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
-import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost,modifyAllGuardStatus} from '@/apis/host';
+import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost,modifyAllGuardStatus,batchCopyConfig} from '@/apis/host';
 
 import SslOrderList from "@/pages/waf/sslorder/index.vue";
 import { v4 as uuidv4 } from 'uuid';
@@ -192,6 +326,26 @@ export default Vue.extend({
   },
   data() {
     return {
+      // 批量复制配置相关数据
+      batchCopyVisible: false,
+      batchCopyLoading: false,
+      batchCopyProgress: {
+        visible: false,
+        current: 0,
+        total: 0,
+        currentHost: '',
+        status: 'processing' // processing, success, error
+      },
+      batchCopyHosts: [],
+      batchCopyForm: {
+        sourceHost: '',
+        modules: ['cache'], // 默认选中缓存模块
+        targetHosts: []
+      },
+      // 可选的功能模块
+      availableModules: [
+        { value: 'cache', label: this.$t('page.host.batch_copy.module_cache') }
+      ],
       uploadParams:{
         import_code_strategy: '0',//编码导入策略 0 新增自动生成 1 保留原有
         import_table:"hosts",//导入到哪个表
@@ -477,6 +631,31 @@ export default Vue.extend({
     offsetTop() {
       return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
     },
+    /**
+     * 可用的目标主机列表（排除源主机）
+     */
+    availableTargetHosts() {
+      // 从host_dic获取所有可用站点，转换为数组格式
+      const allHosts = Object.keys(this.host_dic).map(code => ({
+        code: code,
+        host: this.host_dic[code]
+      }));
+      
+      // 过滤掉全局网站（通过host名称判断）
+      const nonGlobalHosts = allHosts.filter(host => host.host !== '全局网站:0');
+      
+      // 只有在选择了源主机时才排除，否则显示所有非全局主机
+      if (this.batchCopyForm.sourceHost) {
+        return nonGlobalHosts.filter(host => host.code !== this.batchCopyForm.sourceHost);
+      }
+      return nonGlobalHosts;
+    },
+    /**
+     * 是否全选了所有目标站点
+     */
+    isAllTargetsSelected() {
+      return this.batchCopyForm.targetHosts.length === this.availableTargetHosts.length && this.availableTargetHosts.length > 0;
+    }
   },
   mounted() {
     this.loadHostList().then(() => {
@@ -753,7 +932,9 @@ export default Vue.extend({
     },
     onClickCloseEditBtn(): void {
       this.editFormVisible = false;
-      this.formEditData = {};
+      this.formEditData = {
+        code: ''
+      };
       this.hostDefenseData = {
         bot: "1",
         sqli: "1",
@@ -1067,8 +1248,183 @@ export default Vue.extend({
       }
       this.getList("")
     },
-    //end method
-  },
+    /**
+     * 处理目标站点选择变化
+     */
+    handleTargetHostChange(hostCode, checked) {
+      if (checked) {
+        if (!this.batchCopyForm.targetHosts.includes(hostCode)) {
+          this.batchCopyForm.targetHosts.push(hostCode);
+        }
+      } else {
+        const index = this.batchCopyForm.targetHosts.indexOf(hostCode);
+        if (index > -1) {
+          this.batchCopyForm.targetHosts.splice(index, 1);
+        }
+      }
+    },
+    /**
+     * 处理模块选择变化
+     */
+    handleModuleChange(moduleValue, checked) {
+      if (checked) {
+        if (!this.batchCopyForm.modules.includes(moduleValue)) {
+          this.batchCopyForm.modules.push(moduleValue);
+        }
+      } else {
+        const index = this.batchCopyForm.modules.indexOf(moduleValue);
+        if (index > -1) {
+          this.batchCopyForm.modules.splice(index, 1);
+        }
+      }
+    },
+    /**
+     * 批量复制配置
+     */
+    handleBatchCopyConfig() {
+      this.batchCopyVisible = true;
+      this.loadHostsForBatchCopy();
+    },
+    /**
+     * 加载用于批量复制的主机列表
+     */
+    loadHostsForBatchCopy() {
+      // 直接使用已经加载的host_dic数据，无需重新获取
+      // host_dic在mounted时已经通过loadHostList()加载
+    },
+    /**
+     * 执行批量复制配置
+     */
+    executeBatchCopy() {
+      if (!this.batchCopyForm.sourceHost) {
+        this.$message.warning(this.$t('page.host.batch_copy.select_source_host'));
+        return;
+      }
+      if (this.batchCopyForm.modules.length === 0) {
+        this.$message.warning(this.$t('page.host.batch_copy.select_modules'));
+        return;
+      }
+      if (this.batchCopyForm.targetHosts.length === 0) {
+        this.$message.warning(this.$t('page.host.batch_copy.select_target_hosts'));
+        return;
+      }
+
+      this.batchCopyLoading = true;
+      this.batchCopyProgress.visible = true;
+      this.batchCopyProgress.current = 0;
+      this.batchCopyProgress.total = this.batchCopyForm.targetHosts.length;
+      this.batchCopyProgress.status = 'processing';
+      
+      // 执行批量复制
+      this.performBatchCopy();
+    },
+    /**
+     * 执行批量复制操作
+     */
+    async performBatchCopy() {
+      const copyData = {
+        sourceHost: this.batchCopyForm.sourceHost,
+        modules: this.batchCopyForm.modules,
+        targetHosts: this.batchCopyForm.targetHosts
+      };
+      
+      console.log('执行批量复制:', copyData);
+      
+      try {
+        // 逐个处理目标站点
+        for (let i = 0; i < copyData.targetHosts.length; i++) {
+          const targetHost = copyData.targetHosts[i];
+          this.batchCopyProgress.currentHost = this.getHostDisplayName(targetHost);
+          
+          // 调用实际的API进行单个主机配置复制
+          await this.copyConfigToHost(copyData.sourceHost, targetHost, copyData.modules);
+          
+          this.batchCopyProgress.current = i + 1;
+          
+          // 添加短暂延迟以显示进度效果
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        this.batchCopyProgress.status = 'success';
+        this.$message.success(this.$t('page.host.batch_copy.copy_success'));
+        
+        // 2秒后关闭进度弹窗
+        setTimeout(() => {
+          this.closeBatchCopyProgress();
+        }, 2000);
+        
+      } catch (error) {
+        this.batchCopyProgress.status = 'error';
+        this.$message.error(this.$t('page.host.batch_copy.copy_failed'));
+        console.error('批量复制失败:', error);
+      } finally {
+        this.batchCopyLoading = false;
+      }
+    },
+    /**
+     * 复制配置到指定主机
+     */
+    async copyConfigToHost(sourceHost, targetHost, modules) {
+      // 一次性复制所有模块到目标主机
+      const requestData = {
+        source_host_code: sourceHost,
+        target_host_code: targetHost, // 单个目标主机
+        modules: modules              // 多个模块
+      };
+      
+      try {
+        const response = await batchCopyConfig(requestData);
+        if (response.code !== 0) {
+          throw new Error(response.msg || '复制失败');
+        }
+      } catch (error) {
+        throw error;
+      }
+    },
+    /**
+     * 获取主机显示名称
+     */
+    getHostDisplayName(hostCode) { 
+      const hostName = this.host_dic[hostCode] || "无"; 
+      return hostName;
+    },
+    /**
+     * 关闭批量复制进度弹窗
+     */
+    closeBatchCopyProgress() {
+      this.batchCopyProgress.visible = false;
+      this.batchCopyVisible = false;
+      this.resetBatchCopyForm();
+    }, 
+    /**
+     * 重置批量复制表单
+     */
+    resetBatchCopyForm() {
+      this.batchCopyForm = {
+        sourceHost: '',
+        modules: ['cache'], // 重置时也要默认选中缓存模块
+        targetHosts: []
+      };
+    },
+    /**
+     * 取消批量复制
+     */
+    cancelBatchCopy() {
+      this.batchCopyVisible = false;
+      this.resetBatchCopyForm();
+    },
+    /**
+     * 全选/取消全选目标站点
+     */
+    toggleSelectAllTargets() {
+      if (this.batchCopyForm.targetHosts.length === this.availableTargetHosts.length) {
+        this.batchCopyForm.targetHosts = [];
+      } else {
+        this.batchCopyForm.targetHosts = [...this.availableTargetHosts.map(host => host.code)];
+      }
+    },
+    //end method 
+  }
 });
 </script>
 
@@ -1104,5 +1460,91 @@ export default Vue.extend({
 
 .t-button + .t-button {
   margin-left: @spacer;
+}
+
+/* 批量复制配置弹窗样式 */
+.batch-copy-section {
+  margin-bottom: 20px;
+}
+
+.batch-copy-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--td-text-color-primary);
+}
+
+.module-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.module-checkbox {
+  margin: 0;
+}
+
+.target-hosts-container {
+  border: 1px solid var(--td-border-level-1-color);
+  border-radius: 6px;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.select-all-container {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--td-border-level-1-color);
+}
+
+.target-hosts-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.target-host-checkbox {
+  margin: 0;
+}
+
+.batch-copy-summary {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--td-border-level-1-color);
+}
+
+/* 批量复制进度弹窗样式 */
+.progress-container {
+  text-align: center;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: var(--td-text-color-primary);
+}
+
+.success-text {
+  color: var(--td-success-color);
+}
+
+.error-text {
+  color: var(--td-error-color);
+}
+
+.progress-count {
+  font-size: 12px;
+  color: var(--td-text-color-secondary);
+}
+
+.progress-actions {
+  margin-top: 16px;
 }
 </style>

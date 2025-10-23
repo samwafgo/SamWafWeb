@@ -86,3 +86,12 @@ export function modifyAllGuardStatus(data) {
     data: data
   })
 }
+
+//批量复制配置
+export function batchCopyConfig(data) {
+  return request({
+    url: 'wafhost/host/batchcopyconfig',
+    method: 'post',
+    data: data
+  })
+}
