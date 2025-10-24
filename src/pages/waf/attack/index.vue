@@ -698,7 +698,7 @@ export default Vue.extend({
           filter_value: that.filters.filter_value,
           unix_add_time_begin: ConvertStringToUnix(this.dateControl.range1[0]).toString(),
           unix_add_time_end: ConvertStringToUnix(this.dateControl.range1[1]).toString(),
-          ...that.searchformData
+          ...that.getFilteredSearchData()
         },
         )
         .then((res) => {
@@ -886,6 +886,20 @@ export default Vue.extend({
       this.dateControl.range1[1] = NowDate + " 23:59:59"
       this.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
       this.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
+    },
+
+    // 获取过滤后的搜索数据
+    getFilteredSearchData() {
+      const filteredData = {};
+      Object.keys(this.searchformData).forEach(key => {
+        const value = this.searchformData[key];
+        if (typeof value === 'string') {
+          filteredData[key] = value.trim();
+        } else {
+          filteredData[key] = value;
+        }
+      });
+      return filteredData;
     },
     //end meathod
   },
