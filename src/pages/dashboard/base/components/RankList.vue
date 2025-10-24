@@ -17,6 +17,11 @@
           <template #iptags="{ row }">
             <t-tag  v-for="(item, index) in row.ip_tags" :theme="item.ip_tag === '正常' ? 'success' : 'danger'" variant="light" style="margin: 3px">{{ item.ip_tag }}</t-tag>
           </template>
+          <template #operation="{ row }">
+            <t-button v-if="row.ip" size="small" variant="text" @click="handleIpClick(row.ip)">
+              🔍
+            </t-button>
+          </template>
          <!-- <span slot="growUp" slot-scope="{ row }">
             <trend :type="row.growUp > 0 ? 'up' : 'down'" :describe="Math.abs(row.growUp)" />
           </span> -->
@@ -42,6 +47,11 @@
           </template>
           <template #iptags="{ row }">
             <t-tag  v-for="(item, index) in row.ip_tags" :theme="item.ip_tag === '正常' ? 'success' : 'danger'" variant="light" style="margin: 3px">{{ item.ip_tag }}</t-tag>
+          </template>
+           <template #operation="{ row }">
+            <t-button v-if="row.ip" size="small" variant="text" @click="handleIpClick(row.ip)">
+              🔍
+            </t-button>
           </template>
         <!--  <span slot="growUp" slot-scope="{ row }">
             <trend :type="row.growUp > 0 ? 'up' : 'down'" :describe="Math.abs(row.growUp)" />
@@ -101,6 +111,12 @@ export default {
           colKey: 'count',
           title: this.$t('dashboard.ip_rank.counter'),
           width: 100,
+        },
+        {
+          align: 'center',
+          colKey: 'operation',
+          title: '操作',
+          width: 60,
         }
       ],
       normalColumns: [
@@ -136,6 +152,12 @@ export default {
           colKey: 'count',
           title: this.$t('dashboard.ip_rank.counter'),
           width: 100,
+        },
+        {
+          align: 'center',
+          colKey: 'operation',
+          title: '操作',
+          width: 60,
         }
       ],
       rangeType:"day",//时间类型 日 周
@@ -198,6 +220,17 @@ export default {
       this.rangeType = val
       this.setRangeValue()
       this.loadTopIp()
+    },
+    handleIpClick(ip) {
+      console.log('点击IP:', ip);
+      if (ip && ip.trim() !== '') {
+        this.$router.push({
+          name: 'WafvisitLog',
+          query: {
+            src_ip: ip
+          }
+        });
+      }
     }
   },
 };

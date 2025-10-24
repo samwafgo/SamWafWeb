@@ -511,6 +511,11 @@ export default Vue.extend({
       console.log(this.$route.query.action)
       this.searchformData.action = this.$route.query.action
     }
+    // 处理从其他页面传来的IP参数
+    if (this.$route.query.src_ip != null) {
+      console.log('从路由获取src_ip:', this.$route.query.src_ip)
+      this.searchformData.src_ip = this.$route.query.src_ip
+    }
     // 判断 vuex 中是否有保存的搜索参数
 
     if (this.$store.state.attacklog.msgData) {
@@ -536,6 +541,13 @@ export default Vue.extend({
       console.log('action changed', newVal, oldVal)
       this.searchformData.action = newVal
       this.getList("")
+    },
+    '$route.query.src_ip'(newVal, oldVal) {
+      console.log('src_ip changed', newVal, oldVal)
+      if (newVal) {
+        this.searchformData.src_ip = newVal
+        this.getList("")
+      }
     },
     attack_ip(newVal) {
       if (newVal !== "") {
