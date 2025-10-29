@@ -151,13 +151,28 @@ export default {
       ip_belong:"IP Belong",
       day:"Today",
       week:"Week",
+    },
+    stats: {
+      current_qps: "Current QPS",
+      log_qps: "Log QPS",
+      main_queue: "Main Queue", 
+      log_queue: "Log Queue",
+      stats_queue: "Stats Queue",
+      message_queue: "Message Queue",
+      qps_trend: "QPS Trend",
+      queue_trend: "Queue Size Trend",
+      realtime_log: "Real-time Message Log",
+      qps_label: "QPS",
+      log_qps_label: "Log QPS",
+      queue_label: "Queue"
     }
   },
   menu:{
     dashboard: {
-      parent_title: "Dashboard",
-      dashboard_title: "Overview Dashboard",
-    },
+    parent_title: "Dashboard",
+    dashboard_title: "Overview Dashboard",
+    stats_title: "System Statistics Monitor", 
+  },
     host:{
       parent_title: "Website Protection",
       host_title: "Website Protection",

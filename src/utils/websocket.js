@@ -21,29 +21,38 @@ function useWebSocket(
   isReconnect
 ) {
   let isConnected = false; // 设定已链接webSocket标记
-  // websocket对象
   let ws = null;
+  let heartbeatTimer = null;
+
   // 创建并链接webSocket
   let connect = () => {
-    // 如果未链接webSocket，则创建一个新的webSocket
     if (!isConnected) {
-      ws = new WebSocket(url,[token]);
+      ws = new WebSocket(url, [token]);
       isConnected = true;
     }
   };
-  // 向后台发送心跳消息
-  let heartCheck = () => {
-    // for (let i = 0; i < heartMessage.length; i++) {
-    //   ws.send(JSON.stringify(heartMessage[i]))
-    // }
+
+  // 向后台发送心跳消息（简单 ping）
+  let startHeartbeat = () => {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(() => {
+      if (ws && ws.readyState === 1) {
+        try { ws.send('ping'); } catch (_) {}
+      }
+    }, !timer ? 30000 : timer); // 默认 30s
   };
+
+  let stopHeartbeat = () => {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  };
+
   // 初始化事件回调函数
   let initEventHandle = () => {
     ws.addEventListener('open', (e) => {
       console.log('onopen', e);
       // 给后台发心跳请求，在onmessage中取得消息则说明链接正常
-      //heartCheck()
-      // 如果传入了函数，执行onOpenFunc
+      startHeartbeat();
       if (!onOpenFunc) {
         return false;
       } else {
@@ -56,17 +65,7 @@ function useWebSocket(
       if (!e) {
         console.log('get nothing from service');
         return false;
-      } else {
-        // 如果获取到后台消息，则timer毫秒后再次发起心跳请求给后台，检测是否断连
-        setTimeout(
-          () => {
-            if (isConnected) {
-              heartCheck();
-            }
-          },
-          !timer ? 3000 : timer
-        );
-      }
+      } 
       // 如果传入了函数，执行onMessageFunc
       if (!onMessageFunc) {
         return false;
@@ -76,41 +75,34 @@ function useWebSocket(
     });
     ws.addEventListener('close', (e) => {
       console.log('onclose', e);
-      // 如果传入了函数，执行onCloseFunc
+      isConnected = false; // 复位连接标志
+      stopHeartbeat();     // 停止心跳
       if (!onCloseFunc) {
         return false;
       } else {
         onCloseFunc(e);
       }
-      // if (isReconnect) { // 如果断开立即重连标志为true
-      //   // 重新链接webSocket
-      //   connect()
-      // }
     });
     ws.addEventListener('error', (e) => {
       console.log('onerror', e);
-      // 如果传入了函数，执行onErrorFunc
+      isConnected = false; // 复位连接标志
+      stopHeartbeat();     // 停止心跳
       if (!onErrorFunc) {
         return false;
       } else {
         onErrorFunc(e);
       }
       if (isReconnect) {
-        // 如果断开立即重连标志为true
-        // 重新链接webSocket
         connect();
+        initEventHandle(); // 新连接需要重新绑定事件
       }
     });
   };
+
   // 初始化webSocket
-  // (() => {
-  // 1.创建并链接webSocket
   connect();
-  // 2.初始化事件回调函数
   initEventHandle();
-  // 3.返回是否已连接
   return ws;
-  // })()
 }
 
 export default {

@@ -29,6 +29,7 @@ export default Vue.extend({
     this.$store.dispatch('setting/changeTheme', { ...config });
   },
   created() {
+    console.log("App Created")
     this.initWebSocket();
   },
   methods:{
@@ -36,17 +37,20 @@ export default Vue.extend({
         console.log("log",window.location.host)
         if(!this.ws) {
         	// url
-          let url = env=="development"? "ws://127.0.0.1:26666/samwaf/ws" : "ws://"+window.location.host+"/samwaf/ws"
+          const isHttps = window.location.protocol === 'https:';
+          let url = env=="development"
+              ? "ws://127.0.0.1:26666/samwaf/ws"
+              : `${isHttps ? 'wss' : 'ws'}://${window.location.host}/samwaf/ws`;
           this.ws = websocket.useWebSocket(
-            url,	// url
-            localStorage.getItem("access_token"),
-            this.wsOnOpen, // 链接回调
-            this.wsOnMessage,	// 连接成功后处理接口返回信息
-            this.wsOnClose, // 关闭回调
-            this.wsOnError, // 消息通知错误回调
-            [], // 发送后台的心跳包参数
-            null, // 给后台传送心跳包的间隔时间
-            true, // 是否断掉立即重连
+              url,	// url
+              localStorage.getItem("access_token"),
+              this.wsOnOpen, // 链接回调
+              this.wsOnMessage,	// 连接成功后处理接口返回信息
+              this.wsOnClose, // 关闭回调
+              this.wsOnError, // 消息通知错误回调
+              [], // 发送后台的心跳包参数
+              30000, // 心跳间隔：30秒（可按需调整）
+              false // 关闭工具内部重连，统一由 App.vue 控制
           );
         }
 
@@ -56,11 +60,15 @@ export default Vue.extend({
       },
       wsOnError(e) {
         console.log(e,'消息通知错误回调，重新连接')
-        this.ws.close();
+        // 不再主动关闭，避免额外触发 onclose
         this.ws = null;
         this.initWebSocket();
       },
       wsOnMessage(e) {
+        if(e.data=="pong"){
+          console.log('收到心跳包回复')
+          return 
+        }
         let wsData = JSON.parse(e.data)
         if(wsData.msg_code=="200"){
           console.log('接口返回信息',wsData)
@@ -73,7 +81,7 @@ export default Vue.extend({
           let msgData = JSON.parse(tmpSrcContent)
           console.log('msgData',msgData)
           wsData.msg_data = msgData
-          if(wsData.msg_cmd_type=="RELOAD_PAGE"){
+          if(wsData.msg_cmd_type==="RELOAD_PAGE"){
             if(this.mydialog){
               this.mydialog.hide()
               this.mydialog =null
@@ -90,16 +98,23 @@ export default Vue.extend({
                     },
                   });
               return
-          }else if(wsData.msg_cmd_type=="DOWNLOAD_LOG"){
+          }else if(wsData.msg_cmd_type==="DOWNLOAD_LOG"){
             let token  =localStorage.getItem("access_token")? localStorage.getItem("access_token"):""
             //下载连接
             let downloadUrl = env=="development"? "http://127.0.0.1:26666/samwaf/waflog/attack/download" : "http://"+window.location.host+"/samwaf/waflog/attack/download"
             downloadUrl = downloadUrl +"?X-Token="+token
             console.log(downloadUrl)
             window.open(downloadUrl)
+          }else if(wsData.msg_cmd_type==="SystemStats"){
+             console.log("相关统计信息赋值",wsData.msg_data.message_attach)
+             // 将统计信息传递给stats store
+             if (wsData.msg_data.message_attach) {
+               this.$store.commit('stats/addStatsData', wsData.msg_data.message_attach);
+             }
+             return
           }
           this.$store.commit('notification/addMsgData', wsData.msg_data);
-        }else if(wsData.msg_code=="-999"){
+        }else if(wsData.msg_code==="-999"){
           // 保存当前访问的URL
           saveCurrentUrl();
           clearLocalStorageExceptPreserved();

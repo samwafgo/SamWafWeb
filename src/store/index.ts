@@ -8,6 +8,7 @@ import setting from './modules/setting';
 import permission from './modules/permission';
 import tabRouter from './modules/tab-router'; // 多标签管理
 import language from './modules/language';
+import stats from './modules/stats'; // 系统统计监控模块
 Vue.use(Vuex);
 
 const store = new Vuex.Store({
@@ -21,6 +22,7 @@ const store = new Vuex.Store({
     permission,
     tabRouter,
     language,
+    stats, 
   },
 });
 

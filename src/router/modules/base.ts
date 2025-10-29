@@ -18,6 +18,12 @@ export default [
         component: () => import('@/pages/dashboard/base/index.vue'),
         meta: { title: 'menu.dashboard.dashboard_title'},
       },
+      {
+        path: 'stats',
+        name: 'DashboardStats',
+        component: () => import('@/pages/dashboard/stats/index.vue'),
+        meta: { title: 'menu.dashboard.stats_title'},
+      },
     ],
   },
 ];

@@ -151,13 +151,28 @@ export default {
       ip_belong:"归属地",
       day:"今日",
       week:"本周",
+    },
+    stats: { 
+      current_qps: "当前QPS",
+      log_qps: "日志QPS", 
+      main_queue: "主队列",
+      log_queue: "日志队列",
+      stats_queue: "统计队列",
+      message_queue: "消息队列",
+      qps_trend: "QPS趋势",
+      queue_trend: "队列大小趋势",
+      realtime_log: "实时消息日志",
+      qps_label: "QPS",
+      log_qps_label: "日志QPS",
+      queue_label: "队列"
     }
   },
   menu:{
     dashboard: {
-      parent_title:"仪表盘",
-      dashboard_title:"概览仪表盘",
-    },
+    parent_title:"仪表盘",
+    dashboard_title:"概览仪表盘",
+    stats_title: "系统统计监控",
+  },
     host:{
       parent_title:"网站防护",
       host_title:"网站防护",
