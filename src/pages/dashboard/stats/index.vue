@@ -35,7 +35,23 @@
               </div>
             </t-card>
           </t-col>
-          <t-col :span="2">
+          <t-col :span="1">
+            <t-card size="small" :bordered="true">
+              <div class="stat-item">
+                <div class="stat-value">{{ (currentStats.cpu_percent || 0).toFixed(1) }}%</div>
+                <div class="stat-label">{{ $t('dashboard.stats.cpu_usage') }}</div>
+              </div>
+            </t-card>
+          </t-col>
+          <t-col :span="1">
+            <t-card size="small" :bordered="true">
+              <div class="stat-item">
+                <div class="stat-value">{{ (currentStats.memory_percent || 0).toFixed(1) }}%</div>
+                <div class="stat-label">{{ $t('dashboard.stats.memory_usage') }}</div>
+              </div>
+            </t-card>
+          </t-col>
+          <t-col :span="1">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ averageResponseTime }}ms</div>
@@ -61,6 +77,11 @@
           <t-col :span="12">
             <t-card :title="$t('dashboard.stats.response_time_trend')" size="small" :bordered="true">
               <div ref="responseTimeChart" style="height: 300px;"></div>
+            </t-card>
+          </t-col>
+          <t-col :span="12">
+            <t-card :title="$t('dashboard.stats.system_resource_trend')" size="small" :bordered="true">
+              <div ref="systemResourceChart" style="height: 300px;"></div>
             </t-card>
           </t-col>
         </t-row>
@@ -107,6 +128,7 @@ export default {
       qpsChart: null,
       queueChart: null,
       responseTimeChart: null,
+      systemResourceChart: null,
       qpsData: {
         times: [],
         qps: [],
@@ -280,6 +302,11 @@ export default {
         successCount: 0,
         errorCount: 0
       },
+      systemResourceData: {
+        times: [],
+        cpu_percent: [],
+        memory_percent: []
+      },
       recentMessages: [],
       maxDataPoints: 50, // 最多保留50个数据点
       maxMessages: 100, // 最多保留100条消息
@@ -295,7 +322,9 @@ export default {
         main_queue: 0,
         log_queue: 0,
         stats_queue: 0,
-        message_queue: 0
+        message_queue: 0,
+        cpu_percent: 0,
+        memory_percent: 0
       };
     },
     statsHistory() {
@@ -338,7 +367,7 @@ export default {
     this.$store.watch(
       (state) => state.setting.brandTheme,
       () => {
-        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart]);
+        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart, this.systemResourceChart]);
       }
     );
     
@@ -383,7 +412,26 @@ export default {
         this.initQpsChart();
         this.initQueueChart();
         this.initResponseTimeChart();
-        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart]);
+        this.initSystemResourceChart();
+        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart, this.systemResourceChart]);
+      });
+    },
+    
+    updateSystemResourceChart() {
+      if (!this.systemResourceChart) return;
+      
+      this.systemResourceChart.setOption({
+        xAxis: {
+          data: this.systemResourceData.times
+        },
+        series: [
+          {
+            data: this.systemResourceData.cpu_percent
+          },
+          {
+            data: this.systemResourceData.memory_percent
+          }
+        ]
       });
     },
     
@@ -507,6 +555,95 @@ export default {
       this.queueChart.setOption(option);
     },
     
+    initSystemResourceChart() {
+      this.systemResourceChart = echarts.init(this.$refs.systemResourceChart);
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          },
+          formatter: function(params) {
+            let result = params[0].name + '<br/>';
+            params.forEach(function(item) {
+              result += item.marker + item.seriesName + ': ' + item.value + '%<br/>';
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: [this.$t('dashboard.stats.cpu_usage'), this.$t('dashboard.stats.memory_usage')]
+        },
+        grid: {
+          left: '10%',
+          right: '10%',
+          bottom: '15%',
+          top: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.systemResourceData.times
+        },
+        yAxis: {
+          type: 'value',
+          name: '%',
+          min: 0,
+          max: 100
+        },
+        series: [
+          {
+            name: this.$t('dashboard.stats.cpu_usage'),
+            type: 'line',
+            data: this.systemResourceData.cpu_percent,
+            smooth: true,
+            itemStyle: {
+              color: '#ff7875'
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0, color: 'rgba(255, 120, 117, 0.3)'
+                }, {
+                  offset: 1, color: 'rgba(255, 120, 117, 0.1)'
+                }]
+              }
+            }
+          },
+          {
+            name: this.$t('dashboard.stats.memory_usage'),
+            type: 'line',
+            data: this.systemResourceData.memory_percent,
+            smooth: true,
+            itemStyle: {
+              color: '#73d13d'
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0, color: 'rgba(115, 209, 61, 0.3)'
+                }, {
+                  offset: 1, color: 'rgba(115, 209, 61, 0.1)'
+                }]
+              }
+            }
+          }
+        ]
+      };
+      this.systemResourceChart.setOption(option);
+    },
+    
     handleStatsMessage(statsData) {
       // currentStats现在从store中获取，不需要手动更新
       
@@ -531,6 +668,11 @@ export default {
       this.queueData.stats_queue.push(statsData.stats_queue || 0);
       this.queueData.message_queue.push(statsData.message_queue || 0);
       
+      // 更新系统资源数据
+      this.systemResourceData.times.push(timeStr);
+      this.systemResourceData.cpu_percent.push(statsData.cpu_percent || 0);
+      this.systemResourceData.memory_percent.push(statsData.memory_percent || 0);
+      
       // 限制数据点数量
       if (this.qpsData.times.length > this.maxDataPoints) {
         this.qpsData.times.shift();
@@ -542,6 +684,10 @@ export default {
         this.queueData.log_queue.shift();
         this.queueData.stats_queue.shift();
         this.queueData.message_queue.shift();
+        
+        this.systemResourceData.times.shift();
+        this.systemResourceData.cpu_percent.shift();
+        this.systemResourceData.memory_percent.shift();
       }
       
       // 更新图表
@@ -593,6 +739,7 @@ export default {
     updateCharts() {
       this.updateQpsChart();
       this.updateQueueChart();
+      this.updateSystemResourceChart();
     },
     
     formatTime(timestamp) {
@@ -639,7 +786,8 @@ export default {
 
 .charts-container [ref="qpsChart"],
 .charts-container [ref="queueChart"],
-.charts-container [ref="responseTimeChart"] {
+.charts-container [ref="responseTimeChart"],
+.charts-container [ref="systemResourceChart"] {
   width: 100% !important;
   height: 300px !important;
 }

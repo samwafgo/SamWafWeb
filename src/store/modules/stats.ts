@@ -7,6 +7,8 @@ export interface StatsDataItem {
   log_queue: number;
   stats_queue: number;
   message_queue: number;
+  cpu_percent: number;
+  memory_percent: number;
   timestamp: number;
 }
 
