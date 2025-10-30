@@ -1,6 +1,15 @@
 <template>
   <div class="stats-dashboard">
-    <t-card :title="$t('menu.dashboard.stats_title')" :bordered="false">
+    <t-card :bordered="false">
+      <template #header>
+        <div class="card-header">
+          <div class="title">{{ $t('menu.dashboard.stats_title') }}</div>
+          <div class="subtitle">
+            {{ $t('dashboard.stats.update_frequency') }} | 
+            {{ $t('dashboard.stats.last_update') }}: {{ lastUpdateTime }}
+          </div>
+        </div>
+      </template>
       <div class="stats-header">
         <t-row :gutter="16">
           <t-col :span="2">
@@ -89,6 +98,16 @@
 
       <div class="message-log">
         <t-card :title="$t('dashboard.stats.realtime_log')" size="small" :bordered="true">
+          <template #actions>
+            <t-button 
+              theme="default" 
+              size="small" 
+              @click="clearMessages"
+              :disabled="recentMessages.length === 0"
+            >
+              {{ $t('dashboard.stats.clear_log') }}
+            </t-button>
+          </template>
           <div class="log-container">
             <div 
               v-for="(message, index) in recentMessages" 
@@ -101,7 +120,9 @@
               <span class="log-data">
                 {{ $t('dashboard.stats.qps_label') }}: {{ message.qps }}, 
                 {{ $t('dashboard.stats.log_qps_label') }}: {{ message.log_qps }}, 
-                {{ $t('dashboard.stats.queue_label') }}: {{ message.main_queue }}/{{ message.log_queue }}/{{ message.stats_queue }}/{{ message.message_queue }}
+                {{ $t('dashboard.stats.queue_label') }}: {{ message.main_queue }}/{{ message.log_queue }}/{{ message.stats_queue }}/{{ message.message_queue }},
+                {{ $t('dashboard.stats.cpu_usage') }}: {{ message.cpu_percent }}%, 
+                {{ $t('dashboard.stats.memory_usage') }}: {{ message.memory_percent }}%
               </span>
             </div>
           </div>
@@ -311,7 +332,8 @@ export default {
       maxDataPoints: 50, // 最多保留50个数据点
       maxMessages: 100, // 最多保留100条消息
       heartbeatInterval: null, // 心跳定时器
-      heartbeatIntervalTime: 10000 // 心跳间隔10秒
+      heartbeatIntervalTime: 10000, // 心跳间隔10秒
+      lastUpdateTime: '--' // 最新数据更新时间
     };
   },
   computed: {
@@ -344,6 +366,8 @@ export default {
         if (newHistory && newHistory.length > 0) {
           const latestStats = newHistory[newHistory.length - 1];
           this.handleStatsMessage(latestStats);
+          // 更新最新数据时间
+          this.lastUpdateTime = this.formatTime(Date.now());
         }
       },
       deep: true,
@@ -355,6 +379,8 @@ export default {
         if (newHistory && newHistory.length > 0) {
           const latestResponseTime = newHistory[newHistory.length - 1];
           this.handleResponseTimeData(latestResponseTime);
+          // 更新最新数据时间
+          this.lastUpdateTime = this.formatTime(Date.now());
         }
       },
       deep: true,
@@ -745,6 +771,10 @@ export default {
     formatTime(timestamp) {
       const date = new Date(timestamp);
       return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+    },
+    
+    clearMessages() {
+      this.recentMessages = [];
     }
   } 
 };
@@ -753,6 +783,24 @@ export default {
 <style scoped>
 .stats-dashboard {
   padding: 20px;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-header .title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--td-text-color-primary);
+}
+
+.card-header .subtitle {
+  font-size: 12px;
+  color: var(--td-text-color-secondary);
+  font-weight: normal;
 }
 
 .stats-header {
