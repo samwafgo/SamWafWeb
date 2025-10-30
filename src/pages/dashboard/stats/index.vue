@@ -167,6 +167,11 @@
           </div>
         </t-card>
       </div>
+
+      <!-- 系统监控组件 -->
+      <div class="system-monitor-section" style="margin-top: 16px;">
+        <SystemMonitor />
+      </div>
     </t-card>
   </div>
 </template>
@@ -179,10 +184,14 @@ import * as echarts from 'echarts/core';
 import { changeChartsTheme } from '@/utils/color';
 
 import {heartbeat_api} from '@/apis/common';
+import SystemMonitor from '@/pages/waf/monitor/index.vue';
 echarts.use([GridComponent, TooltipComponent, LegendComponent, TitleComponent, LineChart, CanvasRenderer]);
 
 export default {
   name: 'DashboardStats',
+  components: {
+    SystemMonitor
+  },
   data() {
     return {
       qpsChart: null,

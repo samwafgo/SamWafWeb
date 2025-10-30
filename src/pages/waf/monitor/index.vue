@@ -7,11 +7,11 @@
             <template #icon><refresh-icon /></template>
             {{ $t('page.monitor.refresh_data') }}
           </t-button>
-          <t-switch 
-            v-model="autoRefresh" 
+<!--          <t-switch
+            v-model="autoRefresh"
             :label="[$t('page.monitor.auto_refresh')]"
             @change="handleAutoRefreshChange"
-          />
+          />-->
         </t-space>
       </template>
     </t-card>
@@ -50,8 +50,8 @@
             </div>
             <div class="usage-item">
               <span class="label">{{ $t('page.monitor.cpu_usage') }}:</span>
-              <t-progress 
-                :percentage="systemInfo.cpu.usage_percent || 0" 
+              <t-progress
+                :percentage="systemInfo.cpu.usage_percent || 0"
                 :color="getUsageColor(systemInfo.cpu.usage_percent)"
                 :label="true"
                 style="margin-top: 8px;"
@@ -89,8 +89,8 @@
             </div>
             <div class="usage-item">
               <span class="label">{{ $t('page.monitor.memory_usage') }}:</span>
-              <t-progress 
-                :percentage="systemInfo.memory.usage_percent || 0" 
+              <t-progress
+                :percentage="systemInfo.memory.usage_percent || 0"
                 :color="getUsageColor(systemInfo.memory.usage_percent)"
                 :label="true"
                 style="margin-top: 8px;"
@@ -102,8 +102,8 @@
             </div>
             <div class="usage-item">
               <span class="label">{{ $t('page.monitor.jvm_usage') }}:</span>
-              <t-progress 
-                :percentage="systemInfo.memory.jvm_percent || 0" 
+              <t-progress
+                :percentage="systemInfo.memory.jvm_percent || 0"
                 :color="getUsageColor(systemInfo.memory.jvm_percent)"
                 :label="true"
                 style="margin-top: 8px;"
@@ -145,6 +145,7 @@
 import Vue from 'vue';
 import { RefreshIcon } from 'tdesign-icons-vue';
 import { getSystemMonitorApi } from '@/apis/monitor';
+import { mapGetters, mapMutations } from 'vuex';
 
 export default Vue.extend({
   name: 'SystemMonitor',
@@ -157,25 +158,6 @@ export default Vue.extend({
       error: false,
       autoRefresh: false,
       refreshTimer: null,
-      // 系统信息数据
-      systemInfo: {
-        cpu: {
-          model_name: '',
-          cores: 0,
-          usage_percent: 0,
-          physical_cnt: 0,
-          logical_cnt: 0
-        },
-        memory: {
-          total: '',
-          available: '',
-          used: '',
-          usage_percent: 0,
-          jvm_used: '',
-          jvm_percent: 0
-        },
-        disk: []
-      },
       // 磁盘表格列配置
       diskColumns: [
         {
@@ -226,6 +208,29 @@ export default Vue.extend({
       ]
     };
   },
+  computed: {
+    ...mapGetters('stats', ['getCurrentSystemMonitor']),
+    systemInfo() {
+      return this.getCurrentSystemMonitor || {
+        cpu: {
+          model_name: '',
+          cores: 0,
+          usage_percent: 0,
+          physical_cnt: 0,
+          logical_cnt: 0
+        },
+        memory: {
+          total: '',
+          available: '',
+          used: '',
+          usage_percent: 0,
+          jvm_used: '',
+          jvm_percent: 0
+        },
+        disk: []
+      };
+    }
+  },
   mounted() {
     this.fetchSystemInfo();
   },
@@ -235,6 +240,8 @@ export default Vue.extend({
     }
   },
   methods: {
+    ...mapMutations('stats', ['setSystemMonitor']),
+
     // 获取系统监控数据
     fetchSystemInfo() {
       let that = this;
@@ -245,7 +252,8 @@ export default Vue.extend({
           let resdata = res;
           console.log(resdata);
           if (resdata.code === 0) {
-            that.systemInfo = resdata.data;
+            // 将数据存储到Vuex store
+            that.setSystemMonitor(resdata.data);
           } else {
             that.error = true;
             that.$message.error(resdata.msg || '获取系统监控数据失败');
@@ -334,7 +342,7 @@ export default Vue.extend({
     flex-direction: column;
     align-items: normal; /* 小屏幕上取消拉伸 */
   }
-  
+
   .info-card-wrapper {
     min-width: auto;
   }

@@ -173,7 +173,7 @@ export default [
         name: 'Tunnel',
         component: () => import('@/pages/waf/tunnel/index.vue'),
         meta: { title: 'menu.tunnel.list_title' },
-      },  
+      },
     ],
   },
   {
@@ -216,7 +216,7 @@ export default [
         name: 'VpConfig',
         component: () => import('@/pages/waf/vpconfig/index.vue'),
         meta: {
-          title: 'menu.system.vpconfig_title', 
+          title: 'menu.system.vpconfig_title',
         }
       },
       {
@@ -224,7 +224,7 @@ export default [
         name: 'FileManage',
         component: () => import('@/pages/waf/filemanage/index.vue'),
         meta: {
-          title: 'menu.system.filemanage_title', 
+          title: 'menu.system.filemanage_title',
         }
       },
       {
@@ -261,12 +261,6 @@ export default [
         component: () => import('@/pages/waf/task/index.vue'),
         meta: { title: 'menu.system.task' },
       },
-      {
-        path: 'monitor',
-        name: 'Monitor',
-        component: () => import('@/pages/waf/monitor/index.vue'),
-        meta: { title: 'menu.system.monitor_title' },
-      }
     ],
   },
 

@@ -10,11 +10,11 @@
       <div class="system-monitor-panel">
         <div class="monitor-header">
           <p>{{ $t('topNav.system_monitor')  }}</p>
-          <t-button 
-            v-if="!loading" 
-            class="refresh-btn" 
-            variant="text" 
-            theme="primary" 
+          <t-button
+            v-if="!loading"
+            class="refresh-btn"
+            variant="text"
+            theme="primary"
             @click="refreshData"
             :loading="loading"
           >
@@ -22,9 +22,9 @@
             {{ $t('common.refresh')}}
           </t-button>
         </div>
-        
+
         <!-- 监控内容区域 - 始终显示，加载时显示加载状态 -->
-        <div class="monitor-content" :class="{ 'loading-state': loading }"> 
+        <div class="monitor-content" :class="{ 'loading-state': loading }">
           <!-- 错误状态 -->
           <div v-if="error && !loading" class="monitor-error">
             <span>{{ $t('topNav.load_failed')  }}</span>
@@ -32,43 +32,43 @@
               {{ $t('topNav.retry') }}
             </t-button>
           </div>
-          
+
           <!-- 监控数据内容 - 始终显示 -->
           <div class="monitor-data" :class="{ 'data-loading': loading }">
             <!-- CPU信息 -->
             <div class="monitor-item">
               <div class="item-header">
                 <span class="item-label">CPU</span>
-                <span class="item-value" :style="{ color: getUsageColor(getCpuUsage()) }">{{ getCpuUsage() }}%</span>
+                <span class="item-value" :style="{ color: getUsageColor(getCpuUsageLocal()) }">{{ getCpuUsageLocal() }}%</span>
               </div>
-              <t-progress 
-                :percentage="getCpuUsage()" 
-                :color="getUsageColor(getCpuUsage())"
+              <t-progress
+                :percentage="getCpuUsageLocal()"
+                :color="getUsageColor(getCpuUsageLocal())"
                 size="small"
                 :show-text="false"
               />
             </div>
-            
+
             <!-- 内存信息 -->
             <div class="monitor-item">
               <div class="item-header">
                 <span class="item-label">{{ $t('topNav.memory') }}</span>
-                <span class="item-value" :style="{ color: getUsageColor(getMemoryUsage()) }">{{ getMemoryUsage() }}%</span>
+                <span class="item-value" :style="{ color: getUsageColor(getMemoryUsageLocal()) }">{{ getMemoryUsageLocal() }}%</span>
               </div>
-              <t-progress 
-                :percentage="getMemoryUsage()" 
-                :color="getUsageColor(getMemoryUsage())"
+              <t-progress
+                :percentage="getMemoryUsageLocal()"
+                :color="getUsageColor(getMemoryUsageLocal())"
                 size="small"
                 :show-text="false"
               />
             </div>
-            
+
             <!-- 磁盘信息 -->
-            <div class="disk-section" v-if="getDiskList().length > 0">
+            <div class="disk-section" v-if="getDiskListLocal().length > 0">
               <div class="section-title">{{ $t('topNav.disk') }}</div>
               <div class="disk-list">
-                <div 
-                  v-for="disk in getDiskList()" 
+                <div
+                  v-for="disk in getDiskListLocal()"
                   :key="disk.mount_point || disk.file_system"
                   class="disk-item"
                 >
@@ -76,8 +76,8 @@
                     <span class="item-label">{{ disk.mount_point || disk.file_system }}</span>
                     <span class="item-value" :style="{ color: getUsageColor(getDiskUsage(disk)) }">{{ getDiskUsage(disk) }}%</span>
                   </div>
-                  <t-progress 
-                    :percentage="getDiskUsage(disk)" 
+                  <t-progress
+                    :percentage="getDiskUsage(disk)"
                     :color="getUsageColor(getDiskUsage(disk))"
                     size="small"
                     :show-text="false"
@@ -87,9 +87,9 @@
             </div>
           </div>
         </div>
-        
+
         <div class="monitor-footer">
-          <t-button 
+          <t-button
             class="detail-btn"
             variant="text"
             theme="primary"
@@ -100,26 +100,26 @@
         </div>
       </div>
     </template>
-    
+
     <!-- 触发器 - 直观显示系统状态 -->
     <div class="system-monitor-trigger" @click="isMonitorVisible = true">
       <div class="monitor-display">
         <div class="monitor-item-inline">
           <span class="label">CPU</span>
-          <span class="value" :style="{ color: getUsageColor(getCpuUsage()) }">
-            {{ getCpuUsage() }}%
+          <span class="value" :style="{ color: getUsageColor(getCpuUsageLocal()) }">
+            {{ getCpuUsageLocal() }}%
           </span>
         </div>
         <div class="monitor-item-inline">
           <span class="label">{{ $t('topNav.memory') }}</span>
-          <span class="value" :style="{ color: getUsageColor(getMemoryUsage()) }">
-            {{ getMemoryUsage() }}%
+          <span class="value" :style="{ color: getUsageColor(getMemoryUsageLocal()) }">
+            {{ getMemoryUsageLocal() }}%
           </span>
         </div>
-        <div class="monitor-item-inline" v-if="getAverageDiskUsage() > 0">
+        <div class="monitor-item-inline" v-if="getAverageDiskUsageLocal() > 0">
   <span class="label">{{ $t('topNav.disk') }}</span>
-  <span class="value" :style="{ color: getUsageColor(getAverageDiskUsage()) }">
-    {{ getAverageDiskUsage() }}%
+  <span class="value" :style="{ color: getUsageColor(getAverageDiskUsageLocal()) }">
+    {{ getAverageDiskUsageLocal() }}%
   </span>
 </div>
       </div>
@@ -132,6 +132,7 @@
 import Vue from 'vue';
 import { RefreshIcon, DashboardIcon } from 'tdesign-icons-vue';
 import { getSystemMonitorApi } from '@/apis/monitor';
+import { mapGetters, mapMutations } from 'vuex';
 
 export default Vue.extend({
   name: 'SystemMonitor',
@@ -145,23 +146,30 @@ export default Vue.extend({
       error: false,
       refreshTimer: null,
       isMonitorVisible: false,
-      systemInfo: {
-        cpu: {
-          usage_percent: 0
-        },
-        memory: {
-          usage_percent: 0
-        },
-        disk: []
-      }
     };
   },
+  computed: {
+    ...mapGetters('stats', [
+      'getCurrentSystemMonitor',
+      'getCpuUsage',
+      'getMemoryUsage',
+      'getDiskList',
+      'getAverageDiskUsage'
+    ]),
+    systemInfo() {
+      return this.getCurrentSystemMonitor || {
+        cpu: { usage_percent: 0 },
+        memory: { usage_percent: 0 },
+        disk: []
+      };
+    }
+  },
   mounted() {
-    this.fetchSystemInfo();
+    /*this.fetchSystemInfo();
     // 每10秒自动刷新一次
     this.refreshTimer = setInterval(() => {
       this.fetchSystemInfo();
-    }, 10*1000);
+    }, 10*1000);*/
   },
   beforeDestroy() {
     if (this.refreshTimer) {
@@ -169,6 +177,8 @@ export default Vue.extend({
     }
   },
   methods: {
+    ...mapMutations('stats', ['setSystemMonitor']),
+
     onPopupVisibleChange(visible: boolean, context) {
       if (context.trigger === 'trigger-element-click') {
         this.isMonitorVisible = true;
@@ -186,8 +196,9 @@ export default Vue.extend({
         .then((res) => {
           console.log('SystemMonitor API Response:', res);
           if (res.code === 0) {
-            that.systemInfo = res.data;
-            console.log('SystemMonitor Data:', that.systemInfo);
+            // 将数据存储到Vuex store
+            that.setSystemMonitor(res.data);
+            console.log('SystemMonitor Data stored to Vuex:', res.data);
           } else {
             that.error = true;
             console.error('SystemMonitor API Error:', res.msg);
@@ -203,27 +214,18 @@ export default Vue.extend({
     },
 
     // 获取CPU使用率
-    getCpuUsage() {
-      if (this.systemInfo && this.systemInfo.cpu) {
-        return Math.round(this.systemInfo.cpu.usage_percent || 0);
-      }
-      return 0;
+    getCpuUsageLocal() {
+      return Math.round(this.getCpuUsage);
     },
 
     // 获取内存使用率
-    getMemoryUsage() {
-      if (this.systemInfo && this.systemInfo.memory) {
-        return Math.round(this.systemInfo.memory.usage_percent || 0);
-      }
-      return 0;
+    getMemoryUsageLocal() {
+      return Math.round(this.getMemoryUsage);
     },
 
     // 获取磁盘列表
-    getDiskList() {
-      if (this.systemInfo && this.systemInfo.disk && Array.isArray(this.systemInfo.disk)) {
-        return this.systemInfo.disk;
-      }
-      return [];
+    getDiskListLocal() {
+      return this.getDiskList;
     },
 
     // 获取磁盘使用率
@@ -238,7 +240,7 @@ export default Vue.extend({
 
     // 跳转到监控页面
     goToMonitorPage() {
-      this.$router.push('/sys/monitor');
+      this.$router.push('/dashboard/stats');
       this.isMonitorVisible = false; // 关闭弹窗
     },
 
@@ -251,16 +253,13 @@ export default Vue.extend({
     },
 
     // 获取平均磁盘使用率
-    getAverageDiskUsage() {
-      const diskList = this.getDiskList();
-      if (diskList.length === 0) return 0;
-      const totalUsage = diskList.reduce((sum, disk) => sum + this.getDiskUsage(disk), 0);
-      return Math.round(totalUsage / diskList.length);
+    getAverageDiskUsageLocal() {
+      return Math.round(this.getAverageDiskUsage);
     },
 
     // 获取整体状态类
     getOverallStatusClass() {
-      const maxUsage = Math.max(this.getCpuUsage(), this.getMemoryUsage(), this.getAverageDiskUsage());
+      const maxUsage = Math.max(this.getCpuUsageLocal(), this.getMemoryUsageLocal(), this.getAverageDiskUsageLocal());
       if (maxUsage >= 90) return 'overall-critical';
       if (maxUsage >= 70) return 'overall-warning';
       if (maxUsage >= 50) return 'overall-caution';
@@ -500,15 +499,15 @@ export default Vue.extend({
   .system-monitor-trigger {
     min-width: 120px;
   }
-  
+
   .monitor-display {
     gap: 8px;
   }
-  
+
   .monitor-item-inline .label {
     font-size: 10px;
   }
-  
+
   .monitor-item-inline .value {
     font-size: 11px;
     min-width: 24px;
