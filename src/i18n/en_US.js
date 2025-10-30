@@ -164,7 +164,12 @@ export default {
       realtime_log: "Real-time Message Log",
       qps_label: "QPS",
       log_qps_label: "Log QPS",
-      queue_label: "Queue"
+      queue_label: "Queue",
+      response_time_trend: "Response Time Trend",
+      avg_response_time: "Average Response Time",
+      response_time_label: "Response Time(ms)",
+      response_status_success: "Success",
+      response_status_error: "Error"
     }
   },
   menu:{

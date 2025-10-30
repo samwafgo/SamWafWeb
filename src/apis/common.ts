@@ -11,3 +11,11 @@ export function export_api(params) {
     params: params
   })
 } 
+//心跳数据
+export function heartbeat_api() {
+  return request({
+    url: 'heartbeat',
+    method: 'get',
+    timeout: 10000
+  })
+}

@@ -3,7 +3,7 @@
     <t-card :title="$t('menu.dashboard.stats_title')" :bordered="false">
       <div class="stats-header">
         <t-row :gutter="16">
-          <t-col :span="3">
+          <t-col :span="2">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ currentStats.qps || 0 }}</div>
@@ -11,7 +11,7 @@
               </div>
             </t-card>
           </t-col>
-          <t-col :span="3">
+          <t-col :span="2">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ currentStats.log_qps || 0 }}</div>
@@ -19,7 +19,7 @@
               </div>
             </t-card>
           </t-col>
-          <t-col :span="3">
+          <t-col :span="2">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ currentStats.main_queue || 0 }}</div>
@@ -27,11 +27,19 @@
               </div>
             </t-card>
           </t-col>
-          <t-col :span="3">
+          <t-col :span="2">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ currentStats.log_queue || 0 }}</div>
                 <div class="stat-label">{{ $t('dashboard.stats.log_queue') }}</div>
+              </div>
+            </t-card>
+          </t-col>
+          <t-col :span="2">
+            <t-card size="small" :bordered="true">
+              <div class="stat-item">
+                <div class="stat-value">{{ averageResponseTime }}ms</div>
+                <div class="stat-label">{{ $t('dashboard.stats.avg_response_time') }}</div>
               </div>
             </t-card>
           </t-col>
@@ -48,6 +56,11 @@
           <t-col :span="12">
             <t-card :title="$t('dashboard.stats.queue_trend')" size="small" :bordered="true">
               <div ref="queueChart" style="height: 300px;"></div>
+            </t-card>
+          </t-col>
+          <t-col :span="12">
+            <t-card :title="$t('dashboard.stats.response_time_trend')" size="small" :bordered="true">
+              <div ref="responseTimeChart" style="height: 300px;"></div>
             </t-card>
           </t-col>
         </t-row>
@@ -84,6 +97,7 @@ import { CanvasRenderer } from 'echarts/renderers';
 import * as echarts from 'echarts/core';
 import { changeChartsTheme } from '@/utils/color';
 
+import {heartbeat_api} from '@/apis/common';
 echarts.use([GridComponent, TooltipComponent, LegendComponent, TitleComponent, LineChart, CanvasRenderer]);
 
 export default {
@@ -92,11 +106,167 @@ export default {
     return {
       qpsChart: null,
       queueChart: null,
+      responseTimeChart: null,
       qpsData: {
         times: [],
         qps: [],
         log_qps: []
       },
+    
+    handleResponseTimeData(responseTimeItem) {
+      // 更新响应时间图表数据
+      const timeStr = this.formatTime(responseTimeItem.timestamp);
+      
+      this.responseTimeData.times.push(timeStr);
+      this.responseTimeData.responseTimes.push(responseTimeItem.responseTime);
+      
+      // 统计成功失败次数
+      if (responseTimeItem.status === 'success') {
+        this.responseTimeData.successCount++;
+      } else {
+        this.responseTimeData.errorCount++;
+      }
+      
+      // 限制数据点数量
+      if (this.responseTimeData.times.length > this.maxDataPoints) {
+        this.responseTimeData.times.shift();
+        this.responseTimeData.responseTimes.shift();
+      }
+      
+      // 更新响应时间图表
+      this.updateResponseTimeChart();
+    },
+    
+    updateResponseTimeChart() {
+      if (this.responseTimeChart) {
+        this.responseTimeChart.setOption({
+          xAxis: {
+            data: this.responseTimeData.times
+          },
+          series: [
+            {
+              data: this.responseTimeData.responseTimes
+            }
+          ]
+        });
+      }
+    },
+    
+    startHeartbeatMonitoring() {
+      // 启动定时心跳监控
+      this.heartbeatInterval = setInterval(() => {
+        this.sendHeartbeat();
+      }, this.heartbeatIntervalTime);
+    },
+    
+    stopHeartbeatMonitoring() {
+      // 停止心跳监控
+      if (this.heartbeatInterval) {
+        clearInterval(this.heartbeatInterval);
+        this.heartbeatInterval = null;
+      }
+    },
+    
+    async sendHeartbeat() {
+      const startTime = Date.now();
+      try {
+        // 使用导入的heartbeat_api函数发送心跳请求
+        const response = await heartbeat_api();
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        // 记录响应时间数据
+        const responseTimeData = {
+          timestamp: endTime,
+          responseTime: responseTime,
+          status: response.code === 200 ? 'success' : 'error'
+        };
+        
+        // 存储到store
+        this.$store.commit('stats/addResponseTimeData', responseTimeData);
+        
+      } catch (error) {
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        // 记录错误响应时间
+        const responseTimeData = {
+          timestamp: endTime,
+          responseTime: responseTime,
+          status: 'error'
+        };
+        
+        // 存储到store
+        this.$store.commit('stats/addResponseTimeData', responseTimeData);
+        
+        console.error('心跳请求失败:', error);
+      }
+    },
+    
+    initResponseTimeChart() {
+      this.responseTimeChart = echarts.init(this.$refs.responseTimeChart);
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          },
+          formatter: function(params) {
+            let result = params[0].name + '<br/>';
+            params.forEach(function(item) {
+              result += item.marker + item.seriesName + ': ' + item.value + 'ms<br/>';
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: [this.$t('dashboard.stats.response_time_label')]
+        },
+        grid: {
+          left: '10%',
+          right: '10%',
+          bottom: '15%',
+          top: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.responseTimeData.times
+        },
+        yAxis: {
+          type: 'value',
+          name: 'ms',
+          min: 0
+        },
+        series: [
+          {
+            name: this.$t('dashboard.stats.response_time_label'),
+            type: 'line',
+            data: this.responseTimeData.responseTimes,
+            smooth: true,
+            itemStyle: {
+              color: '#ff7875'
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0, color: 'rgba(255, 120, 117, 0.3)'
+                }, {
+                  offset: 1, color: 'rgba(255, 120, 117, 0.1)'
+                }]
+              }
+            }
+          }
+        ]
+      };
+      this.responseTimeChart.setOption(option);
+    },
       queueData: {
         times: [],
         main_queue: [],
@@ -104,9 +274,17 @@ export default {
         stats_queue: [],
         message_queue: []
       },
+      responseTimeData: {
+        times: [],
+        responseTimes: [],
+        successCount: 0,
+        errorCount: 0
+      },
       recentMessages: [],
       maxDataPoints: 50, // 最多保留50个数据点
-      maxMessages: 100 // 最多保留100条消息
+      maxMessages: 100, // 最多保留100条消息
+      heartbeatInterval: null, // 心跳定时器
+      heartbeatIntervalTime: 10000 // 心跳间隔10秒
     };
   },
   computed: {
@@ -122,6 +300,12 @@ export default {
     },
     statsHistory() {
       return this.$store.getters['stats/getStatsHistory'] || [];
+    },
+    responseTimeHistory() {
+      return this.$store.getters['stats/getResponseTimeHistory'] || [];
+    },
+    averageResponseTime() {
+      return this.$store.getters['stats/getAverageResponseTime'] || 0;
     }
   },
   watch: {
@@ -135,15 +319,26 @@ export default {
       },
       deep: true,
       immediate: true
+    },
+    responseTimeHistory: {
+      handler(newHistory) {
+        // 监听响应时间历史数据变化
+        if (newHistory && newHistory.length > 0) {
+          const latestResponseTime = newHistory[newHistory.length - 1];
+          this.handleResponseTimeData(latestResponseTime);
+        }
+      },
+      deep: true,
+      immediate: true
     }
-  },
+  }, 
   mounted() {
     this.initCharts();
     // 监听主题变化
     this.$store.watch(
       (state) => state.setting.brandTheme,
       () => {
-        changeChartsTheme([this.qpsChart, this.queueChart]);
+        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart]);
       }
     );
     
@@ -155,8 +350,14 @@ export default {
       if (this.queueChart) {
         this.queueChart.resize();
       }
+      if (this.responseTimeChart) {
+        this.responseTimeChart.resize();
+      }
     };
     window.addEventListener('resize', this.resizeHandler);
+    
+    // 启动心跳监控
+    this.startHeartbeatMonitoring();
   },
   beforeDestroy() {
     if (this.qpsChart) {
@@ -165,10 +366,15 @@ export default {
     if (this.queueChart) {
       this.queueChart.dispose();
     }
+    if (this.responseTimeChart) {
+      this.responseTimeChart.dispose();
+    }
     // 移除窗口大小变化监听器
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
     }
+    // 停止心跳监控
+    this.stopHeartbeatMonitoring();
   },
   methods: {
     initCharts() {
@@ -176,7 +382,8 @@ export default {
       this.$nextTick(() => {
         this.initQpsChart();
         this.initQueueChart();
-        changeChartsTheme([this.qpsChart, this.queueChart]);
+        this.initResponseTimeChart();
+        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart]);
       });
     },
     
@@ -341,51 +548,58 @@ export default {
       this.updateCharts();
     },
     
-    updateCharts() {
-      if (this.qpsChart) {
-        this.qpsChart.setOption({
-          xAxis: {
-            data: this.qpsData.times
-          },
-          series: [
-            {
-              data: this.qpsData.qps
-            },
-            {
-              data: this.qpsData.log_qps
-            }
-          ]
-        });
-      }
+    updateQpsChart() {
+      if (!this.qpsChart) return;
       
-      if (this.queueChart) {
-        this.queueChart.setOption({
-          xAxis: {
-            data: this.queueData.times
+      this.qpsChart.setOption({
+        xAxis: {
+          data: this.qpsData.times
+        },
+        series: [
+          {
+            data: this.qpsData.qps
           },
-          series: [
-            {
-              data: this.queueData.main_queue
-            },
-            {
-              data: this.queueData.log_queue
-            },
-            {
-              data: this.queueData.stats_queue
-            },
-            {
-              data: this.queueData.message_queue
-            }
-          ]
-        });
-      }
+          {
+            data: this.qpsData.log_qps
+          }
+        ]
+      });
+    },
+    
+    updateQueueChart() {
+      if (!this.queueChart) return;
+      
+      this.queueChart.setOption({
+        xAxis: {
+          data: this.queueData.times
+        },
+        series: [
+          {
+            data: this.queueData.main_queue
+          },
+          {
+            data: this.queueData.log_queue
+          },
+          {
+            data: this.queueData.stats_queue
+          },
+          {
+            data: this.queueData.message_queue
+          }
+        ]
+      });
+    },
+    
+    updateCharts() {
+      this.updateQpsChart();
+      this.updateQueueChart();
     },
     
     formatTime(timestamp) {
       const date = new Date(timestamp);
       return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
     }
-  }
+  } 
 };
 </script>
 
@@ -424,7 +638,8 @@ export default {
 }
 
 .charts-container [ref="qpsChart"],
-.charts-container [ref="queueChart"] {
+.charts-container [ref="queueChart"],
+.charts-container [ref="responseTimeChart"] {
   width: 100% !important;
   height: 300px !important;
 }

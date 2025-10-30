@@ -164,7 +164,12 @@ export default {
       realtime_log: "实时消息日志",
       qps_label: "QPS",
       log_qps_label: "日志QPS",
-      queue_label: "队列"
+      queue_label: "队列",
+      response_time_trend: "响应时间趋势",
+      avg_response_time: "平均响应时间",
+      response_time_label: "响应时间(ms)",
+      response_status_success: "成功",
+      response_status_error: "失败"
     }
   },
   menu:{
