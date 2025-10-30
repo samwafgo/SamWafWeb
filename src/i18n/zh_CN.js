@@ -161,11 +161,17 @@ export default {
       message_queue: "消息队列",
       cpu_usage: "CPU使用率",
       memory_usage: "内存使用率",
+      network_recv_rate: "网络接收速率",
+      network_sent_rate: "网络发送速率",
       system_resource_trend: "系统资源趋势",
       qps_trend: "QPS趋势",
       queue_trend: "队列大小趋势",
       realtime_log: "实时消息日志",
       clear_log: "清空日志",
+      export_csv: "导出CSV",
+      time: "时间",
+      server: "服务器",
+      operation: "操作类型",
       update_frequency: "每10秒更新",
       last_update: "最新数据",
       qps_label: "QPS",
@@ -175,7 +181,8 @@ export default {
       avg_response_time: "平均响应时间",
       response_time_label: "响应时间(ms)",
       response_status_success: "成功",
-      response_status_error: "失败"
+      response_status_error: "失败",
+      network_traffic_trend: "网络流量趋势"
     }
   },
   menu:{

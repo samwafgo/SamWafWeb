@@ -9,6 +9,8 @@ export interface StatsDataItem {
   message_queue: number;
   cpu_percent: number;
   memory_percent: number;
+  network_recv_rate: number;  // 网络接收速率(字节/秒)
+  network_sent_rate: number;  // 网络发送速率(字节/秒)
   timestamp: number;
 }
 

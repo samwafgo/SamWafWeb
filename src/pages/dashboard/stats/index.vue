@@ -43,8 +43,13 @@
                 <div class="stat-label">{{ $t('dashboard.stats.log_queue') }}</div>
               </div>
             </t-card>
-          </t-col>
-          <t-col :span="1">
+          </t-col> 
+        </t-row>
+      </div>
+
+       <div class="stats-header">
+        <t-row :gutter="16"> 
+          <t-col :span="2">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ (currentStats.cpu_percent || 0).toFixed(1) }}%</div>
@@ -52,7 +57,7 @@
               </div>
             </t-card>
           </t-col>
-          <t-col :span="1">
+          <t-col :span="2">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ (currentStats.memory_percent || 0).toFixed(1) }}%</div>
@@ -60,11 +65,27 @@
               </div>
             </t-card>
           </t-col>
-          <t-col :span="1">
+          <t-col :span="2">
             <t-card size="small" :bordered="true">
               <div class="stat-item">
                 <div class="stat-value">{{ averageResponseTime }}ms</div>
                 <div class="stat-label">{{ $t('dashboard.stats.avg_response_time') }}</div>
+              </div>
+            </t-card>
+          </t-col>
+          <t-col :span="2">
+            <t-card size="small" :bordered="true">
+              <div class="stat-item">
+                <div class="stat-value">{{ networkRecvRateFormatted }}</div>
+                <div class="stat-label">{{ $t('dashboard.stats.network_recv_rate') }}</div>
+              </div>
+            </t-card>
+          </t-col>
+          <t-col :span="2">
+            <t-card size="small" :bordered="true">
+              <div class="stat-item">
+                <div class="stat-value">{{ networkSentRateFormatted }}</div>
+                <div class="stat-label">{{ $t('dashboard.stats.network_sent_rate') }}</div>
               </div>
             </t-card>
           </t-col>
@@ -93,12 +114,26 @@
               <div ref="systemResourceChart" style="height: 300px;"></div>
             </t-card>
           </t-col>
+          <t-col :span="12">
+            <t-card :title="$t('dashboard.stats.network_traffic_trend')" size="small" :bordered="true">
+              <div ref="networkTrafficChart" style="height: 300px;"></div>
+            </t-card>
+          </t-col>
         </t-row>
       </div>
 
       <div class="message-log">
         <t-card :title="$t('dashboard.stats.realtime_log')" size="small" :bordered="true">
           <template #actions>
+            <t-button 
+              theme="primary" 
+              size="small" 
+              @click="exportToCSV"
+              :disabled="recentMessages.length === 0"
+              style="margin-right: 8px;"
+            >
+              {{ $t('dashboard.stats.export_csv') }}
+            </t-button>
             <t-button 
               theme="default" 
               size="small" 
@@ -114,15 +149,19 @@
               :key="index" 
               class="log-item"
             >
-              <span class="log-time">{{ formatTime(message.timestamp) }}</span>
-              <span class="log-server">{{ message.server }}</span>
+              <span class="log-time">{{ formatTime(message.timestamp) }}</span> 
               <span class="log-operation">{{ message.operatype }}</span>
               <span class="log-data">
                 {{ $t('dashboard.stats.qps_label') }}: {{ message.qps }}, 
                 {{ $t('dashboard.stats.log_qps_label') }}: {{ message.log_qps }}, 
-                {{ $t('dashboard.stats.queue_label') }}: {{ message.main_queue }}/{{ message.log_queue }}/{{ message.stats_queue }}/{{ message.message_queue }},
+                {{ $t('dashboard.stats.main_queue') }}: {{ message.main_queue }}, 
+                {{ $t('dashboard.stats.log_queue') }}: {{ message.log_queue }}, 
+                {{ $t('dashboard.stats.stats_queue') }}: {{ message.stats_queue }}, 
+                {{ $t('dashboard.stats.message_queue') }}: {{ message.message_queue }},
                 {{ $t('dashboard.stats.cpu_usage') }}: {{ message.cpu_percent }}%, 
-                {{ $t('dashboard.stats.memory_usage') }}: {{ message.memory_percent }}%
+                {{ $t('dashboard.stats.memory_usage') }}: {{ message.memory_percent }}%,
+                {{ $t('dashboard.stats.network_recv_rate') }}: {{ formatBytes(message.network_recv_rate || 0) }},
+                {{ $t('dashboard.stats.network_sent_rate') }}: {{ formatBytes(message.network_sent_rate || 0) }}
               </span>
             </div>
           </div>
@@ -150,6 +189,7 @@ export default {
       queueChart: null,
       responseTimeChart: null,
       systemResourceChart: null,
+      networkTrafficChart: null,
       qpsData: {
         times: [],
         qps: [],
@@ -328,6 +368,11 @@ export default {
         cpu_percent: [],
         memory_percent: []
       },
+      networkTrafficData: {
+        times: [],
+        recv_rate: [],
+        sent_rate: []
+      },
       recentMessages: [],
       maxDataPoints: 50, // 最多保留50个数据点
       maxMessages: 100, // 最多保留100条消息
@@ -346,7 +391,9 @@ export default {
         stats_queue: 0,
         message_queue: 0,
         cpu_percent: 0,
-        memory_percent: 0
+        memory_percent: 0,
+        network_recv_rate: 0,
+        network_sent_rate: 0
       };
     },
     statsHistory() {
@@ -357,6 +404,12 @@ export default {
     },
     averageResponseTime() {
       return this.$store.getters['stats/getAverageResponseTime'] || 0;
+    },
+    networkRecvRateFormatted() {
+      return this.formatBytes(this.currentStats.network_recv_rate || 0);
+    },
+    networkSentRateFormatted() {
+      return this.formatBytes(this.currentStats.network_sent_rate || 0);
     }
   },
   watch: {
@@ -408,6 +461,12 @@ export default {
       if (this.responseTimeChart) {
         this.responseTimeChart.resize();
       }
+      if (this.systemResourceChart) {
+        this.systemResourceChart.resize();
+      }
+      if (this.networkTrafficChart) {
+        this.networkTrafficChart.resize();
+      }
     };
     window.addEventListener('resize', this.resizeHandler);
     
@@ -424,6 +483,12 @@ export default {
     if (this.responseTimeChart) {
       this.responseTimeChart.dispose();
     }
+    if (this.systemResourceChart) {
+      this.systemResourceChart.dispose();
+    }
+    if (this.networkTrafficChart) {
+      this.networkTrafficChart.dispose();
+    }
     // 移除窗口大小变化监听器
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
@@ -439,7 +504,8 @@ export default {
         this.initQueueChart();
         this.initResponseTimeChart();
         this.initSystemResourceChart();
-        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart, this.systemResourceChart]);
+        this.initNetworkTrafficChart();
+        changeChartsTheme([this.qpsChart, this.queueChart, this.responseTimeChart, this.systemResourceChart, this.networkTrafficChart]);
       });
     },
     
@@ -670,6 +736,101 @@ export default {
       this.systemResourceChart.setOption(option);
     },
     
+    initNetworkTrafficChart() {
+      this.networkTrafficChart = echarts.init(this.$refs.networkTrafficChart);
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          },
+          formatter: (params) => {
+            let result = params[0].name + '<br/>';
+            params.forEach((item) => {
+              const value = item.value;
+              const formattedValue = this.formatBytes(value);
+              result += item.marker + item.seriesName + ': ' + formattedValue + '<br/>';
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: [this.$t('dashboard.stats.network_recv_rate'), this.$t('dashboard.stats.network_sent_rate')]
+        },
+        grid: {
+          left: '10%',
+          right: '10%',
+          bottom: '15%',
+          top: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.networkTrafficData.times
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Bytes/s',
+          min: 0,
+          axisLabel: {
+            formatter: (value) => {
+              return this.formatBytes(value);
+            }
+          }
+        },
+        series: [
+          {
+            name: this.$t('dashboard.stats.network_recv_rate'),
+            type: 'line',
+            data: this.networkTrafficData.recv_rate,
+            smooth: true,
+            itemStyle: {
+              color: '#40a9ff'
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0, color: 'rgba(64, 169, 255, 0.3)'
+                }, {
+                  offset: 1, color: 'rgba(64, 169, 255, 0.1)'
+                }]
+              }
+            }
+          },
+          {
+            name: this.$t('dashboard.stats.network_sent_rate'),
+            type: 'line',
+            data: this.networkTrafficData.sent_rate,
+            smooth: true,
+            itemStyle: {
+              color: '#f759ab'
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0, color: 'rgba(247, 89, 171, 0.3)'
+                }, {
+                  offset: 1, color: 'rgba(247, 89, 171, 0.1)'
+                }]
+              }
+            }
+          }
+        ]
+      };
+      this.networkTrafficChart.setOption(option);
+    },
+    
     handleStatsMessage(statsData) {
       // currentStats现在从store中获取，不需要手动更新
       
@@ -699,6 +860,11 @@ export default {
       this.systemResourceData.cpu_percent.push(statsData.cpu_percent || 0);
       this.systemResourceData.memory_percent.push(statsData.memory_percent || 0);
       
+      // 更新网络流量数据
+      this.networkTrafficData.times.push(timeStr);
+      this.networkTrafficData.recv_rate.push(statsData.network_recv_rate || 0);
+      this.networkTrafficData.sent_rate.push(statsData.network_sent_rate || 0);
+      
       // 限制数据点数量
       if (this.qpsData.times.length > this.maxDataPoints) {
         this.qpsData.times.shift();
@@ -714,6 +880,10 @@ export default {
         this.systemResourceData.times.shift();
         this.systemResourceData.cpu_percent.shift();
         this.systemResourceData.memory_percent.shift();
+        
+        this.networkTrafficData.times.shift();
+        this.networkTrafficData.recv_rate.shift();
+        this.networkTrafficData.sent_rate.shift();
       }
       
       // 更新图表
@@ -766,6 +936,25 @@ export default {
       this.updateQpsChart();
       this.updateQueueChart();
       this.updateSystemResourceChart();
+      this.updateNetworkTrafficChart();
+    },
+    
+    updateNetworkTrafficChart() {
+      if (!this.networkTrafficChart) return;
+      
+      this.networkTrafficChart.setOption({
+        xAxis: {
+          data: this.networkTrafficData.times
+        },
+        series: [
+          {
+            data: this.networkTrafficData.recv_rate
+          },
+          {
+            data: this.networkTrafficData.sent_rate
+          }
+        ]
+      });
     },
     
     formatTime(timestamp) {
@@ -773,8 +962,84 @@ export default {
       return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
     },
     
+    formatBytes(bytes) {
+      if (bytes === 0) return '0 B/s';
+      const k = 1024;
+      const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+    
     clearMessages() {
       this.recentMessages = [];
+    },
+    
+    exportToCSV() {
+      if (this.recentMessages.length === 0) {
+        return;
+      }
+      
+      // CSV 列标题
+      const headers = [
+        this.$t('dashboard.stats.time'),
+        //this.$t('dashboard.stats.server'),
+        this.$t('dashboard.stats.operation'),
+        this.$t('dashboard.stats.qps_label'),
+        this.$t('dashboard.stats.log_qps_label'),
+        this.$t('dashboard.stats.main_queue'),
+        this.$t('dashboard.stats.log_queue'),
+        this.$t('dashboard.stats.stats_queue'),
+        this.$t('dashboard.stats.message_queue'),
+        this.$t('dashboard.stats.cpu_usage'),
+        this.$t('dashboard.stats.memory_usage'),
+        this.$t('dashboard.stats.network_recv_rate'),
+        this.$t('dashboard.stats.network_sent_rate')
+      ];
+      
+      // 构建CSV内容
+      let csvContent = headers.join(',') + '\n';
+      
+      // 添加数据行
+      this.recentMessages.forEach(message => {
+        const row = [
+          `"${this.formatTime(message.timestamp)}"`,
+         // `"${message.server || ''}"`,
+          `"${message.operatype || ''}"`,
+          message.qps || 0,
+          message.log_qps || 0,
+          message.main_queue || 0,
+          message.log_queue || 0,
+          message.stats_queue || 0,
+          message.message_queue || 0,
+          `${(message.cpu_percent || 0).toFixed(1)}%`,
+          `${(message.memory_percent || 0).toFixed(1)}%`,
+          `"${this.formatBytes(message.network_recv_rate || 0)}"`,
+          `"${this.formatBytes(message.network_sent_rate || 0)}"`
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+      
+      // 创建并下载文件
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // 生成文件名（包含当前时间）
+      const now = new Date();
+      const timestamp = now.getFullYear() + 
+        String(now.getMonth() + 1).padStart(2, '0') + 
+        String(now.getDate()).padStart(2, '0') + '_' +
+        String(now.getHours()).padStart(2, '0') + 
+        String(now.getMinutes()).padStart(2, '0') + 
+        String(now.getSeconds()).padStart(2, '0');
+      
+      link.setAttribute('download', `samwaf_stats_${timestamp}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
   } 
 };
