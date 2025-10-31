@@ -8,7 +8,7 @@ import config from '@/config/style';
 import websocket from "@/utils/websocket.js";
 import { DialogPlugin } from 'tdesign-vue';
 import  {AesDecrypt} from './utils/usuallytool'
-import { clearLocalStorageExceptPreserved } from '@/constants';
+import { clearLocalStorageExceptPreserved, saveCurrentUrl } from '@/constants';
 const env = import.meta.env.MODE || 'development';
 
 export default Vue.extend({
