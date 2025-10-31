@@ -165,7 +165,7 @@ export default Vue.extend({
     }
   },
   mounted() {
-    /*this.fetchSystemInfo();
+    this.fetchSystemInfo();/**
     // 每10秒自动刷新一次
     this.refreshTimer = setInterval(() => {
       this.fetchSystemInfo();
