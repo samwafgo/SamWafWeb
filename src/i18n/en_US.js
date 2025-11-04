@@ -20,6 +20,7 @@ export default {
     copy: "Copy",
     edit: "Edit",
     delete: "Delete",
+    restore: "Restore",
     reset: "Reset",
     submit: "Submit",
     export: "Export",
@@ -813,9 +814,14 @@ export default {
       label_file_path: "File Path",
       label_before_content: "Original Content",
       label_after_content: "Modified Content",
+      label_is_restore: "Is Restore",
+      label_is_restore_0: "Not Restore",
+      label_is_restore_1: "Restored",
       confirm_delete: "Are you sure you want to delete?",
       success_modify_message: "Operation successful",
-      warning_modify_message: "Operation warning"
+      warning_modify_message: "Operation warning",
+      restore_confirm_title: "Confirm Restore",
+      restore_confirm_content: "This operation will revert the file to its pre-modification content and cannot be undone. Do you want to continue?"
     },
     ipallow: {
       button_add_ip: "Add Allowlist IP",

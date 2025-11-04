@@ -32,9 +32,13 @@
           @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
           :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
 
+          <template #is_restore="slotProps">
+            <span>{{ slotProps.row.is_restore === 0 ? $t('page.one_key_mod.label_is_restore_0') : $t('page.one_key_mod.label_is_restore_1') }}</span>
+          </template>
           <template #op="slotProps">
-             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{$t('common.details')}}</a>
-            <a class="t-button-link" @click="handleClickDelete(slotProps)">{{$t('common.delete')}}</a>
+            <a class="t-button-link" @click="handleClickEdit(slotProps)">{{$t('common.details')}}</a>
+            <a class="t-button-link" @click="handleClickDelete(slotProps)">{{$t('common.delete')}}</a> 
+            <a class="t-button-link" v-if="slotProps.row.is_restore === 0" @click="handleOneKeyRestore(slotProps.row.id)">{{$t('common.restore')}}</a>
           </template>
         </t-table>
       </div>
@@ -60,6 +64,12 @@
           <t-form-item :label="$t('page.one_key_mod.label_after_content')" name="after_content">
             <t-textarea :style="{ width: '480px' }" :autosize="{ minRows: 5, maxRows: 10 }"  v-model="formEditData.after_content"  name="after_content">
             </t-textarea>
+          </t-form-item>
+          <t-form-item :label="$t('page.one_key_mod.label_is_restore')" name="is_restore">
+            <t-select :style="{ width: '480px' }" v-model="formEditData.is_restore" placeholder="">
+              <t-option value="0">{{ $t('page.one_key_mod.label_is_restore_0') }}</t-option>
+              <t-option value="1">{{ $t('page.one_key_mod.label_is_restore_1') }}</t-option>
+            </t-select>
           </t-form-item>
           <t-form-item style="float: right">
             <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>
@@ -87,7 +97,7 @@
   } from '@/apis/host';
 
 import {
-    wafOneKeyModDelApi,wafOneKeyModDetailApi,wafOneKeyModListApi,wafDoOneKeyModApi
+    wafOneKeyModDelApi,wafOneKeyModDetailApi,wafOneKeyModListApi,wafDoOneKeyModApi,wafRestoreOneKeyModApi
   } from '@/apis/onekeymod';
   import {
     SSL_STATUS,
@@ -98,12 +108,8 @@ import {
     CONTRACT_PAYMENT_TYPES
   } from '@/constants';
 
-  const INITIAL_DATA = {
-    host_code: '',
-    url: '',
-    rate: 1,
-    limit: 30,
-    remarks: '',
+  const INITIAL_DATA = { 
+     
   };
   export default Vue.extend({
     name: 'ListBase',
@@ -146,6 +152,12 @@ import {
             width: 450,
             ellipsis: true,
             colKey: 'file_path',
+          },
+          {
+            title: this.$t('page.one_key_mod.label_is_restore'),
+            width: 60,
+            ellipsis: true,
+            colKey: 'is_restore',
           },
           {
             title: this.$t('common.create_time'),
@@ -341,8 +353,52 @@ import {
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
+              //1秒后刷新列表
+              setTimeout(() => {
+                that.getList("")
+              }, 1000); 
               that.$message.success(resdata.msg);
             }else{
+              that.$message.warning(resdata.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+          .finally(() => {});
+      },
+      //还原
+      handleOneKeyRestore(id) {
+        const confirmDia = this.$dialog.confirm({
+          header: this.$t('page.one_key_mod.restore_confirm_title') || '确认执行还原',
+          body: this.$t('page.one_key_mod.restore_confirm_content') || '该操作将回滚修改，是否继续？',
+          confirmBtn: {
+            theme: 'danger',
+            content: this.$t('common.confirm'),
+          },
+          cancelBtn: {
+            theme: 'default',
+            content: this.$t('common.cancel'),
+          },
+          onConfirm: () => {
+            this.doOneKeyRestore(id);
+            confirmDia.destroy();
+          },
+        });
+      },
+      //新增：实际执行还原
+      doOneKeyRestore(id) {
+        let that = this
+        wafRestoreOneKeyModApi({
+          id: id
+        })
+          .then((res) => {
+            let resdata = res
+            console.log(resdata)
+            if (resdata.code === 0) {
+              that.getList("")
+              that.$message.success(resdata.msg);
+            } else {
               that.$message.warning(resdata.msg);
             }
           })

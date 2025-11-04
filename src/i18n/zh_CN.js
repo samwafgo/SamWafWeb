@@ -20,6 +20,7 @@ export default {
     save: "保存",
     edit: "编辑",
     delete: "删除",
+    restore: "还原",
     reset: "重置",
     submit: "提交",
     export: "导出",
@@ -816,9 +817,14 @@ export default {
       label_file_path: "文件路径",
       label_before_content: "原始内容",
       label_after_content: "修改后内容",
+      label_is_restore: "是否还原",
+      label_is_restore_0: "未还原",
+      label_is_restore_1: "已还原",
       confirm_delete: "确认要删除吗",
       success_modify_message: "操作成功",
-      warning_modify_message: "操作警告"
+      warning_modify_message: "操作警告",
+      restore_confirm_title: "确认还原修改",
+      restore_confirm_content: "该操作将恢复文件为修改前的内容，且不可撤销，是否继续？"
     },
     ipallow:{
       button_add_ip: "新建白名单IP",

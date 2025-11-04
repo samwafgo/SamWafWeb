@@ -31,3 +31,10 @@ export function wafDoOneKeyModApi(params) {
     data: params
   })
 }
+//还原
+export function wafRestoreOneKeyModApi(params) {
+  return request({
+    url: '/wafhost/onekeymod/restore?id=' + params.id,
+    method: 'get', 
+  })
+}
