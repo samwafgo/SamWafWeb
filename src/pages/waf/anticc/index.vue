@@ -236,8 +236,8 @@ import {
   const INITIAL_DATA = {
     host_code: '',
     url: '',
-    rate: 1,
-    limit: 30,
+    rate: 10,
+    limit: 250,
     limit_mode: 'window', // 默认使用滑动窗口速率模式
     lock_ip_minutes:10,//默认10分钟
     ip_mode: 'nic', // 默认使用网卡模式
