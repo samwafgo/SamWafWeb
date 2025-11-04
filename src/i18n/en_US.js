@@ -346,7 +346,7 @@ export default {
       ip_mode_nic: 'NIC Mode',
       ip_mode_nic_desc: 'Get client IP directly from network connection',
       ip_mode_proxy: 'Proxy Mode',
-      ip_mode_proxy_desc: 'Get real client IP from HTTP headers (X-Forwarded-For, etc.)',
+      ip_mode_proxy_desc: 'When using a CDN or Nginx in front, get the real client IP from the HTTP headers (X-Forwarded-For, etc.)',
       ip_mode_unknown: 'Unknown Mode',
     },
     visit_log:{

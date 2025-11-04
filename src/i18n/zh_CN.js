@@ -346,7 +346,7 @@ export default {
       ip_mode_nic: '网卡模式',
       ip_mode_nic_desc: '直接从网络连接中获取客户端IP',
       ip_mode_proxy: '代理模式',
-      ip_mode_proxy_desc: '从HTTP头部(X-Forwarded-For等)获取客户端真实IP',
+      ip_mode_proxy_desc: '使用有前置CDN,Nginx等代理时，从HTTP头部(X-Forwarded-For等)获取客户端真实IP',
       ip_mode_unknown: '未知模式',
     },
     visit_log:{

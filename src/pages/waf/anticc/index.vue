@@ -58,7 +58,7 @@
     </t-card>
 
     <!-- New CC Protect Dialog -->
-    <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
+    <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="700" :footer="false">
       <div slot="body">
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150">
           <t-form-item :label="$t('page.cc.website')" name="host_code">
@@ -132,7 +132,7 @@
     </t-dialog>
 
     <!-- Edit CC Protect Dialog -->
-    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
+    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="700" :footer="false">
       <div slot="body">
         <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="150">
           <t-form-item :label="$t('page.cc.website')"  name="host_code">
