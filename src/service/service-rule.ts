@@ -24,32 +24,9 @@ export const RULE = {
     ],
     relation_symbol: "&&"
   },
-  rule_do_assignment: [{
-    fact_name: "MF",
-    attr: "HOST",
-    attr_type: "string",
-    attr_val: "值"
-  },
-  {
-    fact_name: "MF",
-    attr: "PORT",
-    attr_type: "int",
-    attr_val: "0"
-  },
+  rule_do_assignment: [ 
   ],
-  rule_do_method: [{
-    fact_name: "MF",
-    method_name: "DoSomeThing",
-    parms: [{
-      attr_type: "string",
-      attr_val: "值"
-    },
-    {
-      attr_type: "string",
-      attr_val: "值"
-    }
-    ],
-  }]
+  rule_do_method: []
   ,
 };
 
