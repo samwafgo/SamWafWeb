@@ -116,6 +116,21 @@
             </t-radio-group>
           </t-form-item>
 
+          <!-- 新增：启用前置规则 -->
+          <t-form-item :label="$t('page.cc.enable_rule')" name="is_enable_rule">
+            <t-switch v-model="formData.is_enable_rule"></t-switch>
+          </t-form-item>
+
+          <!-- 新增：规则内容（启用时显示） -->
+          <t-form-item v-if="formData.is_enable_rule" :label="$t('page.cc.rule_content')" name="rule_content">
+            <t-textarea :style="{ width: '480px' }"
+                        v-model="formData.rule_content"
+                        :rows="10"
+                        :placeholder="$t('page.cc.rule_content_placeholder')">
+            </t-textarea>
+            <div class="limit-mode-desc">{{ $t('page.cc.rule_content_desc') }}</div>
+          </t-form-item>
+
           <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_ip_minutes">
             <t-input-number :style="{ width: '480px' }" min="1" v-model="formData.lock_ip_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
           </t-form-item>
@@ -189,6 +204,19 @@
               </t-radio>
             </t-radio-group>
           </t-form-item>
+ 
+          <t-form-item :label="$t('page.cc.enable_rule')" name="is_enable_rule">
+            <t-switch v-model="formEditData.is_enable_rule"></t-switch>
+          </t-form-item>
+ 
+          <t-form-item v-if="formEditData.is_enable_rule" :label="$t('page.cc.rule_content')" name="rule_content">
+            <t-textarea :style="{ width: '480px' }"
+                        v-model="formEditData.rule_content"
+                        :rows="10"
+                        :placeholder="$t('page.cc.rule_content_placeholder')">
+            </t-textarea>
+            <div class="limit-mode-desc">{{ $t('page.cc.rule_content_desc') }}</div>
+          </t-form-item>
 
           <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_ip_minutes">
             <t-input-number :style="{ width: '480px' }" min="1" v-model="formEditData.lock_ip_minutes" :placeholder="$t('common.placeholder')+$t('page.cc.lock_minutes')"></t-input-number>
@@ -238,10 +266,13 @@ import {
     url: '',
     rate: 10,
     limit: 250,
-    limit_mode: 'window', // 默认使用滑动窗口速率模式
-    lock_ip_minutes:10,//默认10分钟
-    ip_mode: 'nic', // 默认使用网卡模式
+    limit_mode: 'window',
+    lock_ip_minutes: 10,
+    ip_mode: 'nic',
     remarks: '',
+    // 新增：是否启用前置规则 + 规则内容
+    is_enable_rule: false,
+    rule_content: '',
   };
   export default Vue.extend({
     name: 'ListBase',

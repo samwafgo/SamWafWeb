@@ -349,6 +349,11 @@ export default {
       ip_mode_proxy: 'Proxy Mode',
       ip_mode_proxy_desc: 'When using a CDN or Nginx in front, get the real client IP from the HTTP headers (X-Forwarded-For, etc.)',
       ip_mode_unknown: 'Unknown Mode',
+      enable_rule: 'Enable Pre-Rule',
+      rule_content: 'Rule Content',
+      rule_content_desc: 'When enabled, CC protection runs only if this rule matches. ',
+      rule_content_placeholder: 'Enter rule content',
+      rule_content_required: 'Please enter rule content',
     },
     visit_log:{
       visit_log: "Protection Logs",

@@ -349,6 +349,11 @@ export default {
       ip_mode_proxy: '代理模式',
       ip_mode_proxy_desc: '使用有前置CDN,Nginx等代理时，从HTTP头部(X-Forwarded-For等)获取客户端真实IP',
       ip_mode_unknown: '未知模式',
+      enable_rule: '启用前置规则',
+      rule_content: '规则内容',
+      rule_content_desc: '启用后，只有命中该规则才执行CC防护。',
+      rule_content_placeholder: '请输入规则内容',
+      rule_content_required: '请填写规则内容',
     },
     visit_log:{
       visit_log: "防御日志",
