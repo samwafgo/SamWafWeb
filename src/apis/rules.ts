@@ -55,3 +55,11 @@ export function wafRuleDelAllApi(params) {
     data: params
   })
 }
+// 规则格式预览
+export function wafRuleFormatApi(params) {
+  return request({
+    url: '/wafhost/rule/format',
+    method: 'post',
+    data: params
+  })
+}

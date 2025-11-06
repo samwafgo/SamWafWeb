@@ -7,19 +7,13 @@ export const RULE = {
     rule_domain_code: "请选择网站",
   },
   rule_condition: {
-    relation_detail: [{
-      fact_name: "MF",
-      attr: "HOST",
-      attr_type: "string",
-      attr_judge: "==",
-      attr_val: "值"
-    },
+    relation_detail: [ 
     {
       fact_name: "MF",
       attr: "URL",
-      attr_type: "int",
+      attr_type: "string",
       attr_judge: "==",
-      attr_val: "0"
+      attr_val: "/"
     },
     ],
     relation_symbol: "&&"

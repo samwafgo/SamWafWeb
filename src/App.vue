@@ -71,15 +71,15 @@ export default Vue.extend({
         }
         let wsData = JSON.parse(e.data)
         if(wsData.msg_code=="200"){
-          console.log('接口返回信息',wsData)
+          //console.log('接口返回信息',wsData)
 
           let msgDataEnstr =wsData.msg_data
 
-          console.log('msgDataEnstr',msgDataEnstr)
+          //console.log('msgDataEnstr',msgDataEnstr)
           let tmpSrcContent = AesDecrypt(msgDataEnstr)
-          console.log('tmpSrcContent',tmpSrcContent)
+         // console.log('tmpSrcContent',tmpSrcContent)
           let msgData = JSON.parse(tmpSrcContent)
-          console.log('msgData',msgData)
+          //console.log('msgData',msgData)
           wsData.msg_data = msgData
           if(wsData.msg_cmd_type==="RELOAD_PAGE"){
             if(this.mydialog){
@@ -106,7 +106,7 @@ export default Vue.extend({
             console.log(downloadUrl)
             window.open(downloadUrl)
           }else if(wsData.msg_cmd_type==="SystemStats"){
-             console.log("相关统计信息赋值",wsData.msg_data.message_attach)
+             //console.log("相关统计信息赋值",wsData.msg_data.message_attach)
              // 将统计信息传递给stats store
              if (wsData.msg_data.message_attach) {
                this.$store.commit('stats/addStatsData', wsData.msg_data.message_attach);

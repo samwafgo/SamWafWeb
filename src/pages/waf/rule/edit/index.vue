@@ -41,7 +41,7 @@
           </t-button>
           <t-form-item :label="$t('page.rule.detail.relation')" name="relation_symbol"
             v-if="formData.rule_condition.relation_detail.length > 1">
-            <t-select clearable :style="{ width: '480px' }" v-model="formData.rule_condition.relation_symbol">
+            <t-select clearable :style="{ width: '480px' }" v-model="formData.rule_condition.relation_symbol" @change="onFormChange">
               <t-option v-for="(item, index) in relation_symbol_option" :value="item.value" :label="item.label"
                 :key="index">
                 {{ item.label }}
@@ -68,9 +68,8 @@
               <t-col :span="5">
                 <div>
                   <t-form-item :label="$t('page.rule.detail.judgment')" name="attr_judge" :labelWidth="80">
-                    <t-select clearable :style="{ width: '200px' }" v-model="condition_item.attr_judge">
-                      <t-option v-for="(item, index) in attr_judge_option" :value="item.value" :label="item.label"
-                        :key="index">
+                    <t-select clearable :style="{ width: '200px' }" v-model="condition_item.attr_judge" @change="onAttrJudgeChange(condition_item)">
+                      <t-option v-for="(item, index) in attr_judge_option" :value="item.value" :label="item.label" :key="index">
                         {{ item.label }}
                       </t-option>
                     </t-select>
@@ -80,17 +79,17 @@
               <t-col :span="5">
                 <div>
                   <t-form-item :label="$t('page.rule.detail.value')" name="att_val" :labelWidth="80">
-                    <t-input :style="{ width: '200px' }" placeholder="请输入内容" v-model="condition_item.attr_val" />
+                    <t-input :style="{ width: '200px' }" placeholder="请输入内容" v-model="condition_item.attr_val" @change="onFormChange" />
                   </t-form-item>
                 </div>
               </t-col>
-              <t-col :span="3">
+              <t-col :span="3" v-if="(condition_item.attr_judge || '').startsWith('system.')">
                 <div>
-                  <t-form-item :label="$t('page.rule.detail.function_judgment_result')" name="att_val2"
-                    :labelWidth="80">
-                    <t-input :style="{ width: '160px' }"
-                      :placeholder="$t('common.placeholder') + $t('page.rule.detail.function_judgment_result')"
-                      v-model="condition_item.attr_val2" />
+                  <t-form-item :label="$t('page.rule.detail.function_judgment_result')" name="att_val2" :labelWidth="80">
+                    <t-select clearable :style="{ width: '160px' }" v-model="condition_item.attr_val2" @change="onFormChange">
+                      <t-option value="true" label="true">true</t-option>
+                      <t-option value="false" label="false">false</t-option>
+                    </t-select>
                   </t-form-item>
                 </div>
               </t-col>
@@ -105,8 +104,8 @@
         <!--规则编排 结束-->
 
         <!-- 规则脚本内容预览（仅 UI 模式显示） -->
-        <t-card v-if="ruleDetail.rule_content" :title="$t('page.rule.detail.rule_script_content')">
-          <pre class="rule-example-code">{{ ruleDetail.rule_content }}</pre>
+        <t-card :title="$t('page.rule.detail.rule_script_content')">
+          <pre class="rule-example-code">{{ rulePreviewContent || ruleDetail.rule_content }}</pre>
         </t-card>
 
       </div>
@@ -204,7 +203,7 @@ import writeRule from "@/components/write-rule/index.vue";
 import {
   allhost
 } from '@/apis/host';
-import { wafRuleEditApi, wafRuleAddApi, wafRuleDetailApi } from '@/apis/rules';
+import { wafRuleListApi, wafRuleDelApi, wafRuleEditApi, wafRuleAddApi, wafRuleDetailApi, wafRuleFormatApi } from '@/apis/rules';
 import { v4 as uuidv4 } from 'uuid';
 
 export default {
@@ -360,6 +359,7 @@ export default {
       fromSourcePoint: "",
       //获取的detail的值
       ruleDetail: {},
+      rulePreviewContent: "",//规则预览内容
     };
   },
   beforeRouteUpdate(to, from) {
@@ -425,12 +425,7 @@ export default {
       this.getDetail(newVal)
     },
   },
-  methods: {
-    onAttrChange(item) {
-      const v = String(item.attr || '').toUpperCase();
-      // PORT -> 数字，其它 -> 文本
-      item.attr_type = v === 'PORT' ? 'int' : 'string';
-    },
+  methods: { 
     // 重置表单数据
     resetFormData() {
       console.log('重置表单数据')
@@ -508,7 +503,7 @@ export default {
           )
           url = '/wafhost/rule/add'
           postdata = {
-            RuleJson: JSON.stringify(that.formData),
+            rule_json: JSON.stringify(that.formData),
             is_manual_rule: parseInt(that.formData.is_manual_rule),
             rule_content: that.formCodemirrorContent,
             rule_code: that.ruleuuid
@@ -545,8 +540,8 @@ export default {
             `salience ${that.formData.rule_base.salience}`
           )
           postdata = {
-            Code: that.op_rule_no,
-            RuleJson: JSON.stringify(that.formData),
+            code: that.op_rule_no,
+            rule_json: JSON.stringify(that.formData),
             is_manual_rule: parseInt(that.formData.is_manual_rule),
             rule_content: that.formCodemirrorContent,
           }
@@ -643,6 +638,9 @@ export default {
       //手工编排
       if (e == "1") {
         this.setRuleContentByMode()
+      }else{ 
+        // 触发规则预览
+        this.onFormChange()
       }
     },
     setRuleContentByMode() {
@@ -687,7 +685,76 @@ export default {
       );
     },
     //end method
-
+    onAttrChange(item) {
+      // 依据选择的范围，自动调整值类型
+      if ((item.attr || '').toUpperCase() === 'PORT') {
+        item.attr_type = 'int'
+      } else {
+        item.attr_type = 'string'
+      }
+      // 触发规则预览
+      this.onFormChange()
+    },
+    onFormChange() {
+      // 编排模式下任意字段变更后，刷新预览
+      this.fetchRulePreview()
+    },
+    buildPreviewPayload() {
+      // 统一构造 RuleJson（与后端 RuleInfo JSON结构一致）
+      const ruleJsonObj = {
+        is_manual_rule: this.formData.is_manual_rule,
+        rule_content: this.formData.rule_content,
+        rule_base: this.formData.rule_base,
+        rule_condition: this.formData.rule_condition,
+        rule_do_assignment: this.formData.rule_do_assignment,
+        rule_do_method: this.formData.rule_do_method,
+      }
+      let ruleCode = "";
+      console.log("buildPreviewPayload this.ruledetail",this.ruleDetail)
+      //如果是编辑的情况下 需要把code也传进去
+      if(this.ruleDetail && this.ruleDetail.rule_code){
+          ruleCode = this.ruleDetail.rule_code
+      }else{
+          ruleCode = this.ruleuuid.replace(/-/g, "")// 这个全局替换查找到的字符
+      }
+      return {
+        rule_code: ruleCode, 
+        rule_json: JSON.stringify(ruleJsonObj),
+        is_manual_rule: Number(this.formData.is_manual_rule),
+        rule_content: this.formData.rule_content || '',
+      }
+    },
+    async fetchRulePreview() {
+      try {
+        const payload = this.buildPreviewPayload()
+        console.log("fetchRulePreview",payload)
+        const res = await wafRuleFormatApi(payload)
+        const resdata = res
+        if (resdata.code === 0) {
+          this.rulePreviewContent = (resdata.data && resdata.data.rule_content) ? resdata.data.rule_content : ''
+        } else {
+          this.$message.warning(resdata.msg || '预览格式化失败')
+        }
+      } catch (e) {
+        console.log(e)
+        this.$message.error('预览请求异常')
+      }
+    },
+     onAttrJudgeChange(item) {
+      const isFunc = (item.attr_judge || '').startsWith('system.')
+      if (!isFunc) {
+        item.attr_val2 = ''
+      } else {
+        // 切换为函数时，默认置为 true（仅在为空或非 true/false 时）
+        if (item.attr_val2 !== 'true' && item.attr_val2 !== 'false') {
+          item.attr_val2 = 'true'
+        }
+      }
+      if (typeof this.onFormChange === 'function') {
+        this.onFormChange()
+      }
+    },
+    //end method 
   },
 };
 </script>
