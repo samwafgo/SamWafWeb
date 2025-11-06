@@ -1287,6 +1287,7 @@ export default {
         variable_key: 'Variable Key',
         tutorial_online:'Online Tutorial',
         example_code: 'Rule Example Code',
+        rule_script_content: 'Rule Script Content',
       }
     },
     notice: {

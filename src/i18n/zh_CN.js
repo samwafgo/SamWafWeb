@@ -1295,6 +1295,7 @@ export default {
         variable_key: '变量键值',
         tutorial_online:'立即访问在线教程(含视频+AI智能体自动生成)',
         example_code: '规则示例代码',
+        rule_script_content: '规则脚本内容',
       }
     },
     notice:{
