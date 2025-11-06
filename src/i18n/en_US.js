@@ -73,7 +73,8 @@ export default {
     column_config_reset_success: "Column configuration reset to default",
     column_config_reset_confirm: "Are you sure you want to reset column configuration to default?",
     column_config_load_failed: "Failed to load column configuration",
-    seconds: "seconds"
+    seconds: "seconds",
+    generate_rule: 'Generate Rule'
   },
   login:{
     login_title: "Login",

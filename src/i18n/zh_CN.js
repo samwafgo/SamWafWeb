@@ -73,7 +73,8 @@ export default {
     column_config_reset_success: "列配置已重置为默认设置",
     column_config_reset_confirm: "确定要重置列配置为默认设置吗？",
     column_config_load_failed: "加载列配置失败",
-    seconds: "秒"
+    seconds: "秒",
+    generate_rule: '生成规则'
   },
   login:{
     login_title:"登录",
