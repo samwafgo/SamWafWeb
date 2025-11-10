@@ -262,6 +262,7 @@ export default Vue.extend({
   height: 60vh;
   overflow-y: auto;
   padding: 20px;
+  background: var(--td-bg-color-container);
 }
 
 .message-wrapper {
@@ -289,7 +290,7 @@ export default Vue.extend({
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: var(--td-bg-color-component);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -302,17 +303,18 @@ export default Vue.extend({
 .text {
   padding: 12px;
   border-radius: 6px;
-  background: #f0f0f0;
+  background: var(--td-bg-color-component);
+  color: var(--td-text-color-primary);
   word-break: break-word;
 }
 
 .message-wrapper.user .text {
-  background: #007bff;
-  color: white;
+  background: var(--td-brand-color);
+  color: var(--td-text-color-anti);
 }
 
 .loading {
-  color: #666;
+  color: var(--td-text-color-secondary);
   font-size: 24px;
   padding: 12px;
 }
@@ -321,7 +323,7 @@ export default Vue.extend({
   display: flex;
   gap: 12px;
   padding: 20px;
-  background: #fff;
-  border-top: 1px solid #eee;
+  background: var(--td-bg-color-container);
+  border-top: 1px solid var(--td-component-border);
 }
 </style>
