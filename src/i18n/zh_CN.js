@@ -246,6 +246,7 @@ export default {
       task:"任务管理",
       private_info_title:"密钥管理",
       monitor_title:"系统监控",
+      sql_query_title:"SQL查询工具",
     },
     pc:{
       parent_title:"设备管理",
@@ -312,6 +313,21 @@ export default {
       operation_content: "操作内容",
       cancel: "取消",
       operation_time: "添加时间"
+    },
+    sql_query:{
+      title: "SQL查询工具",
+      db_type: "选择数据库",
+      db_type_local: "本地数据库",
+      db_type_log: "日志数据库",
+      db_type_stats: "统计数据库",
+      sql_input: "SQL查询语句",
+      sql_placeholder: "请输入SELECT查询语句",
+      execute_query: "执行查询",
+      query_result: "查询结果",
+      no_result: "暂无数据",
+      query_success: "查询成功",
+      query_failed: "查询失败",
+      total_records: "共 {count} 条记录",
     },
     analysis:{
         analysis_spider:{

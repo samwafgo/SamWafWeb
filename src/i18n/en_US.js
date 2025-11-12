@@ -246,6 +246,7 @@ export default {
       task:"Task Manager",
       private_info_title:"Private Manager",
       monitor_title:"System Monitor",
+      sql_query_title:"SQL Query Tool",
     },
     pc:{
       parent_title: "Device",
@@ -312,6 +313,21 @@ export default {
       operation_content: "Operation Content",
       cancel: "Cancel",
       operation_time: "Operation Time"
+    },
+    sql_query:{
+      title: "SQL Query Tool",
+      db_type: "Select Database",
+      db_type_local: "Local Database",
+      db_type_log: "Log Database",
+      db_type_stats: "Stats Database",
+      sql_input: "SQL Query Statement",
+      sql_placeholder: "Please enter SELECT query statement",
+      execute_query: "Execute Query",
+      query_result: "Query Result",
+      no_result: "No data",
+      query_success: "Query successful",
+      query_failed: "Query failed",
+      total_records: "Total {count} records",
     },
     analysis:{
       analysis_spider:{

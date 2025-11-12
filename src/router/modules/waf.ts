@@ -255,11 +255,16 @@ export default [
         name: 'OneKeyMod',
         component: () => import('@/pages/waf/onekeymod/index.vue'),
         meta: { title: 'menu.system.system_one_key_modify_title' },
-      },{
+      },      {
         path: 'task',
         name: 'Task',
         component: () => import('@/pages/waf/task/index.vue'),
         meta: { title: 'menu.system.task' },
+      },{
+        path: 'sqlquery',
+        name: 'SqlQuery',
+        component: () => import('@/pages/waf/sqlquery/index.vue'),
+        meta: { title: 'menu.system.sql_query_title' },
       },
     ],
   },
