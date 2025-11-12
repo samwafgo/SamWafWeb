@@ -111,6 +111,12 @@
               {{ row.log_only_mode == '1' ? $t('page.visit_log.log_only_mode_on') : $t('page.visit_log.log_only_mode_off') }}
             </t-tag>
           </template>
+          <template #src_ip="{ row }">
+            <span>{{ row.src_ip }}</span>
+            <t-button theme="primary" shape="round" size="small" style="margin-left: 8px;" @click="handleAddipblock(row)">
+              {{ $t('page.visit_log.detail.add_to_deny_list') }}
+            </t-button>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickIPDetail(slotProps)" v-if="attack_ip == ''">{{
               $t('common.search')
@@ -156,6 +162,9 @@ import { NowDate, ConvertStringToUnix, ConvertDateToString, ConvertUnixToDate } 
 import {
   allhost
 } from '@/apis/host';
+import {
+  wafIPBlockAddApi
+} from '@/apis/ipblock';
 
 import { CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
 
@@ -340,9 +349,10 @@ export default Vue.extend({
         },
         {
           title: this.$t('page.visit_log.source_ip'),
-          width: 150,
+          width: 200,
           ellipsis: true,
           colKey: 'src_ip',
+          cell: 'src_ip',
         },
         {
           title: this.$t('page.visit_log.country'),
@@ -886,6 +896,54 @@ export default Vue.extend({
       this.dateControl.range1[1] = NowDate + " 23:59:59"
       this.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
       this.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
+    },
+    handleAddipblock(row) {
+      const ip = row.src_ip;
+      const host_code = row.host_code;
+
+      if (!host_code) {
+        this.$message.warning("当前网站不存在");
+        return
+      }
+
+      let that = this
+
+      const confirmDia = this.$dialog.confirm({
+        header: this.$t('page.visit_log.detail.add_to_deny_list_confirm_header'),
+        body: this.$t('page.visit_log.detail.add_to_deny_list_confirm_body'),
+        confirmBtn: this.$t('common.confirm'),
+        cancelBtn: this.$t('common.cancel'),
+        onConfirm: ({ e }) => {
+          //add deny IP
+          let formData = {
+            host_code: host_code,
+            ip: ip,
+            remarks: '手工增加',
+          };
+          wafIPBlockAddApi({
+            ...formData
+          })
+            .then((res) => {
+              let resdata = res
+              console.log(resdata)
+              if (resdata.code === 0) {
+                that.$message.success(resdata.msg);
+              } else {
+                that.$message.warning(resdata.msg);
+              }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            })
+            .finally(() => { });
+
+          confirmDia.destroy();
+        },
+        onClose: ({ e, trigger }) => {
+          console.log('关闭弹窗');
+          confirmDia.hide();
+        },
+      });
     },
 
     // 获取过滤后的搜索数据

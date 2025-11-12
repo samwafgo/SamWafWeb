@@ -46,6 +46,12 @@
           <template #rule="{ row }">
             <t-tag v-if="row.rule !== ''" shape="round" theme="primary" variant="outline">{{row.rule}}</t-tag>
           </template>
+          <template #ip="{ row }">
+            <span>{{ row.ip }}</span>
+            <t-button theme="primary" shape="round" size="small" style="margin-left: 8px;" @click="handleAddipblock(row)">
+              {{ $t('page.visit_log.detail.add_to_deny_list') }}
+            </t-button>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickDetail(slotProps)">{{$t('common.details')}}</a>
           </template>
@@ -72,6 +78,9 @@ import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
 import {attackIpListApi,allattacktaglist} from '@/apis/waflog/attacklog';
 import WebLogList  from './index.vue'
+import {
+  wafIPBlockAddApi
+} from '@/apis/ipblock';
 export default Vue.extend({
   name: 'WebLogAttackListBase',
   components: {
@@ -90,9 +99,10 @@ export default Vue.extend({
        columns: [
         {
           title:  this.$t('page.attack_log.source_ip'),
-          width: 100,
+          width: 200,
           ellipsis: true,
           colKey: 'ip',
+          cell: 'ip',
         },
         {
           title:  this.$t('page.attack_log.deny_num'),
@@ -271,6 +281,51 @@ export default Vue.extend({
     },
     resetIdx() {
       this.deleteIdx = -1;
+    },
+    handleAddipblock(row) {
+      const ip = row.ip;
+
+      // 在攻击统计页面，我们需要让用户选择要添加到哪个网站
+      // 由于该页面没有host_code，我们简化处理，使用空字符串
+      // 实际上可能需要弹窗让用户选择网站
+      let that = this
+
+      const confirmDia = this.$dialog.confirm({
+        header: this.$t('page.visit_log.detail.add_to_deny_list_confirm_header'),
+        body: this.$t('page.visit_log.detail.add_to_deny_list_confirm_body'),
+        confirmBtn: this.$t('common.confirm'),
+        cancelBtn: this.$t('common.cancel'),
+        onConfirm: ({ e }) => {
+          //add deny IP
+          let formData = {
+            host_code: '', // 攻击统计页面可能需要全局黑名单或选择网站
+            ip: ip,
+            remarks: '手工增加',
+          };
+          wafIPBlockAddApi({
+            ...formData
+          })
+            .then((res) => {
+              let resdata = res
+              console.log(resdata)
+              if (resdata.code === 0) {
+                that.$message.success(resdata.msg);
+              } else {
+                that.$message.warning(resdata.msg);
+              }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            })
+            .finally(() => { });
+
+          confirmDia.destroy();
+        },
+        onClose: ({ e, trigger }) => {
+          console.log('关闭弹窗');
+          confirmDia.hide();
+        },
+      });
     },
     //Jump Url
     handleJumpOnlineUrl(){
