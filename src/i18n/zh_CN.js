@@ -1318,6 +1318,7 @@ export default {
         inner_option_province:"访客归属省份",
         inner_option_city:"访客归属城市",
         inner_option_getheadervalue:"提取请求头某个Key里面的值",
+        inner_option_getipfailurecount:"获取IP失败次数(分钟)",
         //options attr
         attr_type_text:"文本",
         attr_type_int:"数字",

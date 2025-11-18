@@ -1314,6 +1314,7 @@ export default {
         inner_option_province: "Visitor Province",
         inner_option_city: "Visitor City",
         inner_option_getheadervalue:"Get Header Value",
+        inner_option_getipfailurecount:"Get IP Failure Count (minutes)",
         attr_type_text: "Text",
         attr_type_int: "Number",
         judge_equal: "Judge if Equal",

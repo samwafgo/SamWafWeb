@@ -146,6 +146,17 @@
                   </template>
                 </t-alert>
 
+                <t-alert theme="info" :title="$t('page.rule.detail.example_code')">
+                  <template #message>
+                    <pre> rule R80798f795d7947419ba6f593708b4013 "禁止5分钟内失败10次的IP访问" salience 10 {
+              when
+                MF.GetIPFailureCount(5) > 10
+              then
+                Retract("R80798f795d7947419ba6f593708b4013");
+            }</pre>
+                  </template>
+                </t-alert>
+
                 <t-link theme="danger" hover="color"
                   href="https://update.samwaf.com/airule/auto_jump_url.html?v20250311" target="_blank">
                   <jump-icon slot="suffixIcon" />
@@ -283,9 +294,13 @@ export default {
       }, {
         label: this.$t('page.rule.detail.inner_option_city'),
         value: 'CITY'
-      }, {
+      },       {
         label: this.$t('page.rule.detail.inner_option_getheadervalue'),
         value: 'GetHeaderValue("HeaderKeyName")'
+      },
+      {
+        label: this.$t('page.rule.detail.inner_option_getipfailurecount'),
+        value: 'GetIPFailureCount(5)'
       }
 
       ],
