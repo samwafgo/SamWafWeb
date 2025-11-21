@@ -1,5 +1,7 @@
-import { UserSafetyIcon,SystemSettingIcon,UsergroupIcon,SystemLogIcon,ApplicationIcon,LightingCircleIcon ,
-  ServerIcon ,ForkIcon} from 'tdesign-icons-vue';
+import {
+  UserSafetyIcon, SystemSettingIcon, UsergroupIcon, SystemLogIcon, ApplicationIcon, LightingCircleIcon,
+  ServerIcon, ForkIcon
+} from 'tdesign-icons-vue';
 import Layout from '@/layouts/index.vue';
 
 export default [
@@ -21,7 +23,7 @@ export default [
         path: 'wafrule',
         name: 'WafRule',
         component: () => import('@/pages/waf/rule/index.vue'),
-        meta: { title: 'menu.host.host_protect_rule'},
+        meta: { title: 'menu.host.host_protect_rule' },
       },
       {
         path: 'wafruleedit',
@@ -33,14 +35,14 @@ export default [
         path: 'wafipwhitelist',
         name: 'WafIpWhiteList',
         component: () => import('@/pages/waf/ipallow/index.vue'),
-        meta: { title: 'menu.host.allow_ip'},
+        meta: { title: 'menu.host.allow_ip' },
 
       },
       {
         path: 'wafurlwhitelist',
         name: 'WafUrlWhiteList',
         component: () => import('@/pages/waf/urlallow/index.vue'),
-        meta: { title: 'menu.host.allow_url'},
+        meta: { title: 'menu.host.allow_url' },
 
       },
 
@@ -48,23 +50,23 @@ export default [
         path: 'wafipBlocklist',
         name: 'WafIpBlockList',
         component: () => import('@/pages/waf/ipblock/index.vue'),
-        meta: { title:'menu.host.deny_ip'},
+        meta: { title: 'menu.host.deny_ip' },
 
       },
       {
         path: 'wafurlblocklist',
         name: 'WafUrlBlockList',
         component: () => import('@/pages/waf/urlblock/index.vue'),
-        meta: { title:'menu.host.deny_url'},
+        meta: { title: 'menu.host.deny_url' },
 
       },
       {
         path: 'wafldpurllist',
         name: 'WafLdpUrlList',
         component: () => import('@/pages/waf/ldpurl/index.vue'),
-        meta: { title:  'menu.host.ldp_url'},
+        meta: { title: 'menu.host.ldp_url' },
 
-      },{
+      }, {
         path: 'wafanticclist',
         name: 'WafAntiCCList',
         component: () => import('@/pages/waf/anticc/index.vue'),
@@ -83,7 +85,7 @@ export default [
         component: () => import('@/pages/waf/sslconfig/index.vue'),
         meta: { title: 'menu.host.sslconfig' },
 
-      },{
+      }, {
         path: 'wafbatchtasklist',
         name: 'WafBatchTaskList',
         component: () => import('@/pages/waf/batchtask/index.vue'),
@@ -102,37 +104,42 @@ export default [
         component: () => import('@/pages/waf/ssl_expire/index.vue'),
         meta: { title: 'menu.host.ssl_expire' },
 
-      },{
+      }, {
         path: 'wafBlockingPagelist',
         name: 'WafBlockingPagelist',
         component: () => import('@/pages/waf/bLocking_page/index.vue'),
         meta: { title: 'menu.host.blocking_page' },
+      }, {
+        path: 'wafIPFailure',
+        name: 'WafIPFailure',
+        component: () => import('@/pages/waf/ip_failure/index.vue'),
+        meta: { title: 'menu.host.ip_failure' },
 
       }
     ],
   },
 
   {
-     path: '/wafanalysis',
-     name: 'wafanalysis',
-     component: Layout,
-     meta: { title:'menu.analysis.parent_title', icon: SystemLogIcon },
-     children: [
-       {
-         path: 'wafanalysislog',
-         name: 'WafAnalysisLog',
-         component: () => import('@/pages/waf/analysis/index.vue'),
-         meta: { title:'menu.analysis.analysis_title' },
-       },
-       {
-         path: 'wafanalysisSpiderlog',
-         name: 'WafAnalysisSpiderLog',
-         component: () => import('@/pages/waf/analysis/SpiderActive.vue'),
-         meta: { title:'menu.analysis.analysis_spider_title' },
-       },
-     ],
-   },
- {
+    path: '/wafanalysis',
+    name: 'wafanalysis',
+    component: Layout,
+    meta: { title: 'menu.analysis.parent_title', icon: SystemLogIcon },
+    children: [
+      {
+        path: 'wafanalysislog',
+        name: 'WafAnalysisLog',
+        component: () => import('@/pages/waf/analysis/index.vue'),
+        meta: { title: 'menu.analysis.analysis_title' },
+      },
+      {
+        path: 'wafanalysisSpiderlog',
+        name: 'WafAnalysisSpiderLog',
+        component: () => import('@/pages/waf/analysis/SpiderActive.vue'),
+        meta: { title: 'menu.analysis.analysis_spider_title' },
+      },
+    ],
+  },
+  {
     path: '/waf',
     name: 'waf',
     component: Layout,
@@ -155,7 +162,7 @@ export default [
         path: 'wafattacklogdetail',
         name: 'WafAttackLogDetail',
         component: () => import('@/pages/waf/attack/detail/index.vue'),
-        meta: { title:'menu.visit_log.visit_detail_title',hidden: true,keepAlive:false}
+        meta: { title: 'menu.visit_log.visit_detail_title', hidden: true, keepAlive: false }
         ,
 
       },
@@ -177,39 +184,39 @@ export default [
     ],
   },
   {
-     path: '/account',
-     name: 'account',
-     component: Layout,
-     redirect: '/account',
-     meta: { title: 'menu.account.parent_title', icon: UsergroupIcon },
-     children: [
-       {
-         path: 'Account',
-         name: 'Account',
-         component: () => import('@/pages/waf/account/index.vue'),
-         meta: { title: 'menu.account.account_list_title' },
-       },
-       {
-          path: 'AccountLog',
-          name: 'AccountLog',
-          component: () => import('@/pages/waf/accountlog/index.vue'),
-          meta: { title: 'menu.account.account_log_title'  },
-       },
-       {
-         path: 'OTP',
-         name: 'OTP',
-         component: () => import('@/pages/waf/otp/index.vue'),
-         meta: { title: 'menu.account.otp_title' },
-       },
+    path: '/account',
+    name: 'account',
+    component: Layout,
+    redirect: '/account',
+    meta: { title: 'menu.account.parent_title', icon: UsergroupIcon },
+    children: [
+      {
+        path: 'Account',
+        name: 'Account',
+        component: () => import('@/pages/waf/account/index.vue'),
+        meta: { title: 'menu.account.account_list_title' },
+      },
+      {
+        path: 'AccountLog',
+        name: 'AccountLog',
+        component: () => import('@/pages/waf/accountlog/index.vue'),
+        meta: { title: 'menu.account.account_log_title' },
+      },
+      {
+        path: 'OTP',
+        name: 'OTP',
+        component: () => import('@/pages/waf/otp/index.vue'),
+        meta: { title: 'menu.account.otp_title' },
+      },
 
-     ],
-   },
+    ],
+  },
   {
     path: '/sys',
     name: 'sys',
     component: Layout,
     redirect: '/sys',
-    meta: { title:'menu.system.parent_title', icon: SystemSettingIcon },
+    meta: { title: 'menu.system.parent_title', icon: SystemSettingIcon },
     children: [
       {
         path: 'VpConfig',
@@ -228,39 +235,39 @@ export default [
         }
       },
       {
-         path: 'SysLog',
-         name: 'SysLog',
-         component: () => import('@/pages/waf/syslog/index.vue'),
-         meta: { title: 'menu.system.system_log_title'},
+        path: 'SysLog',
+        name: 'SysLog',
+        component: () => import('@/pages/waf/syslog/index.vue'),
+        meta: { title: 'menu.system.system_log_title' },
       },
       {
-         path: 'SystemConfig',
-         name: 'SystemConfig',
-         component: () => import('@/pages/waf/systemconfig/index.vue'),
-         meta: { title:  'menu.system.system_config_title' },
-       },
+        path: 'SystemConfig',
+        name: 'SystemConfig',
+        component: () => import('@/pages/waf/systemconfig/index.vue'),
+        meta: { title: 'menu.system.system_config_title' },
+      },
       {
         path: 'PrivateInfo',
         name: 'PrivateInfo',
         component: () => import('@/pages/waf/private_info/index.vue'),
-        meta: { title:  'menu.system.private_info_title' },
+        meta: { title: 'menu.system.private_info_title' },
       },
       {
         path: 'RumtimeSysteminfo',
         name: 'RumtimeSysteminfo',
         component: () => import('@/pages/waf/sysruntime/index.vue'),
         meta: { title: 'menu.system.system_runtime_title' },
-      },{
+      }, {
         path: 'OneKeyMod',
         name: 'OneKeyMod',
         component: () => import('@/pages/waf/onekeymod/index.vue'),
         meta: { title: 'menu.system.system_one_key_modify_title' },
-      },      {
+      }, {
         path: 'task',
         name: 'Task',
         component: () => import('@/pages/waf/task/index.vue'),
         meta: { title: 'menu.system.task' },
-      },{
+      }, {
         path: 'sqlquery',
         name: 'SqlQuery',
         component: () => import('@/pages/waf/sqlquery/index.vue'),
@@ -276,7 +283,7 @@ export default [
     redirect: '/center',
     meta: { title: 'menu.pc.parent_title', icon: ServerIcon },
     children: [
-     {
+      {
         path: 'CenterManager',
         name: 'CenterManager',
         component: () => import('@/pages/waf/center/index.vue'),

@@ -6,16 +6,16 @@
  * page - Fields for specific functional pages
  */
 export default {
-  common:{
+  common: {
     confirm: "Confirm",
     cancel: "Cancel",
     close: "Close",
     search: "Search",
-    refresh:"Refresh",
+    refresh: "Refresh",
     all: "All",
     details: "Details",
     new: "New",
-    add:"Add",
+    add: "Add",
     save: "Save",
     copy: "Copy",
     edit: "Edit",
@@ -27,7 +27,7 @@ export default {
     return: "Return",
     status: "Status",
     remarks: "Remarks",
-    renew:"Renew",
+    renew: "Renew",
     select_placeholder: "Please select ",
     selected_count: "Selected {count} items",
     placeholder: "Please enter ",
@@ -40,7 +40,7 @@ export default {
     op: "Operation Content",
     date: "Date",
     online_document: "Online Document",
-    defense_status:{
+    defense_status: {
       all: "All",
       stop: "Block",
       pass: "Allow",
@@ -48,22 +48,22 @@ export default {
     },
     on: "On",
     off: "Off",
-    http_header:{
-      name:"Name",
-      value:"Value",
+    http_header: {
+      name: "Name",
+      value: "Value",
     },
     success: "Success",
     failed: "Fail",
     loading: "Loading...",
-    required:"Required",
-    status_runtime_option:{
+    required: "Required",
+    status_runtime_option: {
       running: "Running",
-      stopped: "Stopped", 
+      stopped: "Stopped",
     },
-    tips:{
-      api_error:"API error",
-      save_success:"Save success",
-      save_failed:"Save failed",
+    tips: {
+      api_error: "API error",
+      save_success: "Save success",
+      save_failed: "Save failed",
     },
     column_config: 'Column Config',
     save_column_config: "Save Column Config",
@@ -74,9 +74,14 @@ export default {
     column_config_reset_confirm: "Are you sure you want to reset column configuration to default?",
     column_config_load_failed: "Failed to load column configuration",
     seconds: "seconds",
-    generate_rule: 'Generate Rule'
+    generate_rule: 'Generate Rule',
+    unit_minute: "minute",
+    unit_count: "times",
+    confirm_unban: "Confirm Unban",
+    confirm_unban_content: "Are you sure you want to unban IP {ip}?",
+    op: "Operation"
   },
-  login:{
+  login: {
     login_title: "Login",
     login_sub_title: "SamWaf Website Firewall Management",
     login_has_question: "Having trouble?",
@@ -85,7 +90,7 @@ export default {
     input_password_placeholder: "Please enter your password:",
     input_secret_code_placeholder: "Please enter your secret code:",
     login_btn_title: "Login",
-    rule:{
+    rule: {
       phone: "Phone number is required",
       account: "Account is required",
       password: "Password is required",
@@ -93,15 +98,15 @@ export default {
     },
     login_success: "Login successful",
   },
-  topNav:{
-    update:{
+  topNav: {
+    update: {
       has_new_version: "New version available",
       confirm_update: "Confirm Update",
-      update_danger_tips:"Please note that the service will be interrupted for a few minutes during the upgrade. We recommend scheduling the update during off-peak hours.",
-       beta_version_warning: 'Warning: This is a beta version which may contain unstable features. Not recommended for production environments.',
-      version_label:"Version:",
-      desc_label:"Description:",
-      more_label:"More information",
+      update_danger_tips: "Please note that the service will be interrupted for a few minutes during the upgrade. We recommend scheduling the update during off-peak hours.",
+      beta_version_warning: 'Warning: This is a beta version which may contain unstable features. Not recommended for production environments.',
+      version_label: "Version:",
+      desc_label: "Description:",
+      more_label: "More information",
       beta_confirm_title: 'Confirm Beta Update',
       beta_confirm_content: 'You are updating to a beta version which may be unstable. Are you sure you want to continue?',
       beta_confirm_yes: 'Confirm Update',
@@ -124,14 +129,14 @@ export default {
     dropdown_reboot_waf: "Reboot",
     dropdown_logout: "Logout",
   },
-  dashboard:{
+  dashboard: {
     tip_create_website_title: "You have not created a protected website, click to create one",
     tip_create_website_link: "Create now",
     tip_modify_pwd_title: "You are still using the default account and password, please change it soon",
     tip_modify_pwd_link: "Change now",
     tip_empty_otp_title: "You have not bound 2FA yet. It is recommended to bind as soon as possible",
     tip_empty_otp_link: "Bind Now",
-    counter:{
+    counter: {
       today_of_attack_count: "Today's Attack Count",
       all_visit_count: "Total Visits Today",
       not_normal_visit_count: "Abnormal IPs Today (count)",
@@ -143,21 +148,21 @@ export default {
     cycle_attack_count: "Attack Count This Period",
     cycle_percent_title: "Proportion of Normal to Attack",
     cycle_percent_subtitle: "In the Period",
-    ip_rank:{
-      normal_title:"IP Normal Rank",
-      attack_title:"IP Attack Rank",
-      ip:"IP",
-      counter:"Counter",
-      rank:"Rank",
-      tag:"Tag",
-      ip_belong:"IP Belong",
-      day:"Today",
-      week:"Week",
+    ip_rank: {
+      normal_title: "IP Normal Rank",
+      attack_title: "IP Attack Rank",
+      ip: "IP",
+      counter: "Counter",
+      rank: "Rank",
+      tag: "Tag",
+      ip_belong: "IP Belong",
+      day: "Today",
+      week: "Week",
     },
     stats: {
       current_qps: "Current QPS",
       log_qps: "Log QPS",
-      main_queue: "Main Queue", 
+      main_queue: "Main Queue",
       log_queue: "Log Queue",
       stats_queue: "Stats Queue",
       message_queue: "Message Queue",
@@ -187,13 +192,13 @@ export default {
       response_status_error: "Error"
     }
   },
-  menu:{
+  menu: {
     dashboard: {
-    parent_title: "Dashboard",
-    dashboard_title: "Overview Dashboard",
-    stats_title: "System Statistics Monitor", 
-  },
-    host:{
+      parent_title: "Dashboard",
+      dashboard_title: "Overview Dashboard",
+      stats_title: "System Statistics Monitor",
+    },
+    host: {
       parent_title: "Website Protection",
       host_title: "Website Protection",
       host_detail: "Host Protection Details",
@@ -205,73 +210,73 @@ export default {
       deny_url: "URL Block List",
       ldp_url: "Protection URL",
       cc: "CC Protection",
-      sensitive:"Sensitive",
-      sslconfig:"SSL Folder",
-      batchtask:"Batch Task",
-      sslorder:"SSL Apply Result",
-      ssl_expire:"SSL Expire Check",
-      blocking_page:"Custom Blocking Page",
-      cache_rule:"Cache Rule",
+      sensitive: "Sensitive",
+      sslconfig: "SSL Folder",
+      batchtask: "Batch Task",
+      sslorder: "SSL Apply Result",
+      ssl_expire: "SSL Expire Check",
+      blocking_page: "Custom Blocking Page",
+      cache_rule: "Cache Rule",
     },
-    analysis:{
+    analysis: {
       parent_title: "Data Analysis",
       analysis_title: "Data Analysis",
       analysis_spider_title: "Spider Analysis",
     },
-    visit_log:{
+    visit_log: {
       parent_title: "Protection Logs",
       visit_title: "Visit Logs",
       visit_detail_title: "Protection Details",
       attack_title: "Attack Logs",
     },
-    tunnel:{
+    tunnel: {
       parent_title: "Tunnel Protection",
       list_title: "Tunnel Protection",
       tunnel_detail_title: "Tunnel Details",
     },
-    account:{
+    account: {
       parent_title: "Account",
-      otp_title:"Two-factor auth (2FA)",
+      otp_title: "Two-factor auth (2FA)",
       account_list_title: "Account List",
       account_log_title: "Account Logs",
     },
-    system:{
+    system: {
       parent_title: "System Settings",
-      vpconfig_title:"Manage Configuration",
+      vpconfig_title: "Manage Configuration",
       filemanage_title: "File Management",
       system_log_title: "System Logs",
       system_config_title: "Parameter Settings",
       system_runtime_title: "Runtime Parameters",
       system_one_key_modify_title: "Quick Modification",
-      task:"Task Manager",
-      private_info_title:"Private Manager",
-      monitor_title:"System Monitor",
-      sql_query_title:"SQL Query Tool",
+      task: "Task Manager",
+      private_info_title: "Private Manager",
+      monitor_title: "System Monitor",
+      sql_query_title: "SQL Query Tool",
     },
-    pc:{
+    pc: {
       parent_title: "Device",
       pc_list_title: "Device List",
     }
   },
-  page:{
+  page: {
     tunnel: {
       alert_message: "The tunnel feature is currently experimental, mainly providing external protection for remote connections, database connections, Redis connections, etc.",
       button_add_tunnel: "New",
-      code: "Code", 
+      code: "Code",
       name: "Tunnel Name",
       port: "Port",
       protocol: "Protocol",
       remote_port: "Remote Port",
       remote_ip: "Remote IP",
       allow_ip: "Allow IP List (comma separated)",
-      deny_ip: "Deny IP List (comma separated)", 
+      deny_ip: "Deny IP List (comma separated)",
       start_status: "Start Status",
       conn_timeout: "Connection Timeout",
       read_timeout: "Read Timeout",
       write_timeout: "Write Timeout",
       max_in_connect: "Max Input Connections",
       max_out_connect: "Max Output Connections",
-      remark: "Remarks", 
+      remark: "Remarks",
       show_connections: 'View Connections',
       view_connections: 'Connections',
       new_tunnel: 'New Tunnel',
@@ -297,7 +302,7 @@ export default {
       password_mismatch_warning: "The passwords do not match, please check",
       admin_delete_warning: "The default admin account cannot be deleted",
     },
-    otp:{
+    otp: {
       alert_message: "SamWaf Two-Factor Authentication (2FA) is a secure login verification technology. It requires users to provide additional authentication information during login, in addition to their password, to enhance account security.",
       secret_code: "Enter Security Code",
       bind_success_tip: "Successfully bound. If you need to unbind, please click More to expand",
@@ -305,7 +310,7 @@ export default {
       unbind: "Unbind",
       cannot_scan: "Scan failed?",
     },
-    account_log:{
+    account_log: {
       export_logs: "Export Logs",
       view_log_dialog_title: "View Log",
       operation_account: "Operation Account",
@@ -314,7 +319,7 @@ export default {
       cancel: "Cancel",
       operation_time: "Operation Time"
     },
-    sql_query:{
+    sql_query: {
       title: "SQL Query Tool",
       db_type: "Select Database",
       db_type_local: "Local Database",
@@ -329,28 +334,28 @@ export default {
       query_failed: "Query failed",
       total_records: "Total {count} records",
     },
-    analysis:{
-      analysis_spider:{
+    analysis: {
+      analysis_spider: {
         "spider_type": "Spider Type",
         "visit_count": "Visit Count",
         "percentage": "Percentage"
       }
     },
-    cc:{
+    cc: {
       new_cc_protection: "New CC Protection",
       selected_count: "Selected {count} items",
       website: "Website",
       url: "URL",
       rate: "Windows Size",
       limit: "Limit Access Times",
-      lock_minutes:"Lock Time(Minutes)",
+      lock_minutes: "Lock Time(Minutes)",
       samwaf_cc_protection: "SamWaf Firewall Resists CC Attacks",
       input_url_placeholder: "Enter URL (optional)",
       show_cc_ban_ip: "Show CC Ban IP",
-      ban_ip:"Ban IP",
-      ban_remain_time:"Ban Remain Ip",
-      ban_ip_belong:"IP Belong",
-      remove_ban_ip:"Remove Ban IP",
+      ban_ip: "Ban IP",
+      ban_remain_time: "Ban Remain Ip",
+      ban_ip_belong: "IP Belong",
+      remove_ban_ip: "Remove Ban IP",
       limit_mode: 'Limit Mode',
       limit_mode_rate: 'Average Rate Mode',
       limit_mode_rate_desc: 'Distributes requests evenly per second, suitable for preventing burst attacks',
@@ -372,7 +377,7 @@ export default {
       rule_content_placeholder: 'Enter rule content',
       rule_content_required: 'Please enter rule content',
     },
-    visit_log:{
+    visit_log: {
       visit_log: "Protection Logs",
       online_document: "Online Document",
       website: "Website",
@@ -411,8 +416,8 @@ export default {
       date_range_last_300_days: "Last 300 Days",
       export_db_file_header: "Export the currently selected log file(SQLITE)",
       export_db_file_content: "The historical file may be large, to avoid affecting bandwidth, please export during off-peak hours.",
-      pop_detail_header:"Visit Detail",
-      detail:{
+      pop_detail_header: "Visit Detail",
+      detail: {
         defense_status: "Defense Status",
         visit_time: "Visit",
         detection_time: "Detection",
@@ -430,7 +435,7 @@ export default {
         balance_info: "Load Balancing Info",
         request_region: "Request Region",
         response_code: "Response Code",
-        more_info:"More Information",
+        more_info: "More Information",
         request_path: "Request Path",
         request_header: "Request Header",
         request_user_browser: "Request User Browser",
@@ -448,19 +453,19 @@ export default {
         mouse_select_tooltip: "Select the content you want to add with the mouse, then click on the page's blank area",
         http_copy_mask: "False Positive？",
         http_copy_mask_tip: "If you encounter a false positive, please copy the text below and send it to samwafgo@gmail.com. Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue.",
-        ai:{
+        ai: {
           title: "AI",
           log_ai_analysis: "AI Analysis",
-          before_send_ai :"Before you send content to ai",
-          before_send_ai_tip:"Before you send content to ai,Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue. ",
+          before_send_ai: "Before you send content to ai",
+          before_send_ai_tip: "Before you send content to ai,Common sensitive information has already been masked: header fields such as Authorization, Token, Api-Key, Secret, Access-Token, X-Api-Key, X-Access-Token, X-Secret, Session-Key, Set-Cookie; cookies such as sessionid, auth, token, key, secret. If there are other sensitive fields, please mask them yourself or feel free to submit an issue. ",
         },
-        time_cost:{
+        time_cost: {
           title: "Time Cost(ms)",
-          total_cost:"Total Time Cost",
-          pre_check_cost:"Req Check Cost",
-          forward_cost:"Forward Cost",
-          backend_check_cost:"Response Check Cost",
-        },response:{
+          total_cost: "Total Time Cost",
+          pre_check_cost: "Req Check Cost",
+          forward_cost: "Forward Cost",
+          backend_check_cost: "Response Check Cost",
+        }, response: {
           response_title: "Response Content",
           response_body: "Response Body",
           response_header: "Response Header",
@@ -469,9 +474,9 @@ export default {
         ip_extract_issue: 'IP Extraction Issue?',
         ip_extract_issue_desc: 'If there is a CDN in front, extract specific header data. If empty, extract connection IP',
         ip_extract_issue_tips: 'If empty, extract connection IP, otherwise extract the value of the specified HTTP header as the source IP',
-       }
+      }
     },
-    attack_log:{
+    attack_log: {
       attack_log: "Risk Log",
       online_document: "Online Documentation",
       rule_name: "Triggered Rule",
@@ -483,7 +488,7 @@ export default {
       ip_total_tag: "Triggered Rule Set",
       attack_ip_visit_detail_list_header: "Access IP Details",
     },
-    center:{
+    center: {
       switch_local: "Switch to Local (No Remote Access)",
       server_switch_button: "Switch Server",
       recent_visit_time: "Recent Visit Time",
@@ -521,12 +526,12 @@ export default {
       ssl_tips: "If it is HTTPS, you need to select an encryption certificate. Port 80 does not require one.",
       ssl_yes: "Yes",
       ssl_no: "No",
-      add_new_ssl:"Add New SSL",
-      edit_ssl:"Edit SSL",
-      bind_empty_ssl_tips:"Current Cannot Bind SSL",
-      ssl_not_found_tips:"Ssl Not Found",
+      add_new_ssl: "Add New SSL",
+      edit_ssl: "Edit SSL",
+      bind_empty_ssl_tips: "Current Cannot Bind SSL",
+      ssl_not_found_tips: "Ssl Not Found",
       ssl_option_yes: "Encryption Certificate (requires certificate upload)",
-      ssl_option_no: "Non-encrypted", 
+      ssl_option_no: "Non-encrypted",
       ssl_config_mode: "SSL Configuration Mode",
       ssl_config_existing: "Existing Certificate",
       ssl_config_auto_apply: "Configure Auto Certificate Application Later",
@@ -534,23 +539,23 @@ export default {
       guard_status_off: "Not Protected",
       auto_start_on: "Auto Start",
       auto_start_off: "Manual Start",
-      log_only_mode:"Log Only Mode",
-      log_only_mode_on:"On",
-      log_only_mode_off:"Off",
-      log_only_mode_tips:"Log Only Mode: When enabled, SamWaf will only record attack logs, but will not block attack requests.",
+      log_only_mode: "Log Only Mode",
+      log_only_mode_on: "On",
+      log_only_mode_off: "Off",
+      log_only_mode_tips: "Log Only Mode: When enabled, SamWaf will only record attack logs, but will not block attack requests.",
       tab_base: "Basic Information",
       tab_engine: "Engine Built-in Protection",
       tab_other: "Other Configurations",
-      tab_more_domain:"Bind More Domain",
-      tab_password:"Web Password Visit",
+      tab_more_domain: "Bind More Domain",
+      tab_password: "Web Password Visit",
       tab_health_check: 'Health Check',
       tab_captcha: 'Captcha Settings',
       tab_anti_leech: "Anti-Leech Config",
       tab_cache: "Cache Config",
       tab_static_site: "Static Site",
       tab_transport: "Transport Config",
-      more_domain:"Bind More Domain",
-      more_domain_tips:"Enter multiple domain names, each on a new line, without including the port.",
+      more_domain: "Bind More Domain",
+      more_domain_tips: "Enter multiple domain names, each on a new line, without including the port.",
       start_status: "Start Status",
       guard_status: "Protection Status",
       start_status_content: "This feature selects whether to start directly.",
@@ -590,7 +595,7 @@ export default {
         unhealthy_servers: "Unhealthy Servers",
       },
       captcha: {
-        alert:"Note: For payment callbacks, refund notifications, open platform notifications, and other callback-related communications, please ensure the following IP addresses are added to your network whitelist or configure URL exceptions in your security/firewall settings",
+        alert: "Note: For payment callbacks, refund notifications, open platform notifications, and other callback-related communications, please ensure the following IP addresses are added to your network whitelist or configure URL exceptions in your security/firewall settings",
         is_enable: 'Enable Captcha',
         is_enable_tips: 'Require captcha verification for website access',
         exclude_urls: 'Exclude URLs',
@@ -620,7 +625,7 @@ export default {
         challenge_difficulty: 'Challenge Difficulty',
         challenge_difficulty_tips: 'Difficulty level (default: 4)',
         capjs_expires_ms: 'Expires (ms)',
-        capjs_expires_ms_tips: 'Expiration time in milliseconds (default: 600000)', 
+        capjs_expires_ms_tips: 'Expiration time in milliseconds (default: 600000)',
         expire_time: 'Verification Period',
         expire_time_tips: 'How long the verification remains valid',
         hours: 'hours',
@@ -727,9 +732,9 @@ export default {
       file_upload_success: "File uploaded successfully",
       file_upload_fail: "File upload failed",
       file_safety: "File Safety",
-      upload:{
-        import_auto_create_code:"Import new host code (for new data)",
-        import_remain_code:"Import retained host code (for old data)",
+      upload: {
+        import_auto_create_code: "Import new host code (for new data)",
+        import_remain_code: "Import retained host code (for old data)",
       },
       back_system_type_baota: "Baota",
       back_system_type_phpstudy: "Xiao Pi Panel (phpstudy)",
@@ -743,9 +748,9 @@ export default {
       forbid_for_global_site: "Global websites cannot be operated",
       forbid_for_global_site_only_change_guard_status: "Global websites can only configure protection status",
       host_rule_msg: "Do not fill in HTTP and HTTPS, just enter the domain name.",
-      real_time:"Real Time",
-      real_qps:"QPS",
-      real_active:"Active Count",
+      real_time: "Real Time",
+      real_qps: "QPS",
+      real_active: "Active Count",
       loadbalance: {
         label_loadbalance_is_enable: "Enable Load Balancing",
         label_loadbalance_type: "Load Balancing Type",
@@ -769,13 +774,13 @@ export default {
         label_unrestricted_port_is_enable_off: "Disable",
         unrestricted_port_tip: "If disabled, suitable when using an external CDN or Nginx, it only matches the protected domain and not the source port."
       },
-      auto_jump_https:{
+      auto_jump_https: {
         label_autu_jump_https: "Force 80 redirect HTTPS",
         label_autu_jump_https_on: "On",
         label_autu_jump_https_off: "Off",
-        autu_jump_https_tip:"If enabled, SamWaf will force automatic redirection to HTTPS; if disabled, SamWaf will not perform automatic redirection."
+        autu_jump_https_tip: "If enabled, SamWaf will force automatic redirection to HTTPS; if disabled, SamWaf will not perform automatic redirection."
       },
-      is_enable_http_auth_base:"Web Password Visit",
+      is_enable_http_auth_base: "Web Password Visit",
       is_enable_http_auth_base_tips: "After enabled, the website will require a password for access. Please add a username and password.",
       modify_all_guard_status: 'Batch Protection Switch',
       confirm_modify_all_guard_status: 'Are you sure you want to modify the protection status of all websites?',
@@ -788,7 +793,7 @@ export default {
         target_hosts: "Target Sites",
         select_all: "Select All",
         execute_copy: "One-Click Copy",
-        module_cache: "Cache Configuration", 
+        module_cache: "Cache Configuration",
         select_modules: "Please select modules to copy",
         select_target_hosts: "Please select target sites",
         selected_modules: "Selected {count} modules",
@@ -931,7 +936,7 @@ export default {
       no_data_selected: "Please select data to delete first",
       no_website_selected: "Please select a website first"
     },
-    sensitive:{
+    sensitive: {
       button_add_sensitive: "Add Sensitive Word",
       button_batch_delete: "Batch Delete",
       button_clear_all: "Clear All",
@@ -942,16 +947,16 @@ export default {
       type_option_1: "Type 1",
       type_option_2: "Type 2",
       type_option_3: "Type 3",
-      label_check_direction:"Detection Direction",
-      label_action:"Action",
-      check_direction_type:{
-        in:"Request",
-        out:"Response",
-        all:"All",
+      label_check_direction: "Detection Direction",
+      label_action: "Action",
+      check_direction_type: {
+        in: "Request",
+        out: "Response",
+        all: "All",
       },
-      action_type:{
-        deny:"Deny",
-        replace:"Replace",
+      action_type: {
+        deny: "Deny",
+        replace: "Replace",
       },
       confirm_batch_delete: "Confirm to delete selected data?",
       confirm_clear_all: "Confirm to clear all sensitive word data?",
@@ -997,7 +1002,7 @@ export default {
       restarting: "Restarting manager, please wait...",
       restart_success: "Restart successful, the page will refresh automatically",
       restart_failed: "Restart failed, please restart manually",
-      restart_wait_tip: "Manager is restarting, please wait..." 
+      restart_wait_tip: "Manager is restarting, please wait..."
     },
     ssl: {
       alert_message: "SamWaf manages all certificate information",
@@ -1053,20 +1058,20 @@ export default {
         manual: "Manual Task",
       },
     },
-    sslorder:{
-      alert_message:"Apply for a free certificate, the certificate is valid for 90 days. By default, it will automatically renew 30 days before expiration, or you can manually initiate renewal.",
-      label_website:"Host",
-      label_apply_status:"Application Status",
-      label_result_error:"Error Information",
-      label_apply_platform:"Application Platform",
-      label_apply_method:"Application Method",
-      label_apply_domain:"Application Domain",
-      label_apply_email:"Application Mail",
-      label_apply_dns:"DNS Provider",
+    sslorder: {
+      alert_message: "Apply for a free certificate, the certificate is valid for 90 days. By default, it will automatically renew 30 days before expiration, or you can manually initiate renewal.",
+      label_website: "Host",
+      label_apply_status: "Application Status",
+      label_result_error: "Error Information",
+      label_apply_platform: "Application Platform",
+      label_apply_method: "Application Method",
+      label_apply_domain: "Application Domain",
+      label_apply_email: "Application Mail",
+      label_apply_dns: "DNS Provider",
       label_private_group: 'Key Group',
       label_private_group_add: 'same cloud  multiple accounts?',
-      key_configured:"Key Configuration",
-      key_not_configured:"Key Not Configured",
+      key_configured: "Key Configuration",
+      key_not_configured: "Key Not Configured",
       ssl_http_check_setting: "SSL File Verification Method Setting",
       ssl_http_check_desc: "Set whether the certificate file verification method strictly controls the backend .well-known response code must be 404 301 302",
       ssl_http_check_tips: "1 means strict control of response codes must be 404 301 302, 0 means no control",
@@ -1074,51 +1079,51 @@ export default {
       ssl_http_check_loose: "No Control(0)",
       maintenance_platform: "Maintenance Platform",
       ca_server_letsencrypt_cannot_op: "letsencrypt does not support maintenance",
-      sslorder_status_type:{
+      sslorder_status_type: {
         submitted: "Submitted",
         applying: "In Progress",
-        fail:"Failed",
+        fail: "Failed",
         success: "Successful",
-        renewed:"Renewed",
-        expired:"Expired",
+        renewed: "Renewed",
+        expired: "Expired",
       },
-      sslorder_platform_type:{
+      sslorder_platform_type: {
         letsencrypt: "Let's Encrypt",
       },
-      sslorder_apply_method_type:{
+      sslorder_apply_method_type: {
         http01: "File Verification Method",
         dns01: "DNS Verification Method",
       },
-      sslorder_apply_dns_type:{
+      sslorder_apply_dns_type: {
         aliyun: "Alibaba cloud",
         huaweicloud: "Huawei cloud",
         tencentcloud: "Tencent cloud",
         cloudflare: "Cloudflare",
         baiducloud: "Baidu cloud",
       },
-      sslorder_apply_dns_config:{
-        alidns:{
+      sslorder_apply_dns_config: {
+        alidns: {
           access_key: "Access Key ID",
           secret_key: "Access Key Secret",
           security_token: "STS Security Token (optional)",
         },
-        huaweicloud:{
+        huaweicloud: {
           access_key: "Access Key",
           secret_key: "Secret Key",
           region: "Region",
         },
-        tencentcloud:{
+        tencentcloud: {
           secret_id: "Access Key ID",
           secret_key: "Access Key Secret",
         },
-        cloudflare:{
+        cloudflare: {
           dns_api_token: "API token with DNS",
         },
-        baiducloud:{
+        baiducloud: {
           access_key: "Access Key ID",
           secret_key: "Access Key Secret",
         },
-        
+
       },
       error_domain_not_match_method: "Wildcard domains are not allowed under the file verification method",
     },
@@ -1154,18 +1159,18 @@ export default {
         ca_server_remarks: "Please enter remarks"
       }
     },
-    ssl_expire:{
+    ssl_expire: {
       alert_message: "SamWaf domain certificate expiration check, scheduled to check all domains once every day at midnight.",
       button_add_ssl_expire: "New",
-      button_check:"Check",
-      button_sync_host:"Sync Exist Host",
+      button_check: "Check",
+      button_sync_host: "Sync Exist Host",
       domain: "Domain",
       port: "Port",
-      valid_to:"Valid Time",
+      valid_to: "Valid Time",
       visit_log: "VisitLog",
       status: "Status",
     },
-    blocking_page:{
+    blocking_page: {
       alert_message: "SamWaf Custom Blocking Page",
       button_add_blocking_page: "Create New",
       blocking_page_name: "Custom Blocking Page Name",
@@ -1175,7 +1180,26 @@ export default {
       response_header: "Response Header Information",
       response_content: "Response Content",
     },
-    cache_rule:{
+    ip_failure: {
+      config: "Config",
+      enabled: "Enable IP Failure Ban",
+      status_codes: "Failure Status Codes",
+      status_codes_placeholder: "e.g.: 401|403|404|444|429|503",
+      status_codes_desc: "Failure status code configuration, supports multiple codes separated by |, also supports regular expressions",
+      lock_time: "Lock Time",
+      lock_time_desc: "IP failure ban lock time (minutes)",
+      ban_list: "Ban List",
+      ip: "IP Address",
+      fail_count: "Failure Count",
+      trigger_minutes: "Trigger Time Window (Minutes)",
+      trigger_count: "Trigger Failure Count",
+      first_time: "First Failure Time",
+      last_time: "Last Failure Time",
+      remain_time: "Remaining Time",
+      region: "Region",
+      unban: "Unban"
+    },
+    cache_rule: {
       alert_message: "SamWaf Cache Rule",
       button_add_cache_rule: "New",
       host_code: "WebSite",
@@ -1206,15 +1230,15 @@ export default {
       request_method_tips: "Specify which HTTP request methods this rule applies to, separate multiple methods with semicolons. Default is GET",
       remarks_tips: "Add remarks for easy identification",
     },
-    http_auth_base:{
+    http_auth_base: {
       alert_message: "After enabled website password, please access with the password.",
       button_add_http_auth_base: "New",
       host_code: "Host",
       user_name: "UserName",
       password: "Password",
-      password_validation:"Password Not Normal"
+      password_validation: "Password Not Normal"
     },
-    task:{
+    task: {
       alert_message: "SamWaf Task",
       button_add_task: "New",
       button_manual_execute: "Manual Execute",
@@ -1223,11 +1247,11 @@ export default {
       task_value: "TaskValue",
       task_at: "TaskAt",
       task_method: "TaskMethod",
-      task_unit_type:{
-        second:"Second",
-        minute:"Minute",
-        hour:"Hour",
-        day:"Day",
+      task_unit_type: {
+        second: "Second",
+        minute: "Minute",
+        hour: "Hour",
+        day: "Day",
       }
     },
     private_group: {
@@ -1236,11 +1260,11 @@ export default {
       private_group_name: "Group Name",
       private_group_belong_cloud: "Cloud Provider"
     },
-    private_info:{
+    private_info: {
       alert_message: "SamWaf ",
       button_add_private_info: "New",
       private_group_name: "GroupName",
-      private_group_belong_cloud:"GroupBelongCloud",
+      private_group_belong_cloud: "GroupBelongCloud",
       private_key: "Key",
       private_value: "Value",
       remarks: "Remarks",
@@ -1296,8 +1320,8 @@ export default {
         parameter: "Parameters",
         write_rule: "Rule Arrangement",
         system_variable: "System Variable",
-        system_judge_symbol:"System Judgment Symbol",
-        system_relation_symbol:"System Relation Symbol",
+        system_judge_symbol: "System Judgment Symbol",
+        system_relation_symbol: "System Relation Symbol",
         ui_rule_edit: "UI Arrangement",
         manual_code_rule_edit: "Manual Code Arrangement",
         mf_option_default: "Default",
@@ -1314,8 +1338,8 @@ export default {
         inner_option_country: "Visitor Country",
         inner_option_province: "Visitor Province",
         inner_option_city: "Visitor City",
-        inner_option_getheadervalue:"Get Header Value",
-        inner_option_getipfailurecount:"Get IP Failure Count (minutes)",
+        inner_option_getheadervalue: "Get Header Value",
+        inner_option_getipfailurecount: "Get IP Failure Count (minutes)",
         attr_type_text: "Text",
         attr_type_int: "Number",
         judge_equal: "Judge if Equal",
@@ -1331,7 +1355,7 @@ export default {
         judge_logic_or: "Or",
         variable_name: 'Variable Name',
         variable_key: 'Variable Key',
-        tutorial_online:'Online Tutorial',
+        tutorial_online: 'Online Tutorial',
         example_code: 'Rule Example Code',
         rule_script_content: 'Rule Script Content',
       }
@@ -1343,12 +1367,12 @@ export default {
       empty: "No Notifications",
       all: "View All"
     },
-    gpt:{
-      assistant:"AI",
-      chat:{
+    gpt: {
+      assistant: "AI",
+      chat: {
         chat_title: "Chat",
         chat_placeholder: "Enter Content",
-        chat_send:"Send",
+        chat_send: "Send",
       }
     },
     filemanage: {
@@ -1366,7 +1390,7 @@ export default {
       delete_success: "File deleted successfully",
       delete_failed: "File deletion failed",
       filter_name_placeholder: "Filter by name",
-      filter_path_placeholder: "Filter by path", 
+      filter_path_placeholder: "Filter by path",
       filter_description_placeholder: "Filter by description"
     },
     right_setting: {
@@ -1383,9 +1407,9 @@ export default {
       use_tabs_router: "Use Multiple Tab Pages",
       footer_position: "Footer Inner Collapse",
       split_menu: "Split Menu (Effective in Mixed Mode)",
-      theme_mode_color_light:"Light",
-      theme_mode_color_dark:"Dark",
-      theme_mode_color_auto:"Auto",
+      theme_mode_color_light: "Light",
+      theme_mode_color_dark: "Dark",
+      theme_mode_color_auto: "Auto",
     },
     monitor: {
       alert_message: "System monitoring page, real-time display of server CPU, memory and disk usage",
