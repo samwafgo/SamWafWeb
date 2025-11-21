@@ -4,6 +4,7 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAddipblock"> {{ $t('page.ipblock.button_add_ip') }} </t-button>
+          <t-button variant="base" theme="default" @click="HandleExportExcel()"> {{ $t('page.ipblock.export_data') }} </t-button>
           <t-button 
             theme="danger" 
             variant="outline" 
@@ -156,6 +157,9 @@
   import {
     wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi
   } from '@/apis/ipblock';
+  import {
+    export_api
+  } from '@/apis/common';
   import {
     SSL_STATUS,
     GUARD_STATUS,
@@ -575,7 +579,33 @@
       // 取消清空所有
       onCancelClearAll() {
         this.clearAllConfirmVisible = false;
-      }, 
+      },
+      /**
+       * 导出Excel数据
+       */
+      HandleExportExcel() {
+        let that = this
+        export_api({table_name: "ipblock"}).then((res) => {
+          let resdata = res
+          console.log(resdata)
+          let blob = new Blob([res], {type: "application/force-download"}) // Blob 对象表示一个不可变、原始数据的类文件对象
+          console.log(blob);
+          let fileReader = new FileReader()   // FileReader 对象允许Web应用程序异步读取存储在用户计算机上的文件的内容
+          fileReader.readAsDataURL(blob)
+          //开始读取指定的Blob中的内容。一旦完成，result属性中将包含一个data: URL格式的Base64字符串以表示所读取文件的内容
+          fileReader.onload = (e) => {
+            let a = document.createElement('a')
+            a.download = `ipblock.xlsx`
+            a.href = e.target.result
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+          }
+        })
+          .catch((e: Error) => {
+            console.log(e);
+          })
+      },
     },
   });
 </script>

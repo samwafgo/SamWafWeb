@@ -861,6 +861,7 @@ export default {
     },
     ipblock: {
       button_add_ip: "Add Blocklist IP",
+      export_data: "Export Data",
       button_batch_delete: "Batch Delete",
       button_clear_all: "Clear All",
       label_website: "Website",

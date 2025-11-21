@@ -864,6 +864,7 @@ export default {
     },
     ipblock:{
       button_add_ip: "新建黑名单IP",
+      export_data: "导出数据",
       button_batch_delete: "批量删除",
       button_clear_all: "清空所有",
       label_website: "网站",
