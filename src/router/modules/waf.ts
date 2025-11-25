@@ -1,6 +1,6 @@
 import {
   UserSafetyIcon, SystemSettingIcon, UsergroupIcon, SystemLogIcon, ApplicationIcon, LightingCircleIcon,
-  ServerIcon, ForkIcon
+  ServerIcon, ForkIcon, NotificationIcon
 } from 'tdesign-icons-vue';
 import Layout from '@/layouts/index.vue';
 
@@ -272,6 +272,34 @@ export default [
         name: 'SqlQuery',
         component: () => import('@/pages/waf/sqlquery/index.vue'),
         meta: { title: 'menu.system.sql_query_title' },
+      },
+    ],
+  },
+
+  {
+    path: '/notify',
+    name: 'notify',
+    component: Layout,
+    redirect: '/notify/channel',
+    meta: { title: 'menu.notify.parent_title', icon: NotificationIcon },
+    children: [
+      {
+        path: 'channel',
+        name: 'NotifyChannel',
+        component: () => import('@/pages/waf/notify_channel/index.vue'),
+        meta: { title: 'menu.notify.channel_title' },
+      },
+      {
+        path: 'subscription',
+        name: 'NotifySubscription',
+        component: () => import('@/pages/waf/notify_subscription/index.vue'),
+        meta: { title: 'menu.notify.subscription_title' },
+      },
+      {
+        path: 'log',
+        name: 'NotifyLog',
+        component: () => import('@/pages/waf/notify_log/index.vue'),
+        meta: { title: 'menu.notify.log_title' },
       },
     ],
   },
