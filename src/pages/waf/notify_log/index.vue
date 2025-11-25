@@ -6,12 +6,14 @@
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
             <t-form-item :label="$t('page.notify_log.label_message_type')" name="message_type">
               <t-select v-model="searchformData.message_type" clearable :style="{ width: '150px' }">
-                <t-option value="user_login" :label="$t('page.notify_subscription.message_type_user_login')"></t-option>
-                <t-option value="attack_info" :label="$t('page.notify_subscription.message_type_attack_info')"></t-option>
-                <t-option value="weekly_report" :label="$t('page.notify_subscription.message_type_weekly_report')"></t-option>
-                <t-option value="ssl_expire" :label="$t('page.notify_subscription.message_type_ssl_expire')"></t-option>
-                <t-option value="system_error" :label="$t('page.notify_subscription.message_type_system_error')"></t-option>
-                <t-option value="ip_ban" :label="$t('page.notify_subscription.message_type_ip_ban')"></t-option>
+                <t-option value="rule_trigger" :label="$t('page.notify_log.message_type_rule_trigger')"></t-option>
+                <t-option value="operation_notice" :label="$t('page.notify_log.message_type_operation_notice')"></t-option>
+                <t-option value="user_login" :label="$t('page.notify_log.message_type_user_login')"></t-option>
+                <t-option value="attack_info" :label="$t('page.notify_log.message_type_attack_info')"></t-option>
+                <t-option value="weekly_report" :label="$t('page.notify_log.message_type_weekly_report')"></t-option>
+                <t-option value="ssl_expire" :label="$t('page.notify_log.message_type_ssl_expire')"></t-option>
+                <t-option value="system_error" :label="$t('page.notify_log.message_type_system_error')"></t-option>
+                <t-option value="ip_ban" :label="$t('page.notify_log.message_type_ip_ban')"></t-option>
               </t-select>
             </t-form-item>
             <t-form-item :label="$t('page.notify_log.label_send_status')" name="status">
@@ -187,12 +189,14 @@ export default Vue.extend({
     },
     getMessageTypeName(type: string) {
       const typeMap: any = {
-        user_login: this.$t('page.notify_subscription.message_type_user_login'),
-        attack_info: this.$t('page.notify_subscription.message_type_attack_info'),
-        weekly_report: this.$t('page.notify_subscription.message_type_weekly_report'),
-        ssl_expire: this.$t('page.notify_subscription.message_type_ssl_expire'),
-        system_error: this.$t('page.notify_subscription.message_type_system_error'),
-        ip_ban: this.$t('page.notify_subscription.message_type_ip_ban'),
+        rule_trigger: this.$t('page.notify_log.message_type_rule_trigger'),
+        operation_notice: this.$t('page.notify_log.message_type_operation_notice'),
+        user_login: this.$t('page.notify_log.message_type_user_login'),
+        attack_info: this.$t('page.notify_log.message_type_attack_info'),
+        weekly_report: this.$t('page.notify_log.message_type_weekly_report'),
+        ssl_expire: this.$t('page.notify_log.message_type_ssl_expire'),
+        system_error: this.$t('page.notify_log.message_type_system_error'),
+        ip_ban: this.$t('page.notify_log.message_type_ip_ban'),
       };
       return typeMap[type] || type;
     },
