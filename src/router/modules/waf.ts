@@ -109,11 +109,18 @@ export default [
         name: 'WafBlockingPagelist',
         component: () => import('@/pages/waf/bLocking_page/index.vue'),
         meta: { title: 'menu.host.blocking_page' },
-      }, {
+      },       {
         path: 'wafIPFailure',
         name: 'WafIPFailure',
         component: () => import('@/pages/waf/ip_failure/index.vue'),
         meta: { title: 'menu.host.ip_failure' },
+
+      },
+      {
+        path: 'wafFirewallIPBlock',
+        name: 'WafFirewallIPBlock',
+        component: () => import('@/pages/waf/firewall_ipblock/index.vue'),
+        meta: { title: 'menu.host.firewall_ip_block' },
 
       }
     ],
