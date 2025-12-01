@@ -26,7 +26,7 @@
           </t-button>
         </div>
         <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
+          <t-form ref="searchForm" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
             <t-form-item :label="$t('page.firewall_ipblock.label_website')" name="host_code">
               <t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
                 <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
@@ -158,7 +158,7 @@
     <!-- 添加对话框 -->
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="120">
+        <t-form :data="formData" ref="addForm" :rules="rules" @submit="onSubmit" :labelWidth="120">
           <t-form-item :label="$t('page.firewall_ipblock.label_website')" name="host_code">
             <t-select v-model="formData.host_code" clearable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
@@ -247,7 +247,7 @@
     <!-- 编辑对话框 -->
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="120">
+        <t-form :data="formEditData" ref="editForm" :rules="rules" @submit="onSubmitEdit" :labelWidth="120">
           <t-form-item :label="$t('page.firewall_ipblock.label_website')" name="host_code">
             <t-select v-model="formEditData.host_code" clearable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
@@ -839,14 +839,17 @@ export default Vue.extend({
           let resdata = res;
           if (resdata.code === 0) {
             that.detail_data = resdata.data;
-            that.formEditData = { ...that.detail_data };
-            
-            // 处理过期时间显示
-            if (that.formEditData.expire_time > 0) {
-              that.formEditData.expire_time_date = new Date(that.formEditData.expire_time * 1000).toISOString();
-            } else {
-              that.formEditData.expire_time_date = null;
+            // 处理过期时间显示（直接使用Date对象，保持本地时区）
+            let expireTimeDate = null;
+            if (resdata.data.expire_time > 0) {
+              expireTimeDate = new Date(resdata.data.expire_time * 1000);
             }
+            
+            // 组装表单数据，添加时间选择器需要的字段
+            that.formEditData = {
+              ...resdata.data,
+              expire_time_date: expireTimeDate
+            };
           }
         })
         .catch((e: Error) => {
