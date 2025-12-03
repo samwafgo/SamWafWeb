@@ -62,3 +62,12 @@ export function allattacktaglist(params) {
     params: params
   })
 }
+//删除tag（设置超长超时时间，因为删除大量日志需要较长时间）
+export function deleteTagByNameApi(data) {
+  return request({
+    url: 'waflog/attack/deletetagbyname',
+    method: 'post',
+    data: data,
+    timeout: 600000 // 10分钟超时，适用于大数据量删除
+  })
+}
