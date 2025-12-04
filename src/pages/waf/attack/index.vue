@@ -5,6 +5,111 @@
         <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
       </template>
     </t-alert>
+
+    <!-- 日志配置区域 -->
+    <t-card class="log-config-card" style="margin-bottom: 16px;">
+      <div @click="toggleLogConfig" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center;">
+          <t-icon :name="logConfigVisible ? 'chevron-down' : 'chevron-right'" style="margin-right: 8px;" />
+          <span style="font-weight: 500; font-size: 14px;">日志配置</span>
+        </div>
+        <t-button theme="primary" size="small" @click.stop="saveLogConfig" :loading="logConfigSaving">
+          保存配置
+        </t-button>
+      </div>
+      
+      <div v-show="logConfigVisible" style="margin-top: 16px;">
+        <t-form :data="logConfig" :label-width="200" layout="inline">
+          <t-row :gutter="16">
+            <t-col :span="6">
+              <t-form-item label="是否记录响应报文" name="record_resp">
+                <t-select v-model="logConfig.record_resp" style="width: 100%;">
+                  <t-option value="1" label="是" />
+                  <t-option value="0" label="否" />
+                </t-select>
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="记录原始请求BODY报文" name="record_all_src_byte_info">
+                <t-select v-model="logConfig.record_all_src_byte_info" style="width: 100%;">
+                  <t-option value="1" label="启动" />
+                  <t-option value="0" label="关闭" />
+                </t-select>
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="日志记录类型" name="record_log_type">
+                <t-select v-model="logConfig.record_log_type" style="width: 100%;">
+                  <t-option value="all" label="全部" />
+                  <t-option value="abnormal" label="非正常" />
+                </t-select>
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="记录请求最大报文(字节)" name="record_max_req_body_length">
+                <t-input-number v-model="logConfig.record_max_req_body_length" style="width: 100%;" :min="0" />
+              </t-form-item>
+            </t-col>
+          </t-row>
+          
+          <t-row :gutter="16">
+            <t-col :span="6">
+              <t-form-item label="记录响应最大报文(字节)" name="record_max_res_body_length">
+                <t-input-number v-model="logConfig.record_max_res_body_length" style="width: 100%;" :min="0" />
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="删除历史日志(天)" name="delete_history_log_day">
+                <t-input-number v-model="logConfig.delete_history_log_day" style="width: 100%;" :min="1" />
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="日志归档最大记录数" name="log_db_size">
+                <t-input-number v-model="logConfig.log_db_size" style="width: 100%;" :min="0" />
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="日志归档最大文件(MB)" name="db_file_size">
+                <t-input-number v-model="logConfig.db_file_size" style="width: 100%;" :min="0" />
+              </t-form-item>
+            </t-col>
+          </t-row>
+          
+          <t-row :gutter="16">
+            <t-col :span="6">
+              <t-form-item label="是否开启日志持久化" name="log_persist_enable">
+                <t-select v-model="logConfig.log_persist_enable" style="width: 100%;">
+                  <t-option value="1" label="开启" />
+                  <t-option value="0" label="关闭" />
+                </t-select>
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="数据库批量插入数量" name="batch_insert">
+                <t-input-number v-model="logConfig.batch_insert" style="width: 100%;" :min="1" />
+              </t-form-item>
+            </t-col>
+            
+            <t-col :span="6">
+              <t-form-item label="IP Tag 存放位置" name="ip_tag_db">
+                <t-select v-model="logConfig.ip_tag_db" style="width: 100%;">
+                  <t-option value="0" label="主库" />
+                  <t-option value="1" label="读取 stat库" />
+                </t-select>
+              </t-form-item>
+            </t-col>
+          </t-row>
+        </t-form>
+      </div>
+    </t-card>
+
     <t-card class="list-card-container">
       <t-row justify="space-between">
         <t-form ref="form" :data="searchformData" :label-width="150" colon layout="inline"
@@ -165,6 +270,10 @@ import {
 import {
   wafIPBlockAddApi
 } from '@/apis/ipblock';
+import {
+  get_detail_by_item_api,
+  edit_system_config_api
+} from '@/apis/systemconfig';
 
 import { CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
 
@@ -474,6 +583,24 @@ export default Vue.extend({
       exportDbVisible: false,
       visitDetailVisible: false,//访问详情弹窗
       visitDetailUid: "",//访问详情id
+      
+      // 日志配置相关
+      logConfigVisible: false, // 日志配置区域是否展开
+      logConfigSaving: false, // 保存配置按钮加载状态
+      logConfig: {
+        record_log_type: 'all',
+        record_max_req_body_length: '0',
+        record_max_res_body_length: '0',
+        record_resp: '0',
+        record_all_src_byte_info: '0',
+        delete_history_log_day: '7',
+        log_db_size: '0',
+        db_file_size: '0',
+        log_persist_enable: '0',
+        batch_insert: '0',
+        ip_tag_db: '0',
+      },
+      logConfigItems: {}, // 存储配置项的完整信息（包含ID等）
     };
   },
   computed: {
@@ -517,6 +644,9 @@ export default Vue.extend({
     console.log("attack list mounted ");
     // 加载保存的列配置
     this.loadColumnConfig();
+    // 加载日志配置
+    this.loadLogConfig();
+    
     if (this.$route.query.action != null) {
       console.log(this.$route.query.action)
       this.searchformData.action = this.$route.query.action
@@ -958,6 +1088,106 @@ export default Vue.extend({
         }
       });
       return filteredData;
+    },
+
+    // 切换日志配置区域显示/隐藏
+    toggleLogConfig() {
+      this.logConfigVisible = !this.logConfigVisible;
+    },
+
+    // 加载日志配置
+    loadLogConfig() {
+      const configKeys = [
+        'record_log_type',
+        'record_max_req_body_length',
+        'record_max_res_body_length',
+        'record_resp',
+        'record_all_src_byte_info',
+        'delete_history_log_day',
+        'log_db_size',
+        'db_file_size',
+        'log_persist_enable',
+        'batch_insert',
+        'ip_tag_db',
+      ];
+      
+      // 使用 Promise.all 并行获取所有配置项
+      const promises = configKeys.map(key => {
+        return get_detail_by_item_api({ item: key })
+          .then(res => {
+            if (res.code === 0 && res.data) {
+              this.logConfigItems[key] = res.data;
+              // 直接使用原始值，不做类型转换
+              this.logConfig[key] = res.data.value;
+            }
+            return { key, success: true };
+          })
+          .catch(err => {
+            console.error(`加载配置项 ${key} 失败:`, err);
+            return { key, success: false };
+          });
+      });
+      
+      Promise.all(promises).then(results => {
+        const failedItems = results.filter(r => !r.success);
+        if (failedItems.length === 0) {
+          console.log('日志配置加载成功', this.logConfig);
+        } else {
+          console.warn('部分配置项加载失败:', failedItems);
+        }
+      });
+    },
+
+    // 保存日志配置
+    saveLogConfig() {
+      this.logConfigSaving = true;
+      
+      const configKeys = [
+        'record_log_type',
+        'record_max_req_body_length',
+        'record_max_res_body_length',
+        'record_resp',
+        'record_all_src_byte_info',
+        'delete_history_log_day',
+        'log_db_size',
+        'db_file_size',
+        'log_persist_enable',
+        'batch_insert',
+        'ip_tag_db',
+      ];
+      
+      const savePromises = configKeys.map(key => {
+        const item = this.logConfigItems[key];
+        if (item) {
+          return edit_system_config_api({
+            id: item.id,
+            category: item.category,
+            item: item.item,
+            value: String(this.logConfig[key]),
+            type: item.type,
+            title: item.title,
+            options: item.options || '',
+          }).catch(err => {
+            console.error(`保存配置项 ${key} 失败:`, err);
+            throw err;
+          });
+        }
+        return Promise.resolve();
+      });
+      
+      Promise.all(savePromises)
+        .then(() => {
+          this.$message.success(this.$t('common.tips.save_success'));
+          // 重新加载日志列表以应用新配置
+          this.getList("");
+        })
+        .catch((e) => {
+          console.error('保存日志配置失败', e);
+          this.$message.error(this.$t('common.tips.save_failed'));
+        })
+        .finally(() => {
+          this.logConfigSaving = false;
+        });
     },
     //end meathod
   },
