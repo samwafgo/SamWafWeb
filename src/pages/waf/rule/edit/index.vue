@@ -64,7 +64,7 @@
                     </t-select>
                   </t-form-item>
                 </div>
-              </t-col> 
+              </t-col>
               <t-col :span="5">
                 <div>
                   <t-form-item :label="$t('page.rule.detail.judgment')" name="attr_judge" :labelWidth="80">
@@ -156,6 +156,8 @@
             }</pre>
                   </template>
                 </t-alert>
+
+
 
                 <t-link theme="danger" hover="color"
                   href="https://update.samwaf.com/airule/auto_jump_url.html?v20250311" target="_blank">
@@ -301,6 +303,10 @@ export default {
       {
         label: this.$t('page.rule.detail.inner_option_getipfailurecount'),
         value: 'GetIPFailureCount(5)'
+      },
+      {
+        label: this.$t('page.rule.detail.inner_option_issafebot'),
+        value: 'IsSafeBot()'
       }
 
       ],
@@ -440,7 +446,7 @@ export default {
       this.getDetail(newVal)
     },
   },
-  methods: { 
+  methods: {
     // 重置表单数据
     resetFormData() {
       console.log('重置表单数据')
@@ -653,7 +659,7 @@ export default {
       //手工编排
       if (e == "1") {
         this.setRuleContentByMode()
-      }else{ 
+      }else{
         // 触发规则预览
         this.onFormChange()
       }
@@ -733,7 +739,7 @@ export default {
           ruleCode = this.ruleuuid.replace(/-/g, "")// 这个全局替换查找到的字符
       }
       return {
-        rule_code: ruleCode, 
+        rule_code: ruleCode,
         rule_json: JSON.stringify(ruleJsonObj),
         is_manual_rule: Number(this.formData.is_manual_rule),
         rule_content: this.formData.rule_content || '',
@@ -769,7 +775,7 @@ export default {
         this.onFormChange()
       }
     },
-    //end method 
+    //end method
   },
 };
 </script>

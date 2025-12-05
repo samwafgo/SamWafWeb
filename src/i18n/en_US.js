@@ -1385,6 +1385,7 @@ export default {
         inner_option_city: "Visitor City",
         inner_option_getheadervalue: "Get Header Value",
         inner_option_getipfailurecount: "Get IP Failure Count (minutes)",
+        inner_option_issafebot: "Check if is Safe Bot",
         attr_type_text: "Text",
         attr_type_int: "Number",
         judge_equal: "Judge if Equal",

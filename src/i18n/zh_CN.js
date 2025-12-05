@@ -1389,6 +1389,7 @@ export default {
         inner_option_city: "访客归属城市",
         inner_option_getheadervalue: "提取请求头某个Key里面的值",
         inner_option_getipfailurecount: "获取IP失败次数(分钟)",
+        inner_option_issafebot: "判断是否是安全bot",
         //options attr
         attr_type_text: "文本",
         attr_type_int: "数字",
