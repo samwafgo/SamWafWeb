@@ -187,7 +187,16 @@ export default Vue.extend({
 
 
         {
+          title: this.$t('page.tunnel.allowed_time_ranges'),
+          width: 200,
+          ellipsis: true,
+          colKey: 'allowed_time_ranges',
+        },
+
+
+        {
           title: this.$t('page.tunnel.conn_timeout'),
+
           width: 100,
           ellipsis: true,
           colKey: 'conn_timeout',
@@ -464,6 +473,8 @@ export default Vue.extend({
             that.detail_data.write_timeout = that.detail_data.write_timeout.toString()
             that.detail_data.max_in_connect = that.detail_data.max_in_connect.toString()
             that.detail_data.max_out_connect = that.detail_data.max_out_connect.toString()
+            // 处理 allowed_time_ranges 字段，确保不是 null 或 undefined
+            that.detail_data.allowed_time_ranges = that.detail_data.allowed_time_ranges || ''
 
 
 

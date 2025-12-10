@@ -288,7 +288,11 @@ export default {
       show_connections: "查看连接数据",
       view_connections: "查看连接",
       new_tunnel: "新建隧道",
+      allowed_time_ranges: "允许访问时间段",
+      allowed_time_ranges_placeholder: "格式: 08:00-10:00;11:00-12:00",
+      allowed_time_ranges_tips: "指定端口可访问的时间段,多个时间段用分号隔开,留空表示24小时可访问",
       tcp_source_count: "TCP源连接数",
+
       tcp_target_count: "TCP目标连接数",
       udp_source_count: "UDP源连接数",
       udp_target_count: "UDP目标连接数",

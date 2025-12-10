@@ -288,7 +288,11 @@ export default {
       show_connections: 'View Connections',
       view_connections: 'Connections',
       new_tunnel: 'New Tunnel',
+      allowed_time_ranges: "Allowed Time Ranges",
+      allowed_time_ranges_placeholder: "Format: 08:00-10:00;11:00-12:00",
+      allowed_time_ranges_tips: "Specify accessible time ranges for the port, separate multiple ranges with semicolon, leave empty for 24/7 access",
       tcp_source_count: "TCP Source Connections",
+
       tcp_target_count: "TCP Target Connections",
       udp_source_count: "UDP Source Connections",
       udp_target_count: "UDP Target Connections",

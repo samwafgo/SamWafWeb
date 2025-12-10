@@ -43,8 +43,18 @@
                 <t-input :style="{ width: '480px' }" v-model="formData.deny_ip"></t-input>
             </t-form-item>
 
+            <t-form-item :label="$t('page.tunnel.allowed_time_ranges')" name="allowed_time_ranges">
+                <t-input :style="{ width: '480px' }" v-model="formData.allowed_time_ranges" 
+                    :placeholder="$t('page.tunnel.allowed_time_ranges_placeholder')">
+                </t-input>
+                <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+                    {{ $t('page.tunnel.allowed_time_ranges_tips') }}
+                </div>
+            </t-form-item>
+
 
             <div class="form-row">
+
                 <t-form-item :label="$t('page.tunnel.conn_timeout')" name="conn_timeout" class="half-width">
                     <t-input-number :style="{ width: '150px' }" v-model="formData.conn_timeout"  :min="0" 
                         :placeholder="$t('common.placeholder')">
@@ -112,6 +122,73 @@ export default {
                 protocol: [{ required: true, message: this.$t('common.required'), type: 'error' }],
                 remote_port: [{ required: true, message: this.$t('common.required'), type: 'error' }],
                 remote_ip: [{ required: true, message: this.$t('common.required'), type: 'error' }],
+                allowed_time_ranges: [
+                    {
+                        validator: (val) => {
+                            // 如果为空，允许通过（表示不限制）
+                            if (!val || val.trim() === '') {
+                                return { result: true };
+                            }
+                            
+                            // 验证时间段格式：HH:MM-HH:MM;HH:MM-HH:MM
+                            const timeRangePattern = /^(\d{2}:\d{2}-\d{2}:\d{2})(;\d{2}:\d{2}-\d{2}:\d{2})*$/;
+                            if (!timeRangePattern.test(val.trim())) {
+                                return { 
+                                    result: false, 
+                                    message: '时间段格式错误，正确格式：08:00-10:00;11:00-12:00',
+                                    type: 'error' 
+                                };
+                            }
+                            
+                            // 验证每个时间段的有效性
+                            const ranges = val.trim().split(';');
+                            for (let range of ranges) {
+                                const times = range.split('-');
+                                if (times.length !== 2) {
+                                    return { 
+                                        result: false, 
+                                        message: '时间段格式错误，每个时间段应为 HH:MM-HH:MM',
+                                        type: 'error' 
+                                    };
+                                }
+                                
+                                // 验证每个时间的有效性
+                                for (let time of times) {
+                                    const parts = time.split(':');
+                                    if (parts.length !== 2) {
+                                        return { 
+                                            result: false, 
+                                            message: '时间格式错误，应为 HH:MM',
+                                            type: 'error' 
+                                        };
+                                    }
+                                    
+                                    const hour = parseInt(parts[0]);
+                                    const minute = parseInt(parts[1]);
+                                    
+                                    if (isNaN(hour) || hour < 0 || hour > 23) {
+                                        return { 
+                                            result: false, 
+                                            message: '小时必须在 00-23 之间',
+                                            type: 'error' 
+                                        };
+                                    }
+                                    
+                                    if (isNaN(minute) || minute < 0 || minute > 59) {
+                                        return { 
+                                            result: false, 
+                                            message: '分钟必须在 00-59 之间',
+                                            type: 'error' 
+                                        };
+                                    }
+                                }
+                            }
+                            
+                            return { result: true };
+                        },
+                        type: 'error'
+                    }
+                ],
             },
         };
     },
