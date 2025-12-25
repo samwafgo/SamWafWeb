@@ -8,6 +8,13 @@
       <t-form-item :label="$t('page.ssl.label_valid_to')" name="valid_to" v-if="isEdit && formData.valid_to">
         <span>{{formData.valid_to}} ({{formData.expiration_info}})</span>
       </t-form-item>
+      <t-form-item :label="$t('page.ssl.label_bind_hosts')" name="bind_hosts" v-if="isEdit && formData.bind_hosts && formData.bind_hosts.length > 0">
+        <div>
+          <div v-for="(host, index) in formData.bind_hosts" :key="index" style="margin-bottom: 4px;">
+            {{ host }}
+          </div>
+        </div>
+      </t-form-item>
 
       <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
         <t-textarea v-model="formData.cert_content" :style="{ width: '480px' }" rows="4" ></t-textarea>

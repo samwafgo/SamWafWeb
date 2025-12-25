@@ -1074,6 +1074,7 @@ export default {
       label_valid_to: "证书有效期结束时间",
       label_expire_time: "到期时间",
       label_domains: "证书适用的域名",
+      label_bind_hosts: "绑定的主机",
       label_auto_tip: "SamWaf每天凌晨3点会自动提取下面对应ssl文件存放路径的证书信息，并备份当前证书",
       label_auto_path: "自动提取证书路径",
       label_auto_key_path: "key文件路径",

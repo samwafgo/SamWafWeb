@@ -1071,6 +1071,7 @@ export default {
       label_valid_to: "Certificate validity end time",
       label_expire_time: "Expiration time",
       label_domains: "Applicable domain names for the certificate",
+      label_bind_hosts: "Bound Hosts",
       label_auto_tip: "SamWaf will automatically extract the certificate information from the SSL file storage path below at 3 AM every day and back up the current certificate.",
       label_auto_key_path: "Key File Path",
       label_auto_crt_path: "Crt File Path",

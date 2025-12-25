@@ -73,6 +73,13 @@
           <t-form-item :label="$t('page.ssl.label_valid_to')" name="valid_to">
             <span>{{formEditData.valid_to}} ({{formEditData.expiration_info}})</span>
           </t-form-item>
+          <t-form-item :label="$t('page.ssl.label_bind_hosts')" name="bind_hosts" v-if="formEditData.bind_hosts && formEditData.bind_hosts.length > 0">
+            <div>
+              <div v-for="(host, index) in formEditData.bind_hosts" :key="index" style="margin-bottom: 4px;">
+                {{ host }}
+              </div>
+            </div>
+          </t-form-item>
           <t-form-item :label="$t('page.ssl.label_cert_content')" name="cert_content">
             <t-textarea v-model="formEditData.cert_content" :style="{ width: '480px' }" rows="4"></t-textarea>
             <t-button theme="default" size="small" @click="importCertFile('edit')" :style="{ marginTop: '8px' }">
@@ -182,6 +189,19 @@ export default Vue.extend({
           width: 250,
           ellipsis: true,
           colKey: 'subject',
+        },
+        {
+          title: this.$t('page.ssl.label_bind_hosts'),
+          align: 'left',
+          width: 300,
+          ellipsis: true,
+          colKey: 'bind_hosts',
+          cell: (h, { row }) => {
+            if (row.bind_hosts && row.bind_hosts.length > 0) {
+              return row.bind_hosts.join(', ');
+            }
+            return '-';
+          },
         },
         {
           title: this.$t('page.ssl.label_issuer'),
