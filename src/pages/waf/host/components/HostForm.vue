@@ -324,6 +324,15 @@
                 </t-radio-group>
               </t-tooltip>
             </t-form-item>
+            <t-form-item v-if="formData.is_enable_http_auth_base === '1'" :label="$t('page.host.http_auth_base_type')" name="http_auth_base_type">
+              <t-tooltip class="placement top center" :content="$t('page.host.http_auth_base_type_tips')" placement="top"
+                       :overlay-style="{ width: '400px' }" show-arrow>
+                <t-radio-group v-model="formData.http_auth_base_type">
+                  <t-radio value="authorization">{{$t('page.host.http_auth_base_type_authorization')}}</t-radio>
+                  <t-radio value="custom">{{$t('page.host.http_auth_base_type_custom')}}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+            </t-form-item>
             <t-form-item v-if="formData.is_enable_http_auth_base === '1'">
               <http-auth-base :propHostCode="formData.code"></http-auth-base>
             </t-form-item>
@@ -579,6 +588,7 @@
           this.formData.auto_jump_https = this.formData.auto_jump_https != null ? this.formData.auto_jump_https.toString() : "0"
           this.formData.is_trans_back_domain = this.formData.is_trans_back_domain != null ? this.formData.is_trans_back_domain.toString() : "0"
           this.formData.is_enable_http_auth_base = this.formData.is_enable_http_auth_base != null ? this.formData.is_enable_http_auth_base.toString() : "0"
+          this.formData.http_auth_base_type = this.formData.http_auth_base_type != null ? this.formData.http_auth_base_type : "authorization"
           this.formData.response_time_out = this.formData.response_time_out != null ? this.formData.response_time_out.toString() : "60"
           this.formData.insecure_skip_verify = this.formData.insecure_skip_verify != null ? this.formData.insecure_skip_verify.toString() : "0"
           this.formData.log_only_mode = this.formData.log_only_mode != null ? this.formData.log_only_mode.toString() : "0"

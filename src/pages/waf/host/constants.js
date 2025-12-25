@@ -25,6 +25,7 @@ export const INITIAL_DATA = {
   is_trans_back_domain:"0",//是否传递后端域名
   bind_more_port:'',//多端口情况
   is_enable_http_auth_base:"0",//是否激活Http Auth Base认证
+  http_auth_base_type:"authorization",//认证类型 authorization(默认Basic Auth) custom(自定义页面)
   response_time_out:"60",//响应超时时间单位秒
   insecure_skip_verify:"0",//是否跳过后端https证书有效性验证
   anti_leech_json: '{"is_enable_anti_leech":0,"file_types":"gif|jpg|jpeg|png|bmp|swf","valid_referers":"none;server_names","action":"block","redirect_url":""}', // 新增防盗链配置
