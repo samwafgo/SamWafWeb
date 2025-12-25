@@ -825,6 +825,11 @@ export default Vue.extend({
               ...detail_data_tmp
             }
             that.$set(that.formData, 'code', uuidv4());
+            // 清空SSL证书相关信息和绑定关系
+            that.$set(that.formData, 'bind_ssl_id', '');
+            that.$set(that.formData, 'auto_jump_https', 0);
+            that.$set(that.formData, 'certfile', '');
+            that.$set(that.formData, 'keyfile', '');
           }
         })
         .catch((e: Error) => {
