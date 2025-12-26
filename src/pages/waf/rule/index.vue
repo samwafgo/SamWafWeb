@@ -69,8 +69,9 @@
             <span> {{host_dic[row.host_code]}}</span>
           </template>
           <template #rule_status="{ row }">
-            <t-tag v-if="row.rule_status === RULE_STATUS.STOPPING" theme="danger" variant="light">{{ $t('page.rule.rule_off') }}</t-tag>
-            <t-tag v-if="row.rule_status === RULE_STATUS.RUNNING" theme="success" variant="light">{{ $t('page.rule.rule_on') }}</t-tag>
+            <t-switch size="medium" v-model="row.rule_status === 1" :label="[$t('page.rule.rule_on'), $t('page.rule.rule_off')]"
+                      @change="changeRuleStatus($event, row)">
+            </t-switch>
           </template>
 
           <template #op="slotProps">
@@ -119,7 +120,7 @@ import Vue from 'vue';
 import { SearchIcon } from 'tdesign-icons-vue';
 import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
-import { wafRuleListApi,wafRuleDelApi,wafRuleBatchDelApi,wafRuleDelAllApi } from '@/apis/rules';
+import { wafRuleListApi,wafRuleDelApi,wafRuleBatchDelApi,wafRuleDelAllApi,changeRuleStatus } from '@/apis/rules';
 import { allhost } from '@/apis/host';
 import { RULE_STATUS,CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
 
@@ -447,6 +448,38 @@ export default Vue.extend({
     //跳转界面
     handleJumpOnlineUrl(){
       window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/Rule.html");
+    },
+    // 修改规则状态
+    changeRuleStatus(value, row) {
+      // value 当前状态 true/1 启动, false/0 关闭，点击时应该切换为相反的状态
+      const that = this;
+      const currentStatus = row.rule_status === 1 ? 1 : 0;
+      const newStatus = currentStatus === 1 ? 0 : 1; // 切换为相反的状态
+
+      let postData = {
+        CODE: row.rule_code,
+        rule_status: newStatus
+      }
+      console.log("rule PostData",postData);
+      changeRuleStatus(postData)
+        .then((res) => {
+          const resdata = res;
+          console.log(resdata);
+          if (resdata.code === 0) {
+            row.rule_status = newStatus;
+            that.$message.success(resdata.msg);
+          } else {
+            // 如果失败，则恢复原来状态
+            row.rule_status = currentStatus;
+            that.$message.warning(resdata.msg);
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+          // 操作失败，恢复原来状态
+          row.rule_status = currentStatus;
+          that.$message.error(that.$t('common.operation_failed'));
+        });
     },
   },
 });

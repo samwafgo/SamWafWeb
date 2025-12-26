@@ -63,3 +63,11 @@ export function wafRuleFormatApi(params) {
     data: params
   })
 }
+//更改规则状态
+export function changeRuleStatus(params) {
+  return request({
+    url: '/wafhost/rule/rulestatus',
+    method: 'get',
+    params: params
+  })
+}

@@ -29,6 +29,13 @@
             </t-option>
           </t-select>
         </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.rule_status')" name="rule_status">
+          <t-select :style="{ width: '480px' }" v-model="formData.rule_status">
+            <t-option v-for="(item, index) in rule_status_option" :value="item.value" :label="item.label" :key="index">
+              {{ item.label }}
+            </t-option>
+          </t-select>
+        </t-form-item>
       </t-card>
       <!--Base Info End-->
 
@@ -239,6 +246,13 @@ export default {
         label: this.$t('page.rule.detail.manual_code_rule_edit'),
         value: '1'
       },],
+      rule_status_option: [{
+        label: this.$t('page.rule.rule_on'),
+        value: 1
+      }, {
+        label: this.$t('page.rule.rule_off'),
+        value: 0
+      },],
       rules: {
         rule_name: [{ required: true, message: this.$t('common.placeholder') + this.$t('page.rule.detail.rule_name'), type: 'error' }],
       },
@@ -367,7 +381,7 @@ export default {
       },
       ],
       formData: {
-        ...copyObj(RULE)
+        ...copyObj(RULE),
       },
       formCodemirrorContent: '',//代码传入值
       //主机列表
@@ -423,7 +437,7 @@ export default {
   },
   created() {
     console.log('----created----')
-    this.ruleuuid = uuidv4()
+    this.ruleuuid = this.genUuidv4()
     console.log(this.ruleuuid)
   },
   beforeMount() {
@@ -451,7 +465,7 @@ export default {
     resetFormData() {
       console.log('重置表单数据')
       // 重新生成UUID
-      this.ruleuuid = uuidv4()
+      this.ruleuuid = this.genUuidv4()
 
       console.log("重置表单数据 before", this.formData)
       // 重置表单数据为初始状态
@@ -499,6 +513,7 @@ export default {
             //const { list = [] } = resdata.data;
 
             that.formData = JSON.parse(resdata.data.rule_content_json);
+            that.formData.rule_status = resdata.data.rule_status
             that.ruleDetail = resdata.data
 
             console.log('返回的', that.formData)
@@ -527,8 +542,10 @@ export default {
             rule_json: JSON.stringify(that.formData),
             is_manual_rule: parseInt(that.formData.is_manual_rule),
             rule_content: that.formCodemirrorContent,
-            rule_code: that.ruleuuid
+            rule_code: that.ruleuuid,
+            rule_status: that.formData.rule_status
           }
+          console.log("rule add postdata",postdata);
 
 
           wafRuleAddApi(postdata)
@@ -565,6 +582,7 @@ export default {
             rule_json: JSON.stringify(that.formData),
             is_manual_rule: parseInt(that.formData.is_manual_rule),
             rule_content: that.formCodemirrorContent,
+            rule_status: that.formData.rule_status
           }
           console.log("formCodemirrorContent", that.formCodemirrorContent)
           console.log('edit postdata', postdata)
@@ -774,6 +792,11 @@ export default {
       if (typeof this.onFormChange === 'function') {
         this.onFormChange()
       }
+    },
+    genUuidv4(){ 
+      let uuid = uuidv4()
+      console.log("genUuidv4",uuid);
+      return uuid
     },
     //end method
   },
