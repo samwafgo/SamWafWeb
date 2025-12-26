@@ -39,8 +39,8 @@ export default Vue.extend({
         	// url
           const isHttps = window.location.protocol === 'https:';
           let url = env=="development"
-              ? "ws://127.0.0.1:26666/samwaf/ws"
-              : `${isHttps ? 'wss' : 'ws'}://${window.location.host}/samwaf/ws`;
+              ? "ws://127.0.0.1:26666/api/v1/ws"
+              : `${isHttps ? 'wss' : 'ws'}://${window.location.host}/api/v1/ws`;
           this.ws = websocket.useWebSocket(
               url,	// url
               localStorage.getItem("access_token"),
@@ -101,7 +101,7 @@ export default Vue.extend({
           }else if(wsData.msg_cmd_type==="DOWNLOAD_LOG"){
             let token  =localStorage.getItem("access_token")? localStorage.getItem("access_token"):""
             //下载连接
-            let downloadUrl = env=="development"? "http://127.0.0.1:26666/samwaf/waflog/attack/download" : "http://"+window.location.host+"/samwaf/waflog/attack/download"
+            let downloadUrl = env=="development"? "http://127.0.0.1:26666/api/v1/waflog/attack/download" : "http://"+window.location.host+"/api/v1/waflog/attack/download"
             downloadUrl = downloadUrl +"?X-Token="+token
             console.log(downloadUrl)
             window.open(downloadUrl)
@@ -138,7 +138,7 @@ export default Vue.extend({
 });
 
 /*
-var ws = new WebSocket("ws://127.0.0.1:26666/samwaf/ws",[localStorage.getItem("access_token")]);
+var ws = new WebSocket("ws://127.0.0.1:26666/api/v1/ws",[localStorage.getItem("access_token")]);
 //连接打开时触发
 ws.onopen = function(evt) {
     console.log("Connection open ...");
