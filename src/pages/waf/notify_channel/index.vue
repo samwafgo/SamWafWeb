@@ -18,6 +18,9 @@
                 <t-option value="feishu" :label="$t('page.notify_channel.type_feishu')">
                   {{ $t('page.notify_channel.type_feishu') }}
                 </t-option>
+                <t-option value="email" :label="$t('page.notify_channel.type_email')">
+                  {{ $t('page.notify_channel.type_email') }}
+                </t-option>
               </t-select>
             </t-form-item>
             <t-form-item>
@@ -35,6 +38,7 @@
           <template #type="{ row }">
             <t-tag v-if="row.type === 'dingtalk'" theme="primary">{{ $t('page.notify_channel.type_dingtalk') }}</t-tag>
             <t-tag v-else-if="row.type === 'feishu'" theme="success">{{ $t('page.notify_channel.type_feishu') }}</t-tag>
+            <t-tag v-else-if="row.type === 'email'" theme="warning">{{ $t('page.notify_channel.type_email') }}</t-tag>
             <t-tag v-else theme="default">{{ row.type }}</t-tag>
           </template>
           <template #status="{ row }">
@@ -57,17 +61,121 @@
             <t-input :style="{ width: '480px' }" v-model="formData.name" :placeholder="$t('page.notify_channel.name_placeholder')"></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.notify_channel.label_type')" name="type">
-            <t-select v-model="formData.type" :style="{ width: '480px' }">
+            <t-select v-model="formData.type" :style="{ width: '480px' }" @change="handleTypeChange">
               <t-option value="dingtalk" :label="$t('page.notify_channel.type_dingtalk')"></t-option>
               <t-option value="feishu" :label="$t('page.notify_channel.type_feishu')"></t-option>
+              <t-option value="email" :label="$t('page.notify_channel.type_email')"></t-option>
             </t-select>
           </t-form-item>
-          <t-form-item :label="$t('page.notify_channel.label_webhook_url')" name="webhook_url">
-            <t-input :style="{ width: '480px' }" v-model="formData.webhook_url" :placeholder="$t('page.notify_channel.webhook_placeholder')"></t-input>
-          </t-form-item>
-          <t-form-item :label="$t('page.notify_channel.label_secret')" name="secret">
-            <t-input :style="{ width: '480px' }" v-model="formData.secret" type="password" :placeholder="$t('page.notify_channel.secret_placeholder')"></t-input>
-          </t-form-item>
+          
+          <!-- 钉钉和飞书配置 -->
+          <template v-if="formData.type === 'dingtalk' || formData.type === 'feishu'">
+            <t-form-item :label="$t('page.notify_channel.label_webhook_url')" name="webhook_url">
+              <t-input :style="{ width: '480px' }" v-model="formData.webhook_url" :placeholder="$t('page.notify_channel.webhook_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.label_secret')" name="secret">
+              <t-input :style="{ width: '480px' }" v-model="formData.secret" type="password" :placeholder="$t('page.notify_channel.secret_placeholder')"></t-input>
+            </t-form-item>
+          </template>
+          
+          <!-- 邮件配置 -->
+          <template v-if="formData.type === 'email'">
+            <t-alert theme="info" :message="$t('page.notify_channel.email_config_tip')" style="margin-bottom: 16px;"></t-alert>
+            
+            <!-- 常见邮箱配置参考 -->
+            <t-collapse :default-value="[]" style="margin-bottom: 16px;">
+              <t-collapse-panel :header="$t('page.notify_channel.email_common_config')" value="common">
+                <div style="line-height: 1.8;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">⭐ QQ邮箱 (推荐)</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.qq.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                        <div>密码: 授权码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">163邮箱</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.163.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                        <div>密码: 授权码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">126邮箱</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.126.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                        <div>密码: 授权码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">⭐ Gmail</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.gmail.com</code></div>
+                        <div>端口: <code>587</code> | 加密: <strong>STARTTLS</strong></div>
+                        <div>密码: 应用专用密码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">Outlook/Hotmail</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.office365.com</code></div>
+                        <div>端口: <code>587</code> | 加密: <strong>STARTTLS</strong></div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">阿里云邮箱</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.aliyun.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 16px; padding: 10px; background: #fff3e0; border-left: 3px solid #ff9800; border-radius: 4px;">
+                    <div style="color: #e65100; font-weight: bold; margin-bottom: 8px;">⚠️ 重要提示：</div>
+                    <div style="color: #666; font-size: 12px; line-height: 1.8;">
+                      <div>• 大多数邮箱需要先开启SMTP服务并生成<strong style="color: #d32f2f;">授权码</strong>（不是登录密码）</div>
+                      <div>• <strong>QQ/163邮箱</strong>：网页版邮箱 → 设置 → 账户 → POP3/SMTP/IMAP → 开启服务 → 生成授权码</div>
+                      <div>• <strong>Gmail</strong>：Google账户 → 安全性 → 两步验证（必须开启）→ 应用专用密码</div>
+                      <div style="margin-top: 6px; color: #2196f3;">💡 推荐配置：<strong>端口465+SSL/TLS</strong> 或 <strong>端口587+STARTTLS</strong></div>
+                    </div>
+                  </div>
+                </div>
+              </t-collapse-panel>
+            </t-collapse>
+            
+            <t-form-item :label="$t('page.notify_channel.email_smtp_host')" name="email_smtp_host">
+              <t-input :style="{ width: '480px' }" v-model="formData.email_smtp_host" :placeholder="$t('page.notify_channel.email_smtp_host_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_smtp_port')" name="email_smtp_port">
+              <t-input :style="{ width: '480px' }" v-model="formData.email_smtp_port" :placeholder="$t('page.notify_channel.email_smtp_port_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_username')" name="email_username">
+              <t-input :style="{ width: '480px' }" v-model="formData.email_username" :placeholder="$t('page.notify_channel.email_username_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_password')" name="email_password">
+              <t-input :style="{ width: '480px' }" v-model="formData.email_password" type="password" :placeholder="$t('page.notify_channel.email_password_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_from')" name="email_from">
+              <t-input :style="{ width: '480px' }" v-model="formData.email_from" :placeholder="$t('page.notify_channel.email_from_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_from_name')" name="email_from_name">
+              <t-input :style="{ width: '480px' }" v-model="formData.email_from_name" :placeholder="$t('page.notify_channel.email_from_name_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_to')" name="email_to">
+              <t-input :style="{ width: '480px' }" v-model="formData.email_to" :placeholder="$t('page.notify_channel.email_to_placeholder')"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_ssl_mode')" name="email_ssl_mode">
+              <t-radio-group v-model="formData.email_ssl_mode">
+                <t-radio value="none">{{ $t('page.notify_channel.email_ssl_none') }}</t-radio>
+                <t-radio value="ssl">{{ $t('page.notify_channel.email_ssl_ssl') }}</t-radio>
+                <t-radio value="starttls">{{ $t('page.notify_channel.email_ssl_starttls') }}</t-radio>
+              </t-radio-group>
+            </t-form-item>
+          </template>
           <t-form-item :label="$t('page.notify_channel.label_status')" name="status">
             <t-radio-group v-model="formData.status">
               <t-radio :value="1">{{ $t('common.on') }}</t-radio>
@@ -93,17 +201,121 @@
             <t-input :style="{ width: '480px' }" v-model="formEditData.name"></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.notify_channel.label_type')" name="type">
-            <t-select v-model="formEditData.type" :style="{ width: '480px' }">
+            <t-select v-model="formEditData.type" :style="{ width: '480px' }" @change="handleEditTypeChange">
               <t-option value="dingtalk" :label="$t('page.notify_channel.type_dingtalk')"></t-option>
               <t-option value="feishu" :label="$t('page.notify_channel.type_feishu')"></t-option>
+              <t-option value="email" :label="$t('page.notify_channel.type_email')"></t-option>
             </t-select>
           </t-form-item>
-          <t-form-item :label="$t('page.notify_channel.label_webhook_url')" name="webhook_url">
-            <t-input :style="{ width: '480px' }" v-model="formEditData.webhook_url"></t-input>
-          </t-form-item>
-          <t-form-item :label="$t('page.notify_channel.label_secret')" name="secret">
-            <t-input :style="{ width: '480px' }" v-model="formEditData.secret" type="password"></t-input>
-          </t-form-item>
+          
+          <!-- 钉钉和飞书配置 -->
+          <template v-if="formEditData.type === 'dingtalk' || formEditData.type === 'feishu'">
+            <t-form-item :label="$t('page.notify_channel.label_webhook_url')" name="webhook_url">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.webhook_url"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.label_secret')" name="secret">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.secret" type="password"></t-input>
+            </t-form-item>
+          </template>
+          
+          <!-- 邮件配置 -->
+          <template v-if="formEditData.type === 'email'">
+            <t-alert theme="info" :message="$t('page.notify_channel.email_config_tip')" style="margin-bottom: 16px;"></t-alert>
+            
+            <!-- 常见邮箱配置参考 -->
+            <t-collapse :default-value="[]" style="margin-bottom: 16px;">
+              <t-collapse-panel :header="$t('page.notify_channel.email_common_config')" value="common">
+                <div style="line-height: 1.8;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">⭐ QQ邮箱 (推荐)</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.qq.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                        <div>密码: 授权码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">163邮箱</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.163.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                        <div>密码: 授权码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">126邮箱</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.126.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                        <div>密码: 授权码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">⭐ Gmail</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.gmail.com</code></div>
+                        <div>端口: <code>587</code> | 加密: <strong>STARTTLS</strong></div>
+                        <div>密码: 应用专用密码</div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">Outlook/Hotmail</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.office365.com</code></div>
+                        <div>端口: <code>587</code> | 加密: <strong>STARTTLS</strong></div>
+                      </div>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                      <div style="color: #1976d2; font-weight: bold; margin-bottom: 4px;">阿里云邮箱</div>
+                      <div style="font-size: 12px; color: #666;">
+                        <div>SMTP: <code>smtp.aliyun.com</code></div>
+                        <div>端口: <code>465</code> | 加密: <strong>SSL/TLS</strong></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 16px; padding: 10px; background: #fff3e0; border-left: 3px solid #ff9800; border-radius: 4px;">
+                    <div style="color: #e65100; font-weight: bold; margin-bottom: 8px;">⚠️ 重要提示：</div>
+                    <div style="color: #666; font-size: 12px; line-height: 1.8;">
+                      <div>• 大多数邮箱需要先开启SMTP服务并生成<strong style="color: #d32f2f;">授权码</strong>（不是登录密码）</div>
+                      <div>• <strong>QQ/163邮箱</strong>：网页版邮箱 → 设置 → 账户 → POP3/SMTP/IMAP → 开启服务 → 生成授权码</div>
+                      <div>• <strong>Gmail</strong>：Google账户 → 安全性 → 两步验证（必须开启）→ 应用专用密码</div>
+                      <div style="margin-top: 6px; color: #2196f3;">💡 推荐配置：<strong>端口465+SSL/TLS</strong> 或 <strong>端口587+STARTTLS</strong></div>
+                    </div>
+                  </div>
+                </div>
+              </t-collapse-panel>
+            </t-collapse>
+            
+            <t-form-item :label="$t('page.notify_channel.email_smtp_host')" name="email_smtp_host">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.email_smtp_host"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_smtp_port')" name="email_smtp_port">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.email_smtp_port"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_username')" name="email_username">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.email_username"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_password')" name="email_password">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.email_password" type="password"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_from')" name="email_from">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.email_from"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_from_name')" name="email_from_name">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.email_from_name"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_to')" name="email_to">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.email_to"></t-input>
+            </t-form-item>
+            <t-form-item :label="$t('page.notify_channel.email_ssl_mode')" name="email_ssl_mode">
+              <t-radio-group v-model="formEditData.email_ssl_mode">
+                <t-radio value="none">{{ $t('page.notify_channel.email_ssl_none') }}</t-radio>
+                <t-radio value="ssl">{{ $t('page.notify_channel.email_ssl_ssl') }}</t-radio>
+                <t-radio value="starttls">{{ $t('page.notify_channel.email_ssl_starttls') }}</t-radio>
+              </t-radio-group>
+            </t-form-item>
+          </template>
           <t-form-item :label="$t('page.notify_channel.label_status')" name="status">
             <t-radio-group v-model="formEditData.status">
               <t-radio :value="1">{{ $t('common.on') }}</t-radio>
@@ -147,6 +359,15 @@ const INITIAL_DATA = {
   config_json: '',
   status: 1,
   remarks: '',
+  // 邮件配置字段
+  email_smtp_host: '',
+  email_smtp_port: '25',
+  email_username: '',
+  email_password: '',
+  email_from: '',
+  email_from_name: '',
+  email_to: '',
+  email_ssl_mode: 'none',
 };
 
 export default Vue.extend({
@@ -235,7 +456,24 @@ export default Vue.extend({
       this.addFormVisible = true;
     },
     handleClickEdit(e: any) {
-      this.formEditData = { ...e.row };
+      const row = { ...e.row };
+      // 如果是邮件类型，解析config_json
+      if (row.type === 'email' && row.config_json) {
+        try {
+          const config = JSON.parse(row.config_json);
+          row.email_smtp_host = config.smtp_host || '';
+          row.email_smtp_port = config.smtp_port || '25';
+          row.email_username = config.username || '';
+          row.email_password = config.password || '';
+          row.email_from = config.from_email || '';
+          row.email_from_name = config.from_name || '';
+          row.email_to = (config.to_emails || []).join(',');
+          row.email_ssl_mode = config.enable_ssl ? 'ssl' : (config.enable_starttls ? 'starttls' : 'none');
+        } catch (e) {
+          console.error('解析邮件配置失败', e);
+        }
+      }
+      this.formEditData = row;
       this.editFormVisible = true;
     },
     handleClickDelete(e: any) {
@@ -272,7 +510,26 @@ export default Vue.extend({
     async onSubmit({ validateResult, firstError }: any) {
       if (validateResult === true) {
         try {
-          const res = await addNotifyChannel(this.formData);
+          const submitData = { ...this.formData };
+          // 如果是邮件类型，构建config_json
+          if (submitData.type === 'email') {
+            const emailConfig = {
+              smtp_host: submitData.email_smtp_host,
+              smtp_port: submitData.email_smtp_port,
+              username: submitData.email_username,
+              password: submitData.email_password,
+              from_email: submitData.email_from,
+              from_name: submitData.email_from_name,
+              to_emails: submitData.email_to.split(',').map((email: string) => email.trim()),
+              enable_ssl: submitData.email_ssl_mode === 'ssl',
+              enable_starttls: submitData.email_ssl_mode === 'starttls',
+            };
+            submitData.config_json = JSON.stringify(emailConfig);
+            // 清空webhook_url和secret字段
+            submitData.webhook_url = '';
+            submitData.secret = '';
+          }
+          const res = await addNotifyChannel(submitData);
           if (res.code === 0) {
             MessagePlugin.success(this.$t('page.notify_channel.add_success'));
             this.addFormVisible = false;
@@ -290,7 +547,26 @@ export default Vue.extend({
     async onSubmitEdit({ validateResult, firstError }: any) {
       if (validateResult === true) {
         try {
-          const res = await editNotifyChannel(this.formEditData);
+          const submitData = { ...this.formEditData };
+          // 如果是邮件类型，构建config_json
+          if (submitData.type === 'email') {
+            const emailConfig = {
+              smtp_host: submitData.email_smtp_host,
+              smtp_port: submitData.email_smtp_port,
+              username: submitData.email_username,
+              password: submitData.email_password,
+              from_email: submitData.email_from,
+              from_name: submitData.email_from_name,
+              to_emails: submitData.email_to.split(',').map((email: string) => email.trim()),
+              enable_ssl: submitData.email_ssl_mode === 'ssl',
+              enable_starttls: submitData.email_ssl_mode === 'starttls',
+            };
+            submitData.config_json = JSON.stringify(emailConfig);
+            // 清空webhook_url和secret字段
+            submitData.webhook_url = '';
+            submitData.secret = '';
+          }
+          const res = await editNotifyChannel(submitData);
           if (res.code === 0) {
             MessagePlugin.success(this.$t('page.notify_channel.edit_success'));
             this.editFormVisible = false;
@@ -327,6 +603,38 @@ export default Vue.extend({
     },
     onClickCloseEditBtn() {
       this.editFormVisible = false;
+    },
+    handleTypeChange(value: string) {
+      // 切换类型时清空相关字段
+      if (value === 'email') {
+        this.formData.webhook_url = '';
+        this.formData.secret = '';
+      } else {
+        this.formData.email_smtp_host = '';
+        this.formData.email_smtp_port = '25';
+        this.formData.email_username = '';
+        this.formData.email_password = '';
+        this.formData.email_from = '';
+        this.formData.email_from_name = '';
+        this.formData.email_to = '';
+        this.formData.email_ssl_mode = 'none';
+      }
+    },
+    handleEditTypeChange(value: string) {
+      // 切换类型时清空相关字段
+      if (value === 'email') {
+        this.formEditData.webhook_url = '';
+        this.formEditData.secret = '';
+      } else {
+        this.formEditData.email_smtp_host = '';
+        this.formEditData.email_smtp_port = '25';
+        this.formEditData.email_username = '';
+        this.formEditData.email_password = '';
+        this.formEditData.email_from = '';
+        this.formEditData.email_from_name = '';
+        this.formEditData.email_to = '';
+        this.formEditData.email_ssl_mode = 'none';
+      }
     },
   },
 });
