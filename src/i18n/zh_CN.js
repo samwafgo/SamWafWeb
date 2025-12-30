@@ -1501,6 +1501,11 @@ export default {
       type_feishu: "飞书",
       type_wechat: "企业微信",
       type_email: "邮件",
+      type_serverchan: "Server酱",
+      // Server酱配置
+      serverchan_config_tip: "Server酱是简单易用的消息推送服务，支持推送到微信、企业微信、钉钉等多个平台",
+      serverchan_sendkey: "SendKey",
+      serverchan_sendkey_placeholder: "从Server酱控制台获取的SendKey（支持SCT和sctp格式）",
       // 邮件配置提示
       email_config_tip: "重要提示：端口465请选择SSL/TLS加密，端口587请选择STARTTLS加密。端口25如需认证必须使用STARTTLS，否则服务器会拒绝",
       email_common_config: "📋 常见邮箱配置参考（点击展开）",

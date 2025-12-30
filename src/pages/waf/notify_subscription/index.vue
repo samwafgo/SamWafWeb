@@ -236,9 +236,9 @@ export default Vue.extend({
       verticalAlign: 'top',
       hover: true,
       pagination: {
-        defaultPageSize: 20,
+        pageSize: 20,
         total: 0,
-        defaultCurrent: 1,
+        current: 1,
       },
       searchformData: {
         pageIndex: 1,
@@ -289,6 +289,8 @@ export default Vue.extend({
         if (res.code === 0) {
           this.data = res.data.list || [];
           this.pagination.total = res.data.total;
+          this.pagination.current = this.searchformData.pageIndex;
+          this.pagination.pageSize = this.searchformData.pageSize;
         }
       } catch (e) {
         console.error(e);

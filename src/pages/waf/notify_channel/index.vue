@@ -21,6 +21,9 @@
                 <t-option value="email" :label="$t('page.notify_channel.type_email')">
                   {{ $t('page.notify_channel.type_email') }}
                 </t-option>
+                <t-option value="serverchan" :label="$t('page.notify_channel.type_serverchan')">
+                  {{ $t('page.notify_channel.type_serverchan') }}
+                </t-option>
               </t-select>
             </t-form-item>
             <t-form-item>
@@ -39,6 +42,7 @@
             <t-tag v-if="row.type === 'dingtalk'" theme="primary">{{ $t('page.notify_channel.type_dingtalk') }}</t-tag>
             <t-tag v-else-if="row.type === 'feishu'" theme="success">{{ $t('page.notify_channel.type_feishu') }}</t-tag>
             <t-tag v-else-if="row.type === 'email'" theme="warning">{{ $t('page.notify_channel.type_email') }}</t-tag>
+            <t-tag v-else-if="row.type === 'serverchan'" theme="danger">{{ $t('page.notify_channel.type_serverchan') }}</t-tag>
             <t-tag v-else theme="default">{{ row.type }}</t-tag>
           </template>
           <template #status="{ row }">
@@ -65,6 +69,7 @@
               <t-option value="dingtalk" :label="$t('page.notify_channel.type_dingtalk')"></t-option>
               <t-option value="feishu" :label="$t('page.notify_channel.type_feishu')"></t-option>
               <t-option value="email" :label="$t('page.notify_channel.type_email')"></t-option>
+              <t-option value="serverchan" :label="$t('page.notify_channel.type_serverchan')"></t-option>
             </t-select>
           </t-form-item>
           
@@ -76,6 +81,27 @@
             <t-form-item :label="$t('page.notify_channel.label_secret')" name="secret">
               <t-input :style="{ width: '480px' }" v-model="formData.secret" type="password" :placeholder="$t('page.notify_channel.secret_placeholder')"></t-input>
             </t-form-item>
+          </template>
+          
+          <!-- Server酱配置 -->
+          <template v-if="formData.type === 'serverchan'">
+            <t-alert theme="info" :message="$t('page.notify_channel.serverchan_config_tip')" style="margin-bottom: 16px;"></t-alert>
+            
+            <t-form-item :label="$t('page.notify_channel.serverchan_sendkey')" name="access_token">
+              <t-input :style="{ width: '480px' }" v-model="formData.access_token" :placeholder="$t('page.notify_channel.serverchan_sendkey_placeholder')"></t-input>
+            </t-form-item>
+            
+            <t-alert theme="warning" style="margin-top: 12px;">
+              <div style="line-height: 1.8;">
+                <div style="font-weight: bold; margin-bottom: 8px;">📝 如何获取SendKey：</div>
+                <div style="font-size: 12px; color: #666;">
+                  <div>1. 访问 <a href="https://sct.ftqq.com/" target="_blank" style="color: #0052d9;">Server酱官网</a> 并使用微信扫码登录</div>
+                  <div>2. 在控制台页面复制您的SendKey</div>
+                  <div>3. 在"消息通道"页面配置接收通知的平台（微信、企业微信、钉钉等）</div>
+                  <div style="margin-top: 8px; color: #e37318;">💡 提示：支持标准格式(SCT开头)和sctp私有部署格式</div>
+                </div>
+              </div>
+            </t-alert>
           </template>
           
           <!-- 邮件配置 -->
@@ -205,6 +231,7 @@
               <t-option value="dingtalk" :label="$t('page.notify_channel.type_dingtalk')"></t-option>
               <t-option value="feishu" :label="$t('page.notify_channel.type_feishu')"></t-option>
               <t-option value="email" :label="$t('page.notify_channel.type_email')"></t-option>
+              <t-option value="serverchan" :label="$t('page.notify_channel.type_serverchan')"></t-option>
             </t-select>
           </t-form-item>
           
@@ -216,6 +243,27 @@
             <t-form-item :label="$t('page.notify_channel.label_secret')" name="secret">
               <t-input :style="{ width: '480px' }" v-model="formEditData.secret" type="password"></t-input>
             </t-form-item>
+          </template>
+          
+          <!-- Server酱配置 -->
+          <template v-if="formEditData.type === 'serverchan'">
+            <t-alert theme="info" :message="$t('page.notify_channel.serverchan_config_tip')" style="margin-bottom: 16px;"></t-alert>
+            
+            <t-form-item :label="$t('page.notify_channel.serverchan_sendkey')" name="access_token">
+              <t-input :style="{ width: '480px' }" v-model="formEditData.access_token" :placeholder="$t('page.notify_channel.serverchan_sendkey_placeholder')"></t-input>
+            </t-form-item>
+            
+            <t-alert theme="warning" style="margin-top: 12px;">
+              <div style="line-height: 1.8;">
+                <div style="font-weight: bold; margin-bottom: 8px;">📝 如何获取SendKey：</div>
+                <div style="font-size: 12px; color: #666;">
+                  <div>1. 访问 <a href="https://sct.ftqq.com/" target="_blank" style="color: #0052d9;">Server酱官网</a> 并使用微信扫码登录</div>
+                  <div>2. 在控制台页面复制您的SendKey</div>
+                  <div>3. 在"消息通道"页面配置接收通知的平台（微信、企业微信、钉钉等）</div>
+                  <div style="margin-top: 8px; color: #e37318;">💡 提示：支持标准格式(SCT开头)和sctp私有部署格式</div>
+                </div>
+              </div>
+            </t-alert>
           </template>
           
           <!-- 邮件配置 -->
@@ -397,9 +445,9 @@ export default Vue.extend({
       verticalAlign: 'top',
       hover: true,
       pagination: {
-        defaultPageSize: 20,
+        pageSize: 20,
         total: 0,
-        defaultCurrent: 1,
+        current: 1,
       },
       searchformData: {
         pageIndex: 1,
@@ -436,6 +484,8 @@ export default Vue.extend({
         if (res.code === 0) {
           this.data = res.data.list || [];
           this.pagination.total = res.data.total;
+          this.pagination.current = this.searchformData.pageIndex;
+          this.pagination.pageSize = this.searchformData.pageSize;
         }
       } catch (e) {
         console.error(e);
@@ -528,6 +578,12 @@ export default Vue.extend({
             // 清空webhook_url和secret字段
             submitData.webhook_url = '';
             submitData.secret = '';
+          } else if (submitData.type === 'serverchan') {
+            // Server酱使用access_token存储SendKey
+            // 清空webhook_url和secret字段
+            submitData.webhook_url = '';
+            submitData.secret = '';
+            submitData.config_json = '';
           }
           const res = await addNotifyChannel(submitData);
           if (res.code === 0) {
@@ -565,6 +621,12 @@ export default Vue.extend({
             // 清空webhook_url和secret字段
             submitData.webhook_url = '';
             submitData.secret = '';
+          } else if (submitData.type === 'serverchan') {
+            // Server酱使用access_token存储SendKey
+            // 清空webhook_url和secret字段
+            submitData.webhook_url = '';
+            submitData.secret = '';
+            submitData.config_json = '';
           }
           const res = await editNotifyChannel(submitData);
           if (res.code === 0) {
@@ -609,7 +671,20 @@ export default Vue.extend({
       if (value === 'email') {
         this.formData.webhook_url = '';
         this.formData.secret = '';
+        this.formData.access_token = '';
+      } else if (value === 'serverchan') {
+        this.formData.webhook_url = '';
+        this.formData.secret = '';
+        this.formData.email_smtp_host = '';
+        this.formData.email_smtp_port = '25';
+        this.formData.email_username = '';
+        this.formData.email_password = '';
+        this.formData.email_from = '';
+        this.formData.email_from_name = '';
+        this.formData.email_to = '';
+        this.formData.email_ssl_mode = 'none';
       } else {
+        this.formData.access_token = '';
         this.formData.email_smtp_host = '';
         this.formData.email_smtp_port = '25';
         this.formData.email_username = '';
@@ -625,7 +700,20 @@ export default Vue.extend({
       if (value === 'email') {
         this.formEditData.webhook_url = '';
         this.formEditData.secret = '';
+        this.formEditData.access_token = '';
+      } else if (value === 'serverchan') {
+        this.formEditData.webhook_url = '';
+        this.formEditData.secret = '';
+        this.formEditData.email_smtp_host = '';
+        this.formEditData.email_smtp_port = '25';
+        this.formEditData.email_username = '';
+        this.formEditData.email_password = '';
+        this.formEditData.email_from = '';
+        this.formEditData.email_from_name = '';
+        this.formEditData.email_to = '';
+        this.formEditData.email_ssl_mode = 'none';
       } else {
+        this.formEditData.access_token = '';
         this.formEditData.email_smtp_host = '';
         this.formEditData.email_smtp_port = '25';
         this.formEditData.email_username = '';

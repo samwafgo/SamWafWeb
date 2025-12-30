@@ -1511,6 +1511,11 @@ export default {
       type_feishu: "Feishu",
       type_wechat: "WeChat Work",
       type_email: "Email",
+      type_serverchan: "ServerChan",
+      // ServerChan configuration
+      serverchan_config_tip: "ServerChan is an easy-to-use message push service that supports pushing to WeChat, WeChat Work, DingTalk and other platforms",
+      serverchan_sendkey: "SendKey",
+      serverchan_sendkey_placeholder: "Get SendKey from ServerChan console (supports SCT and sctp formats)",
       // Email configuration tip
       email_config_tip: "Important: Use SSL/TLS for port 465, STARTTLS for port 587. Port 25 requires STARTTLS if authentication is needed",
       email_common_config: "📋 Common Email Configuration Reference (Click to expand)",
