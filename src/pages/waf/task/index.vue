@@ -3,6 +3,9 @@
     <t-card class="list-card-container">
       <t-row justify="space-between">
         <div class="left-operation-container">
+          <!--<t-button @click="handleAdd">
+            {{ $t('common.new') }}
+          </t-button>-->
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="300" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -32,6 +35,8 @@
             </p>
           </template>
           <template #op="slotProps">
+            <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
+            <!--<a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>-->
             <a class="t-button-link" @click="handleManual(slotProps)">{{ $t('page.task.button_manual_execute') }}</a>
           </template>
         </t-table>
@@ -50,24 +55,40 @@
 
 
           <t-form-item :label="$t('page.task.task_name')" name="task_name">
-            <t-input :style="{ width: '480px' }" v-model="formData.task_name" ></t-input>
+            <t-input :style="{ width: '480px' }" v-model="formData.task_name" :placeholder="$t('common.placeholder')+$t('page.task.task_name')"></t-input>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_unit')" name="task_unit">
-            <t-input :style="{ width: '480px' }" v-model="formData.task_unit" ></t-input>
+            <t-select :style="{ width: '480px' }" v-model="formData.task_unit" :placeholder="$t('common.select')+$t('page.task.task_unit')">
+              <t-option v-for="item in task_unit_type" :key="item.value" :value="item.value" :label="item.label">
+                {{ item.label }}
+              </t-option>
+            </t-select>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_value')" name="task_value">
-            <t-input-number :style="{ width: '150px' }" v-model="formData.task_value" :placeholder="$t('common.placeholder')">
+            <t-input-number :style="{ width: '480px' }" v-model="formData.task_value" :placeholder="$t('common.placeholder')+$t('page.task.task_value')">
             </t-input-number>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_at')" name="task_at">
-            <t-input :style="{ width: '480px' }" v-model="formData.task_at" ></t-input>
+            <t-input :style="{ width: '480px' }" v-model="formData.task_at" :placeholder="$t('page.task.task_at_placeholder')"></t-input>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_method')" name="task_method">
-            <t-input :style="{ width: '480px' }" v-model="formData.task_method" ></t-input>
+            <t-select :style="{ width: '480px' }" v-model="formData.task_method" :placeholder="$t('common.select')+$t('page.task.task_method')" filterable>
+              <t-option v-for="item in task_method_type" :key="item.value" :value="item.value" :label="item.label">
+                {{ item.label }}
+              </t-option>
+            </t-select>
+          </t-form-item>
+
+          <t-form-item :label="$t('page.task.task_days_of_week')" name="task_days_of_the_week" v-if="formData.task_unit === 'weekly'">
+            <t-select :style="{ width: '480px' }" v-model="formData.task_days_of_the_week" :placeholder="$t('common.select')+$t('page.task.task_days_of_week')">
+              <t-option v-for="item in week_days_type" :key="item.value" :value="item.value" :label="item.label">
+                {{ item.label }}
+              </t-option>
+            </t-select>
           </t-form-item>
 
           <t-form-item style="float: right">
@@ -86,24 +107,40 @@
 
 
           <t-form-item :label="$t('page.task.task_name')" name="task_name">
-            <t-input :style="{ width: '480px' }" v-model="formEditData.task_name" ></t-input>
+            <t-input :style="{ width: '480px' }" v-model="formEditData.task_name" :placeholder="$t('common.placeholder')+$t('page.task.task_name')"></t-input>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_unit')" name="task_unit">
-            <t-input :style="{ width: '480px' }" v-model="formEditData.task_unit" ></t-input>
+            <t-select :style="{ width: '480px' }" v-model="formEditData.task_unit" :placeholder="$t('common.select')+$t('page.task.task_unit')">
+              <t-option v-for="item in task_unit_type" :key="item.value" :value="item.value" :label="item.label">
+                {{ item.label }}
+              </t-option>
+            </t-select>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_value')" name="task_value">
-            <t-input-number :style="{ width: '150px' }" v-model="formEditData.task_value" :placeholder="$t('common.placeholder')">
+            <t-input-number :style="{ width: '480px' }" v-model="formEditData.task_value" :placeholder="$t('common.placeholder')+$t('page.task.task_value')">
             </t-input-number>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_at')" name="task_at">
-            <t-input :style="{ width: '480px' }" v-model="formEditData.task_at" ></t-input>
+            <t-input :style="{ width: '480px' }" v-model="formEditData.task_at" :placeholder="$t('page.task.task_at_placeholder')"></t-input>
           </t-form-item>
 
           <t-form-item :label="$t('page.task.task_method')" name="task_method">
-            <t-input :style="{ width: '480px' }" v-model="formEditData.task_method" ></t-input>
+            <t-select :style="{ width: '480px' }" v-model="formEditData.task_method" :placeholder="$t('common.select')+$t('page.task.task_method')" filterable disabled>
+              <t-option v-for="item in task_method_type" :key="item.value" :value="item.value" :label="item.label">
+                {{ item.label }}
+              </t-option>
+            </t-select>
+          </t-form-item>
+
+          <t-form-item :label="$t('page.task.task_days_of_week')" name="task_days_of_the_week" v-if="formEditData.task_unit === 'weekly'">
+            <t-select :style="{ width: '480px' }" v-model="formEditData.task_days_of_the_week" :placeholder="$t('common.select')+$t('page.task.task_days_of_week')">
+              <t-option v-for="item in week_days_type" :key="item.value" :value="item.value" :label="item.label">
+                {{ item.label }}
+              </t-option>
+            </t-select>
           </t-form-item>
 
           <t-form-item style="float: right">
@@ -142,6 +179,7 @@ const INITIAL_DATA = {
   task_value:'',
   task_at:'',
   task_method:'',
+  task_days_of_the_week:'',
 };
 export default Vue.extend({
   name: 'TaskBase',
@@ -162,13 +200,26 @@ export default Vue.extend({
         ...INITIAL_DATA
       },
       rules: {
-
         task_name: [{
           required: true,
           message: this.$t('common.placeholder')+this.$t('page.task.task_name'),
           type: 'error'
         }],
-
+        task_unit: [{
+          required: true,
+          message: this.$t('common.select')+this.$t('page.task.task_unit'),
+          type: 'error'
+        }],
+        task_value: [{
+          required: true,
+          message: this.$t('common.placeholder')+this.$t('page.task.task_value'),
+          type: 'error'
+        }],
+        task_method: [{
+          required: true,
+          message: this.$t('common.select')+this.$t('page.task.task_method'),
+          type: 'error'
+        }],
       },
       textareaValue: '',
       prefix,
@@ -208,11 +259,17 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'task_method',
         },
+        
+        { title: this.$t('page.task.task_days_of_week'),
+          width: 150,
+          ellipsis: true,
+          colKey: 'task_days_of_the_week',
+        },
 
         {
           align: 'left',
           fixed: 'right',
-          width: 200,
+          width: 280,
           colKey: 'op',
           title: this.$t('common.op'),
         },
@@ -231,6 +288,127 @@ export default Vue.extend({
         },{
           label: this.$t('page.task.task_unit_type.day'),
           value: 'day'
+        },{
+          label: this.$t('page.task.task_unit_type.weekly'),
+          value: 'weekly'
+        },
+      ],
+      //任务方法类型
+      task_method_type: [
+        {
+          label: this.$t('page.task.task_method_type.runtime_qps_clean'),
+          value: 'task_runtime_qps_clean'
+        },
+        {
+          label: this.$t('page.task.task_method_type.host_qps_clean'),
+          value: 'task_host_qps_clean'
+        },
+        {
+          label: this.$t('page.task.task_method_type.share_db'),
+          value: 'task_share_db'
+        },
+        {
+          label: this.$t('page.task.task_method_type.counter'),
+          value: 'task_counter'
+        },
+        {
+          label: this.$t('page.task.task_method_type.delay_info'),
+          value: 'task_delay_info'
+        },
+        {
+          label: this.$t('page.task.task_method_type.load_config'),
+          value: 'task_load_config'
+        },
+        {
+          label: this.$t('page.task.task_method_type.reflush_wechat_access_token'),
+          value: 'task_reflush_wechat_access_token'
+        },
+        {
+          label: this.$t('page.task.task_method_type.delete_history_info'),
+          value: 'task_delete_history_info'
+        },
+        {
+          label: this.$t('page.task.task_method_type.delete_history_download_file'),
+          value: 'task_delete_history_download_file'
+        },
+        {
+          label: this.$t('page.task.task_method_type.ssl_order_renew'),
+          value: 'task_ssl_order_renew'
+        },
+        {
+          label: this.$t('page.task.task_method_type.ssl_path_load'),
+          value: 'task_ssl_path_load'
+        },
+        {
+          label: this.$t('page.task.task_method_type.batch'),
+          value: 'task_batch'
+        },
+        {
+          label: this.$t('page.task.task_method_type.ssl_expire_check'),
+          value: 'task_ssl_expire_check'
+        },
+        {
+          label: this.$t('page.task.task_method_type.notice'),
+          value: 'task_notice'
+        },
+        {
+          label: this.$t('page.task.task_method_type.health'),
+          value: 'task_health'
+        },
+        {
+          label: this.$t('page.task.task_method_type.clear_cc_windows'),
+          value: 'task_clear_cc_windows'
+        },
+        {
+          label: this.$t('page.task.task_method_type.clear_webcache'),
+          value: 'task_clear_webcache'
+        },
+        {
+          label: this.$t('page.task.task_method_type.gc'),
+          value: 'task_gc'
+        },
+        {
+          label: this.$t('page.task.task_method_type.stats_push'),
+          value: 'task_stats_push'
+        },
+        {
+          label: this.$t('page.task.task_method_type.db_monitor'),
+          value: 'task_db_monitor'
+        },
+        {
+          label: this.$t('page.task.task_method_type.firewall_clean_expired'),
+          value: 'task_firewall_clean_expired'
+        },
+      ],
+      //星期选项
+      week_days_type: [
+        {
+          label: this.$t('page.task.week_days.sunday'),
+          value: '0'
+        },
+        {
+          label: this.$t('page.task.week_days.monday'),
+          value: '1'
+        },
+        {
+          label: this.$t('page.task.week_days.tuesday'),
+          value: '2'
+        },
+        {
+          label: this.$t('page.task.week_days.wednesday'),
+          value: '3'
+        },
+        {
+          label: this.$t('page.task.week_days.thursday'),
+          value: '4'
+        },
+        {
+          label: this.$t('page.task.week_days.friday'),
+          value: '5'
+        },
+        {
+          label: this.$t('page.task.week_days.saturday'),
+          value: '6'
         },
       ],
       rowKey: 'code',
@@ -384,6 +562,12 @@ export default Vue.extend({
           ...that.formData
         }
         postdata['task_value'] = Number(postdata['task_value'])
+        
+        // 如果不是weekly类型，清空task_days_of_the_week
+        if (postdata['task_unit'] !== 'weekly') {
+          postdata['task_days_of_the_week'] = ''
+        }
+        
         wafTaskAddApi({...postdata})
           .then((res) => {
             let resdata = res
@@ -417,20 +601,12 @@ export default Vue.extend({
           ...that.formEditData
         }
 
-
-
-
-
-
-
-
         postdata['task_value'] = Number(postdata['task_value'])
-
-
-
-
-
-
+        
+        // 如果不是weekly类型，清空task_days_of_the_week
+        if (postdata['task_unit'] !== 'weekly') {
+          postdata['task_days_of_the_week'] = ''
+        }
 
         wafTaskEditApi({...postdata})
           .then((res) => {
@@ -513,21 +689,7 @@ export default Vue.extend({
           if (resdata.code === 0) {
             that.detail_data = resdata.data;
 
-
-
-
-
-
-
-
-
             that.detail_data.task_value = that.detail_data.task_value.toString()
-
-
-
-
-
-
 
             that.formEditData = {
               ...that.detail_data
