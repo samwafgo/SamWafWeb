@@ -23,7 +23,7 @@
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
             <t-form-item :label="$t('page.urlallow.label_website')" name="host_code">
-              <t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
+              <t-select v-model="searchformData.host_code" clearable  filterable :style="{ width: '150px' }">
                 <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                   {{ item }}
                 </t-option>
@@ -72,7 +72,7 @@
       <div slot="body">
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
           <t-form-item :label="$t('page.urlallow.label_website')" name="host_code">
-            <t-select v-model="formData.host_code" clearable :style="{ width: '480px' }">
+            <t-select v-model="formData.host_code" clearable filterable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item"
                 :key="index">
                 {{ item }}
@@ -80,7 +80,7 @@
             </t-select>
           </t-form-item>
           <t-form-item :label="$t('page.urlallow.label_compare_type')" name="compare_type">
-            <t-select v-model="formData.compare_type" clearable :style="{ width: '480px' }">
+            <t-select v-model="formData.compare_type" clearable filterable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in compare_type_options" :value="item.value" :label="item.label"
                 :key="index">
                 {{ item.label }}

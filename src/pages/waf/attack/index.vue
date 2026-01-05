@@ -115,7 +115,7 @@
         <t-form ref="form" :data="searchformData" :label-width="150" colon layout="inline"
           :style="{ marginBottom: '8px' }">
           <t-form-item :label="$t('page.visit_log.website')" name="website">
-            <t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
+            <t-select v-model="searchformData.host_code" clearable filterable :style="{ width: '150px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                 {{ item }}
               </t-option>

@@ -10,7 +10,7 @@
           <t-form ref="form" :data="searchformData" :label-width="150" layout="inline" colon
             :style="{ marginBottom: '8px' }">
             <t-form-item :label="$t('page.cc.website')" name="host_code">
-              <t-select v-model="searchformData.host_code" clearable :style="{ width: '250' }">
+              <t-select v-model="searchformData.host_code" clearable filterable :style="{ width: '250' }">
                 <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                   {{ item }}
                 </t-option>
@@ -64,7 +64,7 @@
       <div slot="body">
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150">
           <t-form-item :label="$t('page.cc.website')" name="host_code">
-            <t-select v-model="formData.host_code" clearable :style="{ width: '480px' }">
+            <t-select v-model="formData.host_code" clearable filterable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                 {{ item }}
               </t-option>
@@ -161,7 +161,7 @@
       <div slot="body">
         <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="150">
           <t-form-item :label="$t('page.cc.website')" name="host_code">
-            <t-select v-model="formEditData.host_code" clearable :style="{ width: '480px' }">
+            <t-select v-model="formEditData.host_code" clearable filterable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                 {{ item }}
               </t-option>

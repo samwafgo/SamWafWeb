@@ -13,7 +13,7 @@
           <t-input :placeholder="$t('common.placeholder')" v-model="formData.rule_base.rule_name" />
         </t-form-item>
         <t-form-item :label="$t('page.rule.detail.rule_domain_code')" name="rule_domain_code">
-          <t-select v-model="formData.rule_base.rule_domain_code" clearable :style="{ width: '480px' }">
+          <t-select v-model="formData.rule_base.rule_domain_code" clearable filterable :style="{ width: '480px' }">
             <t-option v-for="(item, index) in host_options" :value="item.value" :label="item.label" :key="index">
               {{ item.label }}
             </t-option>

@@ -23,7 +23,7 @@
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
             <t-form-item :label="$t('page.rule.label_website')" name="host_code">
-              <t-select v-model="searchformData.host_code" clearable :style="{ width: '150px' }">
+              <t-select v-model="searchformData.host_code" clearable filterable :style="{ width: '150px' }">
                 <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
                   {{ item }}
                 </t-option>
