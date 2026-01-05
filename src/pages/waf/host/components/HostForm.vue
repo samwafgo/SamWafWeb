@@ -333,6 +333,18 @@
                 </t-radio-group>
               </t-tooltip>
             </t-form-item>
+            <t-form-item v-if="formData.is_enable_http_auth_base === '1'" :label="$t('page.host.http_auth_path_prefix')" name="http_auth_path_prefix">
+              <t-tooltip class="placement top center" :content="$t('page.host.http_auth_path_prefix_tips')" placement="top"
+                       :overlay-style="{ width: '500px' }" show-arrow>
+                <t-input v-model="formData.http_auth_path_prefix" :placeholder="$t('page.host.http_auth_path_prefix_placeholder')" :style="{ width: '300px' }">
+                  <template #suffix>
+                    <t-button size="small" theme="primary" @click="generateHttpAuthPath">
+                      {{$t('page.host.generate_random_path')}}
+                    </t-button>
+                  </template>
+                </t-input>
+              </t-tooltip>
+            </t-form-item>
             <t-form-item v-if="formData.is_enable_http_auth_base === '1'">
               <http-auth-base :propHostCode="formData.code"></http-auth-base>
             </t-form-item>
@@ -647,6 +659,7 @@
               if (that.formData.captcha_json != "") {
                 that.captchaConfigData = JSON.parse(that.formData.captcha_json);
                 that.captchaConfigData.is_enable_captcha = getOrDefault(that.captchaConfigData, "is_enable_captcha", "0");
+                that.captchaConfigData.path_prefix = getOrDefault(that.captchaConfigData, "path_prefix", "");
                 that.captchaConfigData.expire_time = getOrDefault(that.captchaConfigData, "expire_time", 24);
                 that.captchaConfigData.ip_mode = getOrDefault(that.captchaConfigData, "ip_mode", "nic");
                 that.captchaConfigData.engine_type = getOrDefault(that.captchaConfigData, "engine_type", "default");
@@ -829,6 +842,13 @@
           }
         }
       },
+      // 监听HTTP认证开关状态，自动生成路径
+      'formData.is_enable_http_auth_base': function(newVal, oldVal) {
+        // 从关闭切换到开启时，如果路径为空则自动生成
+        if (newVal === '1' && oldVal === '0' && !this.formData.http_auth_path_prefix) {
+          this.generateHttpAuthPath();
+        }
+      },
     },
     created() {
       this.getSslFolderList();
@@ -936,6 +956,17 @@
             }
           });
       },
+      // 生成随机HTTP认证路径前缀
+      generateHttpAuthPath() {
+        // 生成格式: /_waf_{8位随机字符}
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let randomStr = '';
+        for (let i = 0; i < 8; i++) {
+          randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        this.formData.http_auth_path_prefix = `/_waf_${randomStr}`;
+        this.$message.success(this.$t('page.host.generate_path_success'));
+      },
         // 表单提交
         onSubmit({ validateResult, firstError }) {
           console.log(validateResult, firstError);
@@ -1003,6 +1034,7 @@
             // 处理验证码配置
             let captchaData = {
               is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
+              path_prefix: this.captchaConfigData.path_prefix || '',
               exclude_urls: this.captchaConfigData.exclude_urls,
               expire_time: this.captchaConfigData.expire_time,
               ip_mode: this.captchaConfigData.ip_mode,

@@ -12,7 +12,7 @@ export const INITIAL_DATA = {
   remarks: '',
   defense_json: '{"bot":1,"sqli":1,"xss":1,"scan":1,"rce":1,"sensitive":1,"traversal":1,"owaspset":0}',
   healthy_json: '{"is_enable_healthy":1,"fail_count":3,"success_count":3,"response_time":60,"check_method":"GET","check_path":"/","expected_codes":"200,"}',
-  captcha_json: '{"is_enable_captcha":0,"exclude_urls":[],"expire_time":24,"ip_mode":"nic","engine_type":"traditional","cap_js_config":{"challengeCount":50,"challengeSize":32,"challengeDifficulty":4,"expiresMs":600000,"infoTitle":{"en":"","zh":""},"infoText":{"en":"","zh":""}}}',
+  captcha_json: '{"is_enable_captcha":0,"path_prefix":"","exclude_urls":[],"expire_time":24,"ip_mode":"nic","engine_type":"traditional","cap_js_config":{"challengeCount":50,"challengeSize":32,"challengeDifficulty":4,"expiresMs":600000,"infoTitle":{"en":"","zh":""},"infoText":{"en":"","zh":""}}}',
   start_status: '0',
   exclude_url_log:'',
   is_enable_load_balance: '0',
@@ -26,6 +26,7 @@ export const INITIAL_DATA = {
   bind_more_port:'',//多端口情况
   is_enable_http_auth_base:"0",//是否激活Http Auth Base认证
   http_auth_base_type:"authorization",//认证类型 authorization(默认Basic Auth) custom(自定义页面)
+  http_auth_path_prefix:"",//HTTP认证路径前缀，空值时使用默认路径或后端自动生成
   response_time_out:"60",//响应超时时间单位秒
   insecure_skip_verify:"0",//是否跳过后端https证书有效性验证
   anti_leech_json: '{"is_enable_anti_leech":0,"file_types":"gif|jpg|jpeg|png|bmp|swf","valid_referers":"none;server_names","action":"block","redirect_url":""}', // 新增防盗链配置
@@ -58,6 +59,7 @@ export const INITIAL_HEALTHY = {
 // 验证码配置初始化数据
 export const INITIAL_CAPTCHA = {
   is_enable_captcha: '0',
+  path_prefix: '', // 验证码路径前缀，空值时后端自动生成
   exclude_urls: "",
   expire_time: 24,
   ip_mode: 'nic',

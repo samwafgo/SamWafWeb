@@ -20,6 +20,22 @@
       </t-tooltip>
     </t-form-item>
 
+    <t-form-item :label="$t('page.host.captcha.path_prefix')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+      <t-tooltip class="placement top center" :content="$t('page.host.captcha.path_prefix_tips')" placement="top"
+                 :overlay-style="{ width: '300px' }" show-arrow>
+        <t-input :style="{ width: '300px' }"
+                 v-model="localCaptchaConfig.path_prefix"
+                 @change="updateParent"
+                 :placeholder="$t('page.host.captcha.path_prefix_placeholder')">
+          <template #suffix>
+            <t-button size="small" theme="primary" @click="generateCaptchaPath">
+              {{$t('page.host.generate_random_path')}}
+            </t-button>
+          </template>
+        </t-input>
+      </t-tooltip>
+    </t-form-item>
+
     <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
       <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
                  :overlay-style="{ width: '200px' }" show-arrow>
@@ -176,6 +192,9 @@ export default {
         if (!this.localCaptchaConfig.engine_type) {
           this.localCaptchaConfig.engine_type = 'traditional';
         }
+        if (!this.localCaptchaConfig.path_prefix) {
+          this.localCaptchaConfig.path_prefix = '';
+        }
         if (!this.localCaptchaConfig.cap_js_config) {
           this.localCaptchaConfig.cap_js_config = {
             challengeCount: 50,
@@ -194,6 +213,13 @@ export default {
         }
       },
       immediate: true
+    },
+    // 监听验证码开关状态，自动生成路径
+    'localCaptchaConfig.is_enable_captcha': function(newVal, oldVal) {
+      // 从关闭切换到开启时，如果路径为空则自动生成
+      if (newVal === '1' && oldVal === '0' && !this.localCaptchaConfig.path_prefix) {
+        this.generateCaptchaPath();
+      }
     }
   },
   methods: {
@@ -202,6 +228,19 @@ export default {
       console.log("CaptchaConfig", JSON.parse(JSON.stringify(this.localCaptchaConfig)))
       // 创建新对象避免直接修改props
       this.$emit('update', JSON.parse(JSON.stringify(this.localCaptchaConfig)));
+    },
+    // 生成随机验证码路径前缀
+    generateCaptchaPath() {
+      // 生成格式: /_waf_{8位随机字符}
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let randomStr = '';
+      for (let i = 0; i < 8; i++) {
+        randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      this.localCaptchaConfig.path_prefix = `/_waf_${randomStr}`;
+      this.$message.success(this.$t('page.host.generate_path_success'));
+      // 通知父组件更新
+      this.updateParent();
     }
   }
 };
