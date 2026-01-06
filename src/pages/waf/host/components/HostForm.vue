@@ -396,6 +396,13 @@
             </template>
             <transport-config :transport-config="transportConfigData" @update="val => transportConfigData = val"></transport-config>
           </t-tab-panel>
+          <t-tab-panel :value="12">
+            <template #label>
+              <t-icon name="filter" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_custom_headers')}}
+            </template>
+            <custom-headers-config :custom-headers-config="customHeadersConfigData" @update="val => customHeadersConfigData = val"></custom-headers-config>
+          </t-tab-panel>
           </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
@@ -440,8 +447,9 @@
 
   import AntiLeechConfig from '../components/AntiLeechConfig.vue';
   import CacheConfig from '../components/CacheConfig.vue';
+  import CustomHeadersConfig from '../components/CustomHeadersConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   export default Vue.extend({
@@ -457,6 +465,7 @@
       CacheConfig,
       StaticSiteConfig,
       TransportConfig,
+      CustomHeadersConfig,
     },
     props: {
       // 表单数据
@@ -512,6 +521,7 @@
         cacheConfigData: { ...INITIAL_CACHE },
         staticSiteConfigData: {...INITIAL_STATIC_SITE},
         transportConfigData: {...INITIAL_TRANSPORT},
+        customHeadersConfigData: {...INITIAL_CUSTOM_HEADERS},
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -734,6 +744,33 @@
             // 如果transport配置为空，使用默认值
             this.transportConfigData = { ...INITIAL_TRANSPORT };
           }
+
+          // 解析自定义头信息配置
+          if (this.formData.custom_headers_json) {
+            try {
+              let that = this;
+              if (that.formData.custom_headers_json != "") {
+                const parsedConfig = JSON.parse(that.formData.custom_headers_json);
+                that.customHeadersConfigData = {
+                  // 转换为字符串类型，因为 radio-group 使用字符串值
+                  is_enable_custom_headers: String(parsedConfig.is_enable_custom_headers !== undefined ? parsedConfig.is_enable_custom_headers : 0),
+                  // 直接获取数组，不使用 getOrDefault（它会调用 toString）
+                  headers: Array.isArray(parsedConfig.headers) ? parsedConfig.headers : []
+                };
+                console.log("解析自定义头信息配置:", that.customHeadersConfigData);
+                console.log("headers 数组:", that.customHeadersConfigData.headers);
+              } else {
+                that.customHeadersConfigData = { ...INITIAL_CUSTOM_HEADERS };
+              }
+            } catch (e) {
+              console.error("解析custom_headers_json失败", e);
+              this.customHeadersConfigData = { ...INITIAL_CUSTOM_HEADERS };
+            }
+          } else {
+            // 如果没有自定义头信息配置，使用默认值
+            this.customHeadersConfigData = { ...INITIAL_CUSTOM_HEADERS };
+          }
+
           // 解析防盗链配置
           if (this.formData.anti_leech_json) {
             try {
@@ -1087,6 +1124,15 @@
               
             };
             postdata['transport_json'] = JSON.stringify(transportData);
+
+            // 自定义头信息配置
+            const customHeadersData = {
+              is_enable_custom_headers: parseInt(this.customHeadersConfigData.is_enable_custom_headers || INITIAL_CUSTOM_HEADERS.is_enable_custom_headers),
+              headers: this.customHeadersConfigData.headers || []
+            };
+            console.log("提交自定义头信息配置:", customHeadersData);
+            postdata['custom_headers_json'] = JSON.stringify(customHeadersData);
+
             // 提交表单
             this.$emit('submit', { result: postdata });
           } else {

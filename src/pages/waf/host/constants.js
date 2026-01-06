@@ -35,6 +35,7 @@ export const INITIAL_DATA = {
   default_encoding:"auto",//默认编码 utf-8 或者 gbk auto字符串自动选择 
   log_only_mode:"0",//仅记录模式 1 启动仅记录模式 0 关闭仅记录模式
   transport_json: '{"max_idle_conns":0,"max_idle_conns_per_host":0,"max_conns_per_host":0,"idle_conn_timeout":0,"tls_handshake_timeout":0,"expect_continue_timeout":0}', //Transport配置 json
+  custom_headers_json: '{"is_enable_custom_headers":0,"headers":[]}', //自定义头信息配置 json
 };
 
 // SSL配置初始化数据
@@ -115,4 +116,10 @@ export const INITIAL_TRANSPORT = {
   idle_conn_timeout: "0",
   tls_handshake_timeout: "0",
   expect_continue_timeout: "0",
+};
+
+// 自定义头信息配置初始化数据
+export const INITIAL_CUSTOM_HEADERS = {
+  is_enable_custom_headers: "0",
+  headers: []
 };
