@@ -197,15 +197,64 @@
     </t-dialog>
 
     <!-- IP提取问题对话框 -->
-    <t-dialog :header="$t('page.visit_log.detail.ip_extract_issue')" :visible.sync="ipExtractDialogVisible" :width="680" :footer="false">
+    <t-dialog :header="$t('page.visit_log.detail.ip_extract_issue')" :visible.sync="ipExtractDialogVisible" :width="800" :footer="false">
       <div slot="body">
         <p>{{ $t('page.visit_log.detail.ip_extract_issue_desc') }}</p>
+        
+        <!-- 视频教程链接 -->
+        <t-alert theme="success" style="margin-bottom: 16px;">
+          <template #icon>
+            <span style="font-size: 20px;">📺</span>
+          </template>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span>{{ $t('page.visit_log.detail.ip_extract_video_tutorial') }}</span>
+            <t-button theme="primary" size="small" @click="openVideoTutorial">
+              {{ $t('page.visit_log.detail.ip_extract_watch_tutorial') }}
+            </t-button>
+          </div>
+        </t-alert>
+        
+        <!-- 常用头信息提示区域 -->
+        <t-card :title="$t('page.visit_log.detail.ip_extract_common_headers')" style="margin-bottom: 20px;">
+          <p style="margin-bottom: 12px; color: #666;">{{ $t('page.visit_log.detail.ip_extract_common_headers_desc') }}</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <t-button size="small" variant="outline" @click="selectIPHeader('CF-Connecting-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.cloudflare') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('True-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.cloudflare_enterprise') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('X-Forwarded-For')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.x_forwarded_for') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('X-Real-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.x_real_ip') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('X-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.x_client_ip') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('Fastly-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.fastly') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('Incap-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.incapsula') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('CF-Connecting-IP,X-Forwarded-For,X-Real-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.multiple') }}
+            </t-button>
+          </div>
+          <t-alert theme="info" :message="$t('page.visit_log.detail.ip_extract_multiple_tips')" style="margin-top: 8px;" />
+          <div style="margin-top: 8px; color: #999; font-size: 12px;">
+            {{ $t('page.visit_log.detail.ip_extract_example') }}
+          </div>
+        </t-card>
+        
         <t-form :data="ipExtractFormData" ref="ipExtractForm" :rules="ipExtractRules" @submit="onSubmitIPExtract" :labelWidth="150">
           <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
-            <t-input :style="{ width: '480px' }" v-model="ipExtractFormData.item" disabled></t-input>
+            <t-input :style="{ width: '600px' }" v-model="ipExtractFormData.item" disabled></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.systemconfig.label_configuration_value')" name="value">
-            <t-input :style="{ width: '480px' }" v-model="ipExtractFormData.value"></t-input>
+            <t-input :style="{ width: '600px' }" v-model="ipExtractFormData.value" :placeholder="$t('page.visit_log.detail.ip_extract_issue_tips')"></t-input>
             <div class="form-item-tips">{{ $t('page.visit_log.detail.ip_extract_issue_tips') }}</div>
           </t-form-item>
           <t-form-item style="float: right">
@@ -331,6 +380,15 @@
             this.$message.error(err.message);
           });
         }
+      },
+      // 快捷选择IP头信息
+      selectIPHeader(headerValue) {
+        this.ipExtractFormData.value = headerValue;
+        this.$message.success('已选择: ' + headerValue);
+      },
+      // 打开视频教程
+      openVideoTutorial() {
+        window.open('https://www.bilibili.com/video/BV1pn8Ez2ELQ/', '_blank');
       },
       handelToAi(){
         console.log("handelToAi",this.httpAiMask)

@@ -166,7 +166,11 @@
               @click="exportDbVisible = true">
               {{
                 $t('common.export') }} </t-button>
+          
             <t-button type="reset" variant="base" theme="default"> {{ $t('common.reset') }} </t-button>
+            <t-button theme="primary" variant="outline" :style="{ marginLeft: '8px' }" @click="handleIPExtractIssue">
+              {{ $t('page.visit_log.detail.ip_extract_issue') }}
+            </t-button>
           </t-form-item>
         </t-form>
       </t-row>
@@ -251,6 +255,75 @@
         <t-checkbox-group v-model="tempDisplayColumns" direction="vertical">
           <t-checkbox v-for="field in availableFields" :key="field.value" :value="field.value" :label="field.label" />
         </t-checkbox-group>
+      </div>
+    </t-dialog>
+
+    <!-- IP提取问题对话框 -->
+    <t-dialog :header="$t('page.visit_log.detail.ip_extract_issue')" :visible.sync="ipExtractDialogVisible" :width="800" :footer="false">
+      <div slot="body">
+        <p>{{ $t('page.visit_log.detail.ip_extract_issue_desc') }}</p>
+        
+        <!-- 视频教程链接 -->
+        <t-alert theme="success" style="margin-bottom: 16px;">
+          <template #icon>
+            <span style="font-size: 20px;">📺</span>
+          </template>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span>{{ $t('page.visit_log.detail.ip_extract_video_tutorial') }}</span>
+            <t-button theme="primary" size="small" @click="openVideoTutorial">
+              {{ $t('page.visit_log.detail.ip_extract_watch_tutorial') }}
+            </t-button>
+          </div>
+        </t-alert>
+        
+        <!-- 常用头信息提示区域 -->
+        <t-card :title="$t('page.visit_log.detail.ip_extract_common_headers')" style="margin-bottom: 20px;">
+          <p style="margin-bottom: 12px; color: #666;">{{ $t('page.visit_log.detail.ip_extract_common_headers_desc') }}</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <t-button size="small" variant="outline" @click="selectIPHeader('CF-Connecting-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.cloudflare') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('True-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.cloudflare_enterprise') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('X-Forwarded-For')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.x_forwarded_for') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('X-Real-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.x_real_ip') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('X-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.x_client_ip') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('Fastly-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.fastly') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('Incap-Client-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.incapsula') }}
+            </t-button>
+            <t-button size="small" variant="outline" @click="selectIPHeader('CF-Connecting-IP,X-Forwarded-For,X-Real-IP')">
+              {{ $t('page.visit_log.detail.ip_extract_headers.multiple') }}
+            </t-button>
+          </div>
+          <t-alert theme="info" :message="$t('page.visit_log.detail.ip_extract_multiple_tips')" style="margin-top: 8px;" />
+          <div style="margin-top: 8px; color: #999; font-size: 12px;">
+            {{ $t('page.visit_log.detail.ip_extract_example') }}
+          </div>
+        </t-card>
+        
+        <t-form :data="ipExtractFormData" ref="ipExtractForm" :rules="ipExtractRules" @submit="onSubmitIPExtract" :labelWidth="150">
+          <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
+            <t-input :style="{ width: '600px' }" v-model="ipExtractFormData.item" disabled></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.systemconfig.label_configuration_value')" name="value">
+            <t-input :style="{ width: '600px' }" v-model="ipExtractFormData.value" :placeholder="$t('page.visit_log.detail.ip_extract_issue_tips')"></t-input>
+            <div class="form-item-tips">{{ $t('page.visit_log.detail.ip_extract_issue_tips') }}</div>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="ipExtractDialogVisible = false">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
       </div>
     </t-dialog>
   </div>
@@ -601,6 +674,18 @@ export default Vue.extend({
         ip_tag_db: '0',
       },
       logConfigItems: {}, // 存储配置项的完整信息（包含ID等）
+      
+      // IP提取配置相关
+      ipExtractDialogVisible: false,
+      ipExtractFormData: {
+        item: 'gwaf_proxy_header',
+        value: '',
+        remarks: '获取访客IP头信息（按照顺序）'
+      },
+      ipExtractRules: {
+        item: [{ required: true, message: '', type: 'error' }],
+        value: [{ required: false, message: '', type: 'error' }]
+      }
     };
   },
   computed: {
@@ -1188,6 +1273,46 @@ export default Vue.extend({
         .finally(() => {
           this.logConfigSaving = false;
         });
+    },
+
+    // 处理IP提取问题
+    handleIPExtractIssue() {
+      this.ipExtractDialogVisible = true;
+      // 获取当前配置
+      get_detail_by_item_api({ item: 'gwaf_proxy_header' }).then(res => {
+        if (res.code === 0 && res.data) {
+          this.ipExtractFormData = res.data;
+        }
+      }).catch(err => {
+        console.error('获取IP提取配置失败:', err);
+      });
+    },
+
+    // 快捷选择IP头信息
+    selectIPHeader(headerValue) {
+      this.ipExtractFormData.value = headerValue;
+      this.$message.success('已选择: ' + headerValue);
+    },
+
+    // 打开视频教程
+    openVideoTutorial() {
+      window.open('https://www.bilibili.com/video/BV1pn8Ez2ELQ/', '_blank');
+    },
+
+    // 提交IP提取配置
+    onSubmitIPExtract({ validateResult }) {
+      if (validateResult === true) {
+        edit_system_config_api(this.ipExtractFormData).then(res => {
+          if (res.code === 0) {
+            this.$message.success(res.msg);
+            this.ipExtractDialogVisible = false;
+          } else {
+            this.$message.error(res.msg);
+          }
+        }).catch(err => {
+          this.$message.error(err.message);
+        });
+      }
     },
     //end meathod
   },
