@@ -31,7 +31,17 @@
                  @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #valid_to="{ row }">
-             <span v-if="row.expiration_info!=''"> {{ row.valid_to}} </span>  <span v-if="row.expiration_day>0 && row.expiration_day<30 " style="color: red"> {{ row.expiration_info}} </span> <span v-if="row.expiration_day>30 " style="color: green"> {{ row.expiration_info}} </span>
+             <span v-if="row.expiration_info!=''"> {{ row.valid_to}} </span>  
+             <span v-if="isIpAddress(row.domain)">
+               <!-- IP证书：小于3天显示红色警告，大于3天显示绿色 -->
+               <span v-if="row.expiration_day>0 && row.expiration_day<3" style="color: red"> {{ row.expiration_info}} </span>
+               <span v-if="row.expiration_day>=3" style="color: green"> {{ row.expiration_info}} </span>
+             </span>
+             <span v-else>
+               <!-- 域名证书：小于30天显示红色警告，大于30天显示绿色 -->
+               <span v-if="row.expiration_day>0 && row.expiration_day<30" style="color: red"> {{ row.expiration_info}} </span>
+               <span v-if="row.expiration_day>=30" style="color: green"> {{ row.expiration_info}} </span>
+             </span>
           </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
@@ -244,6 +254,15 @@ export default Vue.extend({
   },
 
   methods: {
+    // 判断是否是IP地址
+    isIpAddress(domain) {
+      if (!domain) return false;
+      // IPv4 正则表达式
+      const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      // IPv6 正则表达式（简化版）
+      const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+      return ipv4Regex.test(domain) || ipv6Regex.test(domain);
+    },
     handleSyncHost(){
       let that = this
       wafSslExpireSyncHostApi().then( (res)=>{
