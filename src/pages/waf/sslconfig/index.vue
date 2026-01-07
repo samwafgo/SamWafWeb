@@ -182,14 +182,6 @@ export default Vue.extend({
           colKey: 'op',
           title: this.$t('common.op'),
         },
-
-        {
-          title: this.$t('page.ssl.label_subject'),
-          align: 'left',
-          width: 250,
-          ellipsis: true,
-          colKey: 'subject',
-        },
         {
           title: this.$t('page.ssl.label_bind_hosts'),
           align: 'left',
@@ -202,13 +194,6 @@ export default Vue.extend({
             }
             return '-';
           },
-        },
-        {
-          title: this.$t('page.ssl.label_issuer'),
-          align: 'left',
-          width: 250,
-          ellipsis: true,
-          colKey: 'issuer',
         },
         {
           title: this.$t('page.ssl.label_valid_from'),
@@ -233,6 +218,20 @@ export default Vue.extend({
           width: 250,
           ellipsis: true,
           colKey: 'domains',
+        },
+        {
+          title: this.$t('page.ssl.label_subject'),
+          align: 'left',
+          width: 250,
+          ellipsis: true,
+          colKey: 'subject',
+        },
+        {
+          title: this.$t('page.ssl.label_issuer'),
+          align: 'left',
+          width: 250,
+          ellipsis: true,
+          colKey: 'issuer',
         },
         {
           title: this.$t('page.ssl.label_serial_no'),
@@ -419,7 +418,7 @@ export default Vue.extend({
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (e) => { 
+        reader.onload = (e) => {
           const content = e.target.result;
           console.log("file:",content,"this.currentImportMode：",this.currentImportMode)
           if (this.currentImportMode === 'add') {
