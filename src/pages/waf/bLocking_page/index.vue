@@ -29,6 +29,9 @@
           <template #host_code="{ row }">
             <span> {{host_dic[row.host_code]}}</span>
           </template>
+          <template #attack_type="{ row }">
+            <span>{{ getAttackTypeLabel(row.attack_type) }}</span>
+          </template>
           <template #response_header="{ row }">
              <span v-for="header in JSON.parse(row.response_header)">{{ header.name }}={{ header.value }}  </span>
           </template>
@@ -66,6 +69,14 @@
                           </t-option>
                         </t-select>
 
+                    </t-form-item>
+
+                      <t-form-item :label="$t('page.blocking_page.attack_type')" name="attack_type">
+                        <t-select v-model="formData.attack_type" clearable :style="{ width: '480px' }">
+                          <t-option v-for="item in attack_type_options" :value="item.value" :label="item.label" :key="item.value">
+                            {{ item.label }}
+                          </t-option>
+                        </t-select>
                     </t-form-item>
 
                       <t-form-item :label="$t('page.blocking_page.response_code')" name="response_code">
@@ -120,6 +131,14 @@
                             </t-option>
                           </t-select>
                       </t-form-item>
+
+                        <t-form-item :label="$t('page.blocking_page.attack_type')" name="attack_type">
+                          <t-select v-model="formEditData.attack_type" clearable :style="{ width: '480px' }">
+                            <t-option v-for="item in attack_type_options" :value="item.value" :label="item.label" :key="item.value">
+                              {{ item.label }}
+                            </t-option>
+                          </t-select>
+                        </t-form-item>
 
                         <t-form-item :label="$t('page.blocking_page.response_code')" name="response_code">
                           <t-input :style="{ width: '480px' }" v-model="formEditData.response_code" ></t-input>
@@ -179,6 +198,7 @@
   const INITIAL_DATA = {
     blocking_page_name:'',
     blocking_type:'other_block',
+    attack_type:'',
     host_code:'',
     response_code:'403',
     response_header:'',
@@ -249,6 +269,11 @@
                     colKey: 'host_code',
              },
 
+            { title: this.$t('page.blocking_page.attack_type'),
+                    width: 150,
+                    ellipsis: true,
+                    colKey: 'attack_type',
+             },
 
             { title: this.$t('page.blocking_page.response_code'),
                     width: 200,
@@ -302,6 +327,24 @@
             value: '403'
           },
         ],*/
+        //攻击类型选项
+        attack_type_options: [
+          { label: this.$t('page.blocking_page.attack_type_option.default'), value: '' },
+          { label: this.$t('page.blocking_page.attack_type_option.cc_attack'), value: 'cc_attack' },
+          { label: this.$t('page.blocking_page.attack_type_option.sql_injection'), value: 'sql_injection' },
+          { label: this.$t('page.blocking_page.attack_type_option.xss_attack'), value: 'xss_attack' },
+          { label: this.$t('page.blocking_page.attack_type_option.scan_tool'), value: 'scan_tool' },
+          { label: this.$t('page.blocking_page.attack_type_option.rce_attack'), value: 'rce_attack' },
+          { label: this.$t('page.blocking_page.attack_type_option.dir_traversal'), value: 'dir_traversal' },
+          { label: this.$t('page.blocking_page.attack_type_option.bot_attack'), value: 'bot_attack' },
+          { label: this.$t('page.blocking_page.attack_type_option.sensitive_word'), value: 'sensitive_word' },
+          { label: this.$t('page.blocking_page.attack_type_option.ip_blocked'), value: 'ip_blocked' },
+          { label: this.$t('page.blocking_page.attack_type_option.url_blocked'), value: 'url_blocked' },
+          { label: this.$t('page.blocking_page.attack_type_option.anti_leech'), value: 'anti_leech' },
+          { label: this.$t('page.blocking_page.attack_type_option.custom_rule'), value: 'custom_rule' },
+          { label: this.$t('page.blocking_page.attack_type_option.owasp_rule'), value: 'owasp_rule' },
+          { label: this.$t('page.blocking_page.attack_type_option.plugin_block'), value: 'plugin_block' },
+        ],
         //响应header
         response_header_list:[
           {
@@ -332,6 +375,15 @@
     },
 
     methods: {
+      getAttackTypeLabel(attackType) {
+        // 如果 attack_type 为空或 undefined，显示"通用"
+        if (!attackType || attackType === '') {
+          return this.$t('page.blocking_page.attack_type_option.default');
+        }
+        // 根据 attack_type 值查找对应的标签
+        const option = this.attack_type_options.find(opt => opt.value === attackType);
+        return option ? option.label : attackType;
+      },
       addResponseHeader() {
         this.response_header_list.push( {name:"",
           value:""});
@@ -554,7 +606,9 @@
             if (resdata.code === 0) {
               that.detail_data = resdata.data;
               that.formEditData = {
-                ...that.detail_data
+                ...that.detail_data,
+                // 确保 attack_type 为空值时显示为空字符串，匹配"通用"选项
+                attack_type: that.detail_data.attack_type || ''
               }
             }
           })
