@@ -317,6 +317,9 @@ export default {
     },
     otp: {
       alert_message: "SamWaf 双因素认证（ Two-Factor Authentication、缩写 2FA）是一种安全的登录验证技术。要求用户登录时除密码外，需要额外的身份验证信息从而提升帐号的安全性。",
+      issuer: "发行者标识",
+      issuer_placeholder: "用于在认证器应用中识别此帐号",
+      current_issuer: "当前发行者标识",
       secret_code: "输入安全码",
       bind_success_tip: "您已经成功绑定，如果需要解绑，请点击更多展开",
       bind: "绑定",

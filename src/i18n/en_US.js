@@ -317,6 +317,9 @@ export default {
     },
     otp: {
       alert_message: "SamWaf Two-Factor Authentication (2FA) is a secure login verification technology. It requires users to provide additional authentication information during login, in addition to their password, to enhance account security.",
+      issuer: "Issuer",
+      issuer_placeholder: "Used to identify this account in the authenticator app",
+      current_issuer: "Current Issuer",
       secret_code: "Enter Security Code",
       bind_success_tip: "Successfully bound. If you need to unbind, please click More to expand",
       bind: "Bind",

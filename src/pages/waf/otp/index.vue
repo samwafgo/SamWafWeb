@@ -22,6 +22,9 @@
               <t-button variant="outline">{{ $t('page.otp.cannot_scan') }}</t-button>
             </t-popup>
           </t-form-item>
+          <t-form-item :label="$t('page.otp.issuer')" name="issuer">
+            <t-input :style="{ width: '480px' }" v-model="formData.issuer" :placeholder="$t('page.otp.issuer_placeholder')"></t-input>
+          </t-form-item>
           <t-form-item :label="$t('page.otp.secret_code')" name="secret_code">
             <t-input :style="{ width: '480px' }" v-model="formData.secret_code" ></t-input>
           </t-form-item>
@@ -33,6 +36,9 @@
         <t-alert  v-if="isBind"  theme="success" close :max-line="1">
           <span>{{ $t('page.otp.bind_success_tip') }}</span>
           <t-form :data="formBindData" ref="unBindForm" :rules="rules" @submit="onUnBindSubmit" :labelWidth="200">
+            <t-form-item :label="$t('page.otp.issuer')" name="issuer">
+              <t-input :style="{ width: '480px' }" v-model="formBindData.issuer" :readonly="true" :placeholder="$t('page.otp.current_issuer')"></t-input>
+            </t-form-item>
             <t-form-item :label="$t('page.otp.secret_code')" name="secret_code">
               <t-input :style="{ width: '480px' }" v-model="formBindData.secret_code" ></t-input>
             </t-form-item>
@@ -94,11 +100,13 @@
           user_name: "",
           url: "",
           secret: "",
+          issuer: "",
           remarks: "",
           secret_code: ""
         },
         formBindData: {
           id: "",
+          issuer: "",
           secret_code: ""
         },
         rules: {
@@ -161,6 +169,17 @@
       });
     },
 
+    watch: {
+      'formData.issuer'(newIssuer) {
+        // 当用户修改 Issuer 时，重新生成 OTP URL
+        if (newIssuer && this.formData.secret && this.formData.user_name) {
+          const encodedIssuer = encodeURIComponent(newIssuer);
+          const encodedAccount = encodeURIComponent(this.formData.user_name);
+          const encodedSecret = encodeURIComponent(this.formData.secret);
+          this.formData.url = `otpauth://totp/${encodedIssuer}:${encodedAccount}?secret=${encodedSecret}&issuer=${encodedIssuer}`;
+        }
+      }
+    },
     methods: {
       loadInitData() {
         return new Promise((resolve, reject) => {
@@ -177,6 +196,7 @@
                   this.isBind = true
                   this.formBindData.secret_code = ""
                   this.formBindData.id= resdata.data.id
+                  this.formBindData.issuer= resdata.data.issuer || ""
                 }
               }
               resolve(); // 调用 resolve 表示加载完成
