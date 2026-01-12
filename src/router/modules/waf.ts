@@ -122,6 +122,24 @@ export default [
         component: () => import('@/pages/waf/firewall_ipblock/index.vue'),
         meta: { title: 'menu.host.firewall_ip_block' },
 
+      },
+      /*{
+        path: 'wafTamperProtection',
+        name: 'WafTamperProtection',
+        component: () => import('@/pages/waf/tamper_protection/index.vue'),
+        meta: { title: 'menu.host.tamper_protection' },
+      } ,*/
+      {
+        path: 'wafTamperProtectionLog',
+        name: 'WafTamperProtectionLog',
+        component: () => import('@/pages/waf/tamper_protection_log/index.vue'),
+        meta: { title: 'menu.host.tamper_protection_log', hidden: true },
+      },
+      {
+        path: 'wafTamperProtectionFileHash',
+        name: 'WafTamperProtectionFileHash',
+        component: () => import('@/pages/waf/tamper_protection_file_hash/index.vue'),
+        meta: { title: 'menu.host.tamper_protection_file_hash', hidden: true },
       }
     ],
   },
