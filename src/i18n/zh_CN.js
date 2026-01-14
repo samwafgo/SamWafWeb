@@ -295,6 +295,11 @@ export default {
       allowed_time_ranges: "允许访问时间段",
       allowed_time_ranges_placeholder: "格式: 08:00-10:00;11:00-12:00",
       allowed_time_ranges_tips: "指定端口可访问的时间段,多个时间段用分号隔开,留空表示24小时可访问",
+      ip_version: "IP版本支持",
+      ip_version_ipv4: "仅IPv4",
+      ip_version_ipv6: "仅IPv6",
+      ip_version_both: "IPv4和IPv6",
+      ip_version_tips: "选择隧道监听的IP版本，默认为同时支持IPv4和IPv6",
       tcp_source_count: "TCP源连接数",
 
       tcp_target_count: "TCP目标连接数",

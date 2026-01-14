@@ -52,6 +52,16 @@
                 </div>
             </t-form-item>
 
+            <t-form-item :label="$t('page.tunnel.ip_version')" name="ip_version">
+                <t-select v-model="formData.ip_version" :style="{ width: '480px' }">
+                    <t-option value="ipv4" :label="$t('page.tunnel.ip_version_ipv4')">IPv4</t-option>
+                    <t-option value="ipv6" :label="$t('page.tunnel.ip_version_ipv6')">IPv6</t-option>
+                    <t-option value="both" :label="$t('page.tunnel.ip_version_both')">IPv4 & IPv6</t-option>
+                </t-select>
+                <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+                    {{ $t('page.tunnel.ip_version_tips') }}
+                </div>
+            </t-form-item>
 
             <div class="form-row">
 

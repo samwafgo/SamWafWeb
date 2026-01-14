@@ -295,6 +295,11 @@ export default {
       allowed_time_ranges: "Allowed Time Ranges",
       allowed_time_ranges_placeholder: "Format: 08:00-10:00;11:00-12:00",
       allowed_time_ranges_tips: "Specify accessible time ranges for the port, separate multiple ranges with semicolon, leave empty for 24/7 access",
+      ip_version: "IP Version Support",
+      ip_version_ipv4: "IPv4 Only",
+      ip_version_ipv6: "IPv6 Only",
+      ip_version_both: "IPv4 & IPv6",
+      ip_version_tips: "Select the IP version for tunnel listening, default is both IPv4 and IPv6",
       tcp_source_count: "TCP Source Connections",
 
       tcp_target_count: "TCP Target Connections",

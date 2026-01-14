@@ -35,6 +35,17 @@
               {{ $t('common.status_runtime_option.stopped') }}
             </t-tag>
           </template>
+          <template #ip_version="{ row }">
+            <t-tag theme="primary" v-if="row.ip_version === 'ipv4'">
+              {{ $t('page.tunnel.ip_version_ipv4') }}
+            </t-tag>
+            <t-tag theme="success" v-else-if="row.ip_version === 'ipv6'">
+              {{ $t('page.tunnel.ip_version_ipv6') }}
+            </t-tag>
+            <t-tag theme="warning" v-else>
+              {{ $t('page.tunnel.ip_version_both') }}
+            </t-tag>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickShowConnections(slotProps)">{{ $t('page.tunnel.view_connections') }}</a> 
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
@@ -192,8 +203,12 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'allowed_time_ranges',
         },
-
-
+        {
+          title: this.$t('page.tunnel.ip_version'),
+          width: 120,
+          ellipsis: true,
+          colKey: 'ip_version',
+        },
         {
           title: this.$t('page.tunnel.conn_timeout'),
 
@@ -475,6 +490,8 @@ export default Vue.extend({
             that.detail_data.max_out_connect = that.detail_data.max_out_connect.toString()
             // 处理 allowed_time_ranges 字段，确保不是 null 或 undefined
             that.detail_data.allowed_time_ranges = that.detail_data.allowed_time_ranges || ''
+            // 处理 ip_version 字段，确保不是 null 或 undefined，默认为 both
+            that.detail_data.ip_version = that.detail_data.ip_version || 'both'
 
 
 

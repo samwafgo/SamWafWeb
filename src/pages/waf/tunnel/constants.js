@@ -14,6 +14,7 @@ export const INITIAL_DATA = {
     max_in_connect: '0',
     max_out_connect: '0',
     allowed_time_ranges: '',
+    ip_version: 'both',
     remark: '',
 
 };
