@@ -33,6 +33,10 @@
               <t-input v-model="searchformData.rule_name" class="search-input" clearable>
               </t-input>
             </t-form-item>
+            <t-form-item :label="$t('page.rule.label_rule_code')" name="rule_code">
+              <t-input v-model="searchformData.rule_code" class="search-input" clearable>
+              </t-input>
+            </t-form-item>
             <t-form-item>
               <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')">
                 {{ $t('common.search') }}
@@ -69,7 +73,7 @@
             <span> {{host_dic[row.host_code]}}</span>
           </template>
           <template #rule_status="{ row }">
-            <t-switch size="medium" v-model="row.rule_status === 1" :label="[$t('page.rule.rule_on'), $t('page.rule.rule_off')]"
+            <t-switch size="small" v-model="row.rule_status === 1" :label="[$t('page.rule.rule_on'), $t('page.rule.rule_off')]"
                       @change="changeRuleStatus($event, row)">
             </t-switch>
           </template>
@@ -176,6 +180,13 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'rule_name',
         },
+        {
+          title: this.$t('page.rule.label_rule_code'),
+          align: 'left',
+          width: 200,
+          ellipsis: true,
+          colKey: 'rule_code',
+        },
         { title: this.$t('page.rule.label_rule_version'), colKey: 'rule_version', width: 70, cell: { col: 'version' } },
         { title: this.$t('page.rule.label_rule_status'), colKey: 'rule_status', width: 70, cell: { col: 'rule_status' } },
         {
@@ -210,7 +221,8 @@ export default Vue.extend({
       //顶部搜索
       searchformData: {
         rule_name:"",
-        host_code:""
+        host_code:"",
+        rule_code:""
       },
       confirmVisible: false,
       deleteIdx: -1,

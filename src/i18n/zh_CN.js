@@ -1461,6 +1461,7 @@ export default {
       button_add_rule: "新建规则",
       label_website: "网站",
       label_rule_name: "规则名",
+      label_rule_code: "规则编号",
       label_rule_version: "规则版本",
       label_rule_status: "规则状态",
       alert_message: "SamWaf防御规则,可进行脚本(首选)，界面编辑",

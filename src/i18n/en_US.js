@@ -1459,6 +1459,7 @@ export default {
       button_add_rule: "Add Rule",
       label_website: "Website",
       label_rule_name: "Rule Name",
+      label_rule_code: "Rule Code",
       label_rule_version: "Rule Version",
       label_rule_status: "Rule Status",
       alert_message: "SamWaf defense rules, can be scripted (preferred), interface editing",
