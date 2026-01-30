@@ -1594,6 +1594,9 @@ export default {
       theme_mode_color_light: "Light",
       theme_mode_color_dark: "Dark",
       theme_mode_color_auto: "Auto",
+      clear_settings: "Clear Settings",
+      clear_settings_success: "Local settings cleared",
+      saved_to_storage: "Saved to local",
     },
     monitor: {
       alert_message: "System monitoring page, real-time display of server CPU, memory and disk usage",

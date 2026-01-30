@@ -103,6 +103,11 @@
           <p>请复制后手动修改配置文件: /src/config/style.ts</p>
           <t-button theme="primary" variant="text" @click="handleCopy"> 复制配置项 </t-button>
         </div>-->
+        <div class="setting-footer">
+          <t-button theme="default" variant="outline" @click="handleClearSettings">
+            {{ $t('page.right_setting.clear_settings') }}
+          </t-button>
+        </div>
       </div>
     </t-drawer>
   </div>
@@ -122,6 +127,8 @@ import SettingDarkIcon from '@/assets/assets-setting-dark.svg';
 import SettingLightIcon from '@/assets/assets-setting-light.svg';
 import SettingAutoIcon from '@/assets/assets-setting-auto.svg';
 import i18n from "./../i18n";
+
+const SETTING_STORAGE_KEY = 'samwaf_page_setting';
 const LAYOUT_OPTION = ['side', 'top', 'mix'];
 const COLOR_OPTIONS = ['default', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple', 'dynamic'];
 const MODE_OPTIONS = [
@@ -169,9 +176,20 @@ export default {
         // 没有在formData中 需要从store中同步过来
         const { isSidebarCompact } = this.$store.state.setting;
         this.$store.dispatch('setting/changeTheme', { ...newVal, isSidebarCompact });
+        // 用户修改后临时保存到 localStorage
+        this.saveSettingToStorage(newVal);
       },
       deep: true,
     },
+  },
+  created() {
+    // 从 localStorage 恢复上次保存的设置
+    const saved = this.getSettingFromStorage();
+    if (saved && Object.keys(saved).length > 0) {
+      this.formData = { ...this.formData, ...saved };
+      const { isSidebarCompact } = this.$store.state.setting;
+      this.$store.dispatch('setting/changeTheme', { ...this.formData, isSidebarCompact });
+    }
   },
   mounted() {
     document.querySelector('.dynamic-color-btn')?.addEventListener('click', () => {
@@ -237,6 +255,48 @@ export default {
       insertThemeStylesheet(hex, colorMap, mode);
 
       this.$store.dispatch('setting/changeTheme', { ...setting, brandTheme: hex });
+    },
+    getSettingFromStorage() {
+      try {
+        const raw = localStorage.getItem(SETTING_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    },
+    saveSettingToStorage(data: Record<string, unknown>) {
+      try {
+        const payload = { ...STYLE_CONFIG, ...data };
+        const toSave = {
+          showFooter: payload.showFooter,
+          isSidebarCompact: payload.isSidebarCompact,
+          showBreadcrumb: payload.showBreadcrumb,
+          mode: payload.mode,
+          layout: payload.layout,
+          splitMenu: payload.splitMenu,
+          isFooterAside: payload.isFooterAside,
+          isSidebarFixed: payload.isSidebarFixed,
+          isHeaderFixed: payload.isHeaderFixed,
+          showHeader: payload.showHeader,
+          backgroundTheme: payload.backgroundTheme,
+          brandTheme: payload.brandTheme,
+          isUseTabsRouter: payload.isUseTabsRouter,
+        };
+        localStorage.setItem(SETTING_STORAGE_KEY, JSON.stringify(toSave));
+      } catch (_) {
+        // ignore
+      }
+    },
+    handleClearSettings() {
+      try {
+        localStorage.removeItem(SETTING_STORAGE_KEY);
+      } catch (_) {
+        // ignore
+      }
+      this.formData = { ...STYLE_CONFIG };
+      const { isSidebarCompact } = this.$store.state.setting;
+      this.$store.dispatch('setting/changeTheme', { ...this.formData, isSidebarCompact });
+      this.$message.success(this.$t('page.right_setting.clear_settings_success'));
     },
   },
 };
@@ -334,7 +394,13 @@ export default {
 
 .setting-drawer-container {
   .setting-container {
-    padding-bottom: 100px;
+    padding-bottom: 24px;
+  }
+
+  .setting-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--td-component-border);
   }
 
   .t-radio-group.t-size-m {

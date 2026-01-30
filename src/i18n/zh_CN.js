@@ -1751,6 +1751,9 @@ export default {
       theme_mode_color_light: "明亮",
       theme_mode_color_dark: "暗黑",
       theme_mode_color_auto: "跟随系统",
+      clear_settings: "清空设置",
+      clear_settings_success: "已清空本地设置",
+      saved_to_storage: "已保存到本地",
     },
     tamper_protection: {
       alert_message: "SamWaf 本页面提示信息",
