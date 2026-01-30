@@ -141,4 +141,32 @@ export default {
   top: 10px;
   max-width: 130px;
 }
+
+/* 暗黑模式下 CodeMirror 编辑器颜色随主题变化 */
+:root[theme-mode='dark'] .in-coder-panel {
+  .CodeMirror {
+    background: var(--td-bg-color-component);
+    color: var(--td-text-color-primary);
+  }
+  .CodeMirror-gutters {
+    background: var(--td-bg-color-container);
+    border-right-color: var(--td-component-border);
+  }
+  .CodeMirror-linenumber {
+    color: var(--td-text-color-placeholder);
+  }
+  .CodeMirror-scrollbar-filler,
+  .CodeMirror-gutter-filler {
+    background-color: var(--td-bg-color-component);
+  }
+  .CodeMirror-cursor {
+    border-left-color: var(--td-text-color-primary);
+  }
+  .CodeMirror-activeline-background {
+    background: var(--td-bg-color-container);
+  }
+  .CodeMirror-ruler {
+    border-left-color: var(--td-component-border);
+  }
+}
 </style>

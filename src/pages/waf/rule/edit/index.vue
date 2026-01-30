@@ -840,4 +840,29 @@ export default {
   white-space: pre;
   overflow-x: auto;
 }
+
+/* 暗黑模式下「手工代码编排」区域背景与文字随主题变化 */
+:root[theme-mode='dark'] {
+  .rule-example-header {
+    background-color: var(--td-bg-color-component);
+    border-bottom-color: var(--td-component-border);
+
+    .t-icon {
+      color: var(--td-brand-color-5);
+    }
+  }
+
+  .rule-example-title {
+    color: var(--td-text-color-primary);
+  }
+
+  .rule-example-container {
+    border-color: var(--td-component-border);
+  }
+
+  .rule-example-code {
+    background-color: var(--td-bg-color-container);
+    color: var(--td-text-color-primary);
+  }
+}
 </style>
