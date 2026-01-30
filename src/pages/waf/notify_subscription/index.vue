@@ -32,7 +32,20 @@
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange" @change="rehandleChange"
           :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #channel_id="{ row }">
-            <span>{{ getChannelName(row.channel_id) }}</span>
+            <div>{{ getChannelName(row.channel_id) }}</div>
+            <!-- 当渠道为邮箱且有自定义收件人时显示 -->
+            <div v-if="getChannelType(row.channel_id) === 'email' && row.recipients" 
+                 style="font-size: 12px; color: #999; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                 :title="row.recipients">
+              {{ $t('page.notify_subscription.label_recipients') }}: {{ row.recipients }}
+            </div>
+          </template>
+          <template #channel_type="{ row }">
+            <t-tag v-if="getChannelType(row.channel_id) === 'dingtalk'" theme="primary">{{ $t('page.notify_channel.type_dingtalk') }}</t-tag>
+            <t-tag v-else-if="getChannelType(row.channel_id) === 'feishu'" theme="success">{{ $t('page.notify_channel.type_feishu') }}</t-tag>
+            <t-tag v-else-if="getChannelType(row.channel_id) === 'email'" theme="warning">{{ $t('page.notify_channel.type_email') }}</t-tag>
+            <t-tag v-else-if="getChannelType(row.channel_id) === 'serverchan'" theme="danger">{{ $t('page.notify_channel.type_serverchan') }}</t-tag>
+            <t-tag v-else theme="default">{{ getChannelType(row.channel_id) }}</t-tag>
           </template>
           <template #message_type="{ row }">
             <t-tag theme="primary">{{ getMessageTypeName(row.message_type) }}</t-tag>
@@ -73,6 +86,13 @@
           </t-form-item>
           <t-form-item :label="$t('page.notify_subscription.label_filter_json')" name="filter_json">
             <t-textarea :style="{ width: '480px' }" v-model="formData.filter_json" :rows="3" :placeholder="$t('page.notify_subscription.filter_json_placeholder')"></t-textarea>
+          </t-form-item>
+          <!-- 收件人字段（仅邮件类型渠道显示） -->
+          <t-form-item v-if="isEmailChannel(formData.channel_id)" :label="$t('page.notify_subscription.label_recipients')" name="recipients">
+            <t-input :style="{ width: '480px' }" v-model="formData.recipients" :placeholder="$t('page.notify_subscription.recipients_placeholder')"></t-input>
+            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+              💡 {{ $t('page.notify_subscription.recipients_tips') }}
+            </div>
           </t-form-item>
           <t-form-item :label="$t('common.status')" name="status">
             <t-radio-group v-model="formData.status">
@@ -117,6 +137,13 @@
           <t-form-item :label="$t('page.notify_subscription.label_filter_json')" name="filter_json">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.filter_json" :rows="3"></t-textarea>
           </t-form-item>
+          <!-- 收件人字段（仅邮件类型渠道显示） -->
+          <t-form-item v-if="isEmailChannel(formEditData.channel_id)" :label="$t('page.notify_subscription.label_recipients')" name="recipients">
+            <t-input :style="{ width: '480px' }" v-model="formEditData.recipients" :placeholder="$t('page.notify_subscription.recipients_placeholder')"></t-input>
+            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+              💡 {{ $t('page.notify_subscription.recipients_tips') }}
+            </div>
+          </t-form-item>
           <t-form-item :label="$t('common.status')" name="status">
             <t-radio-group v-model="formEditData.status">
               <t-radio :value="1">{{ $t('common.on') }}</t-radio>
@@ -160,6 +187,13 @@
           <t-form-item :label="$t('page.notify_subscription.label_filter_json')" name="filter_json">
             <t-textarea :style="{ width: '480px' }" v-model="batchFormData.filter_json" :rows="3" :placeholder="$t('page.notify_subscription.filter_json_placeholder')"></t-textarea>
           </t-form-item>
+          <!-- 收件人字段（仅邮件类型渠道显示） -->
+          <t-form-item v-if="isEmailChannel(batchFormData.channel_id)" :label="$t('page.notify_subscription.label_recipients')" name="recipients">
+            <t-input :style="{ width: '480px' }" v-model="batchFormData.recipients" :placeholder="$t('page.notify_subscription.recipients_placeholder')"></t-input>
+            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+              💡 {{ $t('page.notify_subscription.recipients_tips') }}
+            </div>
+          </t-form-item>
           <t-form-item :label="$t('common.status')" name="status">
             <t-radio-group v-model="batchFormData.status">
               <t-radio :value="1">{{ $t('common.on') }}</t-radio>
@@ -197,6 +231,7 @@ import { getNotifyChannelList } from '@/apis/notify_channel';
 const INITIAL_DATA = {
   channel_id: '',
   message_type: '',
+  recipients: '',
   filter_json: '',
   status: 1,
   remarks: '',
@@ -205,6 +240,7 @@ const INITIAL_DATA = {
 const BATCH_INITIAL_DATA = {
   channel_id: '',
   message_types: [],
+  recipients: '',
   filter_json: '',
   status: 1,
   remarks: '',
@@ -219,7 +255,8 @@ export default Vue.extend({
       channelList: [],
       columns: [
         { colKey: 'row-select', type: 'multiple', width: 50, fixed: 'left' },
-        { title: this.$t('page.notify_subscription.label_channel'), colKey: 'channel_id', width: 150 },
+        { title: this.$t('page.notify_subscription.label_channel'), colKey: 'channel_id', width: 200 },
+        { title: this.$t('page.notify_channel.label_type'), colKey: 'channel_type', width: 120 },
         { title: this.$t('page.notify_subscription.label_message_type'), colKey: 'message_type', width: 150 },
         { title: this.$t('common.status'), colKey: 'status', width: 100 },
         { title: this.$t('common.remarks'), colKey: 'remarks', ellipsis: true, width: 200 },
@@ -302,6 +339,10 @@ export default Vue.extend({
       const channel = this.channelList.find((c: any) => c.id === channelId);
       return channel ? channel.name : channelId;
     },
+    getChannelType(channelId: string) {
+      const channel = this.channelList.find((c: any) => c.id === channelId);
+      return channel ? channel.type : '';
+    },
     getMessageTypeName(type: string) {
       const typeMap: any = {
         rule_trigger: this.$t('page.notify_subscription.message_type_rule_trigger'),
@@ -314,6 +355,12 @@ export default Vue.extend({
         ip_ban: this.$t('page.notify_subscription.message_type_ip_ban'),
       };
       return typeMap[type] || type;
+    },
+    // 判断渠道是否为邮件类型
+    isEmailChannel(channelId: string) {
+      if (!channelId) return false;
+      const channel = this.channelList.find((c: any) => c.id === channelId);
+      return channel && channel.type === 'email';
     },
     rehandlePageChange(pageInfo: any) {
       this.searchformData.pageIndex = pageInfo.current;
@@ -416,6 +463,7 @@ export default Vue.extend({
             const data = {
               channel_id: this.batchFormData.channel_id,
               message_type: messageType,
+              recipients: this.batchFormData.recipients,
               filter_json: this.batchFormData.filter_json,
               status: this.batchFormData.status,
               remarks: this.batchFormData.remarks,

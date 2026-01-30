@@ -81,6 +81,9 @@
           <t-form-item :label="$t('page.notify_log.label_message_content')">
             <t-textarea :value="detailData.message_content" :autosize="{ minRows: 4, maxRows: 10 }" readonly></t-textarea>
           </t-form-item>
+          <t-form-item v-if="detailData.channel_type === 'email'" :label="$t('page.notify_log.label_recipients')">
+            <span>{{ detailData.recipients || '-' }}</span>
+          </t-form-item>
           <t-form-item :label="$t('page.notify_log.label_send_status')">
             <t-tag v-if="detailData.status === 1" theme="success">{{ $t('page.notify_log.status_success') }}</t-tag>
             <t-tag v-else theme="danger">{{ $t('page.notify_log.status_failed') }}</t-tag>
