@@ -1627,7 +1627,7 @@ export default {
       label_status: "状态",
       type_dingtalk: "钉钉",
       type_feishu: "飞书",
-      type_wechat: "企业微信",
+      type_wechatwork: "企业微信",
       type_email: "邮件",
       type_serverchan: "Server酱",
       // Server酱配置

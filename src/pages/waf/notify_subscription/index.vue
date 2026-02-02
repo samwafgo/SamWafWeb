@@ -45,6 +45,7 @@
             <t-tag v-else-if="getChannelType(row.channel_id) === 'feishu'" theme="success">{{ $t('page.notify_channel.type_feishu') }}</t-tag>
             <t-tag v-else-if="getChannelType(row.channel_id) === 'email'" theme="warning">{{ $t('page.notify_channel.type_email') }}</t-tag>
             <t-tag v-else-if="getChannelType(row.channel_id) === 'serverchan'" theme="danger">{{ $t('page.notify_channel.type_serverchan') }}</t-tag>
+            <t-tag v-else-if="getChannelType(row.channel_id) === 'wechatwork'" theme="primary">{{ $t('page.notify_channel.type_wechatwork') }}</t-tag>
             <t-tag v-else theme="default">{{ getChannelType(row.channel_id) }}</t-tag>
           </template>
           <template #message_type="{ row }">

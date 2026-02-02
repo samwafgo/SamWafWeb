@@ -1640,7 +1640,7 @@ export default {
       label_status: "Status",
       type_dingtalk: "DingTalk",
       type_feishu: "Feishu",
-      type_wechat: "WeChat Work",
+      type_wechatwork: "WeChat Work",
       type_email: "Email",
       type_serverchan: "ServerChan",
       // ServerChan configuration
