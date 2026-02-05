@@ -209,6 +209,9 @@
             </t-form-item>
             <t-form-item :label="$t('page.notify_channel.email_to')" name="email_to">
               <t-input :style="{ width: '480px' }" v-model="formData.email_to" :placeholder="$t('page.notify_channel.email_to_placeholder')"></t-input>
+              <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                💡 <b>默认收件人</b>，订阅时可针对消息类型单独配置，未配置则使用此默认值
+              </div>
             </t-form-item>
             <t-form-item :label="$t('page.notify_channel.email_ssl_mode')" name="email_ssl_mode">
               <t-radio-group v-model="formData.email_ssl_mode">
@@ -383,6 +386,9 @@
             </t-form-item>
             <t-form-item :label="$t('page.notify_channel.email_to')" name="email_to">
               <t-input :style="{ width: '480px' }" v-model="formEditData.email_to"></t-input>
+              <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                💡 <b>默认收件人</b>，订阅时可针对消息类型单独配置，未配置则使用此默认值
+              </div>
             </t-form-item>
             <t-form-item :label="$t('page.notify_channel.email_ssl_mode')" name="email_ssl_mode">
               <t-radio-group v-model="formEditData.email_ssl_mode">
