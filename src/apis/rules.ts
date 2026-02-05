@@ -71,3 +71,11 @@ export function changeRuleStatus(params) {
     params: params
   })
 }
+//测试规则
+export function wafRuleTestApi(params) {
+  return request({
+    url: '/wafhost/rule/test',
+    method: 'post',
+    data: params
+  })
+}

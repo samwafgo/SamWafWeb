@@ -202,10 +202,87 @@
         <t-space size="10px">
           <!-- type = submit，表单中的提交按钮，原生行为 -->
           <t-button theme="primary" type="submit">{{ $t('common.submit') }}</t-button>
+          <t-button theme="warning" type="button" @click="handleTestRule">{{ $t('page.rule.detail.test_rule') }}</t-button>
           <t-button theme="primary" type="button" @click="backPage">{{ $t('common.return') }}</t-button>
         </t-space>
       </t-form-item>
     </t-form>
+
+    <!-- 测试规则弹窗 -->
+    <t-dialog
+      :header="$t('page.rule.detail.test_rule_title')"
+      :visible.sync="testDialogVisible"
+      width="800px"
+      :confirm-btn="$t('page.rule.detail.test_start')"
+      :cancel-btn="$t('page.rule.detail.test_cancel')"
+      @confirm="onConfirmTest"
+      @cancel="onCancelTest"
+    >
+      <t-form :data="testFormData" :label-width="120">
+        <t-form-item :label="$t('page.rule.detail.test_src_ip')" name="test_src_ip">
+          <t-input v-model="testFormData.test_src_ip" :placeholder="$t('page.rule.detail.test_src_ip_placeholder')" />
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_host')" name="test_host">
+          <t-input v-model="testFormData.test_host" :placeholder="$t('page.rule.detail.test_host_placeholder')" />
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_url')" name="test_url">
+          <t-input v-model="testFormData.test_url" :placeholder="$t('page.rule.detail.test_url_placeholder')" />
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_method')" name="test_method">
+          <t-select v-model="testFormData.test_method" :placeholder="$t('page.rule.detail.test_method_placeholder')">
+            <t-option value="GET" label="GET">GET</t-option>
+            <t-option value="POST" label="POST">POST</t-option>
+            <t-option value="PUT" label="PUT">PUT</t-option>
+            <t-option value="DELETE" label="DELETE">DELETE</t-option>
+            <t-option value="HEAD" label="HEAD">HEAD</t-option>
+            <t-option value="OPTIONS" label="OPTIONS">OPTIONS</t-option>
+          </t-select>
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_user_agent')" name="test_user_agent">
+          <t-input v-model="testFormData.test_user_agent" :placeholder="$t('page.rule.detail.test_user_agent_placeholder')" />
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_referer')" name="test_referer">
+          <t-input v-model="testFormData.test_referer" :placeholder="$t('page.rule.detail.test_referer_placeholder')" />
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_header')" name="test_header">
+          <t-textarea v-model="testFormData.test_header" :placeholder="$t('page.rule.detail.test_header_placeholder')" :autosize="{ minRows: 3, maxRows: 6 }" />
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_cookies')" name="test_cookies">
+          <t-input v-model="testFormData.test_cookies" :placeholder="$t('page.rule.detail.test_cookies_placeholder')" />
+        </t-form-item>
+        <t-form-item :label="$t('page.rule.detail.test_body')" name="test_body">
+          <t-textarea v-model="testFormData.test_body" :placeholder="$t('page.rule.detail.test_body_placeholder')" :autosize="{ minRows: 3, maxRows: 6 }" />
+        </t-form-item>
+
+        <!-- 测试结果显示 -->
+        <t-form-item v-if="testResult !== null" :label="$t('page.rule.detail.test_result')">
+          <t-alert v-if="testResult.is_match" theme="warning">
+            <template #message>
+              <div>{{ $t('page.rule.detail.test_matched') }}</div>
+              <div v-if="testResult.matched_rules && testResult.matched_rules.length > 0">
+                <strong>{{ $t('page.rule.detail.test_matched_rules') }}:</strong>
+                <ul>
+                  <li v-for="(rule, index) in testResult.matched_rules" :key="index">{{ rule }}</li>
+                </ul>
+              </div>
+              <div v-if="testResult.parsed_country || testResult.parsed_province || testResult.parsed_city">
+                <strong>{{ $t('page.rule.detail.test_parsed_location') }}:</strong>
+                {{ testResult.parsed_country }} / {{ testResult.parsed_province }} / {{ testResult.parsed_city }}
+              </div>
+            </template>
+          </t-alert>
+          <t-alert v-else theme="success">
+            <template #message>
+              <div>{{ $t('page.rule.detail.test_not_matched') }}</div>
+              <div v-if="testResult.parsed_country || testResult.parsed_province || testResult.parsed_city">
+                <strong>{{ $t('page.rule.detail.test_parsed_location') }}:</strong>
+                {{ testResult.parsed_country }} / {{ testResult.parsed_province }} / {{ testResult.parsed_city }}
+              </div>
+            </template>
+          </t-alert>
+        </t-form-item>
+      </t-form>
+    </t-dialog>
 
   </div>
 </template>
@@ -223,7 +300,7 @@ import writeRule from "@/components/write-rule/index.vue";
 import {
   allhost
 } from '@/apis/host';
-import { wafRuleListApi, wafRuleDelApi, wafRuleEditApi, wafRuleAddApi, wafRuleDetailApi, wafRuleFormatApi } from '@/apis/rules';
+import { wafRuleListApi, wafRuleDelApi, wafRuleEditApi, wafRuleAddApi, wafRuleDetailApi, wafRuleFormatApi, wafRuleTestApi } from '@/apis/rules';
 import { v4 as uuidv4 } from 'uuid';
 
 export default {
@@ -395,6 +472,20 @@ export default {
       //获取的detail的值
       ruleDetail: {},
       rulePreviewContent: "",//规则预览内容
+      // 测试规则相关
+      testDialogVisible: false,
+      testFormData: {
+        test_src_ip: '127.0.0.1',
+        test_host: 'example.com:80',
+        test_url: '/api/test',
+        test_method: 'GET',
+        test_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        test_referer: '',
+        test_header: '',
+        test_cookies: '',
+        test_body: '',
+      },
+      testResult: null,
     };
   },
   beforeRouteUpdate(to, from) {
@@ -797,6 +888,63 @@ export default {
       let uuid = uuidv4()
       console.log("genUuidv4",uuid);
       return uuid
+    },
+    // 测试规则相关方法
+    handleTestRule() {
+      this.testResult = null;
+      this.testDialogVisible = true;
+    },
+    async onConfirmTest() {
+      const that = this;
+      
+      // 构建测试请求数据
+      const testData = {
+        rule_json: JSON.stringify(that.formData),
+        rule_content: that.formCodemirrorContent,
+        is_manual_rule: parseInt(that.formData.is_manual_rule),
+        rule_code: that.ruleuuid,
+        test_src_ip: that.testFormData.test_src_ip,
+        test_host: that.testFormData.test_host,
+        test_url: that.testFormData.test_url,
+        test_method: that.testFormData.test_method,
+        test_user_agent: that.testFormData.test_user_agent,
+        test_referer: that.testFormData.test_referer,
+        test_header: that.testFormData.test_header,
+        test_cookies: that.testFormData.test_cookies,
+        test_body: that.testFormData.test_body,
+      };
+      
+      try {
+        const res = await wafRuleTestApi(testData);
+        const resdata = res;
+        console.log('测试结果-完整响应', resdata);
+        console.log('测试结果-data部分', resdata.data);
+        
+        if (resdata.code === 0) {
+          // 使用 Vue.set 确保响应式,或者创建新对象
+          that.testResult = {
+            is_match: resdata.data.is_match,
+            matched_rules: resdata.data.matched_rules || [],
+            parsed_country: resdata.data.parsed_country || '',
+            parsed_province: resdata.data.parsed_province || '',
+            parsed_city: resdata.data.parsed_city || ''
+          };
+          console.log('设置后的testResult', that.testResult);
+          console.log('parsed_country值:', that.testResult.parsed_country);
+          console.log('parsed_province值:', that.testResult.parsed_province);
+          console.log('parsed_city值:', that.testResult.parsed_city);
+          that.$message.success('测试完成');
+        } else {
+          that.$message.warning(resdata.msg || '测试失败');
+        }
+      } catch (e) {
+        console.log(e);
+        that.$message.error('测试请求异常');
+      }
+    },
+    onCancelTest() {
+      this.testDialogVisible = false;
+      this.testResult = null;
     },
     //end method
   },
