@@ -1591,6 +1591,14 @@ export default {
         test_parsed_city: '城市',
         test_start: '开始测试',
         test_cancel: '取消',
+        rf_helper_title: 'RF 规则函数助手（通用函数）',
+        example_ip_range: 'IP范围判断 - IPInRange',
+        example_ip_ranges: 'IP多范围判断(类似SQL IN) - IPInRanges',
+        example_ip_cidr: 'IP网段判断(CIDR) - IPInCIDR',
+        example_method_in: '字符串IN判断 - In',
+        example_contains_any: '包含任意一个 - ContainsAnyIgnoreCase',
+        example_url_check: '后缀匹配 - EndsWithAny',
+        example_status_range: '整数范围判断 - IntInRange',
       }
     },
     notice: {

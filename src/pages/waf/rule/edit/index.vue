@@ -131,38 +131,172 @@
               <writeRule :valuecontent="formData.rule_content" @edtinput="edtinput"></writeRule>
 
               <div class="rule-example-container">
-                <t-alert theme="info" :title="$t('page.rule.detail.example_code')">
-                  <template #message>
-                    <pre> rule R80798f795d7947419ba6f593708b40d9 "禁止来自中国以外的访客访问" salience 10 {
+                <!-- 使用 Tab 横向展示示例 -->
+                <t-tabs default-value="basic" theme="card">
+                  
+                  <!-- 基础示例 -->
+                  <t-tab-panel value="basic" label="📖 基础示例">
+                    <t-alert theme="info" :title="$t('page.rule.detail.example_code')" style="margin-bottom: 12px;">
+                      <template #message>
+                        <pre> rule R80798f795d7947419ba6f593708b40d9 "禁止来自中国以外的访客访问" salience 10 {
               when
                 MF.COUNTRY != "中国"
               then
                 Retract("R80798f795d7947419ba6f593708b40d9");
             }</pre>
-                  </template>
-                </t-alert>
+                      </template>
+                    </t-alert>
 
-                <t-alert theme="info" :title="$t('page.rule.detail.example_code')">
-                  <template #message>
-                    <pre> rule R80798f795d7947419ba6f593708b4012 "禁止满足条件的Header访客访问" salience 10 {
+                    <div v-show="showMore.basic">
+                      <t-alert theme="info" :title="$t('page.rule.detail.example_code')" style="margin-bottom: 12px;">
+                        <template #message>
+                          <pre> rule R80798f795d7947419ba6f593708b4012 "禁止满足条件的Header访客访问" salience 10 {
               when
                 MF.GetHeaderValue("Accept").Contains("text/plain") == True
               then
                 Retract("R80798f795d7947419ba6f593708b4012");
             }</pre>
-                  </template>
-                </t-alert>
+                        </template>
+                      </t-alert>
 
-                <t-alert theme="info" :title="$t('page.rule.detail.example_code')">
-                  <template #message>
-                    <pre> rule R80798f795d7947419ba6f593708b4013 "禁止5分钟内失败10次的IP访问" salience 10 {
+                      <t-alert theme="info" :title="$t('page.rule.detail.example_code')">
+                        <template #message>
+                          <pre> rule R80798f795d7947419ba6f593708b4013 "禁止5分钟内失败10次的IP访问" salience 10 {
               when
                 MF.GetIPFailureCount(5) > 10
               then
                 Retract("R80798f795d7947419ba6f593708b4013");
             }</pre>
-                  </template>
-                </t-alert>
+                        </template>
+                      </t-alert>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 12px;">
+                      <t-button theme="default" variant="text" @click="toggleShowMore('basic')">
+                        <template v-if="!showMore.basic">
+                          <chevron-down-icon /> 显示更多 (2)
+                        </template>
+                        <template v-else>
+                          <chevron-up-icon /> 收起
+                        </template>
+                      </t-button>
+                    </div>
+                  </t-tab-panel>
+
+                  <!-- RF IP相关函数 -->
+                  <t-tab-panel value="rf_ip" label="🌐 IP地址判断">
+                    <t-alert theme="success" :title="$t('page.rule.detail.example_ip_range')" style="margin-bottom: 12px;">
+                      <template #message>
+                        <pre> rule R835f9bf09867473dbe873027241db107 "不允许特定内网网段访问" salience 10 {
+    when
+        RF.IPInRange(MF.SRC_IP, "172.16.0.0", "172.20.255.254") == true ||
+        RF.IPInRange(MF.SRC_IP, "192.168.0.0", "192.168.1.254") == true
+    then
+        Retract("R835f9bf09867473dbe873027241db107");
+}</pre>
+                      </template>
+                    </t-alert>
+
+                    <div v-show="showMore.rf_ip">
+                      <t-alert theme="success" :title="$t('page.rule.detail.example_ip_ranges')" style="margin-bottom: 12px;">
+                        <template #message>
+                          <pre> rule R835f9bf09867473dbe873027241db108 "不允许多个网段访问(类似SQL IN)" salience 10 {
+    when
+        RF.IPInRanges(MF.SRC_IP, "172.16.0.0-172.20.255.254", "192.168.0.0-192.168.1.254", "10.0.0.0/8") == true
+    then
+        Retract("R835f9bf09867473dbe873027241db108");
+}</pre>
+                        </template>
+                      </t-alert>
+
+                      <t-alert theme="success" :title="$t('page.rule.detail.example_ip_cidr')">
+                        <template #message>
+                          <pre> rule R835f9bf09867473dbe873027241db109 "不允许CIDR网段访问" salience 10 {
+    when
+        RF.IPInCIDR(MF.SRC_IP, "192.168.1.0/24") == true
+    then
+        Retract("R835f9bf09867473dbe873027241db109");
+}</pre>
+                        </template>
+                      </t-alert>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 12px;">
+                      <t-button theme="default" variant="text" @click="toggleShowMore('rf_ip')">
+                        <template v-if="!showMore.rf_ip">
+                          <chevron-down-icon /> 显示更多 (2)
+                        </template>
+                        <template v-else>
+                          <chevron-up-icon /> 收起
+                        </template>
+                      </t-button>
+                    </div>
+                  </t-tab-panel>
+
+                  <!-- RF 字符串函数 -->
+                  <t-tab-panel value="rf_string" label="📝 字符串判断">
+                    <t-alert theme="success" :title="$t('page.rule.detail.example_method_in')" style="margin-bottom: 12px;">
+                      <template #message>
+                        <pre> rule R835f9bf09867473dbe873027241db110 "不允许GET/POST方法" salience 10 {
+    when
+        RF.In(MF.METHOD, "GET", "POST") == true
+    then
+        Retract("R835f9bf09867473dbe873027241db110");
+}</pre>
+                      </template>
+                    </t-alert>
+
+                    <div v-show="showMore.rf_string">
+                      <t-alert theme="success" :title="$t('page.rule.detail.example_contains_any')" style="margin-bottom: 12px;">
+                        <template #message>
+                          <pre> rule R835f9bf09867473dbe873027241db111 "检测爬虫UserAgent" salience 10 {
+    when
+        RF.ContainsAnyIgnoreCase(MF.USER_AGENT, "bot", "spider", "crawler") == true
+    then
+        Retract("R835f9bf09867473dbe873027241db111");
+}</pre>
+                        </template>
+                      </t-alert>
+
+                      <t-alert theme="success" :title="$t('page.rule.detail.example_url_check')">
+                        <template #message>
+                          <pre> rule R835f9bf09867473dbe873027241db112 "检测危险文件扩展名" salience 10 {
+    when
+        RF.EndsWithAny(MF.URL, ".php", ".asp", ".jsp", ".aspx") == true
+    then
+        Retract("R835f9bf09867473dbe873027241db112");
+}</pre>
+                        </template>
+                      </t-alert>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 12px;">
+                      <t-button theme="default" variant="text" @click="toggleShowMore('rf_string')">
+                        <template v-if="!showMore.rf_string">
+                          <chevron-down-icon /> 显示更多 (2)
+                        </template>
+                        <template v-else>
+                          <chevron-up-icon /> 收起
+                        </template>
+                      </t-button>
+                    </div>
+                  </t-tab-panel>
+
+                  <!-- RF 数值函数 -->
+                  <t-tab-panel value="rf_number" label="🔢 数值判断">
+                    <t-alert theme="success" :title="$t('page.rule.detail.example_status_range')">
+                      <template #message>
+                        <pre> rule R835f9bf09867473dbe873027241db113 "检测4xx错误状态码" salience 10 {
+    when
+        RF.IntInRange(MF.STATUS_CODE, 400, 499) == true
+    then
+        Retract("R835f9bf09867473dbe873027241db113");
+}</pre>
+                      </template>
+                    </t-alert>
+                  </t-tab-panel>
+
+                </t-tabs>
 
 
 
@@ -176,23 +310,35 @@
 
             <!-- 右侧系统变量参考区域 -->
             <t-col flex="450px">
-              {{ $t('page.rule.detail.system_variable') }}
-              <t-table :data="attr_option" :columns="[
-                { colKey: 'label', title: $t('page.rule.detail.variable_name') },
-                { colKey: 'value', title: $t('page.rule.detail.variable_key') }
-              ]" size="small" :pagination="{ pageSize: 10 }" rowKey="value" stripe hover />
-              <br>
-              {{ $t('page.rule.detail.system_judge_symbol') }}
-              <t-table :data="attr_judge_option" :columns="[
-                { colKey: 'label', title: $t('page.rule.detail.variable_name') },
-                { colKey: 'value', title: $t('page.rule.detail.variable_key') }
-              ]" size="small" :pagination="{ pageSize: 10 }" rowKey="value" stripe hover />
-              <br>
-              {{ $t('page.rule.detail.system_relation_symbol') }}
-              <t-table :data="relation_symbol_option" :columns="[
-                { colKey: 'label', title: $t('page.rule.detail.variable_name') },
-                { colKey: 'value', title: $t('page.rule.detail.variable_key') }
-              ]" size="small" :pagination="{ pageSize: 10 }" rowKey="value" stripe hover />
+              <div class="reference-container">
+                <t-tabs default-value="variables" theme="card">
+                  
+                  <!-- 系统变量 -->
+                  <t-tab-panel value="variables" :label="$t('page.rule.detail.system_variable')">
+                    <t-table :data="attr_option" :columns="[
+                      { colKey: 'label', title: $t('page.rule.detail.variable_name') },
+                      { colKey: 'value', title: $t('page.rule.detail.variable_key') }
+                    ]" size="small" :pagination="{ pageSize: 10 }" rowKey="value" stripe hover />
+                  </t-tab-panel>
+
+                  <!-- 判断符号 -->
+                  <t-tab-panel value="judge" :label="$t('page.rule.detail.system_judge_symbol')">
+                    <t-table :data="attr_judge_option" :columns="[
+                      { colKey: 'label', title: $t('page.rule.detail.variable_name') },
+                      { colKey: 'value', title: $t('page.rule.detail.variable_key') }
+                    ]" size="small" :pagination="{ pageSize: 10 }" rowKey="value" stripe hover />
+                  </t-tab-panel>
+
+                  <!-- 关系符号 -->
+                  <t-tab-panel value="relation" :label="$t('page.rule.detail.system_relation_symbol')">
+                    <t-table :data="relation_symbol_option" :columns="[
+                      { colKey: 'label', title: $t('page.rule.detail.variable_name') },
+                      { colKey: 'value', title: $t('page.rule.detail.variable_key') }
+                    ]" size="small" :pagination="{ pageSize: 10 }" rowKey="value" stripe hover />
+                  </t-tab-panel>
+
+                </t-tabs>
+              </div>
             </t-col>
           </t-row>
         </t-card>
@@ -290,7 +436,7 @@
 import {
   prefix
 } from '@/config/global';
-import { JumpIcon, CodeIcon } from 'tdesign-icons-vue';
+import { JumpIcon, CodeIcon, ChevronDownIcon, ChevronUpIcon } from 'tdesign-icons-vue';
 
 import {
   RULE, RULE_RELATION_DETAIL, RULE_DO_ASSIGNMENT, RULE_DO_METHOD, RULE_DO_METHOD_PARM
@@ -309,6 +455,8 @@ export default {
     writeRule,
     JumpIcon,
     CodeIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
   },
   data() {
     return {
@@ -486,6 +634,13 @@ export default {
         test_body: '',
       },
       testResult: null,
+      // 控制每个 tab 的展开状态
+      showMore: {
+        basic: false,
+        rf_ip: false,
+        rf_string: false,
+        rf_number: false,
+      },
     };
   },
   beforeRouteUpdate(to, from) {
@@ -552,6 +707,10 @@ export default {
     },
   },
   methods: {
+    // 切换显示更多/收起
+    toggleShowMore(tabName) {
+      this.showMore[tabName] = !this.showMore[tabName];
+    },
     // 重置表单数据
     resetFormData() {
       console.log('重置表单数据')
@@ -987,6 +1146,18 @@ export default {
   line-height: 1.5;
   white-space: pre;
   overflow-x: auto;
+}
+
+/* 左右两侧容器高度一致 */
+.rule-example-container,
+.reference-container {
+  min-height: 500px;
+  max-height: 700px;
+  
+  :deep(.t-tabs__content) {
+    overflow-y: auto;
+    max-height: 600px;
+  }
 }
 
 /* 暗黑模式下「手工代码编排」区域背景与文字随主题变化 */

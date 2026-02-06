@@ -1583,6 +1583,14 @@ export default {
         test_parsed_city: 'City',
         test_start: 'Start Test',
         test_cancel: 'Cancel',
+        rf_helper_title: 'RF Rule Function Helper (Common Functions)',
+        example_ip_range: 'IP Range Judgment - IPInRange',
+        example_ip_ranges: 'Multiple IP Ranges Judgment (Similar to SQL IN) - IPInRanges',
+        example_ip_cidr: 'IP Segment Judgment (CIDR) - IPInCIDR',
+        example_method_in: 'String IN Judgment - In',
+        example_contains_any: 'Contains Any - ContainsAnyIgnoreCase',
+        example_url_check: 'Suffix Match - EndsWithAny',
+        example_status_range: 'Integer Range Judgment - IntInRange',
       }
     },
     notice: {
