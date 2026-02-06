@@ -861,7 +861,15 @@ export default {
         label_autu_jump_https: "强制80跳转HTTPS",
         label_autu_jump_https_on: "启用",
         label_autu_jump_https_off: "关闭",
-        autu_jump_https_tip: "如果启用，那么SamWaf将强制自动跳转到https，如果关闭，那么SamWaf将不会自动跳转"
+        autu_jump_https_tip: "如果启用，那么SamWaf将强制自动跳转到https，如果关闭，那么SamWaf将不会自动跳转",
+        non_standard_port_tip: "检测到您使用非标准443端口，需要启用HTTPS重定向服务器才能实现HTTP到HTTPS的自动跳转，配置后请重启服务生效",
+        redirect_server_status: "重定向服务器状态",
+        https_redirect_server_on: "已启用",
+        https_redirect_server_off: "未启用",
+        enable_redirect_server: "启用重定向服务器",
+        enable_success: "HTTPS重定向服务器启用成功",
+        enable_failed: "HTTPS重定向服务器启用失败",
+        config_not_found: "未找到HTTPS重定向配置"
       },
       is_enable_http_auth_base: "网站密码访问",
       is_enable_http_auth_base_tips: "开启后该网站都是使用密码进行访问，并请添加帐号和密码",

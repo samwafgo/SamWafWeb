@@ -87,6 +87,32 @@
                 <t-radio value="0">{{ $t('page.host.auto_jump_https.label_autu_jump_https_off') }}</t-radio>
                 <t-radio value="1">{{ $t('page.host.auto_jump_https.label_autu_jump_https_on') }}</t-radio>
               </t-radio-group>
+              
+              <!-- 非标准443端口的HTTPS重定向服务器提示 -->
+              <div v-if="shouldShowHttpsRedirectTip" style="margin-top: 10px;">
+                <t-alert theme="warning" :close="false">
+                  <div>
+                    <div style="margin-bottom: 8px;">
+                      {{ $t('page.host.auto_jump_https.non_standard_port_tip') }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span style="color: #555;">
+                        {{ $t('page.host.auto_jump_https.redirect_server_status') }}: 
+                        <strong>{{ httpsRedirectStatusText }}</strong>
+                      </span>
+                      <t-button 
+                        size="small" 
+                        theme="primary" 
+                        @click="enableHttpsRedirect"
+                        :loading="httpsRedirectConfig.loading"
+                        :disabled="httpsRedirectConfig.enable_https_redirect === '1'"
+                      >
+                        {{ $t('page.host.auto_jump_https.enable_redirect_server') }}
+                      </t-button>
+                    </div>
+                  </div>
+                </t-alert>
+              </div>
             </t-form-item>
             <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formData.ssl=='1' && (isEdit || formData.ssl_config_mode === 'existing')">
               <t-tooltip class="placement top center"
@@ -452,6 +478,7 @@
   import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
+  import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
   export default Vue.extend({
     name: 'HostForm',
     components: {
@@ -590,8 +617,30 @@
             }
           ]
         },
+        // HTTPS重定向服务器配置
+        httpsRedirectConfig: {
+          enable_https_redirect: '0',    // 启用状态: 0-关闭 1-开启
+          loading: false                 // 加载状态
+        }
 
       };
+    },
+    computed: {
+      // 判断是否需要显示HTTPS重定向提示
+      shouldShowHttpsRedirectTip() {
+        // 1. 开启了SSL
+        // 2. 端口不是443
+        // 3. HTTPS重定向服务器未启用
+        return this.formData.ssl === '1' && 
+               this.formData.port !== 443 && 
+               this.httpsRedirectConfig.enable_https_redirect === '0';
+      },
+      // 获取HTTPS重定向服务器状态文本
+      httpsRedirectStatusText() {
+        return this.httpsRedirectConfig.enable_https_redirect === '1' 
+          ? this.$t('page.host.auto_jump_https.https_redirect_server_on')
+          : this.$t('page.host.auto_jump_https.https_redirect_server_off');
+      }
     },
     watch: {
       value: {
@@ -889,8 +938,43 @@
     },
     created() {
       this.getSslFolderList();
+      this.getHttpsRedirectConfig();
     },
     methods: {
+      // 获取HTTPS重定向服务器配置
+      async getHttpsRedirectConfig() {
+        try {
+          const res: any = await get_detail_by_item_api({ item: 'enable_https_redirect' });
+          console.log("getHttpsRedirectConfig",res)
+          if (res.code === 0 && res.data) {
+            this.httpsRedirectConfig.enable_https_redirect = res.data.value || '0';
+          }
+        } catch (e) {
+          console.log('获取HTTPS重定向配置失败:', e);
+        }
+      },
+      // 启用HTTPS重定向服务器
+      async enableHttpsRedirect() {
+        this.httpsRedirectConfig.loading = true;
+        try {
+          const res: any = await edit_system_config_by_item_api({
+            item: 'enable_https_redirect',
+            value: '1'
+          });
+          
+          if (res.code === 0) {
+            this.httpsRedirectConfig.enable_https_redirect = '1';
+            this.$message.success(this.$t('page.host.auto_jump_https.enable_success'));
+          } else {
+            this.$message.error(res.msg || this.$t('page.host.auto_jump_https.enable_failed'));
+          }
+        } catch (e) {
+          console.log('启用HTTPS重定向服务器失败:', e);
+          this.$message.error(this.$t('page.host.auto_jump_https.enable_failed'));
+        } finally {
+          this.httpsRedirectConfig.loading = false;
+        }
+      },
       getSslFolderList() {
         let that = this;
         sslConfigListApi({

@@ -859,7 +859,15 @@ export default {
         label_autu_jump_https: "Force 80 redirect HTTPS",
         label_autu_jump_https_on: "On",
         label_autu_jump_https_off: "Off",
-        autu_jump_https_tip: "If enabled, SamWaf will force automatic redirection to HTTPS; if disabled, SamWaf will not perform automatic redirection."
+        autu_jump_https_tip: "If enabled, SamWaf will force automatic redirection to HTTPS; if disabled, SamWaf will not perform automatic redirection.",
+        non_standard_port_tip: "Non-standard port 443 detected. You need to enable the HTTPS redirect server to enable automatic HTTP to HTTPS redirection, please restart the service after configuration",
+        redirect_server_status: "Redirect Server Status",
+        https_redirect_server_on: "Enabled",
+        https_redirect_server_off: "Disabled",
+        enable_redirect_server: "Enable Redirect Server",
+        enable_success: "HTTPS redirect server enabled successfully",
+        enable_failed: "Failed to enable HTTPS redirect server",
+        config_not_found: "HTTPS redirect configuration not found"
       },
       is_enable_http_auth_base: "Web Password Visit",
       is_enable_http_auth_base_tips: "After enabled, the website will require a password for access. Please add a username and password.",

@@ -39,6 +39,14 @@ export function edit_system_config_api(data) {
     data: data
   })
 }
+//通过 item 编辑系统配置的 value
+export function edit_system_config_by_item_api(data) {
+  return request({
+    url: 'systemconfig/editByItem',
+    method: 'post',
+    data: data
+  })
+}
 //删除系统配置
 export function del_detail_api(params) {
   return request({
