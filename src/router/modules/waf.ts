@@ -191,6 +191,12 @@ export default [
         ,
 
       },
+      {
+        path: 'logfilewrite',
+        name: 'LogFileWrite',
+        component: () => import('@/pages/waf/logfilewrite/index.vue'),
+        meta: { title: 'menu.visit_log.logfilewrite_title' },
+      },
     ],
   },
   {
@@ -300,7 +306,6 @@ export default [
       },
     ],
   },
-
   {
     path: '/notify',
     name: 'notify',
