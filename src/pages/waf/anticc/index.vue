@@ -43,11 +43,6 @@
             <t-tag theme="warning" v-else-if="row.limit_mode === 'window'">{{ $t('page.cc.limit_mode_window') }}</t-tag>
             <t-tag v-else>{{ $t('page.cc.limit_mode_unknown') }}</t-tag>
           </template>
-          <template #ip_mode="{ row }">
-            <t-tag theme="success" v-if="row.ip_mode === 'nic'">{{ $t('page.cc.ip_mode_nic') }}</t-tag>
-            <t-tag theme="warning" v-else-if="row.ip_mode === 'proxy'">{{ $t('page.cc.ip_mode_proxy') }}</t-tag>
-            <t-tag v-else>{{ $t('page.cc.ip_mode_unknown') }}</t-tag>
-          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -99,24 +94,6 @@
           <!-- 添加效果提示 -->
           <t-form-item>
             <t-alert theme="info" :message="getLimitModeEffectTips(formData)" />
-          </t-form-item>
-
-          <!-- 添加IP提取模式 -->
-          <t-form-item :label="$t('page.cc.ip_mode')" name="ip_mode">
-            <t-radio-group v-model="formData.ip_mode">
-              <t-radio value="nic">
-                <div>
-                  <div>{{ $t('page.cc.ip_mode_nic') }}</div>
-                  <div class="limit-mode-desc">{{ $t('page.cc.ip_mode_nic_desc') }}</div>
-                </div>
-              </t-radio>
-              <t-radio value="proxy">
-                <div>
-                  <div>{{ $t('page.cc.ip_mode_proxy') }}</div>
-                  <div class="limit-mode-desc">{{ $t('page.cc.ip_mode_proxy_desc') }}</div>
-                </div>
-              </t-radio>
-            </t-radio-group>
           </t-form-item>
 
           <!-- 新增：启用前置规则 -->
@@ -198,24 +175,6 @@
             <t-alert theme="info" :message="getLimitModeEffectTips(formEditData)" />
           </t-form-item>
 
-          <!-- 添加IP提取模式 -->
-          <t-form-item :label="$t('page.cc.ip_mode')" name="ip_mode">
-            <t-radio-group v-model="formEditData.ip_mode">
-              <t-radio value="nic">
-                <div>
-                  <div>{{ $t('page.cc.ip_mode_nic') }}</div>
-                  <div class="limit-mode-desc">{{ $t('page.cc.ip_mode_nic_desc') }}</div>
-                </div>
-              </t-radio>
-              <t-radio value="proxy">
-                <div>
-                  <div>{{ $t('page.cc.ip_mode_proxy') }}</div>
-                  <div class="limit-mode-desc">{{ $t('page.cc.ip_mode_proxy_desc') }}</div>
-                </div>
-              </t-radio>
-            </t-radio-group>
-          </t-form-item>
-
           <t-form-item :label="$t('page.cc.enable_rule')" name="is_enable_rule">
             <t-switch v-model="formEditData.is_enable_rule"></t-switch>
           </t-form-item>
@@ -287,7 +246,6 @@ const INITIAL_DATA = {
   limit: 250,
   limit_mode: 'window',
   lock_ip_minutes: 10,
-  ip_mode: 'nic',
   remarks: '',
   // 新增：是否启用前置规则 + 规则内容
   is_enable_rule: false,
@@ -369,12 +327,6 @@ export default Vue.extend({
           width: 200,
           ellipsis: true,
           colKey: 'limit_mode',
-        },
-        {
-          title: this.$t('page.cc.ip_mode'),
-          width: 200,
-          ellipsis: true,
-          colKey: 'ip_mode',
         },
         {
           title: this.$t('common.create_time'),

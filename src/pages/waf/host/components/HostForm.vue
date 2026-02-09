@@ -302,6 +302,26 @@
             <template #label>
               {{$t('page.host.tab_other')}}
             </template>
+            <!-- IP提取模式选择 -->
+            <t-form-item :label="$t('page.host.ip_mode')" name="ip_mode">
+              <t-tooltip class="placement top center" :content="$t('page.host.ip_mode_tips')" placement="top"
+                         :overlay-style="{ width: '300px' }" show-arrow>
+                <t-radio-group v-model="formData.ip_mode">
+                  <t-radio value="nic">
+                    <div>
+                      <div>{{ $t('page.host.ip_mode_nic') }}</div>
+                      <div class="limit-mode-desc">{{ $t('page.host.ip_mode_nic_desc') }}</div>
+                    </div>
+                  </t-radio>
+                  <t-radio value="proxy">
+                    <div>
+                      <div>{{ $t('page.host.ip_mode_proxy') }}</div>
+                      <div class="limit-mode-desc">{{ $t('page.host.ip_mode_proxy_desc') }}</div>
+                    </div>
+                  </t-radio>
+                </t-radio-group>
+              </t-tooltip>
+            </t-form-item>
             <t-form-item :label="$t('page.host.exclude_url_log')" name="exclude_url_log">
               <t-tooltip class="placement top center" :content="$t('page.host.exclude_url_log_tips')" placement="top"
                        :overlay-style="{ width: '200px' }" show-arrow>
@@ -391,7 +411,7 @@
             </template>
             <t-alert theme="warning" v-if="captchaConfigData.is_enable_captcha == '1'">
               <template #message>{{ $t('page.host.captcha.alert') }} </template>
-            </t-alert>
+            </t-alert> 
             <captcha-config :captcha-config="captchaConfigData" @update="val => captchaConfigData = val"></captcha-config>
           </t-tab-panel>
           <t-tab-panel :value="8">
@@ -663,6 +683,7 @@
           this.formData.response_time_out = this.formData.response_time_out != null ? this.formData.response_time_out.toString() : "60"
           this.formData.insecure_skip_verify = this.formData.insecure_skip_verify != null ? this.formData.insecure_skip_verify.toString() : "0"
           this.formData.log_only_mode = this.formData.log_only_mode != null ? this.formData.log_only_mode.toString() : "0"
+          this.formData.ip_mode = this.formData.ip_mode || "nic"
 
           // 解析防御配置
           if (this.formData.defense_json) {
@@ -1121,6 +1142,11 @@
             postdata['response_time_out'] = Number(postdata['response_time_out']);
             postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify']);
             postdata['log_only_mode'] = Number(postdata['log_only_mode']);
+            
+            // 确保 ip_mode 字段存在，默认为 nic
+            if (!postdata['ip_mode']) {
+              postdata['ip_mode'] = 'nic';
+            }
 
             if (postdata['ssl'] === 0) {
               postdata['bind_ssl_id'] = '';

@@ -8,8 +8,7 @@
           <t-radio value="1">{{ $t('common.on') }}</t-radio>
         </t-radio-group>
       </t-tooltip>
-    </t-form-item>
-
+    </t-form-item> 
     <t-form-item :label="$t('page.host.captcha.engine_type')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
       <t-tooltip class="placement top center" :content="$t('page.host.captcha.engine_type_tips')" placement="top"
                  :overlay-style="{ width: '200px' }" show-arrow>
@@ -58,15 +57,6 @@
       </t-tooltip>
     </t-form-item>
 
-    <t-form-item :label="$t('page.host.captcha.ip_mode')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
-      <t-tooltip class="placement top center" :content="$t('page.host.captcha.ip_mode_tips')" placement="top"
-                 :overlay-style="{ width: '200px' }" show-arrow>
-        <t-select v-model="localCaptchaConfig.ip_mode" @change="updateParent" :style="{ width: '150px' }">
-          <t-option value="nic">{{ $t('page.host.captcha.ip_mode_nic') }}</t-option>
-          <t-option value="header">{{ $t('page.host.captcha.ip_mode_proxy') }}</t-option>
-        </t-select>
-      </t-tooltip>
-    </t-form-item>
 
     <!-- capJS配置部分 -->
     <div v-if="localCaptchaConfig.is_enable_captcha == '1' && localCaptchaConfig.engine_type == 'capJs'">

@@ -619,6 +619,12 @@ export default {
       remote_port_content: "情况1，在SamWaf和网站在同一台服务器，那么端口需要写成81等其他端口  情况2：如果不在同一台服务器，那么此处可以原来端口",
       remarks: "备注",
       exclude_url_log: "记录日志时排除URL",
+      ip_mode: "IP提取模式",
+      ip_mode_tips: "选择如何从请求中提取客户端IP地址，此设置将应用于CC防护、验证码、IP白名单等所有功能",
+      ip_mode_nic: "网卡模式",
+      ip_mode_nic_desc: "直接从网络连接中获取客户端IP（适用于直连场景）",
+      ip_mode_proxy: "代理模式",
+      ip_mode_proxy_desc: "从HTTP头部(X-Forwarded-For等)获取客户端真实IP（适用于使用CDN、Nginx等代理的场景）",
       exclude_url_log_tips: "记录日志时排除URL开头的数据",
       response_time_out: "响应超时时间(单位秒)",
       response_time_out_tips: "如果填写0则无限等待，不建议",
@@ -725,6 +731,7 @@ export default {
         ip_mode_nic_desc: '直接从网络连接中获取客户端IP',
         ip_mode_proxy: '代理模式',
         ip_mode_proxy_desc: '从HTTP头部(X-Forwarded-For等)获取客户端真实IP',
+        ip_mode_moved_tip: 'IP提取模式已在"其他配置"页签中统一设置，验证码功能将自动使用该配置',
 
       },
       custom_headers: {

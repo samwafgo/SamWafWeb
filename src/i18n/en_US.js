@@ -681,7 +681,8 @@ export default {
         ip_mode_nic: 'NIC Mode',
         ip_mode_nic_desc: 'Get client IP directly from network connection',
         ip_mode_proxy: 'Proxy Mode',
-        ip_mode_proxy_desc: 'Get real client IP from HTTP headers (X-Forwarded-For, etc.)'
+        ip_mode_proxy_desc: 'Get real client IP from HTTP headers (X-Forwarded-For, etc.)',
+        ip_mode_moved_tip: 'IP extraction mode is now configured in the "Other Config" tab. Captcha will automatically use that setting'
       },
       custom_headers: {
         is_enable: 'Enable Custom Headers',
@@ -781,6 +782,12 @@ export default {
       remarks: "Remarks",
       exclude_url_log: "Exclude URL When Logging",
       exclude_url_log_tips: "Exclude URL prefix data when logging",
+      ip_mode: "IP Extraction Mode",
+      ip_mode_tips: "Choose how to extract client IP address from requests. This setting applies to all functions including CC protection, captcha, IP whitelist, etc.",
+      ip_mode_nic: "NIC Mode",
+      ip_mode_nic_desc: "Get client IP directly from network connection (for direct connection scenarios)",
+      ip_mode_proxy: "Proxy Mode",
+      ip_mode_proxy_desc: "Get real client IP from HTTP headers (X-Forwarded-For, etc.) when using CDN, Nginx or other proxies",
       response_time_out: "Response timeout (in seconds)",
       response_time_out_tips: "If set to 0, it will wait indefinitely, which is not recommended.",
       insecure_skip_verify: 'Skip HTTPS Certificate Verification',

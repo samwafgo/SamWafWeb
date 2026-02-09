@@ -63,7 +63,6 @@ export const INITIAL_CAPTCHA = {
   path_prefix: '', // 验证码路径前缀，空值时后端自动生成
   exclude_urls: "",
   expire_time: 24,
-  ip_mode: 'nic',
   engine_type: 'traditional', // 新增：验证码引擎类型
   cap_js_config: { // 新增：capJS工作量证明配置
     challengeCount: 50,
