@@ -1354,7 +1354,14 @@ export default {
       last_time: "最后失败时间",
       remain_time: "剩余时间",
       region: "归属地",
-      unban: "解封"
+      unban: "解封",
+      rule_guide_title: "规则使用说明",
+      rule_guide_notice: "此功能需要配合防护规则一起使用才能生效，请先配置相关规则：",
+      goto_rule_page: "前往规则管理",
+      rule_example: "规则示例",
+      system_params: "系统参数说明",
+      param_time_window_desc: "IP失败封禁时间窗口（单位：分钟，默认5分钟）",
+      param_max_count_desc: "IP失败封禁最大失败次数（默认10次）"
     },
     cache_rule: {
       alert_message: "SamWaf 本页面提示信息",

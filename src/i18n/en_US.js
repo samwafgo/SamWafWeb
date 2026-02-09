@@ -1351,7 +1351,14 @@ export default {
       last_time: "Last Failure Time",
       remain_time: "Remaining Time",
       region: "Region",
-      unban: "Unban"
+      unban: "Unban",
+      rule_guide_title: "Rule Usage Guide",
+      rule_guide_notice: "This feature requires protection rules to work. Please configure the related rules first:",
+      goto_rule_page: "Go to Rule Management",
+      rule_example: "Rule Example",
+      system_params: "System Parameters",
+      param_time_window_desc: "IP failure ban time window (unit: minutes, default 5 minutes)",
+      param_max_count_desc: "IP failure ban max failure count (default 10 times)"
     },
     cache_rule: {
       alert_message: "SamWaf Cache Rule",

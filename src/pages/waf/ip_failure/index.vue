@@ -19,6 +19,37 @@
         
         <t-tab-panel value="config" :label="$t('page.ip_failure.config')">
           <div class="config-container">
+            <t-alert theme="info" :title="$t('page.ip_failure.rule_guide_title')" :close="false" class="rule-guide-alert">
+              <template #message>
+                <div class="rule-guide-content">
+                  <div class="rule-important-notice">
+                    <t-icon name="info-circle" class="notice-icon" />
+                    <span>{{ $t('page.ip_failure.rule_guide_notice') }}</span>
+                    <t-button theme="primary" size="small" @click="goToRulePage" class="goto-rule-btn">
+                      {{ $t('page.ip_failure.goto_rule_page') }}
+                      <t-icon name="arrow-right" />
+                    </t-button>
+                  </div>
+                  <div class="rule-section">
+                    <h4>{{ $t('page.ip_failure.rule_example') }}</h4>
+                    <pre class="code-block">rule R80798f795d7947419ba6f593708b4013 "禁止5分钟内失败10次的IP访问" salience 10 {
+  when
+    MF.GetIPFailureCount(5) > 10
+  then
+    Retract("R80798f795d7947419ba6f593708b4013");
+}</pre>
+                  </div>
+                  <div class="rule-section">
+                    <h4>{{ $t('page.ip_failure.system_params') }}</h4>
+                    <ul class="params-list">
+                      <li><strong>ip_failure_ban_time_window</strong>: {{ $t('page.ip_failure.param_time_window_desc') }}</li>
+                      <li><strong>ip_failure_ban_max_count</strong>: {{ $t('page.ip_failure.param_max_count_desc') }}</li>
+                    </ul>
+                  </div>
+                </div>
+              </template>
+            </t-alert>
+            
             <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="180">
               <t-form-item :label="$t('page.ip_failure.enabled')" name="enabled">
                 <t-switch v-model="formData.enabled" :customValue="[1, 0]"></t-switch>
@@ -111,6 +142,9 @@ export default Vue.extend({
     this.getList();
   },
   methods: {
+    goToRulePage() {
+      this.$router.push({ name: 'WafRule' });
+    },
     getConfig() {
       wafIPFailureGetConfigApi().then(res => {
         if (res.code === 0) {
@@ -201,5 +235,88 @@ export default Vue.extend({
 }
 .operation-container {
   margin-bottom: 16px;
+}
+.rule-guide-alert {
+  margin-bottom: 24px;
+}
+.rule-guide-content {
+  .rule-important-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--td-warning-color-1);
+    border: 1px solid var(--td-warning-color-3);
+    border-radius: 6px;
+    margin-bottom: 16px;
+    
+    .notice-icon {
+      font-size: 18px;
+      color: var(--td-warning-color);
+      flex-shrink: 0;
+    }
+    
+    span {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--td-warning-color-9);
+    }
+    
+    .goto-rule-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+  
+  .rule-section {
+    margin-bottom: 16px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--td-text-color-primary);
+    }
+    
+    .code-block {
+      background: var(--td-bg-color-component);
+      border: 1px solid var(--td-border-level-1-color);
+      border-radius: 3px;
+      padding: 12px;
+      margin: 0;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--td-text-color-primary);
+      overflow-x: auto;
+    }
+    
+    .params-list {
+      margin: 0;
+      padding-left: 20px;
+      
+      li {
+        margin-bottom: 6px;
+        font-size: 13px;
+        color: var(--td-text-color-secondary);
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        strong {
+          color: var(--td-brand-color);
+          font-family: 'Courier New', Courier, monospace;
+        }
+      }
+    }
+  }
 }
 </style>
