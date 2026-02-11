@@ -449,6 +449,13 @@
             </template>
             <custom-headers-config :custom-headers-config="customHeadersConfigData" @update="val => customHeadersConfigData = val"></custom-headers-config>
           </t-tab-panel>
+          <t-tab-panel :value="13">
+            <template #label>
+              <t-icon name="filter" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_custom_response_headers')}}
+            </template>
+            <custom-response-headers-config :custom-response-headers-config="customResponseHeadersConfigData" @update="val => customResponseHeadersConfigData = val"></custom-response-headers-config>
+          </t-tab-panel>
           </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
@@ -494,8 +501,9 @@
   import AntiLeechConfig from '../components/AntiLeechConfig.vue';
   import CacheConfig from '../components/CacheConfig.vue';
   import CustomHeadersConfig from '../components/CustomHeadersConfig.vue';
+  import CustomResponseHeadersConfig from '../components/CustomResponseHeadersConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -513,6 +521,7 @@
       StaticSiteConfig,
       TransportConfig,
       CustomHeadersConfig,
+      CustomResponseHeadersConfig,
     },
     props: {
       // 表单数据
@@ -569,6 +578,7 @@
         staticSiteConfigData: {...INITIAL_STATIC_SITE},
         transportConfigData: {...INITIAL_TRANSPORT},
         customHeadersConfigData: {...INITIAL_CUSTOM_HEADERS},
+        customResponseHeadersConfigData: {...INITIAL_CUSTOM_RESPONSE_HEADERS},
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -839,6 +849,27 @@
           } else {
             // 如果没有自定义头信息配置，使用默认值
             this.customHeadersConfigData = { ...INITIAL_CUSTOM_HEADERS };
+          }
+
+          // 解析自定义响应头信息配置
+          if (this.formData.custom_response_headers_json) {
+            try {
+              let that = this;
+              if (that.formData.custom_response_headers_json != "") {
+                const parsedConfig = JSON.parse(that.formData.custom_response_headers_json);
+                that.customResponseHeadersConfigData = {
+                  is_enable_custom_headers: String(parsedConfig.is_enable_custom_headers !== undefined ? parsedConfig.is_enable_custom_headers : 0),
+                  headers: Array.isArray(parsedConfig.headers) ? parsedConfig.headers : []
+                };
+              } else {
+                that.customResponseHeadersConfigData = { ...INITIAL_CUSTOM_RESPONSE_HEADERS };
+              }
+            } catch (e) {
+              console.error("解析custom_response_headers_json失败", e);
+              this.customResponseHeadersConfigData = { ...INITIAL_CUSTOM_RESPONSE_HEADERS };
+            }
+          } else {
+            this.customResponseHeadersConfigData = { ...INITIAL_CUSTOM_RESPONSE_HEADERS };
           }
 
           // 解析防盗链配置
@@ -1242,6 +1273,13 @@
             };
             console.log("提交自定义头信息配置:", customHeadersData);
             postdata['custom_headers_json'] = JSON.stringify(customHeadersData);
+
+            // 自定义响应头信息配置
+            const customResponseHeadersData = {
+              is_enable_custom_headers: parseInt(this.customResponseHeadersConfigData.is_enable_custom_headers || INITIAL_CUSTOM_RESPONSE_HEADERS.is_enable_custom_headers),
+              headers: this.customResponseHeadersConfigData.headers || []
+            };
+            postdata['custom_response_headers_json'] = JSON.stringify(customResponseHeadersData);
 
             // 提交表单
             this.$emit('submit', { result: postdata });
