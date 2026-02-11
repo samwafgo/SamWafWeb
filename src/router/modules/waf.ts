@@ -266,6 +266,14 @@ export default [
         }
       },
       {
+        path: 'IPLocation',
+        name: 'IPLocation',
+        component: () => import('@/pages/waf/iplocation/index.vue'),
+        meta: {
+          title: 'menu.system.iplocation_title',
+        }
+      },
+      {
         path: 'SysLog',
         name: 'SysLog',
         component: () => import('@/pages/waf/syslog/index.vue'),
