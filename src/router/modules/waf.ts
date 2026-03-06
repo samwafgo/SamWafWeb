@@ -1,6 +1,6 @@
 import {
   UserSafetyIcon, SystemSettingIcon, UsergroupIcon, SystemLogIcon, ApplicationIcon, LightingCircleIcon,
-  ServerIcon, ForkIcon, NotificationIcon
+  ServerIcon, ForkIcon, NotificationIcon, CloudIcon
 } from 'tdesign-icons-vue';
 import Layout from '@/layouts/index.vue';
 
@@ -355,6 +355,34 @@ export default [
         component: () => import('@/pages/waf/center/index.vue'),
         meta: { title: 'menu.pc.pc_list_title' },
       }
+    ],
+  },
+
+  {
+    path: '/oplatform',
+    name: 'oplatform',
+    component: Layout,
+    redirect: '/oplatform/key',
+    meta: { title: 'menu.oplatform.parent_title', icon: CloudIcon },
+    children: [
+      {
+        path: 'key',
+        name: 'OPlatformKey',
+        component: () => import('@/pages/waf/oplatform/index.vue'),
+        meta: { title: 'menu.oplatform.key_title' },
+      },
+      {
+        path: 'log',
+        name: 'OPlatformLog',
+        component: () => import('@/pages/waf/oplatform/log.vue'),
+        meta: { title: 'menu.oplatform.log_title' },
+      },
+      {
+        path: 'doc',
+        name: 'OPlatformDoc',
+        component: () => import('@/pages/waf/oplatform/doc.vue'),
+        meta: { title: 'menu.oplatform.doc_title' },
+      },
     ],
   },
 ];
