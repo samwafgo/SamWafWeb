@@ -24,6 +24,12 @@ export default [
         component: () => import('@/pages/dashboard/stats/index.vue'),
         meta: { title: 'menu.dashboard.stats_title'},
       },
+      {
+        path: 'overview',
+        name: 'DashboardOverview',
+        component: () => import('@/pages/dashboard/overview/index.vue'),
+        meta: { title: 'menu.dashboard.overview_title'},
+      },
     ],
   },
 ];

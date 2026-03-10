@@ -49,3 +49,20 @@ export function wafanalysisdaycountryrange(params) {
     params: params
   })
 }
+//【站点综合统计】查询站点概览（汇总卡片+站点列表）
+export function wafstatsiteoverviewapi(params) {
+  return request({
+    url: 'wafstatsiteoverview',
+    method: 'get',
+    params: params
+  })
+}
+
+//【站点综合统计】查询单站点详情趋势（1h/24h/7d/30d）
+export function wafstatsitedetailapi(params) {
+  return request({
+    url: 'wafstatsitedetail',
+    method: 'get',
+    params: params
+  })
+}

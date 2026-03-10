@@ -46,22 +46,51 @@
               :isLoadBalance="row.is_enable_load_balance === '1' || row.is_enable_load_balance === 1"
             />
           </template>
-          <template #guard_status="{ row }">
-            <t-switch size="medium" v-model="row.guard_status ===1" :label="[$t('page.host.guard_status_on'), $t('page.host.guard_status_off')]"
-                      @change="changeGuardStatus($event,row)">
-            </t-switch>
+          <template #host="{ row }">
+            <span :title="row.host">{{ row.host }}</span>
+            <t-tag v-if="row.ssl === SSL_STATUS.SSL" theme="success" variant="light" size="small" style="margin-left: 4px;" :title="$t('page.host.ssl_yes')">SSL</t-tag>
           </template>
-          <template #real_time="{ row }">
-            <span :title="$t('page.host.real_qps')">{{row.real_time_qps}}</span> / <span :title="$t('page.host.real_active')">{{row.real_time_connect_cnt}}</span>
+          <template #data_stats="{ row }">
+            <div style="line-height: 1.8;">
+              <div>
+                <span>{{ $t('page.host.today_pv_short') }}: {{ row.today_pv_count || 0 }}</span>
+                <span style="margin-left: 8px;">{{ $t('page.host.today_uv_short') }}: {{ row.today_uv_count || 0 }}</span>
+                <span style="margin-left: 8px;">{{ $t('page.host.today_attack_short') }}: {{ row.today_attack_count || 0 }}</span>
+              </div>
+              <div>
+                <span>{{ $t('page.host.today_traffic_in_short') }}: {{ formatTrafficBytes(row.today_traffic_in || 0) }}</span>
+                <span style="margin-left: 8px;">{{ $t('page.host.today_traffic_out_short') }}: {{ formatTrafficBytes(row.today_traffic_out || 0) }}</span>
+              </div>
+              <div>
+                <span :title="$t('page.host.real_qps')">{{ $t('page.host.real_qps_short') }}: {{ row.real_time_qps }}</span>
+                <span :title="$t('page.host.real_active')" style="margin-left: 8px;">{{ $t('page.host.real_active_short') }}: {{ row.real_time_connect_cnt }}</span>
+              </div>
+            </div>
           </template>
-          <template #start_status="{ row }">
-            <t-switch size="medium" v-model="row.start_status===0" :label="[$t('page.host.auto_start_on'), $t('page.host.auto_start_off')]"
-                      @change="changeStartStatus($event,row)">
-            </t-switch>
-          </template>
-          <template #ssl="{ row }">
-            <p v-if="row.ssl === SSL_STATUS.NOT_SSL">{{ $t('page.host.ssl_no') }}</p>
-            <p v-if="row.ssl === SSL_STATUS.SSL">{{ $t('page.host.ssl_yes') }}</p>
+          <template #status_switches="{ row }">
+            <div style="display: flex; flex-direction: column; gap: 8px; justify-content: center;">
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span style="font-size: 12px; color: var(--td-text-color-secondary); margin-right: 8px;">{{ $t('page.host.healthy_status') }}:</span>
+                <health-status
+                  v-if="row.global_host!==1"
+                  :healthyStatus="row.healthy_status"
+                  :isLoadBalance="row.is_enable_load_balance === '1' || row.is_enable_load_balance === 1"
+                />
+                <span v-else style="font-size: 12px; color: var(--td-text-color-secondary);">-</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span style="font-size: 12px; color: var(--td-text-color-secondary); margin-right: 8px;">{{ $t('page.host.guard_status') }}:</span>
+                <t-switch size="small" v-model="row.guard_status ===1" :label="[$t('page.host.guard_status_on'), $t('page.host.guard_status_off')]"
+                          @change="changeGuardStatus($event,row)">
+                </t-switch>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span style="font-size: 12px; color: var(--td-text-color-secondary); margin-right: 8px;">{{ $t('page.host.start_status') }}:</span>
+                <t-switch size="small" v-model="row.start_status===0" :label="[$t('page.host.auto_start_on'), $t('page.host.auto_start_off')]"
+                          @change="changeStartStatus($event,row)">
+                </t-switch>
+              </div>
+            </div>
           </template>
           <template #op="slotProps">
             <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickCopy(slotProps)">{{ $t('common.copy') }}</a>
@@ -347,8 +376,8 @@ export default Vue.extend({
         { value: 'cache', label: this.$t('page.host.batch_copy.module_cache') }
       ],
       uploadParams:{
-        import_code_strategy: '0',//编码导入策略 0 新增自动生成 1 保留原有
-        import_table:"hosts",//导入到哪个表
+        import_code_strategy: '0',// 编码导入策略 0 新增自动生成 1 保留原有
+        import_table:"hosts",// 导入到哪个表
       },
       files: [],
       tips: this.$t('page.host.upload_file_limit_size'),
@@ -371,60 +400,54 @@ export default Vue.extend({
         label: this.$t('page.host.back_system_type_baota'),
         value: '1'
       },
-        {
-          label: this.$t('page.host.back_system_type_phpstudy'),
-          value: '2'
-        },
-        {
-          label: this.$t('page.host.back_system_type_phpnow'),
-          value: '3'
-        },
-        {
-          label: this.$t('page.host.back_system_type_default'),
-          value: '4'
-        },
+      {
+        label: this.$t('page.host.back_system_type_phpstudy'),
+        value: '2'
+      },
+      {
+        label: this.$t('page.host.back_system_type_phpnow'),
+        value: '3'
+      },
+      {
+        label: this.$t('page.host.back_system_type_default'),
+        value: '4'
+      },
       ],
       remote_app_options: [{
         label: this.$t('page.host.back_system_biz_website'),
         value: '1'
       },
-        {
-          label: this.$t('page.host.back_system_biz_api'),
-          value: '2'
-        },
-        {
-          label: this.$t('page.host.back_system_biz_mange'),
-          value: '3'
-        },
-        {
-          label: this.$t('page.host.back_system_biz_default'),
-          value: '4'
-        },
+      {
+        label: this.$t('page.host.back_system_biz_api'),
+        value: '2'
+      },
+      {
+        label: this.$t('page.host.back_system_biz_mange'),
+        value: '3'
+      },
+      {
+        label: this.$t('page.host.back_system_biz_default'),
+        value: '4'
+      },
       ],
       GUARD_STATUS,
       SSL_STATUS,
       START_STATUS,
       prefix,
       dataLoading: false,
-      data: [], //列表数据信息
-      detail_data: [], //加载详情信息用于编辑
+      data: [], // 列表数据信息
+      detail_data: [], // 加载详情信息用于编辑
       selectedRowKeys: [],
       value: 'first',
       columns: [
-        {
-          title: this.$t('page.host.healthy_status'),
-          colKey: 'healthy_status',
-          width: 100,
-          cell: {
-            col: 'healthy_status'
-          }
-        },
+
         {
           title: this.$t('page.host.host'),
           align: 'left',
-          width: 200,
+          width: 180,
           ellipsis: true,
           colKey: 'host',
+          cell: 'host',
           filter: {
             type: 'input',
             resetValue: '',
@@ -437,7 +460,7 @@ export default Vue.extend({
         },
         {
           title: this.$t('page.host.port'),
-          width: 100,
+          width: 80,
           ellipsis: true,
           colKey: 'port',
           filter: {
@@ -451,37 +474,16 @@ export default Vue.extend({
           },
         },
         {
-          title: this.$t('page.host.real_time'),
-          colKey: 'real_time',
-          width: 120,
-          cell: {
-            col: 'real_time'
-          }
+          title: this.$t('page.host.stats_info'),
+          colKey: 'data_stats',
+          width: 260,
+          cell: 'data_stats'
         },
         {
-          title: this.$t('page.host.start_status'),
-          colKey: 'start_status',
-          width: 100,
-          cell: {
-            col: 'start_status'
-          }
-        },
-        {
-          title: this.$t('page.host.guard_status'),
-          colKey: 'guard_status',
-          width: 100,
-          cell: {
-            col: 'guard_status'
-          }
-        },
-        {
-          title:this.$t('page.host.ssl'),
-          width: 100,
-          ellipsis: true,
-          colKey: 'ssl',
-          cell: {
-            col: 'ssl'
-          }
+          title: this.$t('common.status'),
+          colKey: 'status_switches',
+          width: 150,
+          cell: 'status_switches'
         },
         {
           title: this.$t('page.host.remote_ip'),
@@ -552,37 +554,37 @@ export default Vue.extend({
         current: 1,
         pageSize: 10
       },
-      //顶部搜索
+      // 顶部搜索
       searchformData: {
         remarks: "",
         code: ""
       },
-      //排序字段
+      // 排序字段
       sorts: {
         sortBy:"create_time",
         descending:true,
       },
-      //筛选字段
+      // 筛选字段
       filters:{
         filter_by:"",
         filter_value:"",
       },
-      //索引区域
+      // 索引区域
       deleteIdx: -1,
       guardStatusIdx: -1,
       startStatusIdx: -1,
 
-      //来源页面
+      // 来源页面
       sourcePage: "",
-      hostAddUrl: this.samwafglobalconfig.getOnlineUrl() + '/guide/Host.html#_2-新增可被防火墙保护的网站',
-      //主机字典
+      hostAddUrl: `${this.samwafglobalconfig.getOnlineUrl()  }/guide/Host.html#_2-新增可被防火墙保护的网站`,
+      // 主机字典
       host_dic: {},
 
-      //弹窗确认
-      guardConfirmVisible: false,//更改防护状态的弹窗控制
-      startConfirmVisible: false,//更改启动状态的弹窗控制
+      // 弹窗确认
+      guardConfirmVisible: false,// 更改防护状态的弹窗控制
+      startConfirmVisible: false,// 更改启动状态的弹窗控制
 
-      //负载列表
+      // 负载列表
       loadBalanceColumns: [
         {
           title: this.$t('page.host.host'),
@@ -610,9 +612,9 @@ export default Vue.extend({
           title: this.$t('common.op'),
         },
       ],
-      //下拉框是否可以筛选
+      // 下拉框是否可以筛选
       selectCanFilter:true,
-      //当前选择的主机
+      // 当前选择的主机
       currentHostCode:"",
       guardAllConfirmVisible: false, // 一键修改所有主机防护状态的确认对话框
       guardAllStatus: "1", // 默认选择开启
@@ -637,7 +639,7 @@ export default Vue.extend({
     availableTargetHosts() {
       // 从host_dic获取所有可用站点，转换为数组格式
       const allHosts = Object.keys(this.host_dic).map(code => ({
-        code: code,
+        code,
         host: this.host_dic[code]
       }));
       
@@ -662,8 +664,8 @@ export default Vue.extend({
       this.getList("");
     });
     this.baseUrl = getBaseUrl()
-    this.fileUploadUrl = this.baseUrl + "/import"
-    this.fileHeader['X-Token'] = localStorage.getItem("access_token") ? localStorage.getItem("access_token") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
+    this.fileUploadUrl = `${this.baseUrl  }/import`
+    this.fileHeader['X-Token'] = localStorage.getItem("access_token") ? localStorage.getItem("access_token") : "" // 此处换成自己获取回来的token，通常存在在cookie或者store里面
     console.log(this.baseUrl)
     if (this.$route.query != null && this.$route.query.sourcePage != "") {
       this.sourcePage = this.$route.query.sourcePage;
@@ -674,6 +676,18 @@ export default Vue.extend({
   },
 
   methods: {
+    formatTrafficBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      let size = bytes;
+      let unitIndex = 0;
+      while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex++;
+      }
+      return `${size.toFixed(size >= 100 || unitIndex === 0 ? 0 : 2)} ${units[unitIndex]}`;
+    },
+
     // 一键修改所有主机防护状态
     handleModifyAllGuardStatus() {
       this.guardAllConfirmVisible = true;
@@ -717,10 +731,10 @@ export default Vue.extend({
       return new Promise((resolve, reject) => {
         allhost()
           .then((res) => {
-            let resdata = res;
+            const resdata = res;
             console.log(resdata);
             if (resdata.code === 0) {
-              let host_options = resdata.data;
+              const host_options = resdata.data;
               for (let i = 0; i < host_options.length; i++) {
                 this.host_dic[host_options[i].value] = host_options[i].label;
               }
@@ -734,27 +748,27 @@ export default Vue.extend({
       });
     },
     getList(keyword) {
-      let that = this
-      let sort_descending =that.sorts.descending?"desc":"asc"
+      const that = this
+      const sort_descending =that.sorts.descending?"desc":"asc"
       hostlist({
         pageSize: that.pagination.pageSize,
         pageIndex: that.pagination.current,
         sort_by: that.sorts.sortBy,
-        sort_descending: sort_descending,
+        sort_descending,
         filter_by:that.filters.filter_by,
         filter_value:that.filters.filter_value,
         ...that.searchformData
       }).then((res) => {
-        let resdata = res
+        const resdata = res
         console.log(resdata)
         if (resdata.code === 0) {
 
-          //const { list = [] } = resdata.data.list;
+          // const { list = [] } = resdata.data.list;
 
           this.data = resdata.data.list??[];
           this.data_attach = []
-          for (var i = 0; i < this.data.length; i++) {
-            this.data[i].guard_status_visiable = false //可扩充
+          for (let i = 0; i < this.data.length; i++) {
+            this.data[i].guard_status_visiable = false // 可扩充
           }
           console.log('getList', this.data)
           this.pagination = {
@@ -796,7 +810,7 @@ export default Vue.extend({
       this.$router.push({
         path: '/waf-host/wafhostdetail',
         query: {
-          code: code,
+          code,
         },
       },);
     },
@@ -812,15 +826,15 @@ export default Vue.extend({
       }
       console.log(code)
       this.addFormVisible = true
-      let that = this
+      const that = this
       getHostDetail({
         CODE: code,
       })
         .then((res) => {
-          let resdata = res
+          const resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
-            let detail_data_tmp = resdata.data;
+            const detail_data_tmp = resdata.data;
             that.formData= {
               ...detail_data_tmp
             }
@@ -858,34 +872,34 @@ export default Vue.extend({
     },
     onSubmit(data ): void {
       console.log(data)
-      let that = this
+      const that = this
       addHost( {
         ...data.result
       }).then((res) => {
-          let resdata = res
-          console.log(resdata)
-          if (resdata.code === 0) {
-            that.$message.success(resdata.msg);
+        const resdata = res
+        console.log(resdata)
+        if (resdata.code === 0) {
+          that.$message.success(resdata.msg);
 
 
-            console.log("submit host data",data)
-            if(data.result.ssl_config_mode === "auto_apply"){
-               that.loadHostList().then(() => {
-                    that.sslAutoApplyVisible = true;
-                    that.currentHostCode = resdata.data
-                    console.log("auto_apply code", resdata.data)
-                });
-            }
-
-            that.addFormVisible = false;
-            that.pagination.current = 1
-
-            that.formData = { ...INITIAL_DATA };
-            that.getList("")
-          } else {
-            that.$message.warning(resdata.msg);
+          console.log("submit host data",data)
+          if(data.result.ssl_config_mode === "auto_apply"){
+            that.loadHostList().then(() => {
+              that.sslAutoApplyVisible = true;
+              that.currentHostCode = resdata.data
+              console.log("auto_apply code", resdata.data)
+            });
           }
-        })
+
+          that.addFormVisible = false;
+          that.pagination.current = 1
+
+          that.formData = { ...INITIAL_DATA };
+          that.getList("")
+        } else {
+          that.$message.warning(resdata.msg);
+        }
+      })
         .catch((e: Error) => {
           console.log(e);
         })
@@ -893,13 +907,13 @@ export default Vue.extend({
         });
     },
     onSubmitEdit(data): void {
-      let that = this
+      const that = this
       console.log('editHost',data)
       editHost( {
         ...data.result
       })
         .then((res) => {
-          let resdata = res
+          const resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
             that.$message.success(resdata.msg);
@@ -963,13 +977,13 @@ export default Vue.extend({
       } = row.row
       if (global_host === 1) {
         this.$message.warning("全局网站只能配置保护状态");
-        //return
+        // return
       }
       console.log(row)
       this.deleteIdx = row.rowIndex;
       this.confirmVisible = true;
     },
-    //SSL申请
+    // SSL申请
     handleClickSSLApply(row){
       const {
         code, global_host
@@ -978,9 +992,9 @@ export default Vue.extend({
         this.$message.warning("全局网站不能申请");
       }
       this.loadHostList().then(() => {
-          this.sslAutoApplyVisible = true;
-          this.currentHostCode = code
-          console.log("code,global_host",code,global_host)
+        this.sslAutoApplyVisible = true;
+        this.currentHostCode = code
+        console.log("code,global_host",code,global_host)
       });
 
     },
@@ -988,15 +1002,15 @@ export default Vue.extend({
       this.confirmVisible = false;
       console.log('delete', this.data)
       console.log('delete', this.data[this.deleteIdx])
-      let {
+      const {
         code
       } = this.data[this.deleteIdx]
-      let that = this
+      const that = this
       delHost({
         CODE: code,
       })
         .then((res) => {
-          let resdata = res
+          const resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
 
@@ -1022,12 +1036,12 @@ export default Vue.extend({
       this.deleteIdx = -1;
     },
     getDetail(id) {
-      let that = this
+      const that = this
       getHostDetail({
         CODE: id,
       })
         .then((res) => {
-          let resdata = res
+          const resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
             that.detail_data = resdata.data;
@@ -1046,19 +1060,19 @@ export default Vue.extend({
      * 导出Excel数据
      */
     HandleExportExcel() {
-      let that = this
-      //window.open('https:\\www.baidu.com','_blank')
+      const that = this
+      // window.open('https:\\www.baidu.com','_blank')
       //
       export_api({table_name: "hosts"}).then((res) => {
-        let resdata = res
+        const resdata = res
         console.log(resdata)
-        let blob = new Blob([res], {type: "application/force-download"}) // Blob 对象表示一个不可变、原始数据的类文件对象
+        const blob = new Blob([res], {type: "application/force-download"}) // Blob 对象表示一个不可变、原始数据的类文件对象
         console.log(blob);
-        let fileReader = new FileReader()   // FileReader 对象允许Web应用程序异步读取存储在用户计算机上的文件的内容
+        const fileReader = new FileReader()   // FileReader 对象允许Web应用程序异步读取存储在用户计算机上的文件的内容
         fileReader.readAsDataURL(blob)
-        //开始读取指定的Blob中的内容。一旦完成，result属性中将包含一个data: URL格式的Base64字符串以表示所读取文件的内容
+        // 开始读取指定的Blob中的内容。一旦完成，result属性中将包含一个data: URL格式的Base64字符串以表示所读取文件的内容
         fileReader.onload = (e) => {
-          let a = document.createElement('a')
+          const a = document.createElement('a')
           a.download = `hosts.xlsx`
           a.href = e.target.result
           document.body.appendChild(a)
@@ -1081,10 +1095,10 @@ export default Vue.extend({
     changeGuardStatus(e, row) {
 
       console.log(e, row)
-      let {code} = row
-      let rowIndex = this.data.findIndex(function (value, index, arr) {
+      const {code} = row
+      const rowIndex = this.data.findIndex((value, index, arr) => {
         console.log("findIndex", value, index, arr)
-        return value['code'] == code
+        return value.code == code
       })
       console.log("rowIndex", rowIndex)
       this.guardStatusIdx = rowIndex
@@ -1094,10 +1108,10 @@ export default Vue.extend({
     changeStartStatus(e, row) {
 
       console.log(e, row)
-      let {code} = row
-      let rowIndex = this.data.findIndex(function (value, index, arr) {
+      const {code} = row
+      const rowIndex = this.data.findIndex((value, index, arr) => {
         console.log("findIndex", value, index, arr)
-        return value['code'] == code
+        return value.code == code
       })
       console.log("rowIndex", rowIndex)
       this.startStatusIdx = rowIndex
@@ -1109,42 +1123,42 @@ export default Vue.extend({
     },
     onSuccess(e) {
 
-      let data = JSON.parse(AesDecrypt(e.response.data))
+      const data = JSON.parse(AesDecrypt(e.response.data))
       console.log('host upload', data)
-      let lastMsg = "成功数量 :" + data.SuccessInt;
+      let lastMsg = `成功数量 :${  data.SuccessInt}`;
       if (data.FailInt > 0) {
-        lastMsg += "失败数量 :" + data.FailInt + " 错误原因:" + data.Msg;
+        lastMsg += `失败数量 :${  data.FailInt  } 错误原因:${  data.Msg}`;
       }
 
       this.tips = lastMsg;
       this.getList("")
     },
-    //跳转界面
+    // 跳转界面
     handleJumpOnlineUrl() {
-      window.open(this.samwafglobalconfig.getOnlineUrl() + "/guide/Host.html");
+      window.open(`${this.samwafglobalconfig.getOnlineUrl()  }/guide/Host.html`);
     },
-    //更改teatarea
+    // 更改teatarea
     updateTextareaEdit(event) {
-      //this.formEditData = event.target.value;
+      // this.formEditData = event.target.value;
 
     },
-    //更改teatarea
+    // 更改teatarea
     updateTextareaAdd(event) {
-      //this.formAddData = event.target.value;
+      // this.formAddData = event.target.value;
 
     },
 
-    //弹窗部分代码
+    // 弹窗部分代码
     onGuardStatusConfirm(){
 
-      let that = this
+      const that = this
       console.log("this.guardStatusIdx", this.guardStatusIdx)
       if (this.guardStatusIdx == -1) {
         return
       }
 
       console.log("this.data", this.data[that.guardStatusIdx])
-      let {
+      const {
         code, guard_status
       } = this.data[this.guardStatusIdx]
       changeGuardStatus({
@@ -1152,7 +1166,7 @@ export default Vue.extend({
         GUARD_STATUS: guard_status == 1 ? 0 : 1,
       })
         .then((res) => {
-          let resdata = res
+          const resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
             that.getList("")
@@ -1177,20 +1191,20 @@ export default Vue.extend({
       this.guardStatusIdx = -1;
     },
     onStartStatusConfirm() {
-      let that = this
+      const that = this
       this.startConfirmVisible = false
 
-      let {
+      const {
         code, start_status
       } = this.data[this.startStatusIdx]
       console.log("code,start_status", code, start_status)
       changeStartStatus({
-          CODE: code,
-          START_STATUS: start_status === 1 ? 0 : 1,
-        }
+        CODE: code,
+        START_STATUS: start_status === 1 ? 0 : 1,
+      }
       )
         .then((res) => {
-          let resdata = res
+          const resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
             that.getList("")
@@ -1242,7 +1256,7 @@ export default Vue.extend({
       this.getList("");
     },
     onSortChange(sorter){
-      let that = this
+      const that = this
 
       if (sorter != undefined){
         this.sorts.sortBy= sorter.sortBy
@@ -1374,7 +1388,7 @@ export default Vue.extend({
       const requestData = {
         source_host_code: sourceHost,
         target_host_code: targetHost, // 单个目标主机
-        modules: modules              // 多个模块
+        modules              // 多个模块
       };
       
       try {
@@ -1428,7 +1442,7 @@ export default Vue.extend({
         this.batchCopyForm.targetHosts = [...this.availableTargetHosts.map(host => host.code)];
       }
     },
-    //end method 
+    // end method 
   }
 });
 </script>

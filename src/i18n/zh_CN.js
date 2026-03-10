@@ -199,6 +199,7 @@ export default {
       parent_title: "仪表盘",
       dashboard_title: "概览仪表盘",
       stats_title: "系统统计监控",
+      overview_title: "网站综合访问统计",
     },
     host: {
       parent_title: "网站防护",
@@ -886,7 +887,21 @@ export default {
       host_rule_msg: "主机请不要填写http和https 直接写域名即可",
       real_time: "实时数据",
       real_qps: "实时QPS",
+      real_qps_short: "QPS",
       real_active: "实时连接",
+      real_active_short: "连接",
+      stats_info: "统计信息",
+      today_stats: "当日数据",
+      today_pv: "当日PV",
+      today_pv_short: "PV",
+      today_uv: "当日UV",
+      today_uv_short: "UV",
+      today_attack: "当日拦截",
+      today_attack_short: "拦截",
+      today_traffic_in: "当日入流量",
+      today_traffic_in_short: "入",
+      today_traffic_out: "当日出流量",
+      today_traffic_out_short: "出",
       loadbalance: {
         label_loadbalance_is_enable: "是否启用负载",
         label_loadbalance_type: "负载均衡类型",
@@ -1673,10 +1688,10 @@ export default {
         system_relation_symbol: "系统关系符号",
         ui_rule_edit: "界面编排",
         manual_code_rule_edit: "手工代码编排",
-        //options
+        // options
         mf_option_default: "默认",
         method_option: "做动作",
-        //options header
+        // options header
         inner_option_host: "主机",
         inner_option_url: "URL",
         inner_option_referrer: "网站来路(referrer)",
@@ -1692,10 +1707,10 @@ export default {
         inner_option_getheadervalue: "提取请求头某个Key里面的值",
         inner_option_getipfailurecount: "获取IP失败次数(分钟)",
         inner_option_issafebot: "判断是否是安全bot",
-        //options attr
+        // options attr
         attr_type_text: "文本",
         attr_type_int: "数字",
-        //options judge
+        // options judge
         judge_equal: "判断是否等于",
         judge_not_equal: "判断是否不等于",
         judge_greater_than: "判断是否大于",
@@ -1705,10 +1720,10 @@ export default {
         judge_contain: "判断包含(函数)",
         judge_has_prefix: "判断开头(函数)",
         judge_has_suffix: "判断结尾(函数)",
-        //options logic relation
+        // options logic relation
         judge_logic_and: "并且",
         judge_logic_or: "或者",
-        //系统信息
+        // 系统信息
         variable_name: '变量名称',
         variable_key: '变量键值',
         tutorial_online: '立即访问在线教程(含视频+AI智能体自动生成)',
@@ -2089,6 +2104,32 @@ export default {
       doc_total_count: "共 {count} 个接口",
       doc_empty: "暂无接口文档，请稍后重试",
       doc_platform_disabled: "开放平台未启用，请在「系统配置」中开启开放平台后再查看 API 文档",
+    },
+    overview: {
+      date_range: "统计日期",
+      site_detail_title: "站点实时安全明细",
+      click_row_hint: "点击数据行下钻查看站点详细历史趋势",
+      total_ip: "总访问IP",
+      total_uv: "总UV",
+      total_pv: "总PV",
+      total_attack: "高危攻击拦截",
+      traffic_in: "入站流量",
+      traffic_out: "出站流量",
+      col_site: "站点名称",
+      col_ip: "访问IP",
+      col_traffic_in: "入站流量",
+      col_traffic_out: "出站流量",
+      col_attack: "已拦截攻击",
+      range_1h: "1小时",
+      range_24h: "24小时",
+      range_7d: "7天",
+      range_30d: "30天",
+      avg_response: "平均响应时间",
+      normal_rate: "正常流量占比",
+      legend_attack: "已拦截攻击",
+      preset_today: "今天",
+      preset_last_7_days: "最近7天",
+      preset_last_30_days: "最近30天",
     },
   }
 };
