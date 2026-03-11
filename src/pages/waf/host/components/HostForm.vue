@@ -503,7 +503,7 @@
   import CustomHeadersConfig from '../components/CustomHeadersConfig.vue';
   import CustomResponseHeadersConfig from '../components/CustomResponseHeadersConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -918,6 +918,9 @@
                 that.staticSiteConfigData.sensitive_extensions = that.staticSiteConfigData.sensitive_extensions || "";
                 that.staticSiteConfigData.allowed_extensions = that.staticSiteConfigData.allowed_extensions || "";
                 that.staticSiteConfigData.sensitive_patterns = that.staticSiteConfigData.sensitive_patterns || "";
+                that.staticSiteConfigData.security_headers = (that.staticSiteConfigData.security_headers && that.staticSiteConfigData.security_headers.length > 0)
+                  ? that.staticSiteConfigData.security_headers
+                  : JSON.parse(JSON.stringify(DEFAULT_STATIC_SECURITY_HEADERS));
               } else {
                 that.staticSiteConfigData = { ...INITIAL_STATIC_SITE };
               }
@@ -1249,7 +1252,8 @@
               sensitive_paths: this.staticSiteConfigData.sensitive_paths,
               sensitive_extensions: this.staticSiteConfigData.sensitive_extensions,
               allowed_extensions: this.staticSiteConfigData.allowed_extensions,
-              sensitive_patterns: this.staticSiteConfigData.sensitive_patterns
+              sensitive_patterns: this.staticSiteConfigData.sensitive_patterns,
+              security_headers: this.staticSiteConfigData.security_headers
             };
             postdata['static_site_json'] = JSON.stringify(staticSiteData);
 

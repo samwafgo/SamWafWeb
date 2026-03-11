@@ -90,6 +90,10 @@
                           @change="changeStartStatus($event,row)">
                 </t-switch>
               </div>
+              <div v-if="row.global_host!==1 && isStaticSiteEnabled(row)" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span style="font-size: 12px; color: var(--td-text-color-secondary); margin-right: 8px;">{{ $t('page.host.static_service_label') }}:</span>
+                <t-tag theme="success" variant="light" size="small">{{ $t('page.host.static_service_label_on') }}</t-tag>
+              </div>
             </div>
           </template>
           <template #op="slotProps">
@@ -1117,6 +1121,15 @@ export default Vue.extend({
       this.startStatusIdx = rowIndex
       console.log(e)
       this.startConfirmVisible = true
+    },
+    isStaticSiteEnabled(row) {
+      if (!row || !row.static_site_json) return false;
+      try {
+        const cfg = typeof row.static_site_json === 'string' ? JSON.parse(row.static_site_json) : row.static_site_json;
+        return cfg.is_enable_static_site === 1 || cfg.is_enable_static_site === '1';
+      } catch {
+        return false;
+      }
     },
     handleFail({file}) {
       this.$message.error(`文件 ${file.name} 上传失败`);

@@ -612,6 +612,8 @@ export default {
       more_domain_tips: "Enter multiple domain names, each on a new line, without including the port.",
       start_status: "Start Status",
       guard_status: "Protection Status",
+      static_service_label: "Static Service",
+      static_service_label_on: "On",
       start_status_content: "This feature selects whether to start directly.",
       health_check: {
         is_enable_healthy: 'Enable Health Check',
@@ -810,7 +812,14 @@ export default {
         allowed_extensions_tips: "Whitelist of allowed file extensions, separated by commas, e.g.: .html,.css,.js,.png,.jpg",
         sensitive_patterns: "Sensitive Patterns",
         sensitive_patterns_placeholder: "Please enter sensitive filename regex patterns, separated by commas",
-        sensitive_patterns_tips: "Regular expression patterns for sensitive filenames, separated by commas, e.g.: .*\\.backup$,.*\\.tmp$"
+        sensitive_patterns_tips: "Regular expression patterns for sensitive filenames, separated by commas, e.g.: .*\\.backup$,.*\\.tmp$",
+        security_headers: "Security Response Headers",
+        security_headers_tips: "Custom security response headers. Leave the list empty to use all system defaults; leave a value empty to fall back to its system default. Extra headers beyond the default set can also be added.",
+        security_headers_reset: "Reset to Defaults",
+        security_header_name: "Header Name",
+        security_header_value: "Header Value (empty = use default)",
+        security_header_add: "Add Header",
+        security_header_delete: "Delete"
       },
       keyfile: "Key String",
       keyfile_content: "Usually filename: *.key Content format: -----BEGIN RSA PRIVATE KEY----- Copy all and fill in",
