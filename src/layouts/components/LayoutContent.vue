@@ -26,7 +26,7 @@
             }"
           >
             <template v-if="!route.isHome">
-              {{ route.title }}
+              {{ $t(route.title) }}
             </template>
             <home-icon v-else />
             <template #dropdown>
