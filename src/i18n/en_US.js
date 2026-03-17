@@ -42,6 +42,7 @@ export default {
     op: "Operation Content",
     date: "Date",
     online_document: "Online Document",
+    online_channel: "Online Channel",
     defense_status: {
       all: "All",
       stop: "Block",

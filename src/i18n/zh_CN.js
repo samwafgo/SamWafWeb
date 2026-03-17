@@ -42,6 +42,7 @@ export default {
     op: "操作内容",
     date: "日期",
     online_document: "在线文档",
+    online_channel: "在线交流渠道",
     defense_status: {
       all: "全部",
       stop: "阻止",
