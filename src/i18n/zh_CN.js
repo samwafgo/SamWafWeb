@@ -310,6 +310,12 @@ export default {
       ip_version_ipv6: "仅IPv6",
       ip_version_both: "IPv4和IPv6",
       ip_version_tips: "选择隧道监听的IP版本，默认为同时支持IPv4和IPv6",
+      ssl_status: "SSL开关",
+      ssl_certificate: "SSL证书路径",
+      ssl_certificate_key: "SSL密钥路径",
+      ssl_protocols: "SSL协议版本",
+      ssl_tips: "开启SSL后，客户端需以TLS方式连接此隧道端口，证书路径需填写服务器上的绝对路径",
+      ssl_protocols_placeholder: "如: TLSv1.2 TLSv1.3",
       tcp_source_count: "TCP源连接数",
 
       tcp_target_count: "TCP目标连接数",

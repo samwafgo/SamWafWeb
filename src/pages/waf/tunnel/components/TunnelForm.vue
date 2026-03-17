@@ -63,6 +63,36 @@
                 </div>
             </t-form-item>
 
+            <t-form-item v-if="formData.protocol === 'tcp'" :label="$t('page.tunnel.ssl_status')" name="ssl_status">
+                <t-radio-group v-model="formData.ssl_status">
+                    <t-radio :value="0">{{ $t('common.off') }}</t-radio>
+                    <t-radio :value="1">{{ $t('common.on') }}</t-radio>
+                </t-radio-group>
+                <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+                    {{ $t('page.tunnel.ssl_tips') }}
+                </div>
+            </t-form-item>
+
+            <template v-if="formData.protocol === 'tcp' && formData.ssl_status === 1">
+                <t-form-item :label="$t('page.tunnel.ssl_certificate')" name="ssl_certificate">
+                    <t-input :style="{ width: '480px' }" v-model="formData.ssl_certificate"
+                        placeholder="/home/nginx/cert/test.com.pem">
+                    </t-input>
+                </t-form-item>
+
+                <t-form-item :label="$t('page.tunnel.ssl_certificate_key')" name="ssl_certificate_key">
+                    <t-input :style="{ width: '480px' }" v-model="formData.ssl_certificate_key"
+                        placeholder="/home/nginx/cert/test.com.key">
+                    </t-input>
+                </t-form-item>
+
+                <t-form-item :label="$t('page.tunnel.ssl_protocols')" name="ssl_protocols">
+                    <t-input :style="{ width: '480px' }" v-model="formData.ssl_protocols"
+                        :placeholder="$t('page.tunnel.ssl_protocols_placeholder')">
+                    </t-input>
+                </t-form-item>
+            </template>
+
             <div class="form-row">
 
                 <t-form-item :label="$t('page.tunnel.conn_timeout')" name="conn_timeout" class="half-width">
@@ -225,6 +255,7 @@ export default {
                 postdata['write_timeout'] = Number(postdata['write_timeout'])
                 postdata['max_in_connect'] = Number(postdata['max_in_connect'])
                 postdata['max_out_connect'] = Number(postdata['max_out_connect'])
+                postdata['ssl_status'] = Number(postdata['ssl_status'] || 0)
                 this.$emit('submit', { result: postdata });
             } else {
                 console.log('Tunnel Form Error:', firstError);

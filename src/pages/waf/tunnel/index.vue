@@ -492,6 +492,11 @@ export default Vue.extend({
             that.detail_data.allowed_time_ranges = that.detail_data.allowed_time_ranges || ''
             // 处理 ip_version 字段，确保不是 null 或 undefined，默认为 both
             that.detail_data.ip_version = that.detail_data.ip_version || 'both'
+            // 处理 SSL 相关字段，确保老记录有默认值（平滑升级）
+            that.detail_data.ssl_status = (that.detail_data.ssl_status != null && that.detail_data.ssl_status !== '') ? Number(that.detail_data.ssl_status) : 0
+            that.detail_data.ssl_certificate = that.detail_data.ssl_certificate || ''
+            that.detail_data.ssl_certificate_key = that.detail_data.ssl_certificate_key || ''
+            that.detail_data.ssl_protocols = that.detail_data.ssl_protocols || 'TLSv1.2 TLSv1.3'
 
 
 

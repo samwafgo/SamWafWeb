@@ -310,6 +310,12 @@ export default {
       ip_version_ipv6: "IPv6 Only",
       ip_version_both: "IPv4 & IPv6",
       ip_version_tips: "Select the IP version for tunnel listening, default is both IPv4 and IPv6",
+      ssl_status: "SSL Status",
+      ssl_certificate: "SSL Certificate",
+      ssl_certificate_key: "SSL Certificate Key",
+      ssl_protocols: "SSL Protocols",
+      ssl_tips: "When SSL is enabled, clients must connect to this tunnel port via TLS. Certificate paths must be absolute paths on the server.",
+      ssl_protocols_placeholder: "e.g. TLSv1.2 TLSv1.3",
       tcp_source_count: "TCP Source Connections",
 
       tcp_target_count: "TCP Target Connections",

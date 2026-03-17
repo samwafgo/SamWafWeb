@@ -16,5 +16,8 @@ export const INITIAL_DATA = {
     allowed_time_ranges: '',
     ip_version: 'both',
     remark: '',
-
+    ssl_status: 0,
+    ssl_certificate: '',
+    ssl_certificate_key: '',
+    ssl_protocols: 'TLSv1.2 TLSv1.3',
 };
