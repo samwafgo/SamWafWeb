@@ -456,6 +456,13 @@
             </template>
             <custom-response-headers-config :custom-response-headers-config="customResponseHeadersConfigData" @update="val => customResponseHeadersConfigData = val"></custom-response-headers-config>
           </t-tab-panel>
+          <t-tab-panel :value="14">
+            <template #label>
+              <t-icon name="file-paste" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_response_compress')}}
+            </template>
+            <response-compress-config :response-compress-config="responseCompressConfigData" @update="val => responseCompressConfigData = val"></response-compress-config>
+          </t-tab-panel>
           </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
@@ -502,8 +509,9 @@
   import CacheConfig from '../components/CacheConfig.vue';
   import CustomHeadersConfig from '../components/CustomHeadersConfig.vue';
   import CustomResponseHeadersConfig from '../components/CustomResponseHeadersConfig.vue';
+  import ResponseCompressConfig from '../components/ResponseCompressConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -522,6 +530,7 @@
       TransportConfig,
       CustomHeadersConfig,
       CustomResponseHeadersConfig,
+      ResponseCompressConfig,
     },
     props: {
       // 表单数据
@@ -579,6 +588,7 @@
         transportConfigData: {...INITIAL_TRANSPORT},
         customHeadersConfigData: {...INITIAL_CUSTOM_HEADERS},
         customResponseHeadersConfigData: {...INITIAL_CUSTOM_RESPONSE_HEADERS},
+        responseCompressConfigData: { ...INITIAL_RESPONSE_COMPRESS },
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -907,6 +917,34 @@
           } else {
             this.cacheConfigData = { ...INITIAL_CACHE };
           }
+
+          // 解析响应压缩配置
+          if (this.formData.response_compress_json) {
+            try {
+              let that = this;
+              if (that.formData.response_compress_json !== '') {
+                const rc = JSON.parse(that.formData.response_compress_json);
+                that.responseCompressConfigData = {
+                  is_enable: String(rc.is_enable !== undefined ? rc.is_enable : 0),
+                  prefer: rc.prefer || INITIAL_RESPONSE_COMPRESS.prefer,
+                  min_length: String(rc.min_length !== undefined && rc.min_length !== '' ? rc.min_length : INITIAL_RESPONSE_COMPRESS.min_length),
+                  include_types: rc.include_types != null ? rc.include_types : '',
+                  include_extensions: rc.include_extensions != null ? rc.include_extensions : '',
+                  exclude_extensions: rc.exclude_extensions != null ? rc.exclude_extensions : '',
+                  exclude_paths: rc.exclude_paths != null ? rc.exclude_paths : '',
+                  compress_when_static_assist: String(rc.compress_when_static_assist !== undefined ? rc.compress_when_static_assist : 0),
+                };
+              } else {
+                that.responseCompressConfigData = { ...INITIAL_RESPONSE_COMPRESS };
+              }
+            } catch (e) {
+              console.error('解析response_compress_json失败', e);
+              this.responseCompressConfigData = { ...INITIAL_RESPONSE_COMPRESS };
+            }
+          } else {
+            this.responseCompressConfigData = { ...INITIAL_RESPONSE_COMPRESS };
+          }
+
           // 解析静态网站配置
           if (this.formData.static_site_json) {
             try {
@@ -1243,6 +1281,18 @@
               max_memory_size_mb: parseFloat(this.cacheConfigData.max_memory_size_mb)
             };
             postdata['cache_json'] = JSON.stringify(cacheData);
+
+            const rcData = {
+              is_enable: parseInt(this.responseCompressConfigData.is_enable, 10) || 0,
+              prefer: this.responseCompressConfigData.prefer || 'br_first',
+              min_length: parseInt(this.responseCompressConfigData.min_length, 10) || 256,
+              include_types: this.responseCompressConfigData.include_types || '',
+              include_extensions: this.responseCompressConfigData.include_extensions || '',
+              exclude_extensions: this.responseCompressConfigData.exclude_extensions || '',
+              exclude_paths: this.responseCompressConfigData.exclude_paths || '',
+              compress_when_static_assist: parseInt(this.responseCompressConfigData.compress_when_static_assist, 10) || 0,
+            };
+            postdata['response_compress_json'] = JSON.stringify(rcData);
 
             // 处理静态网站配置
             let staticSiteData = {

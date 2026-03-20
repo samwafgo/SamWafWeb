@@ -377,7 +377,8 @@ export default Vue.extend({
       },
       // 可选的功能模块
       availableModules: [
-        { value: 'cache', label: this.$t('page.host.batch_copy.module_cache') }
+        { value: 'cache', label: this.$t('page.host.batch_copy.module_cache') },
+        { value: 'response_compress', label: this.$t('page.host.batch_copy.module_response_compress') }
       ],
       uploadParams:{
         import_code_strategy: '0',// 编码导入策略 0 新增自动生成 1 保留原有
