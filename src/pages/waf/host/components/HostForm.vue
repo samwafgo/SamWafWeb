@@ -302,25 +302,29 @@
             <template #label>
               {{$t('page.host.tab_other')}}
             </template>
-            <!-- IP提取模式选择 -->
-            <t-form-item :label="$t('page.host.ip_mode')" name="ip_mode">
-              <t-tooltip class="placement top center" :content="$t('page.host.ip_mode_tips')" placement="top"
-                         :overlay-style="{ width: '300px' }" show-arrow>
-                <t-radio-group v-model="formData.ip_mode">
-                  <t-radio value="nic">
-                    <div>
-                      <div>{{ $t('page.host.ip_mode_nic') }}</div>
-                      <div class="limit-mode-desc">{{ $t('page.host.ip_mode_nic_desc') }}</div>
-                    </div>
-                  </t-radio>
-                  <t-radio value="proxy">
-                    <div>
-                      <div>{{ $t('page.host.ip_mode_proxy') }}</div>
-                      <div class="limit-mode-desc">{{ $t('page.host.ip_mode_proxy_desc') }}</div>
-                    </div>
-                  </t-radio>
-                </t-radio-group>
-              </t-tooltip>
+            <!-- IP提取模式：不要用 t-tooltip 包裹整组单选，否则会拦截点击导致无法切换 -->
+            <t-form-item name="ip_mode">
+              <template #label>
+                <span>{{ $t('page.host.ip_mode') }}</span>
+                <t-tooltip class="placement top center" :content="$t('page.host.ip_mode_tips')" placement="top"
+                           :overlay-style="{ width: '300px' }" show-arrow>
+                  <t-icon name="help-circle" class="host-form-ip-mode-help-icon" />
+                </t-tooltip>
+              </template>
+              <t-radio-group v-model="formData.ip_mode">
+                <t-radio value="nic">
+                  <div>
+                    <div>{{ $t('page.host.ip_mode_nic') }}</div>
+                    <div class="limit-mode-desc">{{ $t('page.host.ip_mode_nic_desc') }}</div>
+                  </div>
+                </t-radio>
+                <t-radio value="proxy">
+                  <div>
+                    <div>{{ $t('page.host.ip_mode_proxy') }}</div>
+                    <div class="limit-mode-desc">{{ $t('page.host.ip_mode_proxy_desc') }}</div>
+                  </div>
+                </t-radio>
+              </t-radio-group>
             </t-form-item>
             <t-form-item :label="$t('page.host.exclude_url_log')" name="exclude_url_log">
               <t-tooltip class="placement top center" :content="$t('page.host.exclude_url_log_tips')" placement="top"
@@ -703,7 +707,9 @@
           this.formData.response_time_out = this.formData.response_time_out != null ? this.formData.response_time_out.toString() : "60"
           this.formData.insecure_skip_verify = this.formData.insecure_skip_verify != null ? this.formData.insecure_skip_verify.toString() : "0"
           this.formData.log_only_mode = this.formData.log_only_mode != null ? this.formData.log_only_mode.toString() : "0"
-          this.formData.ip_mode = this.formData.ip_mode || "nic"
+          // 保证存在且为合法值，并用 $set 确保 Vue2 对新增字段的响应式
+          const ipMode = this.formData.ip_mode === 'proxy' ? 'proxy' : 'nic'
+          this.$set(this.formData, 'ip_mode', ipMode)
 
           // 解析防御配置
           if (this.formData.defense_json) {
@@ -1345,3 +1351,12 @@
       }
   });
   </script>
+
+<style scoped>
+.host-form-ip-mode-help-icon {
+  margin-left: 6px;
+  vertical-align: middle;
+  cursor: help;
+  color: var(--td-text-color-secondary, rgba(0, 0, 0, 0.55));
+}
+</style>
