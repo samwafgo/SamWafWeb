@@ -100,6 +100,14 @@
               </t-option>
             </t-select>
           </t-form-item>
+          <t-form-item v-if="formData.apply_method === 'dns01'" :label="$t('page.sslorder.label_skip_dns_verify')"
+            name="skip_dns_verify">
+            <t-radio-group v-model="formData.skip_dns_verify">
+              <t-radio :value="0">{{ $t('page.sslorder.skip_dns_verify_off') }}</t-radio>
+              <t-radio :value="1">{{ $t('page.sslorder.skip_dns_verify_on') }}</t-radio>
+            </t-radio-group>
+            <div class="form-item-tips">{{ $t('page.sslorder.skip_dns_verify_tips') }}</div>
+          </t-form-item>
 
           <!-- 密钥分组选择 -->
           <t-form-item v-if="formData.apply_method === 'dns01' && formData.apply_dns"
@@ -181,6 +189,14 @@
               <t-option v-for="item in sslorder_apply_dns_type" :value="item.value" :label="`${item.label}`">
               </t-option>
             </t-select>
+          </t-form-item>
+          <t-form-item v-if="formEditData.apply_method === 'dns01'" :label="$t('page.sslorder.label_skip_dns_verify')"
+            name="skip_dns_verify">
+            <t-radio-group v-model="formEditData.skip_dns_verify">
+              <t-radio :value="0">{{ $t('page.sslorder.skip_dns_verify_off') }}</t-radio>
+              <t-radio :value="1">{{ $t('page.sslorder.skip_dns_verify_on') }}</t-radio>
+            </t-radio-group>
+            <div class="form-item-tips">{{ $t('page.sslorder.skip_dns_verify_tips') }}</div>
           </t-form-item>
 
           <!-- 密钥分组选择 -->
@@ -392,6 +408,7 @@ const INITIAL_DATA = {
   host_code: "",
   apply_platform: "letsencrypt",
   apply_method: "http01",
+  skip_dns_verify: 0,
   apply_dns: "",
   apply_email: "",
   apply_domain: "",
@@ -1332,7 +1349,8 @@ export default Vue.extend({
         row
       } = slotProps;
       this.formEditData = {
-        ...row
+        ...row,
+        skip_dns_verify: row.skip_dns_verify ?? 0
       };
       if (row.apply_method === 'dns01' && row.apply_dns) {
         this.getPrivateGroupList(row.apply_dns);
