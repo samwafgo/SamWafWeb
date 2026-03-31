@@ -29,7 +29,7 @@
                 </t-select>
               </t-form-item>
               <t-divider></t-divider>
-              <div style="padding: 10px 0; background: #f5f5f5; border-radius: 4px; padding: 10px; margin-bottom: 10px;">
+              <div style="padding: 10px 0;  border-radius: 4px; padding: 10px; margin-bottom: 10px;">
                 <p style="margin: 5px 0;"><strong>{{ $t('page.iplocation.current_status') }}:</strong></p>
                 <p style="margin: 5px 0;">{{ $t('page.iplocation.source') }}: {{ status.ipv4_source || '-' }}</p>
                 <p style="margin: 5px 0;">{{ $t('page.iplocation.format') }}: {{ status.ipv4_format || '-' }}</p>
@@ -61,7 +61,7 @@
                 </t-select>
               </t-form-item>
               <t-divider></t-divider>
-              <div style="padding: 10px 0; background: #f5f5f5; border-radius: 4px; padding: 10px; margin-bottom: 10px;">
+              <div style="padding: 10px 0;border-radius: 4px; padding: 10px; margin-bottom: 10px;">
                 <p style="margin: 5px 0;"><strong>{{ $t('page.iplocation.current_status') }}:</strong></p>
                 <p style="margin: 5px 0;">{{ $t('page.iplocation.source') }}: {{ status.ipv6_source || '-' }}</p>
                 <p style="margin: 5px 0;">{{ $t('page.iplocation.format') }}: {{ status.ipv6_format || '-' }}</p>
