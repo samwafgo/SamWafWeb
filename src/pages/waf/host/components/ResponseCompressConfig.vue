@@ -14,6 +14,7 @@
           <t-option value="br_first" :label="$t('page.host.response_compress.prefer_br_first')" />
           <t-option value="gzip_only" :label="$t('page.host.response_compress.prefer_gzip_only')" />
           <t-option value="br_only" :label="$t('page.host.response_compress.prefer_br_only')" />
+          <t-option value="zstd_only" :label="$t('page.host.response_compress.prefer_zstd_only')" />
         </t-select>
       </t-tooltip>
     </t-form-item>
