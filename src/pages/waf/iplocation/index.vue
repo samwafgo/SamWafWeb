@@ -29,13 +29,13 @@
                 </t-select>
               </t-form-item>
               <t-divider></t-divider>
-              <div style="padding: 10px 0;  border-radius: 4px; padding: 10px; margin-bottom: 10px;">
-                <p style="margin: 5px 0;"><strong>{{ $t('page.iplocation.current_status') }}:</strong></p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.source') }}: {{ status.ipv4_source || '-' }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.format') }}: {{ status.ipv4_format || '-' }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.file_size') }}: {{ formatFileSize(status.ipv4_file_size) }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.file_create_time') }}: {{ status.ipv4_create_time || '-' }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.load_time') }}: {{ status.ipv4_load_time || '-' }}</p>
+              <div class="iplocation-status-box">
+                <p><strong>{{ $t('page.iplocation.current_status') }}:</strong></p>
+                <p>{{ $t('page.iplocation.source') }}: {{ status.ipv4_source || '-' }}</p>
+                <p>{{ $t('page.iplocation.format') }}: {{ status.ipv4_format || '-' }}</p>
+                <p>{{ $t('page.iplocation.file_size') }}: {{ formatFileSize(status.ipv4_file_size) }}</p>
+                <p>{{ $t('page.iplocation.file_create_time') }}: {{ status.ipv4_create_time || '-' }}</p>
+                <p>{{ $t('page.iplocation.load_time') }}: {{ status.ipv4_load_time || '-' }}</p>
               </div>
             </t-form>
           </t-card>
@@ -61,13 +61,13 @@
                 </t-select>
               </t-form-item>
               <t-divider></t-divider>
-              <div style="padding: 10px 0;border-radius: 4px; padding: 10px; margin-bottom: 10px;">
-                <p style="margin: 5px 0;"><strong>{{ $t('page.iplocation.current_status') }}:</strong></p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.source') }}: {{ status.ipv6_source || '-' }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.format') }}: {{ status.ipv6_format || '-' }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.file_size') }}: {{ formatFileSize(status.ipv6_file_size) }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.file_create_time') }}: {{ status.ipv6_create_time || '-' }}</p>
-                <p style="margin: 5px 0;">{{ $t('page.iplocation.load_time') }}: {{ status.ipv6_load_time || '-' }}</p>
+              <div class="iplocation-status-box">
+                <p><strong>{{ $t('page.iplocation.current_status') }}:</strong></p>
+                <p>{{ $t('page.iplocation.source') }}: {{ status.ipv6_source || '-' }}</p>
+                <p>{{ $t('page.iplocation.format') }}: {{ status.ipv6_format || '-' }}</p>
+                <p>{{ $t('page.iplocation.file_size') }}: {{ formatFileSize(status.ipv6_file_size) }}</p>
+                <p>{{ $t('page.iplocation.file_create_time') }}: {{ status.ipv6_create_time || '-' }}</p>
+                <p>{{ $t('page.iplocation.load_time') }}: {{ status.ipv6_load_time || '-' }}</p>
               </div>
             </t-form>
           </t-card>
@@ -383,5 +383,25 @@ export default Vue.extend({
 <style scoped lang="less">
 .list-card-container {
   padding: 20px;
+}
+
+.iplocation-status-box {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: #f5f5f5;
+
+  p {
+    margin: 5px 0;
+  }
+}
+</style>
+
+<style lang="less">
+/* 亮色沿用 #f5f5f5；暗黑模式与 TDesign 主题一致（见 documentElement theme-mode） */
+:root[theme-mode='dark'] .iplocation-status-box {
+  background: var(--td-bg-color-component);
+  color: var(--td-text-color-primary);
+  border: 1px solid var(--td-component-border);
 }
 </style>
