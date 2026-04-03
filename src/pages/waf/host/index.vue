@@ -47,8 +47,38 @@
             />
           </template>
           <template #host="{ row }">
-            <span :title="row.host">{{ row.host }}</span>
-            <t-tag v-if="row.ssl === SSL_STATUS.SSL" theme="success" variant="light" size="small" style="margin-left: 4px;" :title="$t('page.host.ssl_yes')">SSL</t-tag>
+            <div>
+              <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+                <span :title="row.host" style="font-weight:500;">{{ row.host }}</span>
+                <t-tag v-if="row.ssl === SSL_STATUS.SSL" theme="success" variant="light" size="small" :title="$t('page.host.ssl_yes')">SSL</t-tag>
+              </div>
+              <div v-if="row.bind_more_host && row.bind_more_host.trim()" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">
+                <t-tag
+                  v-for="(domain, i) in row.bind_more_host.split('\n').map(s=>s.trim()).filter(Boolean)"
+                  :key="i"
+                  theme="default"
+                  variant="light"
+                  size="small"
+                  :title="domain"
+                  style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                >{{ domain }}</t-tag>
+              </div>
+            </div>
+          </template>
+          <template #port="{ row }">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:3px;">
+              <span style="font-weight:500;min-width:36px;">{{ row.port }}</span>
+              <template v-if="row.bind_more_port && row.bind_more_port.trim()">
+                <t-tag
+                  v-for="(p, i) in row.bind_more_port.split(',').map(s=>s.trim()).filter(Boolean)"
+                  :key="i"
+                  theme="primary"
+                  variant="light"
+                  size="small"
+                  :title="p"
+                >{{ p }}</t-tag>
+              </template>
+            </div>
           </template>
           <template #data_stats="{ row }">
             <div style="line-height: 1.8;">
@@ -465,9 +495,9 @@ export default Vue.extend({
         },
         {
           title: this.$t('page.host.port'),
-          width: 80,
-          ellipsis: true,
+          width: 140,
           colKey: 'port',
+          cell: 'port',
           filter: {
             type: 'input',
             resetValue: '',
