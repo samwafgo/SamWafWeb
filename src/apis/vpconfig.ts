@@ -47,3 +47,19 @@ export function restartManagerApi(data) {
     data: data
   })
 }
+//获取安全路径入口配置
+export function getSecurityEntryApi(params) {
+  return request({
+    url: 'vipconfig/getSecurityEntry',
+    method: 'get',
+    params: params
+  })
+}
+//更新安全路径入口配置
+export function updateSecurityEntryApi(data) {
+  return request({
+    url: 'vipconfig/updateSecurityEntry',
+    method: 'post',
+    data: data
+  })
+}

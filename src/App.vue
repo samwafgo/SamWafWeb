@@ -38,9 +38,11 @@ export default Vue.extend({
         if(!this.ws) {
         	// url
           const isHttps = window.location.protocol === 'https:';
+          // 安全路径：优先读注入变量，其次读 localStorage（支持开发模式）
+          const secPath = window.__SAMWAF_SECURITY_PATH__ || (() => { try { return localStorage.getItem('__samwaf_security_path__') || ''; } catch { return ''; } })();
           let url = env=="development"
-              ? "ws://127.0.0.1:26666/api/v1/ws"
-              : `${isHttps ? 'wss' : 'ws'}://${window.location.host}/api/v1/ws`;
+              ? `ws://127.0.0.1:26666${secPath}/api/v1/ws`
+              : `${isHttps ? 'wss' : 'ws'}://${window.location.host}${secPath}/api/v1/ws`;
           this.ws = websocket.useWebSocket(
               url,	// url
               localStorage.getItem("access_token"),
@@ -101,7 +103,10 @@ export default Vue.extend({
           }else if(wsData.msg_cmd_type==="DOWNLOAD_LOG"){
             let token  =localStorage.getItem("access_token")? localStorage.getItem("access_token"):""
             //下载连接
-            let downloadUrl = env=="development"? "http://127.0.0.1:26666/api/v1/waflog/attack/download" : "http://"+window.location.host+"/api/v1/waflog/attack/download"
+            const dlSecPath = window.__SAMWAF_SECURITY_PATH__ || (() => { try { return localStorage.getItem('__samwaf_security_path__') || ''; } catch { return ''; } })();
+            let downloadUrl = env=="development"
+              ? `http://127.0.0.1:26666${dlSecPath}/api/v1/waflog/attack/download`
+              : `${window.location.protocol}//${window.location.host}${dlSecPath}/api/v1/waflog/attack/download`
             downloadUrl = downloadUrl +"?X-Token="+token
             console.log(downloadUrl)
             window.open(downloadUrl)

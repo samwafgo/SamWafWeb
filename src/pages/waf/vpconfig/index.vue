@@ -101,6 +101,90 @@
         </t-loading>
       </t-card>
       
+      <!-- 安全路径入口卡片 -->
+      <t-card class="list-card-container">
+        <template #header>
+          <t-row justify="space-between">
+            <div class="card-header-title">
+              <t-space>
+                <div>{{ $t('page.vpconfig.security_entry_title') }}</div>
+                <t-tooltip :content="$t('page.vpconfig.security_entry_description')">
+                  <t-icon name="help-circle" />
+                </t-tooltip>
+              </t-space>
+            </div>
+          </t-row>
+        </template>
+
+        <t-loading :loading="securityEntryLoading">
+          <!-- 编辑表单：开关 + 自定义路径 + 保存按钮 -->
+          <t-form :data="securityEntryFormData" :label-width="180">
+            <t-form-item :label="$t('page.vpconfig.security_entry_enable')">
+              <t-switch v-model="securityEntryFormData.entry_enable" />
+              <div class="form-item-tips">{{ $t('page.vpconfig.security_entry_enable_tips') }}</div>
+            </t-form-item>
+
+            <!--
+              【影响范围说明】
+              安全路径 handler 拦截的是整个 HTTP Server 的所有请求，因此以下所有调用都受影响：
+              1. 管理界面浏览器访问
+              2. WebSocket 连接（/api/v1/ws）
+              3. 开放平台 API Key 外部调用（/api/v1/oplatform/...）
+              4. 任何通过脚本/程序直接调用的 /api/v1/... 接口
+
+              启用后，所有调用方的 URL 都需要改为：
+                http(s)://host:port/{安全码}/api/v1/...
+            -->
+            <t-form-item v-if="securityEntryFormData.entry_enable">
+              <t-alert
+                theme="info"
+                :message="$t('page.vpconfig.security_entry_oplatform_notice')"
+              />
+            </t-form-item>
+
+            <t-form-item v-if="securityEntryFormData.entry_enable" :label="$t('page.vpconfig.security_entry_custom_code')">
+              <t-input
+                v-model="securityEntryFormData.entry_path"
+                :placeholder="$t('page.vpconfig.security_entry_custom_code_placeholder')"
+                style="width: 280px; font-family: monospace;"
+                clearable
+              />
+              <div class="form-item-tips">{{ $t('page.vpconfig.security_entry_custom_code_tips') }}</div>
+            </t-form-item>
+
+            <t-form-item>
+              <t-button theme="primary" @click="handleSaveSecurityEntry">{{ $t('page.vpconfig.security_entry_save') }}</t-button>
+            </t-form-item>
+          </t-form>
+
+          <!-- 已保存的访问信息：仅当服务端已启用时展示 -->
+          <template v-if="savedSecurityEntry.entry_enable && savedSecurityEntry.entry_path">
+            <t-divider />
+            <t-form :label-width="180">
+              <t-form-item>
+                <t-alert theme="warning" :message="$t('page.vpconfig.security_entry_warning')" />
+              </t-form-item>
+
+              <t-form-item :label="$t('page.vpconfig.security_entry_code')">
+                <t-input :value="savedSecurityEntry.entry_path" readonly style="width: 280px; font-family: monospace;" />
+              </t-form-item>
+
+              <t-form-item :label="$t('page.vpconfig.security_entry_url')">
+                <t-space direction="vertical" style="width: 100%">
+                  <t-input :value="securityEntryFullUrl" readonly style="width: 520px; font-family: monospace;" />
+                  <div class="form-item-tips">{{ $t('page.vpconfig.security_entry_url_tips') }}</div>
+                  <t-space>
+                    <t-button theme="primary" @click="copySecurityUrl">{{ $t('page.vpconfig.security_entry_copy_url') }}</t-button>
+                    <t-button theme="default" @click="openSecurityUrl">{{ $t('page.vpconfig.security_entry_open_url') }}</t-button>
+                    <t-button theme="danger" variant="outline" @click="showRegenerateDialog">{{ $t('page.vpconfig.security_entry_regenerate') }}</t-button>
+                  </t-space>
+                </t-space>
+              </t-form-item>
+            </t-form>
+          </template>
+        </t-loading>
+      </t-card>
+
       <!-- 确认对话框 -->
       <t-dialog
         :visible.sync="confirmDialogVisible"
@@ -154,13 +238,22 @@
         @confirm="handleRestartManager"
         @cancel="restartDialogVisible = false"
       />
+
+      <!-- 重新生成访问码确认对话框 -->
+      <t-dialog
+        :visible.sync="regenerateDialogVisible"
+        :header="$t('common.confirm')"
+        :body="$t('page.vpconfig.security_entry_regenerate_confirm')"
+        @confirm="handleRegenerateCode"
+        @cancel="regenerateDialogVisible = false"
+      />
     </div>
   </template>
   
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi } from '@/apis/vpconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -176,6 +269,18 @@
         certListDialogVisible: false,
         certListLoading: false,
         restartDialogVisible: false,
+        securityEntryLoading: false,
+        regenerateDialogVisible: false,
+        // 编辑中的表单值（开关+自定义路径，点保存才提交）
+        securityEntryFormData: {
+          entry_enable: false,
+          entry_path: ''
+        },
+        // 服务端已保存的配置（fetch 或 save 成功后更新）
+        savedSecurityEntry: {
+          entry_enable: false,
+          entry_path: ''
+        },
         formData: {
           ip_whitelist: ''
         },
@@ -235,9 +340,17 @@
         }
       };
     },
+    computed: {
+      securityEntryFullUrl() {
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        return `${protocol}//${host}/${this.savedSecurityEntry.entry_path}/`;
+      }
+    },
     mounted() {
       this.fetchData();
       this.fetchSslStatus();
+      this.fetchSecurityEntry();
     },
     methods: {
       fetchData() {
@@ -437,6 +550,138 @@
       },
       showRestartDialog() {
         this.restartDialogVisible = true;
+      },
+      fetchSecurityEntry() {
+        this.securityEntryLoading = true;
+        getSecurityEntryApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              const enable = res.data.entry_enable || false;
+              const path = res.data.entry_path || '';
+              // 同步到已保存状态和表单编辑状态
+              this.savedSecurityEntry.entry_enable = enable;
+              this.savedSecurityEntry.entry_path = path;
+              this.securityEntryFormData.entry_enable = enable;
+              this.securityEntryFormData.entry_path = path;
+              // 同步到 localStorage（供开发环境使用）
+              this.syncSecurityPathToStorage(enable, path);
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.api_error'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.api_error'));
+          })
+          .finally(() => {
+            this.securityEntryLoading = false;
+          });
+      },
+      // 保存安全路径到 localStorage，供开发模式的 host.ts / App.vue 使用
+      syncSecurityPathToStorage(enable, path) {
+        try {
+          if (enable && path) {
+            localStorage.setItem('__samwaf_security_path__', '/' + path);
+          } else {
+            localStorage.removeItem('__samwaf_security_path__');
+          }
+        } catch (e) {
+          // localStorage 不可用时忽略
+        }
+      },
+      // 点击保存按钮时才调用 API
+      handleSaveSecurityEntry() {
+        this.securityEntryLoading = true;
+        updateSecurityEntryApi({
+          entry_enable: this.securityEntryFormData.entry_enable,
+          entry_path: this.securityEntryFormData.entry_path
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              const enable = res.data.entry_enable;
+              const path = res.data.entry_path || '';
+              this.savedSecurityEntry.entry_enable = enable;
+              this.savedSecurityEntry.entry_path = path;
+              // 将新路径同步到表单（后端可能自动生成了路径）
+              this.securityEntryFormData.entry_path = path;
+              // 保存到 localStorage
+              this.syncSecurityPathToStorage(enable, path);
+              if (enable) {
+                MessagePlugin.success(this.$t('page.vpconfig.security_entry_save_success'));
+                setTimeout(() => {
+                  window.location.href = this.securityEntryFullUrl;
+                }, 2000);
+              } else {
+                MessagePlugin.success(this.$t('page.vpconfig.security_entry_disable_success'));
+                setTimeout(() => {
+                  window.location.href = `${window.location.protocol}//${window.location.host}/`;
+                }, 2000);
+              }
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.securityEntryLoading = false;
+          });
+      },
+      copySecurityUrl() {
+        const url = this.securityEntryFullUrl;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(() => {
+            MessagePlugin.success(this.$t('page.vpconfig.security_entry_copy_success'));
+          }).catch(() => {
+            this.fallbackCopy(url);
+          });
+        } else {
+          this.fallbackCopy(url);
+        }
+      },
+      fallbackCopy(text) {
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        MessagePlugin.success(this.$t('page.vpconfig.security_entry_copy_success'));
+      },
+      openSecurityUrl() {
+        window.open(this.securityEntryFullUrl, '_blank');
+      },
+      showRegenerateDialog() {
+        this.regenerateDialogVisible = true;
+      },
+      handleRegenerateCode() {
+        this.regenerateDialogVisible = false;
+        this.securityEntryLoading = true;
+        updateSecurityEntryApi({
+          entry_enable: true,
+          entry_path: '' // 传空触发后端重新生成18位随机码
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              const path = res.data.entry_path || '';
+              this.savedSecurityEntry.entry_enable = true;
+              this.savedSecurityEntry.entry_path = path;
+              this.securityEntryFormData.entry_path = path;
+              this.syncSecurityPathToStorage(true, path);
+              MessagePlugin.success(this.$t('page.vpconfig.security_entry_save_success'));
+              setTimeout(() => {
+                window.location.href = this.securityEntryFullUrl;
+              }, 2000);
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.securityEntryLoading = false;
+          });
       },
       handleRestartManager() {
         this.restartDialogVisible = false;
