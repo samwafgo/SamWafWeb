@@ -292,6 +292,12 @@ export default [
         meta: { title: 'menu.system.private_info_title' },
       },
       {
+        path: 'DataRetention',
+        name: 'DataRetention',
+        component: () => import('@/pages/waf/data_retention/index.vue'),
+        meta: { title: 'menu.system.data_retention_title' },
+      },
+      {
         path: 'RumtimeSysteminfo',
         name: 'RumtimeSysteminfo',
         component: () => import('@/pages/waf/sysruntime/index.vue'),
