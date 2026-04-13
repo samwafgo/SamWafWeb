@@ -124,6 +124,10 @@
                 <span style="font-size: 12px; color: var(--td-text-color-secondary); margin-right: 8px;">{{ $t('page.host.static_service_label') }}:</span>
                 <t-tag theme="success" variant="light" size="small">{{ $t('page.host.static_service_label_on') }}</t-tag>
               </div>
+              <div v-if="row.global_host!==1 && (row.unrestricted_port === 0 || row.unrestricted_port === '0')" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span style="font-size: 12px; color: var(--td-text-color-secondary); margin-right: 8px;">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable') }}:</span>
+                <t-tag theme="success" variant="light" size="small">{{ $t('page.host.unrestricted_port.label_unrestricted_port_is_enable_on') }}</t-tag>
+              </div>
             </div>
           </template>
           <template #op="slotProps">
