@@ -38,6 +38,7 @@
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <!--<a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>-->
             <a class="t-button-link" @click="handleManual(slotProps)">{{ $t('page.task.button_manual_execute') }}</a>
+            <a class="t-button-link" @click="handleViewLog(slotProps)">{{ $t('page.task.button_view_log') }}</a>
           </template>
         </t-table>
       </div>
@@ -154,6 +155,32 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
               :onCancel="onCancel">
     </t-dialog>
+
+    <!-- 任务日志对话框 -->
+    <t-dialog
+      :header="$t('page.task.log_dialog_title') + ' - ' + logCurrentTaskName"
+      :visible.sync="logDialogVisible"
+      :width="900"
+      :footer="false"
+      @close="onLogDialogClose"
+    >
+      <div slot="body">
+        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <t-tag v-if="logFilePath" theme="default" variant="outline" size="small">{{ logFilePath }}</t-tag>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+            <t-switch v-model="logAutoRefresh" @change="onAutoRefreshChange">
+              <template #label="{ value }">{{ value ? $t('page.task.log_auto_refresh_on') : $t('page.task.log_auto_refresh') }}</template>
+            </t-switch>
+            <t-button size="small" theme="default" @click="loadLog(true)">{{ $t('page.task.log_refresh') }}</t-button>
+            <t-button size="small" theme="danger" variant="outline" @click="handleClearLog">{{ $t('page.task.log_clear') }}</t-button>
+          </div>
+        </div>
+        <div class="log-container" ref="logContainer">
+          <pre class="log-content" v-if="logContent">{{ logContent }}</pre>
+          <div v-else class="log-empty">{{ $t('page.task.log_empty') }}</div>
+        </div>
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -170,7 +197,8 @@ import {
 } from '@/apis/host';
 
 import {
-  wafTaskListApi,wafTaskDelApi,wafTaskEditApi,wafTaskAddApi,wafTaskDetailApi,wafTaskManualExecApi
+  wafTaskListApi,wafTaskDelApi,wafTaskEditApi,wafTaskAddApi,wafTaskDetailApi,wafTaskManualExecApi,
+  wafTaskLogApi,wafTaskLogClearApi
 } from '@/apis/task.ts';
 
 const INITIAL_DATA = {
@@ -430,7 +458,17 @@ export default Vue.extend({
       deleteIdx: -1,
       guardStatusIdx :-1,
       //主机字典
-      host_dic:{}
+      host_dic:{},
+      // 任务日志
+      logDialogVisible: false,
+      logCurrentTaskMethod: '',
+      logCurrentTaskName: '',
+      logContent: '',
+      logFilePath: '',
+      logOffset: 0,
+      logAutoRefresh: false,
+      logRefreshTimer: null as any,
+      logLoading: false,
     };
   },
   computed: {
@@ -704,6 +742,92 @@ export default Vue.extend({
     handleJumpOnlineUrl(){
       window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/Task.html");
     },
+    // 查看任务日志
+    handleViewLog(e) {
+      const { task_method, task_name } = e.row;
+      this.logCurrentTaskMethod = task_method;
+      this.logCurrentTaskName = task_name || task_method;
+      this.logContent = '';
+      this.logFilePath = '';
+      this.logOffset = 0;
+      this.logAutoRefresh = false;
+      this.logDialogVisible = true;
+      this.$nextTick(() => {
+        this.loadLog(true);
+      });
+    },
+    // 加载日志（reset=true 表示全量加载，false 表示增量加载）
+    loadLog(reset: boolean) {
+      if (!this.logCurrentTaskMethod || this.logLoading) return;
+      this.logLoading = true;
+      const offset = reset ? 0 : this.logOffset;
+      wafTaskLogApi({
+        task_method: this.logCurrentTaskMethod,
+        lines: 500,
+        offset: offset,
+      }).then((res) => {
+        let resdata = res;
+        if (resdata.code === 0) {
+          const data = resdata.data;
+          this.logFilePath = data.log_file || '';
+          this.logOffset = data.new_offset || 0;
+          if (reset) {
+            this.logContent = data.content || '';
+          } else {
+            if (data.content) {
+              this.logContent += data.content;
+            }
+          }
+          this.$nextTick(() => {
+            const container = this.$refs.logContainer as HTMLElement;
+            if (container) {
+              container.scrollTop = container.scrollHeight;
+            }
+          });
+        }
+      }).catch((e: Error) => {
+        console.log(e);
+      }).finally(() => {
+        this.logLoading = false;
+      });
+    },
+    // 自动刷新开关
+    onAutoRefreshChange(val: boolean) {
+      if (val) {
+        this.logRefreshTimer = setInterval(() => {
+          this.loadLog(false);
+        }, 5000);
+      } else {
+        if (this.logRefreshTimer) {
+          clearInterval(this.logRefreshTimer);
+          this.logRefreshTimer = null;
+        }
+      }
+    },
+    // 清空任务日志
+    handleClearLog() {
+      wafTaskLogClearApi({ task_method: this.logCurrentTaskMethod })
+        .then((res) => {
+          let resdata = res;
+          if (resdata.code === 0) {
+            this.$message.success(resdata.msg);
+            this.logContent = '';
+            this.logOffset = 0;
+          } else {
+            this.$message.warning(resdata.msg);
+          }
+        }).catch((e: Error) => {
+          console.log(e);
+        });
+    },
+    // 关闭日志对话框时清理定时器
+    onLogDialogClose() {
+      if (this.logRefreshTimer) {
+        clearInterval(this.logRefreshTimer);
+        this.logRefreshTimer = null;
+      }
+      this.logAutoRefresh = false;
+    },
   },
 });
 </script>
@@ -728,5 +852,32 @@ export default Vue.extend({
 
 .t-button+.t-button {
   margin-left: @spacer;
+}
+
+.log-container {
+  height: 480px;
+  overflow-y: auto;
+  background: #1a1a1a;
+  border-radius: 4px;
+  padding: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+  word-break: break-all;
+
+  .log-content {
+    margin: 0;
+    color: #d4d4d4;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  .log-empty {
+    color: #888;
+    text-align: center;
+    padding-top: 60px;
+  }
 }
 </style>

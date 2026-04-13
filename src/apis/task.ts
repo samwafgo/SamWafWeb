@@ -47,3 +47,19 @@ export function wafTaskManualExecApi(params) {
     params: params
   })
 }
+//获取任务日志
+export function wafTaskLogApi(params) {
+  return request({
+    url: '/wafhost/task/log',
+    method: 'get',
+    params: params
+  })
+}
+//清空任务日志
+export function wafTaskLogClearApi(params) {
+  return request({
+    url: '/wafhost/task/log/clear',
+    method: 'get',
+    params: params
+  })
+}
