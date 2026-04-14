@@ -867,18 +867,34 @@
             this.customHeadersConfigData = { ...INITIAL_CUSTOM_HEADERS };
           }
 
-          // 解析自定义响应头信息配置
-          if (this.formData.custom_response_headers_json) {
+          // 解析自定义响应头信息配置（兼容旧版扁平 headers 和新版 rules 格式）
+          if (this.formData.custom_response_headers_json && this.formData.custom_response_headers_json !== "") {
             try {
-              let that = this;
-              if (that.formData.custom_response_headers_json != "") {
-                const parsedConfig = JSON.parse(that.formData.custom_response_headers_json);
-                that.customResponseHeadersConfigData = {
-                  is_enable_custom_headers: String(parsedConfig.is_enable_custom_headers !== undefined ? parsedConfig.is_enable_custom_headers : 0),
-                  headers: Array.isArray(parsedConfig.headers) ? parsedConfig.headers : []
+              const parsedConfig = JSON.parse(this.formData.custom_response_headers_json);
+              const isEnable = String(parsedConfig.is_enable_custom_headers !== undefined ? parsedConfig.is_enable_custom_headers : 0);
+              // 旧版兼容：若只有 headers 没有 rules（或 rules 为空），转换为 global 规则
+              const hasRules = Array.isArray(parsedConfig.rules) && parsedConfig.rules.length > 0;
+              const hasHeaders = Array.isArray(parsedConfig.headers) && parsedConfig.headers.length > 0;
+              if (hasRules) {
+                this.customResponseHeadersConfigData = {
+                  is_enable_custom_headers: isEnable,
+                  rules: parsedConfig.rules
+                };
+              } else if (hasHeaders) {
+                // 旧格式：有 headers 数组，包装成一条 global 规则
+                this.customResponseHeadersConfigData = {
+                  is_enable_custom_headers: isEnable,
+                  rules: [{
+                    rule_name: '全局默认',
+                    match_type: 'global',
+                    match_value: '',
+                    merge_mode: 'merge',
+                    headers: parsedConfig.headers
+                  }]
                 };
               } else {
-                that.customResponseHeadersConfigData = { ...INITIAL_CUSTOM_RESPONSE_HEADERS };
+                // 无规则无 headers：保留开关状态，rules 为空
+                this.customResponseHeadersConfigData = { is_enable_custom_headers: isEnable, rules: [] };
               }
             } catch (e) {
               console.error("解析custom_response_headers_json失败", e);
@@ -1334,10 +1350,22 @@
             console.log("提交自定义头信息配置:", customHeadersData);
             postdata['custom_headers_json'] = JSON.stringify(customHeadersData);
 
-            // 自定义响应头信息配置
+            // 自定义响应头信息配置（V2 rules 格式，兼容旧版 headers 字段）
+            const crConfig = this.customResponseHeadersConfigData || {};
+            let crRules = crConfig.rules || [];
+            // 防御：若 rules 为空但旧版 headers 存在，自动转为 global 规则（避免数据丢失）
+            if (crRules.length === 0 && Array.isArray(crConfig.headers) && crConfig.headers.length > 0) {
+              crRules = [{
+                rule_name: '全局默认',
+                match_type: 'global',
+                match_value: '',
+                merge_mode: 'merge',
+                headers: crConfig.headers
+              }];
+            }
             const customResponseHeadersData = {
-              is_enable_custom_headers: parseInt(this.customResponseHeadersConfigData.is_enable_custom_headers || INITIAL_CUSTOM_RESPONSE_HEADERS.is_enable_custom_headers),
-              headers: this.customResponseHeadersConfigData.headers || []
+              is_enable_custom_headers: parseInt(crConfig.is_enable_custom_headers || INITIAL_CUSTOM_RESPONSE_HEADERS.is_enable_custom_headers),
+              rules: crRules
             };
             postdata['custom_response_headers_json'] = JSON.stringify(customResponseHeadersData);
 

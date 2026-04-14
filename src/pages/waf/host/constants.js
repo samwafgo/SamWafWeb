@@ -151,5 +151,5 @@ export const INITIAL_CUSTOM_HEADERS = {
 // 自定义响应头信息配置初始化数据
 export const INITIAL_CUSTOM_RESPONSE_HEADERS = {
   is_enable_custom_headers: "0",
-  headers: []
+  rules: []
 };
