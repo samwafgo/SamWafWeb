@@ -63,3 +63,19 @@ export function updateSecurityEntryApi(data) {
     data: data
   })
 }
+//获取通知标题前缀
+export function getNoticeTitleApi(params) {
+  return request({
+    url: 'vipconfig/getNoticeTitle',
+    method: 'get',
+    params: params
+  })
+}
+//更新通知标题前缀
+export function updateNoticeTitleApi(data) {
+  return request({
+    url: 'vipconfig/updateNoticeTitle',
+    method: 'post',
+    data: data
+  })
+}

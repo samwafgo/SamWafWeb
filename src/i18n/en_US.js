@@ -1367,7 +1367,13 @@ export default {
       security_entry_copy_success: "URL copied to clipboard",
       security_entry_save_success: "Security entry saved, redirecting to new URL...",
       security_entry_disable_success: "Security entry disabled, redirecting to root...",
-      security_entry_warning: "After enabling, save the new URL immediately, otherwise you will not be able to access the management interface!"
+      security_entry_warning: "After enabling, save the new URL immediately, otherwise you will not be able to access the management interface!",
+      notice_title_title: "Notification Title Prefix",
+      notice_title_description: "Add a prefix to notification titles to distinguish messages from multiple SamWaf instances. Takes effect immediately without restart.",
+      notice_title_label: "Title Prefix",
+      notice_title_placeholder: "e.g. Production-01",
+      notice_title_tips: "Once set, all notification titles will become [Prefix] Original Title, e.g. [Production-01] Attack Alert",
+      notice_title_save: "Save"
     },
     ssl: {
       alert_message: "SamWaf manages all certificate information",

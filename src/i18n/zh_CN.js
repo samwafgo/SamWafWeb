@@ -1370,7 +1370,13 @@ export default {
       security_entry_copy_success: "URL已复制到剪贴板",
       security_entry_save_success: "安全路径配置已保存，即将跳转到新URL...",
       security_entry_disable_success: "安全路径已关闭，即将跳转到根路径...",
-      security_entry_warning: "启用后请立即保存新URL，否则将无法访问管理界面！"
+      security_entry_warning: "启用后请立即保存新URL，否则将无法访问管理界面！",
+      notice_title_title: "通知标题前缀",
+      notice_title_description: "为通知消息添加标题前缀，便于区分多个 SamWaf 实例发出的消息。立即生效，无需重启。",
+      notice_title_label: "标题前缀",
+      notice_title_placeholder: "请输入通知标题前缀，如：生产服务器-01",
+      notice_title_tips: "设置后，所有通知标题将变为 [前缀] 原标题，例如：[生产服务器-01] 攻击告警通知",
+      notice_title_save: "保存"
     },
     ssl: {
       alert_message: "SamWaf 管理所有证书信息",

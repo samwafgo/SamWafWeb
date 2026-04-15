@@ -185,6 +185,39 @@
         </t-loading>
       </t-card>
 
+      <!-- 通知标题前缀卡片 -->
+      <t-card class="list-card-container">
+        <template #header>
+          <t-row justify="space-between">
+            <div class="card-header-title">
+              <t-space>
+                <div>{{ $t('page.vpconfig.notice_title_title') }}</div>
+                <t-tooltip :content="$t('page.vpconfig.notice_title_description')">
+                  <t-icon name="help-circle" />
+                </t-tooltip>
+              </t-space>
+            </div>
+          </t-row>
+        </template>
+
+        <t-loading :loading="noticeTitleLoading">
+          <t-form :data="noticeTitleFormData" :label-width="180">
+            <t-form-item :label="$t('page.vpconfig.notice_title_label')">
+              <t-input
+                v-model="noticeTitleFormData.notice_title"
+                :placeholder="$t('page.vpconfig.notice_title_placeholder')"
+                style="width: 320px;"
+                clearable
+              />
+              <div class="form-item-tips">{{ $t('page.vpconfig.notice_title_tips') }}</div>
+            </t-form-item>
+            <t-form-item>
+              <t-button theme="primary" @click="handleSaveNoticeTitle">{{ $t('page.vpconfig.notice_title_save') }}</t-button>
+            </t-form-item>
+          </t-form>
+        </t-loading>
+      </t-card>
+
       <!-- 确认对话框 -->
       <t-dialog
         :visible.sync="confirmDialogVisible"
@@ -253,7 +286,7 @@
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi } from '@/apis/vpconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -271,6 +304,10 @@
         restartDialogVisible: false,
         securityEntryLoading: false,
         regenerateDialogVisible: false,
+        noticeTitleLoading: false,
+        noticeTitleFormData: {
+          notice_title: ''
+        },
         // 编辑中的表单值（开关+自定义路径，点保存才提交）
         securityEntryFormData: {
           entry_enable: false,
@@ -351,6 +388,7 @@
       this.fetchData();
       this.fetchSslStatus();
       this.fetchSecurityEntry();
+      this.fetchNoticeTitle();
     },
     methods: {
       fetchData() {
@@ -681,6 +719,43 @@
           })
           .finally(() => {
             this.securityEntryLoading = false;
+          });
+      },
+      fetchNoticeTitle() {
+        this.noticeTitleLoading = true;
+        getNoticeTitleApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.noticeTitleFormData.notice_title = res.data.notice_title || '';
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.api_error'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.api_error'));
+          })
+          .finally(() => {
+            this.noticeTitleLoading = false;
+          });
+      },
+      handleSaveNoticeTitle() {
+        this.noticeTitleLoading = true;
+        updateNoticeTitleApi({
+          notice_title: this.noticeTitleFormData.notice_title
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              this.noticeTitleFormData.notice_title = res.data.notice_title || '';
+              MessagePlugin.success(this.$t('common.tips.save_success'));
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.noticeTitleLoading = false;
           });
       },
       handleRestartManager() {
