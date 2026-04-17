@@ -7,6 +7,8 @@
  */
 export default {
   common: {
+    yes: "是",
+    no: "否",
     confirm: "确认",
     cancel: "取消",
     close: "关闭",
@@ -450,6 +452,8 @@ export default {
       rule_content_desc: '启用后，只有命中该规则才执行CC防护。',
       rule_content_placeholder: '请输入规则内容',
       rule_content_required: '请填写规则内容',
+      skip_global_cc: '跳过全局CC检测',
+      skip_global_cc_desc: '开启后，该站点触发局部CC规则时将不再继续检测全局CC规则',
     },
     visit_log: {
       visit_log: "防御日志",

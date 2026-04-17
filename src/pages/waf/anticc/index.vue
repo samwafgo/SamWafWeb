@@ -43,6 +43,10 @@
             <t-tag theme="warning" v-else-if="row.limit_mode === 'window'">{{ $t('page.cc.limit_mode_window') }}</t-tag>
             <t-tag v-else>{{ $t('page.cc.limit_mode_unknown') }}</t-tag>
           </template>
+          <template #skip_global_cc="{ row }">
+            <t-tag theme="danger" v-if="row.skip_global_cc">{{ $t('common.yes') }}</t-tag>
+            <t-tag theme="default" v-else>{{ $t('common.no') }}</t-tag>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -114,6 +118,11 @@
               <RuleBuilder :hostCode="formData.host_code" @confirm="onRuleBuilderConfirm"
                 @cancel="showRuleBuilderDialog = false" />
             </t-dialog>
+          </t-form-item>
+
+          <t-form-item v-if="!isGlobalHost(formData.host_code)" :label="$t('page.cc.skip_global_cc')" name="skip_global_cc">
+            <t-switch v-model="formData.skip_global_cc"></t-switch>
+            <div class="limit-mode-desc">{{ $t('page.cc.skip_global_cc_desc') }}</div>
           </t-form-item>
 
           <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_ip_minutes">
@@ -192,6 +201,11 @@
             </t-dialog>
           </t-form-item>
 
+          <t-form-item v-if="!isGlobalHost(formEditData.host_code)" :label="$t('page.cc.skip_global_cc')" name="skip_global_cc">
+            <t-switch v-model="formEditData.skip_global_cc"></t-switch>
+            <div class="limit-mode-desc">{{ $t('page.cc.skip_global_cc_desc') }}</div>
+          </t-form-item>
+
           <t-form-item :label="$t('page.cc.lock_minutes')" name="lock_ip_minutes">
             <t-input-number :style="{ width: '480px' }" min="1" v-model="formEditData.lock_ip_minutes"
               :placeholder="$t('common.placeholder') + $t('page.cc.lock_minutes')"></t-input-number>
@@ -247,9 +261,9 @@ const INITIAL_DATA = {
   limit_mode: 'window',
   lock_ip_minutes: 10,
   remarks: '',
-  // 新增：是否启用前置规则 + 规则内容
   is_enable_rule: false,
   rule_content: '',
+  skip_global_cc: false,
 };
 export default Vue.extend({
   name: 'ListBase',
@@ -329,6 +343,12 @@ export default Vue.extend({
           colKey: 'limit_mode',
         },
         {
+          title: this.$t('page.cc.skip_global_cc'),
+          width: 160,
+          ellipsis: true,
+          colKey: 'skip_global_cc',
+        },
+        {
           title: this.$t('common.create_time'),
           width: 200,
           ellipsis: true,
@@ -385,6 +405,10 @@ export default Vue.extend({
   },
 
   methods: {
+    // 判断是否选择了全局网站（全局网站无需也无法跳过全局CC）
+    isGlobalHost(host_code) {
+      return this.host_dic[host_code] === '全局网站:0';
+    },
     // 根据限流模式和参数计算效果提示
     getLimitModeEffectTips(formData) {
       if (!formData.rate || !formData.limit) {
@@ -494,6 +518,7 @@ export default Vue.extend({
         let postdata = {
           ...that.formData
         }
+        console.log('add cc ', postdata)
         wafAntiCCAddApi({
           ...postdata
         })

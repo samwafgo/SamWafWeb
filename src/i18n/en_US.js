@@ -7,6 +7,8 @@
  */
 export default {
   common: {
+    yes: "Yes",
+    no: "No",
     confirm: "Confirm",
     cancel: "Cancel",
     close: "Close",
@@ -450,6 +452,8 @@ export default {
       rule_content_desc: 'When enabled, CC protection runs only if this rule matches. ',
       rule_content_placeholder: 'Enter rule content',
       rule_content_required: 'Please enter rule content',
+      skip_global_cc: 'Skip Global CC Check',
+      skip_global_cc_desc: 'When enabled, global CC rules will not be checked after this site\'s local CC rule is triggered',
     },
     visit_log: {
       visit_log: "Protection Logs",
