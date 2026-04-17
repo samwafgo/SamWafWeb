@@ -11,6 +11,7 @@
       <t-tooltip class="placement top center" :content="$t('page.host.response_compress.prefer_tips')" placement="top"
                  :overlay-style="{ width: '320px' }" show-arrow>
         <t-select v-model="local.prefer" :style="{ width: '280px' }" @change="updateParent">
+          <t-option value="zstd_first" :label="$t('page.host.response_compress.prefer_zstd_first')" />
           <t-option value="br_first" :label="$t('page.host.response_compress.prefer_br_first')" />
           <t-option value="gzip_only" :label="$t('page.host.response_compress.prefer_gzip_only')" />
           <t-option value="br_only" :label="$t('page.host.response_compress.prefer_br_only')" />
