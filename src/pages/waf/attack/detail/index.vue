@@ -7,7 +7,11 @@
     <t-row justify="start" v-if="detail_data.rule!=''">
       <t-col :span="12">
         <t-alert theme="error" :message="detail_data.rule" />
-        <t-link  @click="loadHttpCopyMask">{{ $t('page.visit_log.detail.http_copy_mask') }}</t-link>
+        <t-space size="small" style="margin-top:6px">
+          <t-link @click="loadHttpCopyMask">{{ $t('page.visit_log.detail.http_copy_mask') }}</t-link>
+          <t-link v-if="isOwaspRule" theme="primary" @click="goToOwaspRule">{{ $t('page.visit_log.detail.owasp_view_rule') }}</t-link>
+          <t-link v-if="isOwaspRule" theme="primary" @click="goToOwaspSandbox">{{ $t('page.visit_log.detail.owasp_sandbox_test') }}</t-link>
+        </t-space>
       </t-col>
     </t-row>
 
@@ -341,6 +345,17 @@
     updated() {
       console.log('----updated----')
     },
+    computed: {
+      isOwaspRule() {
+        const rule = (this.detail_data as any).rule || '';
+        return rule.startsWith('OWASP:');
+      },
+      owaspRuleId() {
+        const rule = (this.detail_data as any).rule || '';
+        const m = rule.match(/^OWASP:(\d+)/);
+        return m ? m[1] : '';
+      },
+    },
     watch: {
       '$route.query.req_uuid'(newVal, oldVal) {
         console.log('route.query.req_uuid changed', newVal, oldVal)
@@ -356,6 +371,24 @@
       },
     },
     methods: {
+      goToOwaspRule() {
+        this.$router.push({
+          path: '/sys/OwaspManage',
+          query: { tab: 'rules', rule_id: this.owaspRuleId },
+        });
+      },
+      goToOwaspSandbox() {
+        const d = this.detail_data as any;
+        sessionStorage.setItem('owasp_sandbox_prefill', JSON.stringify({
+          method: d.method || 'GET',
+          url: d.url || '/',
+          headers: d.header || '',
+        }));
+        this.$router.push({
+          path: '/sys/OwaspManage',
+          query: { tab: 'sandbox' },
+        });
+      },
       handleIPExtractIssue() {
         this.ipExtractDialogVisible = true;
         // 获取当前配置

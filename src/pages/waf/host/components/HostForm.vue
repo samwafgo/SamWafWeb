@@ -295,6 +295,9 @@
                   <t-radio value="1">{{$t('common.on')}}</t-radio>
                 </t-radio-group>
               </t-tooltip>
+              <t-link theme="primary" size="small" style="margin-left:12px" @click="$router.push({name:'OwaspManage'})">
+                {{ $t('page.host.owasp_manage_link') }} <t-icon name="jump" />
+              </t-link>
             </t-form-item>
           </t-tab-panel>
 

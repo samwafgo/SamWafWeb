@@ -298,6 +298,12 @@ export default [
         meta: { title: 'menu.system.data_retention_title' },
       },
       {
+        path: 'OwaspManage',
+        name: 'OwaspManage',
+        component: () => import('@/pages/waf/owasp/index.vue'),
+        meta: { title: 'menu.system.owasp_title' },
+      },
+      {
         path: 'RumtimeSysteminfo',
         name: 'RumtimeSysteminfo',
         component: () => import('@/pages/waf/sysruntime/index.vue'),

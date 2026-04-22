@@ -29,9 +29,16 @@
                   v-model="inputMessage"
                   :placeholder="$t('page.gpt.chat.chat_placeholder')"
                   name="description"
-                  :autosize="{ minRows: 3,maxRows: 4 }" @enter="sendMessage">
+                  :autosize="{ minRows: 3,maxRows: 4 }"
+                  :disabled="isStreaming"
+                  @enter="!isStreaming && sendMessage()">
                 </t-textarea>
-                <t-button @click="sendMessage">{{ $t('page.gpt.chat.chat_send') }}</t-button>
+                <t-button v-if="!isStreaming" theme="primary" @click="sendMessage">
+                  {{ $t('page.gpt.chat.chat_send') }}
+                </t-button>
+                <t-button v-else theme="danger" variant="outline" @click="stopStreaming">
+                  {{ $t('page.gpt.chat.chat_stop') }}
+                </t-button>
               </div>
             </template>
           </t-drawer>
@@ -108,6 +115,9 @@ export default Vue.extend({
       inputMessage: '',
       loading: false,
       token: "your_token",  // 你需要动态传入token
+      isStreaming: false,          // 是否正在流式输出
+      currentCtrl: null as any,   // AbortController，用于中止流
+      streamAborted: false,       // 标记是用户主动中止（区别于网络错误）
     };
   },
   computed: {
@@ -193,6 +203,9 @@ export default Vue.extend({
     },
     askQuestion(q: string) {
       const ctrl = new AbortController();
+      this.currentCtrl = ctrl;
+      this.isStreaming = true;
+      this.streamAborted = false;
       const answerIndex = this.questionList.length - 1;
 
       fetchChatStream({
@@ -201,23 +214,53 @@ export default Vue.extend({
         ctrl,
         onSuccess: (assistantMessage) => {
           const answer = this.questionList[answerIndex];
-          //console.log("onSuccess",assistantMessage)
           answer.content += assistantMessage.content;
           this.$set(this.questionList, answerIndex, { ...answer });
           this.goChatBottom();
-
         },
         onComplete: () => {
+          this.isStreaming = false;
+          this.currentCtrl = null;
           const answer = this.questionList[answerIndex];
-          answer.loading = false;
-          this.$set(this.questionList, answerIndex, { ...answer });
-          this.goChatBottom();
+          if (answer) {
+            answer.loading = false;
+            this.$set(this.questionList, answerIndex, { ...answer });
+            this.goChatBottom();
+          }
         },
         onError: (errorMsg) => {
-          this.$message.error(errorMsg);
-          this.questionList.splice(answerIndex, 1); // 移除加载中的消息
-        }
+          this.isStreaming = false;
+          this.currentCtrl = null;
+          const answer = this.questionList[answerIndex];
+          if (this.streamAborted) {
+            // 用户主动中止：保留已输出内容，标记为已停止
+            if (answer) {
+              answer.loading = false;
+              if (!answer.content) answer.content = '_(已中止)_';
+              this.$set(this.questionList, answerIndex, { ...answer });
+              this.goChatBottom();
+            }
+          } else {
+            // 真实错误：在气泡里展示错误，不删消息，让用户看到
+            this.$message.error(errorMsg);
+            if (answer) {
+              answer.loading = false;
+              answer.content = answer.content || ('⚠️ ' + errorMsg);
+              this.$set(this.questionList, answerIndex, { ...answer });
+              this.goChatBottom();
+            }
+          }
+          this.streamAborted = false;
+        },
       });
+    },
+    stopStreaming() {
+      if (this.currentCtrl) {
+        this.streamAborted = true;     // 先标记，让 onError 知道这是主动中止
+        this.currentCtrl.abort();
+        this.currentCtrl = null;
+      }
+      this.isStreaming = false;
     },
 
     goChatBottom() {
