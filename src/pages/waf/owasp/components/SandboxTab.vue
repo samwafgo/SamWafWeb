@@ -543,7 +543,7 @@ export default Vue.extend({
       owaspRuleOverrideApi({
         id: this.overrideDialog.ruleId,
         source_file: this.overrideDialog.sourceFile,
-        custom_content: this.overrideDialog.content,
+        content: this.overrideDialog.content,
       })
         .then((res: any) => {
           if (res.code === 0) {
