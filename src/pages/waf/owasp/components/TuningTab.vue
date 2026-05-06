@@ -230,10 +230,21 @@ import Vue from 'vue';
 import { owaspTuningGetApi, owaspTuningSetApi, owaspCRSVarsGetApi, owaspCRSVarSetApi, owaspCRSVarDeleteApi } from '@/apis/owasp';
 
 // 内置常用 CRS 事务变量说明（key 不含 tx. 前缀）
+//
+// 格式说明：
+//   - 规则通过 @within 做子串匹配。若规则先将 input 用管道符包裹（如 |utf-8|），
+//     则允许列表里每个值也必须用管道符包裹（|val| 空格 |val2|），否则首尾项将被误判。
+//   - 规则不包裹 input（如 allowed_methods / allowed_http_versions）时，
+//     允许列表用空格分隔即可。
 const KNOWN_CRS_VARS = [
-  { key: 'allowed_methods', default: 'GET HEAD POST OPTIONS', desc: '允许的 HTTP 方法（空格分隔）', rules: '911100' },
-  { key: 'allowed_request_content_type', default: 'application/x-www-form-urlencoded|multipart/form-data|text/xml|application/xml|application/json', desc: '允许的请求 Content-Type（竖线分隔）', rules: '920420' },
-  { key: 'allowed_http_versions', default: 'HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0', desc: '允许的 HTTP 协议版本', rules: '920430' },
+  // input 不包裹，空格分隔即可
+  { key: 'allowed_methods', default: 'GET HEAD POST OPTIONS PATCH PUT DELETE', desc: '允许的 HTTP 方法（空格分隔）', rules: '911100' },
+  // input 被包裹为 |mime-type|，列表每项也必须用 |...| 包裹，项间空格分隔
+  { key: 'allowed_request_content_type', default: '|application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/json| |application/ld+json| |application/x-json| |text/plain| |application/octet-stream|', desc: '允许的请求 Content-Type（每项用 | 包裹，项间空格分隔）', rules: '920420' },
+  // input 被包裹为 |charset|，列表每项也必须用 |...| 包裹
+  { key: 'allowed_request_content_type_charset', default: '|utf-8| |utf-16| |iso-8859-1| |iso-8859-15| |windows-1252| |us-ascii| |gbk| |gb2312| |big5|', desc: '允许的 Content-Type 字符集（每项用 | 包裹，项间空格分隔）', rules: '920480' },
+  // input 不包裹，空格分隔即可
+  { key: 'allowed_http_versions', default: 'HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0 HTTP/3 HTTP/3.0', desc: '允许的 HTTP 协议版本（空格分隔）', rules: '920430' },
   { key: 'max_num_args', default: '255', desc: '请求参数最大数量', rules: '920380' },
   { key: 'arg_name_length', default: '100', desc: '单个参数名最大长度（字节）', rules: '920370' },
   { key: 'arg_length', default: '400', desc: '单个参数值最大长度（字节）', rules: '920370' },
