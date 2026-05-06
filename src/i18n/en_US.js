@@ -84,7 +84,19 @@ export default {
     unit_count: "times",
     confirm_unban: "Confirm Unban",
     confirm_unban_content: "Are you sure you want to unban IP {ip}?",
-    op: "Operation"
+    op: "Operation",
+    batch_delete: {
+      title: "Batch Delete",
+      warning: "Deletion is irreversible, please proceed with caution",
+      delete_mode_label: "Delete mode:",
+      mode_tag_only: "Delete tag statistics only (keep raw logs)",
+      mode_with_logs: "Also delete all related logs (may take longer for large datasets)",
+      deleting: "Deleting {progress}/{total}",
+      confirm_btn: "Confirm Delete",
+      select_warning: "Please select at least one item",
+      success: "Successfully deleted {count} items",
+      partial_success: "Deletion complete: {success} succeeded, {fail} failed",
+    },
   },
   login: {
     login_title: "Login",
@@ -586,6 +598,9 @@ export default {
       latest_time: "Latest Access Time",
       ip_total_tag: "Triggered Rule Set",
       attack_ip_visit_detail_list_header: "Access IP Details",
+      batch_delete_header: "Batch Delete Rule Tags",
+      batch_delete_select_label: "Select rule tags to delete:",
+      batch_delete_select_placeholder: "Select rule tags (multiple allowed)",
     },
     center: {
       switch_local: "Switch to Local (No Remote Access)",

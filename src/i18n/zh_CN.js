@@ -84,7 +84,19 @@ export default {
     unit_count: "次",
     confirm_unban: "确认解封",
     confirm_unban_content: "确认解封IP {ip} 吗？",
-    op: "操作"
+    op: "操作",
+    batch_delete: {
+      title: "批量删除",
+      warning: "删除操作不可恢复，请谨慎选择",
+      delete_mode_label: "删除方式：",
+      mode_tag_only: "仅删除标签统计数据（保留原始日志）",
+      mode_with_logs: "同时删除所有相关日志（数据量大时耗时较长）",
+      deleting: "删除中 {progress}/{total}",
+      confirm_btn: "确认删除",
+      select_warning: "请至少选择一项",
+      success: "成功删除 {count} 项",
+      partial_success: "删除完成：成功 {success} 项，失败 {fail} 项",
+    },
   },
   login: {
     login_title: "登录",
@@ -587,6 +599,9 @@ export default {
       ip_total_tag: "触发规则集合",
       attack_ip_visit_detail_list_header: "访问IP明细",
       log_only_mode: "日志模式",
+      batch_delete_header: "批量删除规则标签",
+      batch_delete_select_label: "选择要删除的规则标签：",
+      batch_delete_select_placeholder: "请选择规则标签（可多选）",
     },
     center: {
       switch_local: "切换本机（不进行远程访问）",

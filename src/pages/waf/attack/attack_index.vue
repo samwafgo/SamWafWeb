@@ -28,6 +28,7 @@
             <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }} </t-button>
             <t-button type="reset" variant="base" theme="default"> {{ $t('common.reset') }}  </t-button>
             <t-button v-if="attackSearchformData.rule && attackSearchformData.rule !== ''" theme="danger" variant="outline" @click="handleDeleteTag"> {{ $t('common.delete') }} </t-button>
+            <t-button theme="danger" variant="outline" @click="handleBatchDeleteTag"> {{ $t('common.batch_delete.title') }} </t-button>
           </t-form-item>
         </t-form>
       </t-row>
@@ -59,6 +60,40 @@
         </t-table>
       </div>
     </t-card>
+
+    <t-dialog
+      :header="$t('page.attack_log.batch_delete_header')"
+      :visible.sync="batchDeleteVisible"
+      width="520px"
+      :confirmBtn="batchDeleteLoading ? { content: $t('common.batch_delete.deleting', { progress: batchDeleteProgress, total: batchDeleteTags.length }), loading: true, disabled: true } : { content: $t('common.batch_delete.confirm_btn'), theme: 'danger' }"
+      :cancelBtn="{ content: $t('common.cancel'), disabled: batchDeleteLoading }"
+      :closeOnEscKeydown="!batchDeleteLoading"
+      :closeOnOverlayClick="!batchDeleteLoading"
+      :onConfirm="confirmBatchDelete"
+      :onClose="() => { if (!batchDeleteLoading) batchDeleteVisible = false }"
+    >
+      <div style="padding: 8px 0;">
+        <t-alert theme="warning" :message="$t('common.batch_delete.warning')" style="margin-bottom: 16px;" />
+        <div style="margin-bottom: 16px;">
+          <div style="font-weight: 500; margin-bottom: 8px;">{{ $t('page.attack_log.batch_delete_select_label') }}</div>
+          <t-select
+            v-model="batchDeleteTags"
+            :options="attackTagsForBatch"
+            multiple
+            :style="{ width: '100%' }"
+            :placeholder="$t('page.attack_log.batch_delete_select_placeholder')"
+            clearable
+          />
+        </div>
+        <div>
+          <div style="font-weight: 500; margin-bottom: 8px;">{{ $t('common.batch_delete.delete_mode_label') }}</div>
+          <t-radio-group v-model="batchDeleteMode" style="display: flex; flex-direction: column; gap: 8px;">
+            <t-radio value="tag_only">{{ $t('common.batch_delete.mode_tag_only') }}</t-radio>
+            <t-radio value="with_logs"><span style="color: #e34d59;">{{ $t('common.batch_delete.mode_with_logs') }}</span></t-radio>
+          </t-radio-group>
+        </div>
+      </div>
+    </t-dialog>
 
     <t-dialog
       :header="$t('page.attack_log.attack_ip_visit_detail_list_header')"
@@ -182,11 +217,19 @@ export default Vue.extend({
       attackIpVisible:false,//访问明细
       trans_to_parent_ip:"",//传递给
       deleteLogMode: 'tag_only',//删除模式
+      batchDeleteVisible: false,
+      batchDeleteTags: [],
+      batchDeleteMode: 'tag_only',
+      batchDeleteLoading: false,
+      batchDeleteProgress: 0,
     };
   },
   computed: {
     offsetTop() {
       return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
+    },
+    attackTagsForBatch() {
+      return this.attackTags.filter((t: any) => t.value !== '');
     },
     columnControllerConfig() {
       return {
@@ -473,6 +516,50 @@ export default Vue.extend({
           console.log(e);
           that.$message.error('删除失败: ' + e.message);
         })
+    },
+    handleBatchDeleteTag() {
+      this.batchDeleteTags = [];
+      this.batchDeleteMode = 'tag_only';
+      this.batchDeleteProgress = 0;
+      this.batchDeleteLoading = false;
+      this.batchDeleteVisible = true;
+    },
+    async confirmBatchDelete() {
+      if (this.batchDeleteTags.length === 0) {
+        this.$message.warning(this.$t('common.batch_delete.select_warning'));
+        return;
+      }
+      let that = this;
+      that.batchDeleteLoading = true;
+      that.batchDeleteProgress = 0;
+      let successCount = 0;
+      let failCount = 0;
+      for (const tagName of that.batchDeleteTags) {
+        try {
+          const res: any = await deleteTagByNameApi({
+            tag_name: tagName,
+            delete_logs: that.batchDeleteMode === 'with_logs',
+          });
+          if (res.code === 0) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (e) {
+          failCount++;
+        }
+        that.batchDeleteProgress++;
+      }
+      that.batchDeleteLoading = false;
+      that.batchDeleteVisible = false;
+      if (failCount === 0) {
+        that.$message.success(that.$t('common.batch_delete.success', { count: successCount }));
+      } else {
+        that.$message.warning(that.$t('common.batch_delete.partial_success', { success: successCount, fail: failCount }));
+      }
+      that.attackSearchformData.rule = '';
+      that.getIpTags();
+      that.getList('');
     },
     //end meathod
   },
