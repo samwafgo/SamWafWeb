@@ -318,7 +318,7 @@ export default Vue.extend({
         this.selectedRowKeys.splice(selectedIdx, 1);
       }
       this.confirmVisible = false;
-      this.$message.success('删除成功');
+      this.$message.success(this.$t('common.tips.delete_success'));
       this.resetIdx();
     },
     onCancel() {
@@ -429,19 +429,17 @@ export default Vue.extend({
       let that = this
       const currentTag = this.attackSearchformData.rule
       if (!currentTag) {
-        this.$message.warning('请选择要删除的规则标签');
+        this.$message.warning(this.$t('page.attack_log.select_tag_warning'));
         return;
       }
 
-      // 第一步：确认是否删除标签
       const dialog1 = this.$dialog.confirm({
-        header: '删除规则标签',
-        body: '确定要删除规则标签 "' + currentTag + '" 吗？',
-        confirmBtn: '下一步',
-        cancelBtn: '取消',
+        header: this.$t('page.attack_log.delete_tag_header'),
+        body: this.$t('page.attack_log.delete_tag_confirm', { tag: currentTag }),
+        confirmBtn: this.$t('common.next_step'),
+        cancelBtn: this.$t('common.cancel'),
         onConfirm: ({ e }) => {
           dialog1.destroy();
-          // 第二步：询问是否连带删除日志
           that.askDeleteLogsMode(currentTag);
         },
         onClose: ({ e, trigger }) => {
@@ -452,34 +450,31 @@ export default Vue.extend({
     // 询问是否连带删除日志
     askDeleteLogsMode(tagName){
       let that = this
-      
+
       const dialog2 = this.$dialog.confirm({
-        header: '是否连带删除相关日志？',
-        body: '请选择删除方式：\n\n【仅删除标签】：只删除标签统计数据，不影响原始日志\n\n【同时删除日志】：删除标签和所有相关攻击日志\n   ⚠️ 警告：数据量大时需要较长时间，且不可恢复！',
+        header: this.$t('page.attack_log.delete_mode_dialog_header'),
+        body: this.$t('page.attack_log.delete_mode_dialog_body'),
         confirmBtn: {
-          content: '同时删除日志',
-          theme: 'danger',  // 红色危险按钮
+          content: this.$t('common.batch_delete.mode_with_logs_btn'),
+          theme: 'danger',
           variant: 'base'
         },
         cancelBtn: {
-          content: '仅删除标签',
-          theme: 'default',  // 灰色普通按钮
+          content: this.$t('common.batch_delete.mode_tag_only_btn'),
+          theme: 'default',
           variant: 'outline'
         },
         theme: 'warning',
         onConfirm: ({ e }) => {
-          // 选择同时删除日志
           dialog2.destroy();
           that.confirmDeleteTag(tagName, 'with_logs');
         },
         onCancel: ({ e }) => {
-          // 选择仅删除标签
           dialog2.destroy();
           that.confirmDeleteTag(tagName, 'tag_only');
         },
         onClose: ({ e, trigger }) => {
           if (trigger === 'cancel') {
-            // 点击取消按钮，执行仅删除标签
             that.confirmDeleteTag(tagName, 'tag_only');
           }
           dialog2.hide();
@@ -489,9 +484,9 @@ export default Vue.extend({
     // 确认删除tag
     confirmDeleteTag(tagName, deleteMode) {
       let that = this
-      
-      that.$message.loading('正在删除，请稍候...', 0);
-      
+
+      that.$message.loading(that.$t('common.deleting'), 0);
+
       deleteTagByNameApi({
         tag_name: tagName,
         delete_logs: deleteMode === 'with_logs'
@@ -501,20 +496,18 @@ export default Vue.extend({
           let resdata = res
           console.log(resdata)
           if (resdata.code === 0) {
-            that.$message.success(resdata.msg || '删除成功');
-            // 重置搜索条件
+            that.$message.success(resdata.msg || that.$t('common.tips.delete_success'));
             that.attackSearchformData.rule = ''
-            // 重新加载标签列表和数据列表
             that.getIpTags()
             that.getList('')
           } else {
-            that.$message.warning(resdata.msg || '删除失败');
+            that.$message.warning(resdata.msg || that.$t('common.tips.delete_failed'));
           }
         })
         .catch((e: Error) => {
           that.$message.closeAll();
           console.log(e);
-          that.$message.error('删除失败: ' + e.message);
+          that.$message.error(that.$t('common.tips.delete_failed_msg', { msg: e.message }));
         })
     },
     handleBatchDeleteTag() {
