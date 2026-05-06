@@ -69,6 +69,8 @@ instance.interceptors.request.use(
       config.data = AesEncrypt(data) // 加密请求参数
     }
     console.log("request",config)*/
+    config.headers['X-Request-Time'] = Math.floor(Date.now() / 1000).toString()
+    config.headers['X-Request-Id'] = crypto.randomUUID()
     return config
   },
   error => {
