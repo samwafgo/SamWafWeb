@@ -504,6 +504,9 @@
               if (resdata.code === 0) {
                 that.$message.success(resdata.msg);
                 that.resetPwdFormVisible = false;
+                that.formResetPwdData.login_super_password = ''
+                that.formResetPwdData.login_new_password = ''
+                that.formResetPwdData.login_new_password2 = ''
                 that.pagination.current = 1
                 that.getList("")
               } else {
@@ -565,10 +568,6 @@
         this.formEditData = {...INITIAL_DATA};
       },
       handleClickDelete(row) {
-        if(row.row.login_account=="admin"){
-            alert(this.$t('page.account.admin_delete_warning'))
-            return;
-        }
         console.log(row)
         this.deleteIdx = row.rowIndex;
         this.confirmVisible = true;
@@ -647,8 +646,11 @@
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
-              that.formResetPwdData.login_account =  resdata.data.login_account
+              that.formResetPwdData.login_account = resdata.data.login_account
               that.formResetPwdData.id = id
+              that.formResetPwdData.login_super_password = ''
+              that.formResetPwdData.login_new_password = ''
+              that.formResetPwdData.login_new_password2 = ''
             }
           })
           .catch((e: Error) => {
