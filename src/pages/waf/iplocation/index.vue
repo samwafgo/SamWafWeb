@@ -329,6 +329,8 @@ export default Vue.extend({
       return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     },
     beforeUpload(file) {
+      this.uploadHeaders['X-Request-Time'] = Math.floor(Date.now() / 1000).toString()
+      this.uploadHeaders['X-Request-Id'] = crypto.randomUUID()
       const isValid = file.name.endsWith('.xdb') || file.name.endsWith('.mmdb');
       if (!isValid) {
         MessagePlugin.error(this.$t('page.iplocation.invalid_file_type'));

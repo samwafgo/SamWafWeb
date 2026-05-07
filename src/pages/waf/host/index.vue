@@ -185,7 +185,7 @@
         <t-radio value="1">{{$t('page.host.upload.import_remain_code')}}</t-radio>
       </t-radio-group>
       <t-upload :action="fileUploadUrl" :tips="tips" :headers="fileHeader" v-model="files" @fail="handleFail"
-                :data="uploadParams"
+                :data="uploadParams" :before-upload="beforeUpload"
                 @success="onSuccess" theme="file-input" :placeholder="$t('page.host.upload_tips')"></t-upload>
     </t-dialog>
 
@@ -704,7 +704,7 @@ export default Vue.extend({
     });
     this.baseUrl = getBaseUrl()
     this.fileUploadUrl = `${this.baseUrl  }/import`
-    this.fileHeader['X-Token'] = localStorage.getItem("access_token") ? localStorage.getItem("access_token") : "" // 此处换成自己获取回来的token，通常存在在cookie或者store里面
+    this.fileHeader['X-Token'] = localStorage.getItem("access_token") ? localStorage.getItem("access_token") : ""
     console.log(this.baseUrl)
     if (this.$route.query != null && this.$route.query.sourcePage != "") {
       this.sourcePage = this.$route.query.sourcePage;
@@ -1168,6 +1168,11 @@ export default Vue.extend({
     },
     handleFail({file}) {
       this.$message.error(`文件 ${file.name} 上传失败`);
+    },
+    beforeUpload() {
+      this.fileHeader['X-Request-Time'] = Math.floor(Date.now() / 1000).toString()
+      this.fileHeader['X-Request-Id'] = crypto.randomUUID()
+      return true
     },
     onSuccess(e) {
 
