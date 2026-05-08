@@ -11,3 +11,9 @@ README.html
 .idea
 yarn.lock
 
+*.log
+*.exe
+/.trae/
+/.cursor/
+/.claude/
+/.data/
