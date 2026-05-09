@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 import proxy from '../config/host';
 import router from '../router/index';
 import { AesDecrypt, AesEncrypt, isObject, isInList } from './usuallytool'
@@ -70,7 +71,7 @@ instance.interceptors.request.use(
     }
     console.log("request",config)*/
     config.headers['X-Request-Time'] = Math.floor(Date.now() / 1000).toString()
-    config.headers['X-Request-Id'] = crypto.randomUUID()
+    config.headers['X-Request-Id'] = uuidv4()
     return config
   },
   error => {

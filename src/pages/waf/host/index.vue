@@ -1171,7 +1171,7 @@ export default Vue.extend({
     },
     beforeUpload() {
       this.fileHeader['X-Request-Time'] = Math.floor(Date.now() / 1000).toString()
-      this.fileHeader['X-Request-Id'] = crypto.randomUUID()
+      this.fileHeader['X-Request-Id'] = uuidv4()
       return true
     },
     onSuccess(e) {

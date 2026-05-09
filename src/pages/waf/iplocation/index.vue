@@ -156,6 +156,7 @@ import { MessagePlugin } from 'tdesign-vue';
 import { getIPDBStatusApi, uploadIPDBFileApi, reloadIPDBApi, testIPLookupApi } from '@/apis/iplocation';
 import { get_detail_by_item_api, edit_system_config_by_item_api } from '@/apis/systemconfig';
 import { getBaseUrl } from '@/utils/usuallytool';
+import { v4 as uuidv4 } from 'uuid';
 
 export default Vue.extend({
   name: 'IPLocation',
@@ -330,7 +331,7 @@ export default Vue.extend({
     },
     beforeUpload(file) {
       this.uploadHeaders['X-Request-Time'] = Math.floor(Date.now() / 1000).toString()
-      this.uploadHeaders['X-Request-Id'] = crypto.randomUUID()
+      this.uploadHeaders['X-Request-Id'] = uuidv4()
       const isValid = file.name.endsWith('.xdb') || file.name.endsWith('.mmdb');
       if (!isValid) {
         MessagePlugin.error(this.$t('page.iplocation.invalid_file_type'));

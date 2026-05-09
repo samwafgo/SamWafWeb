@@ -8,6 +8,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
 
@@ -15,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.20.4]
+        node-version: [22]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -46,39 +49,20 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist.zip
-          path: |
-            dist.zip
+          path: dist.zip
+
       - name: Upload artifacts dist.tar.gz
         uses: actions/upload-artifact@v4
         with:
           name: dist.tar.gz
-          path: |
+          path: dist.tar.gz
+
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ env.VERSION }}
+          files: |
+            dist.zip
             dist.tar.gz
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ env.VERSION }}
-          release_name: v${{ env.VERSION }}
-          draft: false
-          prerelease: false
-      - name: Upload Release Assets dist.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist.zip
-          asset_name: dist.zip
-          asset_content_type: application/octet-stream
-      - name: Upload Release Assets dist.tar.gz
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist.tar.gz
-          asset_name: dist.tar.gz
-          asset_content_type: application/octet-stream
