@@ -35,6 +35,30 @@
 
     </t-dialog>
     
+    <!-- 版本回退对话框 -->
+    <t-dialog width="680px" :visible.sync="rollback_visible" header="版本回退" :confirm-btn="null" :cancel-btn="null">
+      <t-alert theme="warning" style="margin-bottom:16px">
+        <template #message>回退后服务将自动重启，请确认操作</template>
+      </t-alert>
+      <div v-if="rollback_loading" style="text-align:center;padding:24px;color:#646a73">加载中...</div>
+      <t-table
+        v-else
+        :data="rollback_list"
+        :columns="rollbackColumns"
+        row-key="file_name"
+        size="small"
+        :selected-row-keys="rollback_selected ? [rollback_selected.file_name] : []"
+        @select-change="onRollbackSelect"
+        select-on-row-click
+      />
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
+        <t-button theme="default" @click="rollback_visible=false">取消</t-button>
+        <t-button theme="danger" :disabled="!rollback_selected || isRollbackLoading" :loading="isRollbackLoading" @click="handleConfirmRollback">
+          确认回退到 {{ rollback_selected ? rollback_selected.version : '' }}
+        </t-button>
+      </div>
+    </t-dialog>
+
     <!-- 微信公众号二维码对话框 -->
     <t-dialog width="800px" :visible.sync="wechat_visible" :header="$t('topNav.wechat')" :confirmBtn="null" :cancelBtn="null">
       <div class="wechat-qr-container">
@@ -121,6 +145,9 @@
                 <t-dropdown-item class="operations-dropdown-container-item" :disabled="isUpdateloading" @click="checkVersion('manual')">
                   <RotateIcon /> {{ $t('topNav.dropdown_update')}}
                 </t-dropdown-item>
+                <t-dropdown-item class="operations-dropdown-container-item" @click="openRollbackDialog">
+                  <RollbackIcon /> 版本回退
+                </t-dropdown-item>
                 <t-dropdown-item class="operations-dropdown-container-item" :disabled="isResetloading" @click="resetServer">
                   <ArrowUpDownCircleIcon />{{ $t('topNav.dropdown_reboot_waf')}}
                 </t-dropdown-item>
@@ -166,14 +193,15 @@
     NotificationErrorIcon,
     ArrowUpDownCircleIcon,
     AddIcon,
-    LogoWechatStrokeIcon
+    LogoWechatStrokeIcon,
+    RollbackIcon
   } from 'tdesign-icons-vue';
   import {
     prefix
   } from '@/config/global';
   import LogoFull from '@/assets/assets-logo-full.svg';
   import {
-    CheckVersionApi,DoUpdateApi
+    CheckVersionApi, DoUpdateApi, GetRollbackListApi, DoRollbackApi
   } from '@/apis/sysinfo';
   import { marked } from 'marked'; // 导入 marked
 
@@ -202,7 +230,8 @@
       NotificationErrorIcon,
       ArrowUpDownCircleIcon,
       AddIcon,
-      LogoWechatStrokeIcon
+      LogoWechatStrokeIcon,
+      RollbackIcon
     },
     props: {
       theme: String,
@@ -248,6 +277,19 @@
         /**控制中心相关**/
         hasClientServer:false,
         current_server:"",
+        /**版本回退**/
+        rollback_visible: false,
+        rollback_loading: false,
+        isRollbackLoading: false,
+        rollback_list: [],
+        rollback_selected: null,
+        rollbackColumns: [
+          { colKey: 'row-select', type: 'single', width: 48 },
+          { colKey: 'version', title: '版本', width: 120 },
+          { colKey: 'backup_time', title: '备份时间', width: 180, cell: (h, { row }) => new Date(row.backup_time).toLocaleString('zh-CN') },
+          { colKey: 'file_size', title: '大小', width: 90, cell: (h, { row }) => (row.file_size / 1024 / 1024).toFixed(2) + ' MB' },
+          { colKey: 'file_name', title: '文件名' },
+        ],
         /**语言问题**/
         langValue:"zh_CN",
         langOptions: [
@@ -454,6 +496,50 @@
           // 非beta版本直接更新
           this.handleDoUpdate();
         }
+      },
+      openRollbackDialog() {
+        this.rollback_visible = true;
+        this.rollback_selected = null;
+        this.rollback_loading = true;
+        GetRollbackListApi().then((res: any) => {
+          if (res.code === 0) {
+            this.rollback_list = res.data || [];
+          } else {
+            this.$message.warning(res.msg || '获取备份列表失败');
+          }
+        }).catch(() => {
+          this.$message.warning('获取备份列表失败');
+        }).finally(() => {
+          this.rollback_loading = false;
+        });
+      },
+      onRollbackSelect(selectedKeys: any[], { selectedRowData }: any) {
+        this.rollback_selected = selectedRowData[0] || null;
+      },
+      handleConfirmRollback() {
+        if (!this.rollback_selected) return;
+        const that = this;
+        const target = this.rollback_selected;
+        this.$dialog.confirm({
+          header: '确认回退版本',
+          body: `确定将程序回退到版本 ${target.version}？\n回退后服务将自动重启，请耐心等待。`,
+          confirmBtn: { theme: 'danger', content: '确认回退' },
+          onConfirm: () => {
+            that.isRollbackLoading = true;
+            DoRollbackApi({ version: target.version }).then((res: any) => {
+              if (res.code === 0) {
+                that.$message.success(res.msg || '已发起回退，等待重启通知');
+                that.rollback_visible = false;
+              } else {
+                that.$message.warning(res.msg || '回退失败');
+              }
+            }).catch(() => {
+              that.$message.warning('回退请求失败');
+            }).finally(() => {
+              that.isRollbackLoading = false;
+            });
+          },
+        });
       },
       handleDoUpdate(){
           //处理升级

@@ -1,5 +1,20 @@
 <template>
-  <router-view :class="[mode]" />
+  <div>
+    <router-view :class="[mode]" />
+    <!-- 前端运行异常 → 应急恢复对话框 -->
+    <t-dialog
+      :visible.sync="showEmergencyDialog"
+      header="检测到前端运行异常"
+      confirm-btn="进入紧急模式"
+      cancel-btn="忽略"
+      @confirm="enterEmergencyMode"
+      @cancel="showEmergencyDialog = false"
+    >
+      <p>检测到前端运行异常，可能影响正常操作。</p>
+      <t-alert theme="warning" :message="emergencyError" style="margin:12px 0" />
+      <p>[适用于升级异常场景]是否进入紧急恢复模式？该模式可在不依赖前端的情况下执行版本回退。</p>
+    </t-dialog>
+  </div>
 </template>
 
 <script>
@@ -19,20 +34,44 @@ export default Vue.extend({
   },
   data() {
     return {
-      ws: null, // ws
-      disConnectTimer: null, // 断连计时
+      ws: null,
+      disConnectTimer: null,
       mydialog: null,
-
+      showEmergencyDialog: false,
+      emergencyDialogShown: false,
+      emergencyError: '',
     }
   },
   mounted() {
     this.$store.dispatch('setting/changeTheme', { ...config });
+    if (localStorage.getItem('access_token')) {
+      this.$store.dispatch('sysparams/fetchParams');
+    }
+    this.setupGlobalErrorHandler();
   },
   created() {
     console.log("App Created")
     this.initWebSocket();
   },
   methods:{
+      setupGlobalErrorHandler() {
+        const handle = (msg) => {
+          if (this.emergencyDialogShown) return;
+          if (!localStorage.getItem('access_token')) return;
+          const path = this.$store.state.sysparams?.emergencyPath;
+          if (!path) return;
+          this.emergencyDialogShown = true;
+          this.emergencyError = String(msg);
+          this.showEmergencyDialog = true;
+        };
+        window.onerror = (msg, src, line, col, err) => handle(err?.message || msg);
+        window.addEventListener('unhandledrejection', (e) => handle(e.reason?.message || e.reason));
+      },
+      enterEmergencyMode() {
+        const path = this.$store.state.sysparams?.emergencyPath;
+        if (path) window.location.href = path + '?back=' + encodeURIComponent(window.location.href);
+        this.showEmergencyDialog = false;
+      },
       initWebSocket() {
         console.log("log",window.location.host)
         if(!this.ws) {
@@ -69,7 +108,7 @@ export default Vue.extend({
       wsOnMessage(e) {
         if(e.data=="pong"){
           console.log('收到心跳包回复')
-          return 
+          return
         }
         let wsData = JSON.parse(e.data)
         if(wsData.msg_code=="200"){

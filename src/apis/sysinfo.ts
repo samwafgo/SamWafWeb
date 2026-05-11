@@ -33,3 +33,18 @@ export function GetAnnouncementApi(params) {
     params: params
   })
 }
+
+// 获取登录后的系统参数（含应急路径等）
+export function GetSystemParamsApi() {
+  return request({ url: 'sysinfo/systemparams', method: 'get' })
+}
+
+// 获取可回退的备份版本列表
+export function GetRollbackListApi() {
+  return request({ url: 'sysinfo/rollbacklist', method: 'get' })
+}
+
+// 触发版本回退
+export function DoRollbackApi(params: { version: string }) {
+  return request({ url: 'sysinfo/rollback', method: 'get', params })
+}
