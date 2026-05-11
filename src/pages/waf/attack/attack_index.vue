@@ -75,7 +75,14 @@
       <div style="padding: 8px 0;">
         <t-alert theme="warning" :message="$t('common.batch_delete.warning')" style="margin-bottom: 16px;" />
         <div style="margin-bottom: 16px;">
-          <div style="font-weight: 500; margin-bottom: 8px;">{{ $t('page.attack_log.batch_delete_select_label') }}</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-weight: 500;">{{ $t('page.attack_log.batch_delete_select_label') }}</span>
+            <div>
+              <t-link theme="primary" hover="color" size="small" @click="handleBatchSelectAll" style="margin-right: 8px;">{{ $t('common.batch_delete.select_all') }}</t-link>
+              <t-link theme="primary" hover="color" size="small" @click="handleBatchInvertSelection" style="margin-right: 8px;">{{ $t('common.batch_delete.invert_selection') }}</t-link>
+              <t-link theme="danger" hover="color" size="small" @click="handleBatchClearSelection">{{ $t('common.batch_delete.clear_selection') }}</t-link>
+            </div>
+          </div>
           <t-select
             v-model="batchDeleteTags"
             :options="attackTagsForBatch"
@@ -509,6 +516,17 @@ export default Vue.extend({
           console.log(e);
           that.$message.error(that.$t('common.tips.delete_failed_msg', { msg: e.message }));
         })
+    },
+    handleBatchSelectAll() {
+      this.batchDeleteTags = this.attackTagsForBatch.map((t: any) => t.value);
+    },
+    handleBatchInvertSelection() {
+      this.batchDeleteTags = this.attackTagsForBatch
+        .filter((t: any) => !this.batchDeleteTags.includes(t.value))
+        .map((t: any) => t.value);
+    },
+    handleBatchClearSelection() {
+      this.batchDeleteTags = [];
     },
     handleBatchDeleteTag() {
       this.batchDeleteTags = [];

@@ -103,6 +103,9 @@ export default {
       partial_success: "删除完成：成功 {success} 项，失败 {fail} 项",
       mode_with_logs_btn: "同时删除日志",
       mode_tag_only_btn: "仅删除标签",
+      select_all: "全选",
+      invert_selection: "反选",
+      clear_selection: "清空",
     },
   },
   login: {

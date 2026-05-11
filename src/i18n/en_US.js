@@ -103,6 +103,9 @@ export default {
       partial_success: "Deletion complete: {success} succeeded, {fail} failed",
       mode_with_logs_btn: "Also Delete Logs",
       mode_tag_only_btn: "Tag Only",
+      select_all: "Select All",
+      invert_selection: "Invert",
+      clear_selection: "Clear",
     },
   },
   login: {
