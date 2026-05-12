@@ -451,7 +451,7 @@ export default Vue.extend({
     async queryTop100(row) {
       // 同步 db 类型到查询 Tab，填入 SQL，切换到查询 Tab 后执行
       this.dbType   = this.structDbType;
-      this.sqlQuery = `SELECT * FROM "${row.table_name}" LIMIT 100`;
+      this.sqlQuery = `SELECT * FROM ${row.table_name} LIMIT 100`;
       this.activeTab = 'query';
       // 等待 DOM 更新后再执行，避免 Tab 切换动画干扰
       await this.$nextTick();
