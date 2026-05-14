@@ -105,7 +105,7 @@ export const DEFAULT_STATIC_SECURITY_HEADERS = [
   { header_name: 'X-Frame-Options',         header_value: 'DENY' },
   { header_name: 'X-XSS-Protection',        header_value: '1; mode=block' },
   { header_name: 'Referrer-Policy',         header_value: 'strict-origin-when-cross-origin' },
-  { header_name: 'Content-Security-Policy', header_value: "default-src 'self'" },
+  { header_name: 'Content-Security-Policy', header_value: "default-src 'self' 'unsafe-inline'; img-src * data: blob:; font-src * data:; connect-src 'self'; media-src 'self'; object-src 'none'" },
   { header_name: 'Cache-Control',           header_value: 'public, max-age=3600' },
 ];
 

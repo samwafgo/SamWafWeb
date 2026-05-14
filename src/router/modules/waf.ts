@@ -140,6 +140,12 @@ export default [
         name: 'WafTamperProtectionFileHash',
         component: () => import('@/pages/waf/tamper_protection_file_hash/index.vue'),
         meta: { title: 'menu.host.tamper_protection_file_hash', hidden: true },
+      },
+      {
+        path: 'wafPathRulelist',
+        name: 'WafPathRuleList',
+        component: () => import('@/pages/waf/path_rule/index.vue'),
+        meta: { title: 'menu.host.path_rule', hidden: true },
       }
     ],
   },

@@ -470,6 +470,13 @@
             </template>
             <response-compress-config :response-compress-config="responseCompressConfigData" @update="val => responseCompressConfigData = val"></response-compress-config>
           </t-tab-panel>
+          <t-tab-panel :value="15">
+            <template #label>
+              <t-icon name="swap" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_path_rule')}}
+            </template>
+            <path-rule-config :prop-host-code="formData.code"></path-rule-config>
+          </t-tab-panel>
           </t-tabs>
 
         <t-form-item style="float: right;margin-top:5px">
@@ -517,6 +524,7 @@
   import CustomHeadersConfig from '../components/CustomHeadersConfig.vue';
   import CustomResponseHeadersConfig from '../components/CustomResponseHeadersConfig.vue';
   import ResponseCompressConfig from '../components/ResponseCompressConfig.vue';
+  import PathRuleConfig from '../components/PathRuleConfig.vue';
   import SslForm from '../components/SslForm.vue';
   import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
@@ -538,6 +546,7 @@
       CustomHeadersConfig,
       CustomResponseHeadersConfig,
       ResponseCompressConfig,
+      PathRuleConfig,
     },
     props: {
       // 表单数据

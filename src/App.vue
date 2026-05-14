@@ -55,7 +55,26 @@ export default Vue.extend({
   },
   methods:{
       setupGlobalErrorHandler() {
-        const handle = (msg) => {
+        const IGNORE_PATTERNS = [
+          /network\s*error/i,
+          /failed\s*to\s*fetch/i,
+          /request\s*(aborted|cancelled|canceled|timed?\s*out)/i,
+          /the\s*user\s*aborted/i,
+          /ResizeObserver\s*loop/i,
+          /NavigationDuplicated/i,
+          /Avoided\s*redundant\s*navigation/i,
+        ];
+
+        const isCritical = (msg, src) => {
+          const msgStr = String(msg || '').trim();
+          if (!msgStr || /^Script\s*error\.?$/i.test(msgStr)) return false;
+          if (src && /^(chrome|moz|safari)-extension:/.test(src)) return false;
+          if (IGNORE_PATTERNS.some(p => p.test(msgStr))) return false;
+          return true;
+        };
+
+        const handle = (msg, src) => {
+          if (!isCritical(msg, src)) return;
           if (this.emergencyDialogShown) return;
           if (!localStorage.getItem('access_token')) return;
           const path = this.$store.state.sysparams?.emergencyPath;
@@ -64,8 +83,12 @@ export default Vue.extend({
           this.emergencyError = String(msg);
           this.showEmergencyDialog = true;
         };
-        window.onerror = (msg, src, line, col, err) => handle(err?.message || msg);
-        window.addEventListener('unhandledrejection', (e) => handle(e.reason?.message || e.reason));
+
+        window.onerror = (msg, src, line, col, err) => handle(err?.message || msg, src);
+        window.addEventListener('unhandledrejection', (e) => {
+          if (!(e.reason instanceof Error)) return;
+          handle(e.reason.message, null);
+        });
       },
       enterEmergencyMode() {
         const path = this.$store.state.sysparams?.emergencyPath;
