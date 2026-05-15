@@ -1,15 +1,21 @@
 <template>
   <div v-if="layout === 'side'" class="header-menu-search">
-    <t-input
+    <t-select
+      v-model="searchData"
       :class="{ 'hover-active': isSearchFocus }"
-      placeholder="请输入搜索内容"
-      @blur="changeSearchFocus(false)"
+      filterable
+      clearable
+      :filter="filterSearch"
+      :options="searchOptions"
+      placeholder="搜索页面"
       @focus="changeSearchFocus(true)"
+      @blur="changeSearchFocus(false)"
+      @change="handleNavigate"
     >
       <template #prefix-icon>
         <search-icon class="icon" size="16" />
       </template>
-    </t-input>
+    </t-select>
   </div>
 
   <div v-else class="header-menu-search-left">
@@ -22,24 +28,33 @@
     >
       <search-icon />
     </t-button>
-    <t-input
-      ref="inputRef"
+    <t-select
       v-model="searchData"
       :class="['header-search', { 'width-zero': !isSearchFocus }]"
-      placeholder="输入要搜索内容"
+      filterable
+      clearable
+      :filter="filterSearch"
+      :options="searchOptions"
+      placeholder="搜索页面"
       :autofocus="isSearchFocus"
       @blur="changeSearchFocus(false)"
+      @change="handleNavigate"
     >
       <template #prefix-icon>
         <search-icon size="16" />
       </template>
-    </t-input>
+    </t-select>
   </div>
 </template>
 
 <script lang="ts">
 import Vue, { PropType } from 'vue';
 import { SearchIcon } from 'tdesign-icons-vue';
+
+interface SearchOption {
+  value: string;
+  label: string;
+}
 
 export default Vue.extend({
   components: {
@@ -53,15 +68,53 @@ export default Vue.extend({
   data() {
     return {
       isSearchFocus: false,
-      searchData: '',
+      searchData: null as string | null,
     };
+  },
+  computed: {
+    searchOptions(): SearchOption[] {
+      const options: SearchOption[] = [];
+      // 从运行时 router 读取，避免循环依赖
+      const allRoutes: any[] = (this as any).$router?.options?.routes || [];
+
+      const flatten = (routes: any[], parentPath: string, parentLabel: string) => {
+        for (const route of routes) {
+          if (!route.meta?.title || route.meta?.hidden) continue;
+          const path = route.path.startsWith('/')
+            ? route.path
+            : parentPath ? `${parentPath}/${route.path}` : route.path;
+          const label = (this as any).$t(route.meta.title);
+          if (route.children?.length) {
+            flatten(route.children, path, label);
+          } else {
+            const display =
+              parentLabel && parentLabel !== label ? `${parentLabel} / ${label}` : label;
+            options.push({ value: path, label: display });
+          }
+        }
+      };
+      flatten(allRoutes, '', '');
+      return options;
+    },
   },
   methods: {
     changeSearchFocus(value: boolean) {
       if (!value) {
-        this.searchData = '';
+        this.searchData = null;
       }
       this.isSearchFocus = value;
+    },
+    filterSearch(filterWords: string, option: SearchOption): boolean {
+      if (!filterWords) return true;
+      return option.label.toLowerCase().includes(filterWords.toLowerCase());
+    },
+    handleNavigate(path: string) {
+      if (!path) return;
+      this.$router.push(path).catch(() => {});
+      this.$nextTick(() => {
+        this.searchData = null;
+        this.isSearchFocus = false;
+      });
     },
   },
 });
@@ -74,7 +127,7 @@ export default Vue.extend({
   margin-left: 16px;
 
   .hover-active {
-    .t-input {
+    /deep/ .t-input {
       background: var(--td-bg-color-secondarycontainer);
     }
 
@@ -88,7 +141,7 @@ export default Vue.extend({
     color: var(--td-text-color-primary);
   }
 
-  .t-input {
+  /deep/ .t-select__wrap .t-input {
     border: none;
     outline: none;
     box-shadow: none;
@@ -104,7 +157,7 @@ export default Vue.extend({
   width: 200px;
   transition: width @anim-duration-base @anim-time-fn-easing;
 
-  .t-input {
+  /deep/ .t-select__wrap .t-input {
     border: 0;
     padding-left: 40px;
 

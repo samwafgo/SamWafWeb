@@ -87,7 +87,7 @@
       <template #operations>
         <div class="operations-container">
           <!-- 搜索框 -->
-          <search v-if="layout !== 'side'" :layout="layout" />
+          <search layout="top" />
 
           <!-- 系统监控 -->
           <system-monitor />
