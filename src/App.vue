@@ -23,6 +23,7 @@ import config from '@/config/style';
 import websocket from "@/utils/websocket.js";
 import { DialogPlugin } from 'tdesign-vue';
 import  {AesDecrypt} from './utils/usuallytool'
+import { v4 as uuidv4 } from 'uuid'
 import { clearLocalStorageExceptPreserved, saveCurrentUrl } from '@/constants';
 const env = import.meta.env.MODE || 'development';
 
@@ -170,6 +171,8 @@ export default Vue.extend({
               ? `http://127.0.0.1:26666${dlSecPath}/api/v1/waflog/attack/download`
               : `${window.location.protocol}//${window.location.host}${dlSecPath}/api/v1/waflog/attack/download`
             downloadUrl = downloadUrl +"?X-Token="+token
+              +"&X-Request-Time="+Math.floor(Date.now() / 1000).toString()
+              +"&X-Request-Id="+uuidv4()
             console.log(downloadUrl)
             window.open(downloadUrl)
           }else if(wsData.msg_cmd_type==="SystemStats"){
