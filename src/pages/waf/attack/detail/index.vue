@@ -137,8 +137,16 @@
          <t-textarea v-model="detail_data.cookies" :autosize="{ minRows: 3, maxRows: 5 }" readonly @blur="handleMouseSelect('cookies')"/>
         <t-list-item >
           <t-list-item-meta :title="$t('page.visit_log.detail.request_body')" ></t-list-item-meta>
+          <template #action>
+            <span v-if="bodySize > 300" style="font-size:12px;color:#999;margin-right:8px;">
+              {{ $t('page.visit_log.detail.body_content_size') }}: {{ bodySize }} bytes
+            </span>
+            <t-link v-if="bodySize > 300" theme="primary" @click="bodyExpanded = !bodyExpanded">
+              {{ bodyExpanded ? $t('page.visit_log.detail.body_show_less') : $t('page.visit_log.detail.body_show_more') }}
+            </t-link>
+          </template>
         </t-list-item>
-        <t-textarea v-model="detail_data.body" :autosize="{ minRows: 3, maxRows: 5 }" readonly @blur="handleMouseSelect('body')"/>
+        <t-textarea :value="displayBody" :autosize="{ minRows: 3, maxRows: bodyExpanded ? 30 : 5 }" readonly @blur="handleMouseSelect('body')"/>
         <t-list-item >
           <t-list-item-meta :title="$t('page.visit_log.detail.request_form')" ></t-list-item-meta>
         </t-list-item>
@@ -153,8 +161,16 @@
         <t-textarea v-model="detail_data.res_header" :autosize="{ minRows: 3, maxRows: 5 }" readonly />
         <t-list-item>
           <t-list-item-meta :title="$t('page.visit_log.detail.response.response_body')"></t-list-item-meta>
+          <template #action>
+            <span v-if="resBodySize > 300" style="font-size:12px;color:#999;margin-right:8px;">
+              {{ $t('page.visit_log.detail.body_content_size') }}: {{ resBodySize }} bytes
+            </span>
+            <t-link v-if="resBodySize > 300" theme="primary" @click="resBodyExpanded = !resBodyExpanded">
+              {{ resBodyExpanded ? $t('page.visit_log.detail.body_show_less') : $t('page.visit_log.detail.body_show_more') }}
+            </t-link>
+          </template>
         </t-list-item>
-        <t-textarea v-model="detail_data.res_body" :autosize="{ minRows: 3, maxRows: 5 }"  readonly />
+        <t-textarea :value="displayResBody" :autosize="{ minRows: 3, maxRows: resBodyExpanded ? 30 : 5 }"  readonly />
         <t-list-item>
           <t-list-item-meta :title="$t('page.visit_log.detail.response_status')"></t-list-item-meta>
         </t-list-item>
@@ -303,6 +319,8 @@
         baseInfoData: model.getBaseInfoData(),
         detail_data: {},
         quickAddRuleChecked:false,
+        bodyExpanded: false,
+        resBodyExpanded: false,
         detail_req:{
           req_uuid:'',
           current_db:'',
@@ -346,6 +364,22 @@
       console.log('----updated----')
     },
     computed: {
+      bodySize() {
+        return ((this.detail_data as any).body || '').length;
+      },
+      resBodySize() {
+        return ((this.detail_data as any).res_body || '').length;
+      },
+      displayBody() {
+        const body = (this.detail_data as any).body || '';
+        if (this.bodyExpanded || body.length <= 300) return body;
+        return body.substring(0, 300) + ' ...';
+      },
+      displayResBody() {
+        const body = (this.detail_data as any).res_body || '';
+        if (this.resBodyExpanded || body.length <= 300) return body;
+        return body.substring(0, 300) + ' ...';
+      },
       isOwaspRule() {
         const rule = (this.detail_data as any).rule || '';
         return rule.startsWith('OWASP:');
@@ -482,6 +516,8 @@
 
         this.detail_req.req_uuid = id
         this.detail_req.current_db = current_db_name
+        this.bodyExpanded = false
+        this.resBodyExpanded = false
         let that = this
         geWebLogDetail({
               REQ_UUID: id,

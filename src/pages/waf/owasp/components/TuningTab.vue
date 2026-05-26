@@ -1,6 +1,14 @@
 <template>
   <div>
     <t-alert theme="info" :message="$t('page.owasp.tuning.alert_message')" close />
+    <t-alert theme="success" style="margin-top: 8px">
+      <template #message>
+        {{ $t('page.owasp.tuning.whitelist_tip') }}
+        <t-button variant="text" theme="success" size="small" style="padding: 0 4px" @click="gotoUrlWhitelist">{{ $t('page.owasp.tuning.goto_url_whitelist') }}</t-button>
+        <span style="color: var(--td-text-color-secondary)">|</span>
+        <t-button variant="text" theme="success" size="small" style="padding: 0 4px" @click="gotoIpWhitelist">{{ $t('page.owasp.tuning.goto_ip_whitelist') }}</t-button>
+      </template>
+    </t-alert>
 
     <!-- 概念说明区：帮助用户理解 Paranoia / Anomaly 等核心术语 -->
     <t-collapse :default-value="['concepts']" expandMutex expand-icon-placement="right" class="concept-panel">
@@ -118,6 +126,75 @@
         <span class="tip">{{ $t('page.owasp.tuning.early_blocking_tip') }}</span>
       </t-form-item>
       <t-form-item>
+        <t-alert theme="warning" :message="$t('page.owasp.tuning.request_body_warn')" style="margin: 4px 0 2px" />
+      </t-form-item>
+      <t-form-item name="request_body_limit">
+        <template #label>
+          <span>{{ $t('page.owasp.tuning.request_body_limit') }}</span>
+          <t-tooltip :content="$t('page.owasp.tuning.concept_request_body_limit_tooltip')" placement="top-left">
+            <t-icon name="help-circle" class="label-icon" />
+          </t-tooltip>
+        </template>
+        <div class="body-limit-field">
+          <t-input-number v-model="form.request_body_limit" :min="0" :step="1048576" />
+          <div class="quick-presets">
+            <t-tag
+              v-for="p in bodyLimitPresets"
+              :key="p.value"
+              :theme="form.request_body_limit === p.value ? 'primary' : 'default'"
+              :variant="form.request_body_limit === p.value ? 'light' : 'outline'"
+              class="preset-tag"
+              @click="form.request_body_limit = p.value"
+            >{{ p.label }}</t-tag>
+          </div>
+        </div>
+        <span class="tip">{{ $t('page.owasp.tuning.request_body_limit_tip') }}</span>
+      </t-form-item>
+      <t-form-item name="request_body_in_memory_limit">
+        <template #label>
+          <span>{{ $t('page.owasp.tuning.request_body_in_memory_limit') }}</span>
+          <t-tooltip :content="$t('page.owasp.tuning.concept_request_body_in_memory_limit_tooltip')" placement="top-left">
+            <t-icon name="help-circle" class="label-icon" />
+          </t-tooltip>
+        </template>
+        <div class="body-limit-field">
+          <t-input-number v-model="form.request_body_in_memory_limit" :min="0" :step="131072" />
+          <div class="quick-presets">
+            <t-tag
+              v-for="p in bodyInMemoryLimitPresets"
+              :key="p.value"
+              :theme="form.request_body_in_memory_limit === p.value ? 'primary' : 'default'"
+              :variant="form.request_body_in_memory_limit === p.value ? 'light' : 'outline'"
+              class="preset-tag"
+              @click="form.request_body_in_memory_limit = p.value"
+            >{{ p.label }}</t-tag>
+          </div>
+        </div>
+        <span class="tip">{{ $t('page.owasp.tuning.request_body_in_memory_limit_tip') }}</span>
+      </t-form-item>
+      <t-form-item name="body_inspect_limit">
+        <template #label>
+          <span>{{ $t('page.owasp.tuning.body_inspect_limit') }}</span>
+          <t-tooltip :content="$t('page.owasp.tuning.concept_body_inspect_limit_tooltip')" placement="top-left">
+            <t-icon name="help-circle" class="label-icon" />
+          </t-tooltip>
+        </template>
+        <div class="body-limit-field">
+          <t-input-number v-model="form.body_inspect_limit" :min="0" :step="131072" />
+          <div class="quick-presets">
+            <t-tag
+              v-for="p in bodyInspectLimitPresets"
+              :key="p.value"
+              :theme="form.body_inspect_limit === p.value ? 'primary' : 'default'"
+              :variant="form.body_inspect_limit === p.value ? 'light' : 'outline'"
+              class="preset-tag"
+              @click="form.body_inspect_limit = p.value"
+            >{{ p.label }}</t-tag>
+          </div>
+        </div>
+        <span class="tip">{{ $t('page.owasp.tuning.body_inspect_limit_tip') }}</span>
+      </t-form-item>
+      <t-form-item>
         <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
         <t-button variant="outline" @click="getTuning">{{ $t('common.refresh') }}</t-button>
       </t-form-item>
@@ -153,7 +230,6 @@
             :data="knownVars"
             rowKey="key"
             size="small"
-            :pagination="false"
           >
             <template #action="{ row }">
               <t-button size="small" variant="outline" @click="onSetKnown(row)">
@@ -171,7 +247,6 @@
           :data="crsVarRows"
           rowKey="key"
           size="small"
-          :pagination="false"
           :empty="$t('page.owasp.tuning.crs_vars_empty')"
         >
           <template #value="{ row }">
@@ -264,8 +339,33 @@ export default Vue.extend({
         inbound_threshold: 7,
         outbound_threshold: 4,
         early_blocking: 0,
+        request_body_limit: 0,
+        request_body_in_memory_limit: 0,
+        body_inspect_limit: 0,
       },
       earlyBool: false,
+      bodyLimitPresets: [
+        { label: '默认', value: 0 },
+        { label: '1 MB', value: 1048576 },
+        { label: '5 MB', value: 5242880 },
+        { label: '10 MB', value: 10485760 },
+        { label: '50 MB', value: 52428800 },
+        { label: '100 MB', value: 104857600 },
+      ],
+      bodyInMemoryLimitPresets: [
+        { label: '默认', value: 0 },
+        { label: '128 KB', value: 131072 },
+        { label: '512 KB', value: 524288 },
+        { label: '1 MB', value: 1048576 },
+        { label: '5 MB', value: 5242880 },
+      ],
+      bodyInspectLimitPresets: [
+        { label: '无限制', value: 0 },
+        { label: '128 KB', value: 131072 },
+        { label: '512 KB', value: 524288 },
+        { label: '1 MB', value: 1048576 },
+        { label: '2 MB', value: 2097152 },
+      ],
       rules: {},
       // CRS 变量
       crsVarsLoading: false,
@@ -304,6 +404,12 @@ export default Vue.extend({
     this.getCRSVars();
   },
   methods: {
+    gotoUrlWhitelist() {
+      this.$router.push({ name: 'WafUrlWhiteList' });
+    },
+    gotoIpWhitelist() {
+      this.$router.push({ name: 'WafIpWhiteList' });
+    },
     getTuning() {
       owaspTuningGetApi().then((res) => {
         if (res.code === 0 && res.data) {
@@ -315,6 +421,9 @@ export default Vue.extend({
             inbound_threshold: d.inbound_anomaly_score_threshold || 7,
             outbound_threshold: d.outbound_anomaly_score_threshold || 4,
             early_blocking: d.early_blocking || 0,
+            request_body_limit: d.request_body_limit || 0,
+            request_body_in_memory_limit: d.request_body_in_memory_limit || 0,
+            body_inspect_limit: d.body_inspect_limit || 0,
           };
           this.earlyBool = this.form.early_blocking === 1;
         }
@@ -328,6 +437,9 @@ export default Vue.extend({
         inbound_anomaly_score_threshold: this.form.inbound_threshold,
         outbound_anomaly_score_threshold: this.form.outbound_threshold,
         early_blocking: this.form.early_blocking,
+        request_body_limit: this.form.request_body_limit,
+        request_body_in_memory_limit: this.form.request_body_in_memory_limit,
+        body_inspect_limit: this.form.body_inspect_limit,
       };
       owaspTuningSetApi(payload).then((res) => {
         if (res.code === 0) {
@@ -417,6 +529,20 @@ export default Vue.extend({
   margin-left: 12px;
   color: var(--td-text-color-secondary);
   font-size: 12px;
+}
+.body-limit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quick-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.preset-tag {
+  cursor: pointer;
+  user-select: none;
 }
 .label-icon {
   margin-left: 4px;
