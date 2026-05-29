@@ -32,6 +32,39 @@
         </t-loading>
       </t-card>
 
+      <!-- 域名白名单卡片 -->
+      <t-card class="list-card-container">
+        <template #header>
+          <t-row justify="space-between">
+            <div class="card-header-title">
+              <t-space>
+                <div>{{ $t('page.vpconfig.domain_whitelist_title') }}</div>
+                <t-tooltip :content="$t('page.vpconfig.domain_whitelist_description')">
+                  <t-icon name="help-circle" />
+                </t-tooltip>
+              </t-space>
+            </div>
+            <t-space>
+              <t-button theme="primary" @click="handleDomainRefresh">{{ $t('common.refresh') }}</t-button>
+              <t-button theme="primary" @click="showDomainConfirmDialog">{{ $t('common.save') }}</t-button>
+            </t-space>
+          </t-row>
+        </template>
+
+        <t-loading :loading="domainLoading">
+          <t-form :data="domainFormData" :label-width="180">
+            <t-form-item :label="$t('page.vpconfig.domain_whitelist')">
+              <t-textarea
+                v-model="domainFormData.domain_whitelist"
+                :placeholder="$t('page.vpconfig.domain_whitelist_placeholder')"
+                :autosize="{ minRows: 3, maxRows: 8 }"
+              />
+              <div class="form-item-tips">{{ $t('page.vpconfig.domain_whitelist_tips') }}</div>
+            </t-form-item>
+          </t-form>
+        </t-loading>
+      </t-card>
+
       <t-card class="list-card-container">
         <template #header>
           <t-row justify="space-between">
@@ -218,6 +251,15 @@
         </t-loading>
       </t-card>
 
+      <!-- 域名白名单确认对话框 -->
+      <t-dialog
+        :visible.sync="domainConfirmDialogVisible"
+        :header="$t('common.confirm')"
+        :body="$t('page.vpconfig.domain_whitelist_save_confirm')"
+        @confirm="handleDomainSave"
+        @cancel="domainConfirmDialogVisible = false"
+      />
+
       <!-- 确认对话框 -->
       <t-dialog
         :visible.sync="confirmDialogVisible"
@@ -286,7 +328,7 @@
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi } from '@/apis/vpconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -297,6 +339,11 @@
         prefix,
         dataLoading: false,
         confirmDialogVisible: false,
+        domainLoading: false,
+        domainConfirmDialogVisible: false,
+        domainFormData: {
+          domain_whitelist: ''
+        },
         sslLoading: false,
         uploadCertDialogVisible: false,
         certListDialogVisible: false,
@@ -386,6 +433,7 @@
     },
     mounted() {
       this.fetchData();
+      this.fetchDomainWhitelist();
       this.fetchSslStatus();
       this.fetchSecurityEntry();
       this.fetchNoticeTitle();
@@ -411,6 +459,49 @@
       },
       handleRefresh() {
         this.fetchData();
+      },
+      fetchDomainWhitelist() {
+        this.domainLoading = true;
+        getDomainWhitelistApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.domainFormData.domain_whitelist = res.data.domain_whitelist || '';
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.api_error'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.api_error'));
+          })
+          .finally(() => {
+            this.domainLoading = false;
+          });
+      },
+      handleDomainRefresh() {
+        this.fetchDomainWhitelist();
+      },
+      showDomainConfirmDialog() {
+        this.domainConfirmDialogVisible = true;
+      },
+      handleDomainSave() {
+        this.domainLoading = true;
+        updateDomainWhitelistApi({
+          domain_whitelist: this.domainFormData.domain_whitelist
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              MessagePlugin.success(this.$t('common.tips.save_success'));
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.domainLoading = false;
+            this.domainConfirmDialogVisible = false;
+          });
       },
       showConfirmDialog() {
         this.$refs.form.validate().then((result) => {

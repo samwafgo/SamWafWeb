@@ -79,3 +79,19 @@ export function updateNoticeTitleApi(data) {
     data: data
   })
 }
+//获取域名白名单
+export function getDomainWhitelistApi(params) {
+  return request({
+    url: 'vipconfig/getDomainWhitelist',
+    method: 'get',
+    params: params
+  })
+}
+//更新域名白名单
+export function updateDomainWhitelistApi(data) {
+  return request({
+    url: 'vipconfig/updateDomainWhitelist',
+    method: 'post',
+    data: data
+  })
+}

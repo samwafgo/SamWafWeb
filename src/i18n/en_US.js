@@ -1419,7 +1419,14 @@ export default {
       notice_title_label: "Title Prefix",
       notice_title_placeholder: "e.g. Production-01",
       notice_title_tips: "Once set, all notification titles will become [Prefix] Original Title, e.g. [Production-01] Attack Alert",
-      notice_title_save: "Save"
+      notice_title_save: "Save",
+      domain_whitelist_title: "Domain Whitelist",
+      domain_whitelist_description: "Restrict management access to specified domains only. Empty means no restriction. Takes effect immediately, no restart required.",
+      domain_whitelist: "Domain Whitelist",
+      domain_whitelist_placeholder: "Enter allowed domains separated by commas",
+      domain_whitelist_tips: "Leave empty to allow all. When set, only matching domains can access the panel. Include your current domain or IP to avoid locking yourself out.",
+      domain_whitelist_save_confirm: "Save domain whitelist? A non-empty list will restrict access immediately.",
+      domain_whitelist_save: "Save"
     },
     ssl: {
       alert_message: "SamWaf manages all certificate information",

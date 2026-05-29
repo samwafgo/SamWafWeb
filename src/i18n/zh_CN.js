@@ -1422,7 +1422,14 @@ export default {
       notice_title_label: "标题前缀",
       notice_title_placeholder: "请输入通知标题前缀，如：生产服务器-01",
       notice_title_tips: "设置后，所有通知标题将变为 [前缀] 原标题，例如：[生产服务器-01] 攻击告警通知",
-      notice_title_save: "保存"
+      notice_title_save: "保存",
+      domain_whitelist_title: "域名白名单",
+      domain_whitelist_description: "限制管理端只允许通过指定域名访问，为空表示不限制。立即生效，无需重启。",
+      domain_whitelist: "域名白名单",
+      domain_whitelist_placeholder: "请输入允许访问的域名，多个用,分隔",
+      domain_whitelist_tips: "留空表示不限制；填写后仅允许列表中的域名访问，请将当前访问域名或IP也加入列表以防止锁定自己",
+      domain_whitelist_save_confirm: "确定保存域名白名单？非空时将立即限制访问来源域名。",
+      domain_whitelist_save: "保存"
     },
     ssl: {
       alert_message: "SamWaf 管理所有证书信息",
