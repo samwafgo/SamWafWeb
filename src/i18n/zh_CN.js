@@ -1692,7 +1692,9 @@ export default {
       upload_title: "上传数据库文件",
       upload_ipv4: "上传IPv4数据库",
       upload_ipv6: "上传IPv6数据库",
+      upload_ipdb: "上传IPDB文件",
       upload_tips: "仅支持 .xdb 或 .mmdb 文件",
+      upload_tips_ipdb: "支持 .ipdb 格式，同时覆盖 IPv4 和 IPv6 查询",
       upload_success: "上传成功",
       upload_failed: "上传失败",
       invalid_file_type: "不支持的文件类型",
@@ -1713,7 +1715,14 @@ export default {
       isp: "运营商",
       region: "区域",
       district: "区县",
-      load_status_failed: "获取状态失败"
+      load_status_failed: "获取状态失败",
+      tab_config: "配置与状态",
+      tab_upload: "上传数据库",
+      tab_test: "IP查询测试",
+      contribute_title: "贡献数据库格式 / 技术文档",
+      contribute_desc: "如果您拥有其他 IP 数据库的技术规范，欢迎发送给我们，我们将评估并集成更多格式，让所有用户受益。",
+      contribute_email_label: "联系邮箱",
+      contribute_note: "请在邮件中注明数据库名称、格式说明，并附上示例文件（如有）。"
     },
     cache_rule: {
       alert_message: "SamWaf 本页面提示信息",

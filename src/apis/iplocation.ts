@@ -8,6 +8,23 @@ export function getIPDBStatusApi() {
   })
 }
 
+// IP数据库管理 - 获取配置
+export function getIPDBConfigApi() {
+  return request({
+    url: '/iplocation/config',
+    method: 'get'
+  })
+}
+
+// IP数据库管理 - 保存配置
+export function saveIPDBConfigApi(data) {
+  return request({
+    url: '/iplocation/config/save',
+    method: 'post',
+    data: data
+  })
+}
+
 // IP数据库管理 - 上传文件
 export function uploadIPDBFileApi(data) {
   return request({

@@ -1689,7 +1689,9 @@ export default {
       upload_title: "Upload Database Files",
       upload_ipv4: "Upload IPv4 Database",
       upload_ipv6: "Upload IPv6 Database",
+      upload_ipdb: "Upload IPDB File (IPv4+IPv6)",
       upload_tips: "Only .xdb or .mmdb files are supported",
+      upload_tips_ipdb: "Supports .ipdb format, covers both IPv4 and IPv6",
       upload_success: "Upload successful",
       upload_failed: "Upload failed",
       invalid_file_type: "Unsupported file type",
@@ -1710,7 +1712,14 @@ export default {
       isp: "ISP",
       region: "Region",
       district: "District",
-      load_status_failed: "Failed to load status"
+      load_status_failed: "Failed to load status",
+      tab_config: "Config & Status",
+      tab_upload: "Upload Database",
+      tab_test: "IP Lookup Test",
+      contribute_title: "Contribute Database Format / Documentation",
+      contribute_desc: "If you have an ipdb-compatible database format, field mapping documentation, or technical specs for other IP databases, feel free to send them to us. We will review and integrate more formats to benefit all users.",
+      contribute_email_label: "Contact Email",
+      contribute_note: "Please include the database name, format description, and a sample file (if available)."
     },
     cache_rule: {
       alert_message: "SamWaf Cache Rule",
