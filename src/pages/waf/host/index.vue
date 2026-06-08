@@ -48,6 +48,7 @@
           </template>
           <template #host="{ row }">
             <div>
+              <div v-if="row.nickname" style="color:#888;font-size:12px;margin-bottom:2px;">{{ row.nickname }}</div>
               <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
                 <span :title="row.host" style="font-weight:500;">{{ row.host }}</span>
                 <t-tag v-if="row.ssl === SSL_STATUS.SSL" theme="success" variant="light" size="small" :title="$t('page.host.ssl_yes')">SSL</t-tag>
@@ -492,7 +493,7 @@ export default Vue.extend({
             resetValue: '',
             confirmEvents: ['onEnter'],
             props: {
-              placeholder: this.$t('common.placeholder'),
+              placeholder: this.$t('page.host.host_filter_placeholder'),
             },
             showConfirmAndReset: true,
           },

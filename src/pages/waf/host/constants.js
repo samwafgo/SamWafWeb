@@ -1,5 +1,6 @@
 // 主机配置初始化数据
 export const INITIAL_DATA = {
+  nickname: '',
   host: 'www.baidu.com',
   port: 80,
   remote_host: 'http://www.baidu.com',

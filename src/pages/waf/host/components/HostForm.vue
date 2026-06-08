@@ -5,6 +5,7 @@
       <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="230">
         <t-tabs :defaultValue="1">
           <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
+            
             <t-form-item :label="$t('page.host.website')" name="host">
               <t-tooltip class="placement top center" :content="$t('page.host.host_tips')" placement="top"
                        :overlay-style="{ width: '200px' }" show-arrow>
@@ -191,6 +192,9 @@
               </t-tooltip>
             </t-form-item>
 
+            <t-form-item :label="$t('page.host.nickname')" name="nickname">
+              <t-input :style="{ width: '480px' }" v-model="formData.nickname" :placeholder="$t('page.host.nickname_placeholder')"></t-input>
+            </t-form-item>
 
             <t-form-item :label="$t('common.remarks')" name="remarks">
               <t-textarea :style="{ width: '480px' }" v-model="formData.remarks" :placeholder="$t('common.placeholder_content')" name="remarks">
