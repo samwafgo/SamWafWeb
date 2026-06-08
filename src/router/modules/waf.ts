@@ -221,6 +221,21 @@ export default [
     ],
   },
   {
+    path: '/application',
+    name: 'application',
+    component: Layout,
+    redirect: '/application',
+    meta: { title: 'menu.application.parent_title', icon: ServerIcon },
+    children: [
+      {
+        path: 'AppList',
+        name: 'AppList',
+        component: () => import('@/pages/waf/application/index.vue'),
+        meta: { title: 'menu.application.list_title' },
+      },
+    ],
+  },
+  {
     path: '/account',
     name: 'account',
     component: Layout,
