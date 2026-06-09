@@ -439,6 +439,13 @@ export default {
       net_conn_count: "Connections",
       net_local_ports: "Local Ports",
       net_conn_limit: "Showing up to 1000 connections. Actual count may be higher.",
+      change_logs: "Change Logs",
+      op_password_title: "App Operation Password",
+      op_password_hint: "This operation requires the app operation password (different from your login password; auto-generated at first startup and printed in the startup log, also visible in conf/config.yml under application_op_password)",
+      op_password_placeholder: "Enter app operation password",
+      op_password_remember: "Remember for this session",
+      op_password_required: "Please enter the operation password",
+      op_password_wrong: "Operation password is incorrect, please try again",
     },
     account: {
       create_account: "Create Account",

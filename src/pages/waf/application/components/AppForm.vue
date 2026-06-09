@@ -99,13 +99,14 @@
 import Vue from 'vue';
 import CryptoJS from 'crypto-js';
 import request from '@/utils/request';
-import { wafAppAddApi, wafAppEditApi } from '@/apis/application';
+import { wafAppAddApi, wafAppEditApi, buildUploadConfig } from '@/apis/application';
 
 export default Vue.extend({
   name: 'AppForm',
   props: {
-    value: { type: Object, default: () => ({}) },
-    isEdit: { type: Boolean, default: false },
+    value:      { type: Object,  default: () => ({}) },
+    isEdit:     { type: Boolean, default: false },
+    opPassword: { type: String,  default: '' },
   },
   data() {
     return {
@@ -170,7 +171,8 @@ export default Vue.extend({
       fd.append('code', code);
       fd.append('hash', this.uploadHash);
       fd.append('file', this.uploadFile as File);
-      request({ url: '/application/app/upload', method: 'post', data: fd })
+      const timeout = Math.max(300000, Math.ceil((this.uploadFile as File).size / 102400) * 1000 + 90000);
+      request(buildUploadConfig('/application/app/upload', fd, timeout, this.opPassword))
         .then(res => {
           if (res && res.code === 0) {
             this.$message.success(this.$t('page.application.upload_init_uploaded'));

@@ -158,12 +158,27 @@ instance.interceptors.response.use(
               color: #e74c3c;
               margin-bottom: 20px;
             }
+            .back-btn {
+              display: inline-block;
+              padding: 10px 24px;
+              background-color: #e74c3c;
+              color: #fff;
+              border-radius: 4px;
+              text-decoration: none;
+              font-size: 16px;
+              cursor: pointer;
+              border: none;
+            }
+            .back-btn:hover {
+              background-color: #c0392b;
+            }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="icon">⛔</div>
-            <h1>Access denied</h1> 
+            <h1>Access denied</h1>
+            <button class="back-btn" onclick="history.back(); window.addEventListener('popstate', function(){ window.location.reload(); }, {once: true});">Go Back</button>
           </div>
         </body>
         </html>

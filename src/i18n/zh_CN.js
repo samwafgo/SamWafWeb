@@ -439,6 +439,13 @@ export default {
       net_conn_count: "连接数",
       net_local_ports: "本地端口",
       net_conn_limit: "当前仅显示最多 1000 条连接记录，实际连接数可能更多。",
+      change_logs: "变更记录",
+      op_password_title: "应用操作密码确认",
+      op_password_hint: "此操作需要验证应用操作密码（与登录密码不同，首次启动时自动生成并打印在启动日志中，也可在 conf/config.yml 的 application_op_password 字段中查看）",
+      op_password_placeholder: "请输入应用操作密码",
+      op_password_remember: "本次会话内记住密码",
+      op_password_required: "请输入操作密码",
+      op_password_wrong: "操作密码错误，请重新输入",
     },
     account: {
       create_account: "新建账号",

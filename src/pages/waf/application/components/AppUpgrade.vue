@@ -53,11 +53,14 @@
 import Vue from 'vue';
 import CryptoJS from 'crypto-js';
 import request from '@/utils/request';
-import { wafAppBackupsApi, wafAppStatusApi } from '@/apis/application';
+import { wafAppBackupsApi, wafAppStatusApi, buildUploadConfig, buildRollbackConfig, getAppOpPassword } from '@/apis/application';
 
 export default Vue.extend({
   name: 'AppUpgrade',
-  props: { appCode: { type: String, default: '' } },
+  props: {
+    appCode:    { type: String, default: '' },
+    opPassword: { type: String, default: '' },
+  },
   data() {
     return {
       formData: { hash: '' },
@@ -130,9 +133,12 @@ export default Vue.extend({
       return Math.max(300000, Math.ceil(fileSize / 102400) * 1000 + 90000);
     },
     // 停止应用并轮询直到确认已停止（最多等 60s）
+    // stop 本身不在高危组，但升级/回滚流程需要携带密码头以备路由规则变动
     stopAndWait(): Promise<void> {
       return new Promise((resolve, reject) => {
-        request({ url: '/application/app/stop', method: 'get', params: { code: this.appCode }, timeout: 15000 })
+        const pwd = this.opPassword || getAppOpPassword()
+        const headers: any = pwd ? { 'X-App-Op-Password': pwd } : {}
+        request({ url: '/application/app/stop', method: 'get', params: { code: this.appCode }, timeout: 15000, headers })
           .then(() => {
             const deadline = Date.now() + 60000;
             const poll = () => {
@@ -174,7 +180,7 @@ export default Vue.extend({
           : '/application/app/upload';
         const timeout = this.calcTimeout(this.selectedFile.size);
 
-        const res = await request({ url, method: 'post', data: fd, timeout });
+        const res = await request(buildUploadConfig(url, fd, timeout, this.opPassword));
         if (res && res.code === 0) {
           this.$message.success(this.$t('common.success'));
           this.loadBackups();
@@ -203,8 +209,7 @@ export default Vue.extend({
       this.stopAndWait()
         .then(() => {
           this.uploadPhase = 'uploading';
-          return request({ url: '/application/app/rollback', method: 'get',
-            params: { code: this.appCode, filename }, timeout: 60000 });
+          return request(buildRollbackConfig({ code: this.appCode, filename }, this.opPassword));
         })
         .then(res => {
           if (res && res.code === 0) {
