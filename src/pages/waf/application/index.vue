@@ -50,13 +50,13 @@
               <a class="t-button-link" @click="handleStart(slotProps)"   v-if="slotProps.row.run_status !== 1">{{ $t('page.application.start') }}</a>
               <a class="t-button-link" @click="handleStop(slotProps)"    v-if="slotProps.row.run_status === 1">{{ $t('page.application.stop') }}</a>
               <a class="t-button-link" @click="handleRestart(slotProps)">{{ $t('page.application.restart') }}</a>
+              <a class="t-button-link" @click="handleShowLogs(slotProps)">{{ $t('page.application.view_logs') }}</a>
+              <a class="t-button-link" @click="handleShowUpgrade(slotProps)">{{ $t('page.application.upgrade') }}</a>
+              <a class="t-button-link" @click="handleShowNetwork(slotProps)">{{ $t('page.application.network') }}</a>
+              <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
+              <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
             </template>
             <span v-else class="t-button-link acting-text">{{ $t('page.application.acting') }}</span>
-            <a class="t-button-link" @click="handleShowLogs(slotProps)">{{ $t('page.application.view_logs') }}</a>
-            <a class="t-button-link" @click="handleShowUpgrade(slotProps)">{{ $t('page.application.upgrade') }}</a>
-            <a class="t-button-link" @click="handleShowNetwork(slotProps)">{{ $t('page.application.network') }}</a>
-            <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
-            <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
           </template>
         </t-table>
       </div>
@@ -140,6 +140,7 @@ export default Vue.extend({
       selectedCode: '',
       logsKey: 0,
       deleteId: '',
+      deleteCode: '',
       confirmBody: '',
       actingCode: '',
       formData: this.initFormData(),
@@ -210,17 +211,25 @@ export default Vue.extend({
     },
     handleClickDelete(slotProps) {
       this.deleteId = slotProps.row.id;
+      this.deleteCode = slotProps.row.code;
       this.confirmBody = `${this.$t('common.confirm_delete')} ${slotProps.row.name}?`;
       this.confirmVisible = true;
     },
     onConfirmDelete() {
-      wafAppDelApi({ id: this.deleteId }).then(res => {
-        if (res && res.code === 0) {
-          this.$message.success(this.$t('common.tips.delete_success'));
-          this.getList();
-        }
-      });
       this.confirmVisible = false;
+      const code = this.deleteCode;
+      this.actingCode = code;
+      wafAppDelApi({ id: this.deleteId })
+        .then(res => {
+          if (res && res.code === 0) {
+            this.$message.success(this.$t('common.tips.delete_success'));
+            // 轮询直到进程停止（stopped=0），后台停进程最长 30s，给 60s 余量
+            this.pollUntilStatus(code, 0, 1000, 60000);
+          } else {
+            this.actingCode = '';
+          }
+        })
+        .catch(() => { this.actingCode = ''; });
     },
     onCancel() { this.confirmVisible = false; },
     // 轮询状态直到 targetStatus，initialDelay 后开始，超过 maxWaitMs 则放弃
