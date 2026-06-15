@@ -303,6 +303,19 @@
                 {{ $t('page.host.owasp_manage_link') }} <t-icon name="jump" />
               </t-link>
             </t-form-item>
+
+            <t-form-item :label="$t('page.host.ai_detection')">
+              <t-tooltip class="placement top center" :content="$t('page.host.ai_detection_tips')" placement="top"
+                       :overlay-style="{ width: '240px' }" show-arrow>
+                <t-radio-group v-model="hostDefenseData.ai">
+                  <t-radio value="0">{{$t('common.off')}}</t-radio>
+                  <t-radio value="1">{{$t('common.on')}}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+              <t-link theme="primary" size="small" style="margin-left:12px" @click="$router.push({name:'AIModelManage'})">
+                {{ $t('page.host.ai_manage_link') }} <t-icon name="jump" />
+              </t-link>
+            </t-form-item>
           </t-tab-panel>
 
           <t-tab-panel :value="4">
@@ -596,6 +609,7 @@
           sensitive: "1",
           traversal: "1",
           owaspset: "0",
+          ai: "0",
         },
         // 健康度检测配置
         healthyConfigData: { ...INITIAL_HEALTHY },
@@ -744,6 +758,7 @@
               that.hostDefenseData.sensitive = getOrDefault(defenseData, "sensitive", "1");
               that.hostDefenseData.traversal = getOrDefault(defenseData, "traversal", "1");
               that.hostDefenseData.owaspset = getOrDefault(defenseData, "owaspset", "0");
+              that.hostDefenseData.ai = getOrDefault(defenseData, "ai", "0");
             } catch (e) {
               console.error("解析defense_json失败", e);
             }
@@ -1272,7 +1287,8 @@
               rce: parseInt(this.hostDefenseData.rce),
               sensitive: parseInt(this.hostDefenseData.sensitive),
               traversal: parseInt(this.hostDefenseData.traversal),
-              owaspset: parseInt(this.hostDefenseData.owaspset)
+              owaspset: parseInt(this.hostDefenseData.owaspset),
+              ai: parseInt(this.hostDefenseData.ai)
             };
             postdata['defense_json'] = JSON.stringify(defenseData);
 
