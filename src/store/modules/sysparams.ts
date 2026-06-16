@@ -2,12 +2,17 @@ import { GetSystemParamsApi } from '@/apis/sysinfo';
 
 const state = {
   emergencyPath: '',
+  // 当前运行环境：数据库(sqlite|mysql) / 缓存(memory|redis)，用于顶部展示
+  database: { driver: '' },
+  cache: { type: '' },
   // 后续其他认证后参数在此追加
 };
 
 const mutations = {
   setParams(state: any, data: any) {
     state.emergencyPath = data?.emergency_path || '';
+    state.database = data?.database || { driver: '' };
+    state.cache = data?.cache || { type: '' };
   },
 };
 

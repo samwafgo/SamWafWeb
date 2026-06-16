@@ -90,7 +90,7 @@
           <search layout="top" />
 
           <!-- 系统监控 -->
-          <system-monitor />
+          <system-monitor @open-wechat="wechat_visible = true" />
 
           <!-- 全局通知 -->
           <notice />

@@ -162,7 +162,7 @@
           <t-form-item>
             <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }}
             </t-button>
-            <t-button theme="primary" :style="{ marginLeft: '8px' }" v-if="attack_ip == ''"
+            <t-button theme="primary" :style="{ marginLeft: '8px' }" v-if="attack_ip == '' && isFileBasedDb"
               @click="exportDbVisible = true">
               {{
                 $t('common.export') }} </t-button>
@@ -703,6 +703,8 @@ export default Vue.extend({
       host_dic: {},
       //日志存档字典
       share_db_dic: {},
+      //当前是否为文件型数据库(SQLite)：仅 SQLite 支持日志文件导出，MySQL 隐藏导出按钮
+      isFileBasedDb: true,
       //export db
       exportDbVisible: false,
       visitDetailVisible: false,//访问详情弹窗
@@ -955,9 +957,20 @@ export default Vue.extend({
         console.log("loadShareDbList", resdata)
         if (resdata.code === 0) {
           let share_options = resdata.data;
+          let currentName = "";
           for (let i = 0; i < share_options.length; i++) {
             that.share_db_dic[share_options[i].file_name] = share_options[i].file_name + "(" + share_options[i].cnt + ")"
+            // 后端按驱动标记当前(实时)分片：SQLite=local_log.db，MySQL=web_logs
+            if (share_options[i].is_current) {
+              currentName = share_options[i].file_name;
+            }
           }
+          // 默认选中当前驱动的实时分片，避免 MySQL 下仍显示 SQLite 味的 local_log.db
+          if (currentName !== "") {
+            that.searchformData.current_db_name = currentName;
+          }
+          // 文件型(SQLite)实时分片名以 .db 结尾；MySQL 为 web_logs(无后缀)。据此决定是否显示导出按钮
+          that.isFileBasedDb = currentName === "" || currentName.endsWith(".db");
         }
       })
         .catch((e: Error) => {
