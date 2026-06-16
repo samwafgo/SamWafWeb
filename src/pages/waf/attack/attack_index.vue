@@ -260,7 +260,8 @@ export default Vue.extend({
       allattacktaglist({
       }).then((res) => {
         console.log("res getIpTags",res.data)
-        this.attackTags = res.data??[];
+        // 后端出错时 data 可能是对象/字符串而非数组，需兜底成数组，避免 unshift 报错导致前端异常弹窗
+        this.attackTags = Array.isArray(res.data) ? res.data : [];
         this.attackTags.unshift({ "label": "所有规则", "value": "" });
       })
     },
