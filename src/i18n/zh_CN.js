@@ -432,6 +432,8 @@ export default {
       rollback: "回滚",
       rollback_success: "回滚成功，应用已重启",
       app_dir_actual: "实际目录：",
+      app_dir_absolute_warn: "（绝对路径，请确认该路径存在且包含可执行文件）",
+      app_dir_relative_note: "（相对 SamWaf 安装目录）",
       section_upload_init: "初始文件（可选）",
       upload_init_uploaded: "文件已上传到工作目录",
       network: "网络",
@@ -2829,8 +2831,11 @@ export default {
       normal_rate: "正常流量占比",
       legend_attack: "已拦截攻击",
       preset_today: "今天",
+      preset_yesterday: "昨天",
+      preset_last_3_days: "最近3天",
       preset_last_7_days: "最近7天",
       preset_last_30_days: "最近30天",
+      refresh: "刷新",
     },
   }
 };

@@ -7,6 +7,15 @@
           <span class="filter-label">{{ $t('page.overview.date_range') }}</span>
         </t-col>
         <t-col flex="none">
+          <t-radio-group v-model="quickRange" variant="default-filled" @change="onQuickRangeChange">
+            <t-radio-button value="today">{{ $t('page.overview.preset_today') }}</t-radio-button>
+            <t-radio-button value="yesterday">{{ $t('page.overview.preset_yesterday') }}</t-radio-button>
+            <t-radio-button value="3d">{{ $t('page.overview.preset_last_3_days') }}</t-radio-button>
+            <t-radio-button value="7d">{{ $t('page.overview.preset_last_7_days') }}</t-radio-button>
+            <t-radio-button value="30d">{{ $t('page.overview.preset_last_30_days') }}</t-radio-button>
+          </t-radio-group>
+        </t-col>
+        <t-col flex="none">
           <t-date-range-picker
             v-model="dateRange"
             mode="date"
@@ -15,6 +24,12 @@
             value-format="YYYYMMDD"
             @change="onDateRangeChange"
           />
+        </t-col>
+        <t-col flex="none">
+          <t-button theme="default" variant="outline" :loading="loading" @click="loadOverview">
+            <template #icon><refresh-icon /></template>
+            {{ $t('page.overview.refresh') }}
+          </t-button>
         </t-col>
       </t-row>
     </t-card>
@@ -127,7 +142,8 @@ import {
   RootListIcon,
   HourglassIcon,
   CloudUploadIcon,
-  ShieldErrorIcon, 
+  ShieldErrorIcon,
+  RefreshIcon,
 } from 'tdesign-icons-vue';
 import dayjs from 'dayjs';
 import { wafstatsiteoverviewapi, wafstatsitedetailapi } from '@/apis/stats';
@@ -143,15 +159,20 @@ export default {
     HourglassIcon,
     CloudUploadIcon,
     ShieldErrorIcon,
+    RefreshIcon,
   },
   data() {
     const today = dayjs().format('YYYYMMDD');
     const sevenDaysAgo = dayjs().subtract(6, 'day').format('YYYYMMDD');
     return {
       loading: false,
+      // 快捷范围：与下方 dateRange 默认值保持一致（最近7天）；选择自定义日期时置空
+      quickRange: '7d',
       dateRange: [sevenDaysAgo, today],
       datePresets: {
         [this.$t('page.overview.preset_today')]: [dayjs().format('YYYYMMDD'), dayjs().format('YYYYMMDD')],
+        [this.$t('page.overview.preset_yesterday')]: [dayjs().subtract(1, 'day').format('YYYYMMDD'), dayjs().subtract(1, 'day').format('YYYYMMDD')],
+        [this.$t('page.overview.preset_last_3_days')]: [dayjs().subtract(2, 'day').format('YYYYMMDD'), dayjs().format('YYYYMMDD')],
         [this.$t('page.overview.preset_last_7_days')]: [dayjs().subtract(6, 'day').format('YYYYMMDD'), dayjs().format('YYYYMMDD')],
         [this.$t('page.overview.preset_last_30_days')]: [dayjs().subtract(29, 'day').format('YYYYMMDD'), dayjs().format('YYYYMMDD')],
       },
@@ -215,15 +236,33 @@ export default {
   },
   methods: {
     onDateRangeChange(val) {
+      // 用户手动选择具体日期时，取消快捷按钮的选中态
+      this.quickRange = '';
       if (val && val.length === 2) {
         this.loadOverview();
       }
     },
+    onQuickRangeChange(val: string) {
+      const today = dayjs().format('YYYYMMDD');
+      const rangeMap = {
+        today: [today, today],
+        yesterday: [dayjs().subtract(1, 'day').format('YYYYMMDD'), dayjs().subtract(1, 'day').format('YYYYMMDD')],
+        '3d': [dayjs().subtract(2, 'day').format('YYYYMMDD'), today],
+        '7d': [dayjs().subtract(6, 'day').format('YYYYMMDD'), today],
+        '30d': [dayjs().subtract(29, 'day').format('YYYYMMDD'), today],
+      };
+      const range = rangeMap[val];
+      if (!range) return;
+      this.dateRange = range;
+      this.loadOverview();
+    },
     loadOverview() {
       this.loading = true;
+      // 兼容日期选择器可能返回 2026-06-18 格式：统一去掉分隔符为 20260618
+      const toDayStr = (v: string) => String(v || '').replace(/[^0-9]/g, '');
       const params = {
-        start_day: this.dateRange[0],
-        end_day: this.dateRange[1],
+        start_day: toDayStr(this.dateRange[0]),
+        end_day: toDayStr(this.dateRange[1]),
       };
       wafstatsiteoverviewapi(params)
         .then((res) => {
