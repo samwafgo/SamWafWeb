@@ -41,7 +41,6 @@ export default {
     data_delete_warning: "删除后，数据将被删除，且无法恢复",
     create_time: "创建时间",
     update_time: "更新时间",
-    op: "操作内容",
     date: "日期",
     online_document: "在线文档",
     online_channel: "在线交流渠道",
@@ -366,6 +365,7 @@ export default {
     },
     application: {
       new_app: "新建应用",
+      allow_dirs_tip: "可信路径（允许托管的应用目录）在 conf/config.yml 的 application_allow_dirs 字段中配置，修改后需重启 SamWaf 生效。",
       name: "应用名称",
       name_placeholder: "请输入应用名称",
       name_required: "应用名称不能为空",

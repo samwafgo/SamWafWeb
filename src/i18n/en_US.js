@@ -366,6 +366,7 @@ export default {
     },
     application: {
       new_app: "New App",
+      allow_dirs_tip: "Trusted paths (directories allowed to be hosted) are configured via the application_allow_dirs field in conf/config.yml. Restart SamWaf after changes to take effect.",
       name: "App Name",
       name_placeholder: "Enter application name",
       name_required: "App name is required",

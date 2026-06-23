@@ -1,6 +1,7 @@
 <template>
   <div>
     <t-card class="list-card-container">
+      <t-alert theme="info" :message="$t('page.application.allow_dirs_tip')" :style="{ marginBottom: '16px' }" />
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAdd">{{ $t('page.application.new_app') }}</t-button>

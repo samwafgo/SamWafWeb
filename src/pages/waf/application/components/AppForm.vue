@@ -10,7 +10,11 @@
     </t-form-item>
     <t-form-item :label="$t('page.application.app_dir')" name="app_dir">
       <t-input v-model="formData.app_dir" :placeholder="$t('page.application.app_dir_placeholder')" />
-      <div class="dir-hint">{{ $t('page.application.app_dir_actual') }}{{ effectiveDir }}</div>
+      <div class="dir-hint" :class="{ 'dir-hint-warn': isDirAbsolute }">
+        {{ $t('page.application.app_dir_actual') }}{{ effectiveDir }}
+        <span v-if="isDirAbsolute">{{ $t('page.application.app_dir_absolute_warn') }}</span>
+        <span v-else>{{ $t('page.application.app_dir_relative_note') }}</span>
+      </div>
     </t-form-item>
     <t-form-item :label="$t('page.application.env')" name="env">
       <t-textarea v-model="formData.env" :placeholder="$t('page.application.env_placeholder')" :rows="2" />
@@ -126,7 +130,11 @@ export default Vue.extend({
       const dir = (this.formData as any).app_dir;
       if (dir && dir.trim()) return dir.trim();
       const code = (this.formData as any).code || '';
-      return `./data/applications/${code}/`;
+      return `data/applications/${code}/`;
+    },
+    isDirAbsolute(): boolean {
+      const dir = (this.formData as any).app_dir;
+      return !!(dir && dir.trim().startsWith('/'));
     },
   },
   watch: {
@@ -219,5 +227,8 @@ export default Vue.extend({
   font-size: 12px;
   color: #999;
   word-break: break-all;
+}
+.dir-hint-warn {
+  color: #e37318;
 }
 </style>
