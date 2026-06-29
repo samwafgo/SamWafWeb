@@ -95,6 +95,12 @@
           <t-form-item>
             <b>{{$t("page.ssl.label_auto_tip")}}</b>
           </t-form-item>
+          <t-form-item :label="$t('page.ssl.label_auto_load_path_switch')" name="auto_load_path">
+            <t-switch v-model="formEditData.auto_load_path" :custom-value="[1, 0]"></t-switch>
+            <div style="color: #909399; font-size: 12px; margin-top: 4px; line-height: 1.5; max-width: 480px;">
+              {{ $t('page.ssl.label_auto_load_path_tip') }}
+            </div>
+          </t-form-item>
           <t-form-item :label="$t('page.ssl.label_auto_key_path')" name="key_path">
             <t-textarea v-model="formEditData.key_path" :style="{ width: '480px' }" rows="4"></t-textarea>
           </t-form-item>
@@ -137,6 +143,7 @@ const INITIAL_DATA = {
   key_content: '',
   cert_path: '',
   key_path: '',
+  auto_load_path: 1,
 };
 
 export default Vue.extend({
@@ -343,6 +350,7 @@ export default Vue.extend({
         row
       } = slotProps;
       this.formEditData = {
+        auto_load_path: 1,
         ...row
       };
       this.editFormVisible = true;

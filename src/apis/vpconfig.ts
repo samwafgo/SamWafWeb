@@ -79,6 +79,38 @@ export function updateNoticeTitleApi(data) {
     data: data
   })
 }
+//获取管理端仅允许HTTPS开关
+export function getSslForceHttpsApi(params) {
+  return request({
+    url: 'vipconfig/getSslForceHttps',
+    method: 'get',
+    params: params
+  })
+}
+//更新管理端仅允许HTTPS开关
+export function updateSslForceHttpsApi(data) {
+  return request({
+    url: 'vipconfig/updateSslForceHttps',
+    method: 'post',
+    data: data
+  })
+}
+//获取管理端证书绑定的证书夹
+export function getSslBindCertApi(params) {
+  return request({
+    url: 'vipconfig/getSslBindCert',
+    method: 'get',
+    params: params
+  })
+}
+//绑定/解绑管理端证书到证书夹（ssl_config_id 传空表示解绑）
+export function updateSslBindCertApi(data) {
+  return request({
+    url: 'vipconfig/updateSslBindCert',
+    method: 'post',
+    data: data
+  })
+}
 //获取域名白名单
 export function getDomainWhitelistApi(params) {
   return request({

@@ -91,6 +91,11 @@
               <div class="form-item-tips">{{ $t('page.vpconfig.ssl_enable_tips') }}</div>
             </t-form-item>
 
+            <t-form-item :label="$t('page.vpconfig.ssl_force_https')" v-if="sslFormData.ssl_enable">
+              <t-switch v-model="sslForceHttpsFormData.force_https" @change="handleSslForceHttpsChange" />
+              <div class="form-item-tips">{{ $t('page.vpconfig.ssl_force_https_tips') }}</div>
+            </t-form-item>
+
             <t-form-item :label="$t('page.vpconfig.cert_status')" v-if="sslFormData.ssl_enable">
               <t-space direction="vertical" style="width: 100%">
                 <div>
@@ -128,6 +133,24 @@
               <t-space>
                 <t-button theme="default" @click="showCertListDialog">{{ $t('page.vpconfig.select_from_certfolder') }}</t-button>
                 <t-button theme="primary" @click="showUploadCertDialog">{{ $t('page.vpconfig.upload_cert') }}</t-button>
+              </t-space>
+            </t-form-item>
+
+            <t-form-item :label="$t('page.vpconfig.ssl_bind_cert')" v-if="sslFormData.ssl_enable">
+              <t-space direction="vertical" style="width: 100%">
+                <div v-if="sslBindCert.ssl_config_id">
+                  <t-tag theme="success">{{ $t('page.vpconfig.ssl_bind_cert_bound') }}</t-tag>
+                  <span v-if="sslBindCert.domains" class="cert-info" style="margin-left: 8px">{{ sslBindCert.domains }}</span>
+                  <span v-if="sslBindCert.valid_to" class="cert-info" style="margin-left: 8px">{{ $t('page.ssl.label_valid_to') }}: {{ sslBindCert.valid_to }}</span>
+                </div>
+                <div v-else>
+                  <t-tag theme="default">{{ $t('page.vpconfig.ssl_bind_cert_unbound') }}</t-tag>
+                </div>
+                <t-space>
+                  <t-button theme="primary" @click="showBindCertDialog">{{ $t('page.vpconfig.ssl_bind_cert_select') }}</t-button>
+                  <t-button theme="danger" variant="outline" v-if="sslBindCert.ssl_config_id" @click="handleUnbindCert">{{ $t('page.vpconfig.ssl_bind_cert_unbind') }}</t-button>
+                </t-space>
+                <div class="form-item-tips">{{ $t('page.vpconfig.ssl_bind_cert_tips') }}</div>
               </t-space>
             </t-form-item>
           </t-form>
@@ -296,8 +319,8 @@
               @page-change="handleCertPageChange"
             >
               <template #op="{ row }">
-                <t-button theme="primary" size="small" @click="handleSelectCert(row)">
-                  {{ $t('common.select_placeholder') }}
+                <t-button theme="primary" size="small" @click="handleCertOp(row)">
+                  {{ certDialogMode === 'bind' ? $t('page.vpconfig.ssl_bind_cert_do_bind') : $t('common.select_placeholder') }}
                 </t-button>
               </template>
             </t-table>
@@ -328,7 +351,7 @@
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -378,6 +401,18 @@
           cert_content: '',
           key_content: ''
         },
+        // 管理端仅允许HTTPS开关
+        sslForceHttpsFormData: {
+          force_https: false
+        },
+        // 管理端证书绑定的证书夹（自动同步）
+        sslBindCert: {
+          ssl_config_id: '',
+          domains: '',
+          valid_to: ''
+        },
+        // 证书夹弹窗模式：copy=一次性复制内容到上传框, bind=绑定自动同步
+        certDialogMode: 'copy',
         certListData: [],
         certPagination: {
           total: 0,
@@ -435,6 +470,8 @@
       this.fetchData();
       this.fetchDomainWhitelist();
       this.fetchSslStatus();
+      this.fetchSslForceHttps();
+      this.fetchSslBindCert();
       this.fetchSecurityEntry();
       this.fetchNoticeTitle();
     },
@@ -614,8 +651,21 @@
           });
       },
       showCertListDialog() {
+        this.certDialogMode = 'copy';
         this.certListDialogVisible = true;
         this.fetchCertList();
+      },
+      showBindCertDialog() {
+        this.certDialogMode = 'bind';
+        this.certListDialogVisible = true;
+        this.fetchCertList();
+      },
+      handleCertOp(row) {
+        if (this.certDialogMode === 'bind') {
+          this.handleBindCert(row);
+        } else {
+          this.handleSelectCert(row);
+        }
       },
       fetchCertList() {
         this.certListLoading = true;
@@ -675,6 +725,95 @@
           })
           .finally(() => {
             this.certListLoading = false;
+          });
+      },
+      handleBindCert(row) {
+        this.certListLoading = true;
+        updateSslBindCertApi({
+          ssl_config_id: row.id
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
+              this.certListDialogVisible = false;
+              this.fetchSslBindCert();
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch((error) => {
+            console.error('绑定管理端证书失败:', error);
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.certListLoading = false;
+          });
+      },
+      handleUnbindCert() {
+        this.sslLoading = true;
+        updateSslBindCertApi({
+          ssl_config_id: ''
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
+              this.fetchSslBindCert();
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch((error) => {
+            console.error('解绑管理端证书失败:', error);
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.sslLoading = false;
+          });
+      },
+      fetchSslBindCert() {
+        getSslBindCertApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.sslBindCert.ssl_config_id = res.data.ssl_config_id || '';
+              this.sslBindCert.domains = res.data.domains || '';
+              this.sslBindCert.valid_to = res.data.valid_to || '';
+            }
+          })
+          .catch((error) => {
+            console.error('获取管理端证书绑定信息失败:', error);
+          });
+      },
+      fetchSslForceHttps() {
+        getSslForceHttpsApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.sslForceHttpsFormData.force_https = res.data.force_https || false;
+            }
+          })
+          .catch((error) => {
+            console.error('获取仅HTTPS开关失败:', error);
+          });
+      },
+      handleSslForceHttpsChange(value) {
+        this.sslLoading = true;
+        updateSslForceHttpsApi({
+          force_https: value
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+              this.sslForceHttpsFormData.force_https = !value;
+            }
+          })
+          .catch((error) => {
+            console.error('更新仅HTTPS开关失败:', error);
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+            this.sslForceHttpsFormData.force_https = !value;
+          })
+          .finally(() => {
+            this.sslLoading = false;
           });
       },
       showRestartDialog() {
