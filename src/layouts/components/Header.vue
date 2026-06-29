@@ -142,6 +142,9 @@
                 <t-dropdown-item class="operations-dropdown-container-item" @click="handleNav('/user/index')">
                   <user-circle-icon /> {{ $t('topNav.dropdown_person_center')}}
                 </t-dropdown-item>
+                <t-dropdown-item class="operations-dropdown-container-item" @click="showChangePwd = true">
+                  <lock-on-icon /> {{ $t('topNav.dropdown_change_password')}}
+                </t-dropdown-item>
                 <t-dropdown-item class="operations-dropdown-container-item" :disabled="isUpdateloading" @click="checkVersion('manual')">
                   <RotateIcon /> {{ $t('topNav.dropdown_update')}}
                 </t-dropdown-item>
@@ -174,6 +177,9 @@
         </div>
       </template>
     </t-head-menu>
+
+    <!-- 个人自助修改密码 -->
+    <change-password-dialog :visible.sync="showChangePwd" :forced="false" />
   </div>
 </template>
 
@@ -194,7 +200,8 @@
     ArrowUpDownCircleIcon,
     AddIcon,
     LogoWechatStrokeIcon,
-    RollbackIcon
+    RollbackIcon,
+    LockOnIcon
   } from 'tdesign-icons-vue';
   import {
     prefix
@@ -209,6 +216,7 @@
   import Search from './Search.vue';
   import MenuContent from './MenuContent.vue';
   import SystemMonitor from './SystemMonitor.vue';
+  import ChangePasswordDialog from '@/pages/waf/account/components/ChangePasswordDialog.vue';
   import {logoutapi} from '@/apis/login'
   export default Vue.extend({
     components: {
@@ -217,6 +225,7 @@
       Notice,
       Search,
       SystemMonitor,
+      ChangePasswordDialog,
       ViewListIcon,
       LogoGithubIcon,
       HelpCircleIcon,
@@ -231,7 +240,8 @@
       ArrowUpDownCircleIcon,
       AddIcon,
       LogoWechatStrokeIcon,
-      RollbackIcon
+      RollbackIcon,
+      LockOnIcon
     },
     props: {
       theme: String,
@@ -265,6 +275,8 @@
         visibleNotice: false,
         isSearchFocus: false,
         isResetloading:false,
+        /**个人修改密码**/
+        showChangePwd:false,
         /**更新内容**/
         hasNewVersion:false,//是否有新版本
         isUpdateloading:false,

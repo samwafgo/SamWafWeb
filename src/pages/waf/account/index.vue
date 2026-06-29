@@ -78,6 +78,14 @@
           <t-form-item :label="$t('page.account.login_account_label')" name="login_account">
            <t-input :style="{ width: '480px' }" v-model="formEditData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')"></t-input>
           </t-form-item>
+          <t-form-item :label="$t('page.account.role')" name="role">
+            <t-select v-model="formEditData.role" clearable :style="{ width: '480px' }">
+              <t-option v-for="(item, index) in roleType" :value="item.value" :label="item.label"
+                        :key="index">
+                {{ item.label }}
+              </t-option>
+            </t-select>
+          </t-form-item>
           <t-form-item :label="$t('common.status')" name="status">
             <t-input-number :style="{ width: '480px' }" v-model="formEditData.status" :placeholder="$t('common.placeholder')+$t('common.status')"></t-input-number>
           </t-form-item>
@@ -138,6 +146,7 @@
   const INITIAL_DATA = {
     login_account: '',
     login_password: '',
+    role: '',
     status: 1,
     remarks: '',
   };
@@ -203,12 +212,20 @@
         },
         roleType: [
           {
-          label: this.$t('page.account.role_super_admin'),
-          value: 'superAdmin'
-         },
+            label: this.$t('page.account.role_super_admin'),
+            value: 'superAdmin'
+          },
           {
-            label: this.$t('page.account.role_admin'),
-            value: 'admin'
+            label: this.$t('page.account.role_system_admin'),
+            value: 'systemAdmin'
+          },
+          {
+            label: this.$t('page.account.role_security_admin'),
+            value: 'securityAdmin'
+          },
+          {
+            label: this.$t('page.account.role_audit_admin'),
+            value: 'auditAdmin'
           }
         ],
         textareaValue: '',

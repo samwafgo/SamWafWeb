@@ -58,6 +58,15 @@
     <t-form-item v-if="type !== 'qrcode'" class="btn-container">
       <t-button block size="large" type="submit"> {{ $t('login.login_btn_title') }} </t-button>
     </t-form-item>
+
+    <!-- 首次登录/口令到期 强制改密弹窗 -->
+    <change-password-dialog
+      :visible.sync="showChangePwd"
+      :forced="true"
+      :reason="changePwdReason"
+      :preset-old-password="formData.password"
+      @success="onChangePwdSuccess"
+    />
   </t-form>
 </template>
 <script lang="ts">
@@ -67,6 +76,7 @@ import QrcodeVue from 'qrcode.vue';
 import { UserIcon, LockOnIcon, BrowseOffIcon, BrowseIcon, RefreshIcon } from 'tdesign-icons-vue';
 import { loginapi } from '@/apis/login';
 import { getSafeRedirectUrl } from '@/constants';
+import ChangePasswordDialog from '@/pages/waf/account/components/ChangePasswordDialog.vue';
 const INITIAL_DATA = {
   phone: '',
   account: '',
@@ -92,6 +102,7 @@ export default Vue.extend({
     BrowseOffIcon,
     BrowseIcon,
     RefreshIcon,
+    ChangePasswordDialog,
   },
   data() {
     return {
@@ -102,6 +113,9 @@ export default Vue.extend({
       showSecretCode: false,
       countDown: 0,
       intervalTimer: null,
+      /**强制改密**/
+      showChangePwd: false,
+      changePwdReason: '',
       /**语言问题**/
       langValue:"zh_CN",
       langOptions: [
@@ -165,13 +179,20 @@ export default Vue.extend({
             this.$store.dispatch('user/login', this.formData);
             this.$store.dispatch('sysparams/fetchParams');
 
+            // 首次登录/口令到期：强制改密，改密成功后再进入系统
+            if (res.data.need_change_password) {
+              this.changePwdReason = res.data.change_password_reason || '';
+              this.showChangePwd = true;
+              return;
+            }
+
             this.$message.success(this.$t('login.login_success'));
-            
+
             setTimeout(() => {
               // 获取安全的重定向URL
               const redirectUrl = getSafeRedirectUrl();
               console.log('重定向到:', redirectUrl);
-              
+
               // 安全跳转
               this.$router.replace(redirectUrl).catch(() => '');
             }, 1000);
@@ -188,6 +209,14 @@ export default Vue.extend({
           console.log(err);
         });
       }
+    },
+    // 强制改密成功后进入系统
+    onChangePwdSuccess() {
+      this.$message.success(this.$t('login.login_success'));
+      setTimeout(() => {
+        const redirectUrl = getSafeRedirectUrl();
+        this.$router.replace(redirectUrl).catch(() => '');
+      }, 800);
     },
     handleCounter() {
       this.countDown = 60;

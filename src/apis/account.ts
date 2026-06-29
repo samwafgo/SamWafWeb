@@ -25,3 +25,12 @@ export function account_reset_2fa_api(data) {
     data: data
   })
 }
+
+// 当前登录账号自助改密（首次登录/口令到期强制改密 或 个人主动修改）
+export function account_change_my_password_api(data) {
+  return request({
+    url: 'account/changemypwd',
+    method: 'post',
+    data: data
+  })
+}
