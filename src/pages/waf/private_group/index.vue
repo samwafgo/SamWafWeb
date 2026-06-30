@@ -457,7 +457,7 @@
           .finally(() => {});
       },
       handleJumpOnlineUrl(){
-        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/PrivateGroup.html");
+        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/PrivateInfo.html");
       },
     },
   });

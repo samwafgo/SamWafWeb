@@ -382,7 +382,7 @@ export default Vue.extend({
     },
     //Jump Url
     handleJumpOnlineUrl(){
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/attacklog.html");
+      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/AttackLog.html");
     },
     /**
      * table 排序

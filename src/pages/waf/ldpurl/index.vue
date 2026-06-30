@@ -595,7 +595,7 @@
       },
       //跳转界面
       handleJumpOnlineUrl(){
-        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/ldp.html");
+        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/Ldp.html");
       },
 
     },

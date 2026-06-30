@@ -3,7 +3,7 @@
     <t-card class="list-card-container">
       <t-row justify="space-between">
         <div class="left-operation-container">
-          <t-button @click="handleAdd"> {{ $t('page.ca_server_info.button_add_ca_server_info') }} </t-button>
+          <t-button @click="handleAdd"> {{ $t('page.ca_server_info.button_add_ca_server') }} </t-button>
         </div>
         <div class="right-operation-container">
             <t-form ref="form" :data="searchformData" :label-width="300" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -53,7 +53,7 @@
                          <t-input :style="{ width: '480px' }" v-model="formData.ca_server_address" ></t-input>
                     </t-form-item>
             
-                      <t-form-item :label="$t('page.ca_server_info.remarks')" name="remarks">
+                      <t-form-item :label="$t('page.ca_server_info.ca_server_remarks')" name="remarks">
                          <t-input :style="{ width: '480px' }" v-model="formData.remarks" ></t-input>
                     </t-form-item>
             
@@ -80,7 +80,7 @@
                            <t-input :style="{ width: '480px' }" v-model="formEditData.ca_server_address" ></t-input>
                       </t-form-item>
            
-                        <t-form-item :label="$t('page.ca_server_info.remarks')" name="remarks">
+                        <t-form-item :label="$t('page.ca_server_info.ca_server_remarks')" name="remarks">
                            <t-input :style="{ width: '480px' }" v-model="formEditData.remarks" ></t-input>
                       </t-form-item>
            
@@ -178,7 +178,7 @@
              },
          
 
-            { title: this.$t('page.ca_server_info.remarks'),
+            { title: this.$t('page.ca_server_info.ca_server_remarks'),
                     width: 200,
                     ellipsis: true,
                     colKey: 'remarks',
@@ -477,7 +477,7 @@
           .finally(() => {});
       },
       handleJumpOnlineUrl(){
-        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/CaServerInfo.html");
+        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/SSL.html");
       },
     },
   });

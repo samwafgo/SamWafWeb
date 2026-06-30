@@ -547,7 +547,7 @@ export default Vue.extend({
         .finally(() => {});
     },
     handleJumpOnlineUrl(){
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/SslExpire.html");
+      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/SSL.html");
     },
   },
 });

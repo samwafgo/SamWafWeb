@@ -24,9 +24,6 @@
         </div>
       </t-row>
       <t-alert theme="info" :message="$t('page.tamper_protection.alert_message')" close>
-        <template #operation>
-          <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-        </template>
       </t-alert>
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
@@ -894,9 +891,6 @@ export default Vue.extend({
           console.log(e);
         })
         .finally(() => { });
-    },
-    handleJumpOnlineUrl() {
-      window.open(this.samwafglobalconfig.getOnlineUrl() + "/guide/TamperProtection.html");
     },
   },
 });

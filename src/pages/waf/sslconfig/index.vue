@@ -401,7 +401,7 @@ export default Vue.extend({
       this.deleteIdx = -1;
     },
     handleJumpOnlineUrl() {
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/SSLConfig.html");
+      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/SSL.html");
     },
     onClickCloseBtn() {
       this.addFormVisible = false;
