@@ -3,7 +3,7 @@
 
   <div class="host-form">
       <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="230">
-        <t-tabs :defaultValue="1">
+        <t-tabs v-model="activeTab">
           <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
             
             <t-form-item :label="$t('page.host.website')" name="host">
@@ -316,6 +316,32 @@
                 {{ $t('page.host.ai_manage_link') }} <t-icon name="jump" />
               </t-link>
             </t-form-item>
+
+            <t-form-item :label="$t('page.host.tab_cookie_security')">
+              <t-tooltip class="placement top center" :content="$t('page.host.cookie_security.intro')" placement="top"
+                       :overlay-style="{ width: '320px' }" show-arrow>
+                <t-radio-group v-model="cookieSecurityConfigData.is_enable">
+                  <t-radio value="0">{{$t('common.off')}}</t-radio>
+                  <t-radio value="1">{{$t('common.on')}}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+              <t-link theme="primary" size="small" style="margin-left:12px" @click="activeTab = 16">
+                {{ $t('page.host.config_detail') }} <t-icon name="jump" />
+              </t-link>
+            </t-form-item>
+
+            <t-form-item :label="$t('page.host.tab_csrf')">
+              <t-tooltip class="placement top center" :content="$t('page.host.csrf.intro')" placement="top"
+                       :overlay-style="{ width: '320px' }" show-arrow>
+                <t-radio-group v-model="csrfConfigData.is_enable">
+                  <t-radio value="0">{{$t('common.off')}}</t-radio>
+                  <t-radio value="1">{{$t('common.on')}}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+              <t-link theme="primary" size="small" style="margin-left:12px" @click="activeTab = 17">
+                {{ $t('page.host.config_detail') }} <t-icon name="jump" />
+              </t-link>
+            </t-form-item>
           </t-tab-panel>
 
           <t-tab-panel :value="4">
@@ -494,6 +520,13 @@
             </template>
             <cookie-security-config :cookie-security-config="cookieSecurityConfigData" @update="val => cookieSecurityConfigData = val"></cookie-security-config>
           </t-tab-panel>
+          <t-tab-panel :value="17">
+            <template #label>
+              <t-icon name="secured" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_csrf')}}
+            </template>
+            <csrf-config :csrf-config="csrfConfigData" @update="val => csrfConfigData = val"></csrf-config>
+          </t-tab-panel>
           <t-tab-panel :value="15">
             <template #label>
               <t-icon name="swap" style="margin-right: 4px;color:#0052d9"/>
@@ -549,9 +582,10 @@
   import CustomResponseHeadersConfig from '../components/CustomResponseHeadersConfig.vue';
   import ResponseCompressConfig from '../components/ResponseCompressConfig.vue';
   import CookieSecurityConfig from '../components/CookieSecurityConfig.vue';
+  import CsrfConfig from '../components/CsrfConfig.vue';
   import PathRuleConfig from '../components/PathRuleConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,INITIAL_CSRF,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -572,6 +606,7 @@
       CustomResponseHeadersConfig,
       ResponseCompressConfig,
       CookieSecurityConfig,
+      CsrfConfig,
       PathRuleConfig,
     },
     props: {
@@ -633,6 +668,8 @@
         customResponseHeadersConfigData: {...INITIAL_CUSTOM_RESPONSE_HEADERS},
         responseCompressConfigData: { ...INITIAL_RESPONSE_COMPRESS },
         cookieSecurityConfigData: { ...INITIAL_COOKIE_SECURITY },
+        csrfConfigData: { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] },
+        activeTab: 1, // 当前激活的配置 Tab（受控，供防御总览开关「配置详情」跳转）
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -1027,6 +1064,27 @@
             this.cookieSecurityConfigData = { ...INITIAL_COOKIE_SECURITY };
           }
 
+          // 解析 CSRF 防护配置
+          if (this.formData.csrf_json && this.formData.csrf_json !== '') {
+            try {
+              const cf = JSON.parse(this.formData.csrf_json);
+              this.csrfConfigData = {
+                is_enable: String(cf.is_enable !== undefined ? cf.is_enable : 0),
+                protect_methods: (cf.protect_methods != null && cf.protect_methods !== '')
+                  ? String(cf.protect_methods).split(',').map(s => s.trim()).filter(s => s)
+                  : ['POST', 'PUT', 'DELETE', 'PATCH'],
+                allowed_origins: cf.allowed_origins != null ? cf.allowed_origins : '',
+                allow_empty_ref: String(cf.allow_empty_ref !== undefined ? cf.allow_empty_ref : 1),
+                exclude_paths: cf.exclude_paths != null ? cf.exclude_paths : '',
+              };
+            } catch (e) {
+              console.error('解析csrf_json失败', e);
+              this.csrfConfigData = { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] };
+            }
+          } else {
+            this.csrfConfigData = { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] };
+          }
+
           // 解析静态网站配置
           if (this.formData.static_site_json) {
             try {
@@ -1384,6 +1442,17 @@
               secure: parseInt(this.cookieSecurityConfigData.secure, 10) || 0,
               same_site: this.cookieSecurityConfigData.same_site || '',
               exclude_cookies: this.cookieSecurityConfigData.exclude_cookies || '',
+            });
+
+            // 处理 CSRF 防护配置
+            postdata['csrf_json'] = JSON.stringify({
+              is_enable: parseInt(this.csrfConfigData.is_enable, 10) || 0,
+              protect_methods: Array.isArray(this.csrfConfigData.protect_methods)
+                ? this.csrfConfigData.protect_methods.join(',')
+                : (this.csrfConfigData.protect_methods || 'POST,PUT,DELETE,PATCH'),
+              allowed_origins: this.csrfConfigData.allowed_origins || '',
+              allow_empty_ref: parseInt(this.csrfConfigData.allow_empty_ref, 10) || 0,
+              exclude_paths: this.csrfConfigData.exclude_paths || '',
             });
 
             // 处理静态网站配置
