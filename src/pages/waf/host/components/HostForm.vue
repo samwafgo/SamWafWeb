@@ -487,6 +487,13 @@
             </template>
             <response-compress-config :response-compress-config="responseCompressConfigData" @update="val => responseCompressConfigData = val"></response-compress-config>
           </t-tab-panel>
+          <t-tab-panel :value="16">
+            <template #label>
+              <t-icon name="lock-on" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_cookie_security')}}
+            </template>
+            <cookie-security-config :cookie-security-config="cookieSecurityConfigData" @update="val => cookieSecurityConfigData = val"></cookie-security-config>
+          </t-tab-panel>
           <t-tab-panel :value="15">
             <template #label>
               <t-icon name="swap" style="margin-right: 4px;color:#0052d9"/>
@@ -541,9 +548,10 @@
   import CustomHeadersConfig from '../components/CustomHeadersConfig.vue';
   import CustomResponseHeadersConfig from '../components/CustomResponseHeadersConfig.vue';
   import ResponseCompressConfig from '../components/ResponseCompressConfig.vue';
+  import CookieSecurityConfig from '../components/CookieSecurityConfig.vue';
   import PathRuleConfig from '../components/PathRuleConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -563,6 +571,7 @@
       CustomHeadersConfig,
       CustomResponseHeadersConfig,
       ResponseCompressConfig,
+      CookieSecurityConfig,
       PathRuleConfig,
     },
     props: {
@@ -623,6 +632,7 @@
         customHeadersConfigData: {...INITIAL_CUSTOM_HEADERS},
         customResponseHeadersConfigData: {...INITIAL_CUSTOM_RESPONSE_HEADERS},
         responseCompressConfigData: { ...INITIAL_RESPONSE_COMPRESS },
+        cookieSecurityConfigData: { ...INITIAL_COOKIE_SECURITY },
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -998,6 +1008,25 @@
             this.responseCompressConfigData = { ...INITIAL_RESPONSE_COMPRESS };
           }
 
+          // 解析 Cookie 安全保护配置
+          if (this.formData.cookie_security_json && this.formData.cookie_security_json !== '') {
+            try {
+              const cs = JSON.parse(this.formData.cookie_security_json);
+              this.cookieSecurityConfigData = {
+                is_enable: String(cs.is_enable !== undefined ? cs.is_enable : 0),
+                http_only: String(cs.http_only !== undefined ? cs.http_only : 1),
+                secure: String(cs.secure !== undefined ? cs.secure : 2),
+                same_site: cs.same_site != null ? cs.same_site : 'Lax',
+                exclude_cookies: cs.exclude_cookies != null ? cs.exclude_cookies : '',
+              };
+            } catch (e) {
+              console.error('解析cookie_security_json失败', e);
+              this.cookieSecurityConfigData = { ...INITIAL_COOKIE_SECURITY };
+            }
+          } else {
+            this.cookieSecurityConfigData = { ...INITIAL_COOKIE_SECURITY };
+          }
+
           // 解析静态网站配置
           if (this.formData.static_site_json) {
             try {
@@ -1347,6 +1376,15 @@
               compress_when_static_assist: parseInt(this.responseCompressConfigData.compress_when_static_assist, 10) || 0,
             };
             postdata['response_compress_json'] = JSON.stringify(rcData);
+
+            // 处理 Cookie 安全保护配置
+            postdata['cookie_security_json'] = JSON.stringify({
+              is_enable: parseInt(this.cookieSecurityConfigData.is_enable, 10) || 0,
+              http_only: parseInt(this.cookieSecurityConfigData.http_only, 10) || 0,
+              secure: parseInt(this.cookieSecurityConfigData.secure, 10) || 0,
+              same_site: this.cookieSecurityConfigData.same_site || '',
+              exclude_cookies: this.cookieSecurityConfigData.exclude_cookies || '',
+            });
 
             // 处理静态网站配置
             let staticSiteData = {
