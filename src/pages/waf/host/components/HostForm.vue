@@ -342,6 +342,19 @@
                 {{ $t('page.host.config_detail') }} <t-icon name="jump" />
               </t-link>
             </t-form-item>
+
+            <t-form-item :label="$t('page.host.tab_tamper')">
+              <t-tooltip class="placement top center" :content="$t('page.host.tamper.intro')" placement="top"
+                       :overlay-style="{ width: '320px' }" show-arrow>
+                <t-radio-group v-model="tamperConfigData.is_enable">
+                  <t-radio value="0">{{$t('common.off')}}</t-radio>
+                  <t-radio value="1">{{$t('common.on')}}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+              <t-link theme="primary" size="small" style="margin-left:12px" @click="activeTab = 18">
+                {{ $t('page.host.config_detail') }} <t-icon name="jump" />
+              </t-link>
+            </t-form-item>
           </t-tab-panel>
 
           <t-tab-panel :value="4">
@@ -527,6 +540,13 @@
             </template>
             <csrf-config :csrf-config="csrfConfigData" @update="val => csrfConfigData = val"></csrf-config>
           </t-tab-panel>
+          <t-tab-panel :value="18">
+            <template #label>
+              <t-icon name="verify" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_tamper')}}
+            </template>
+            <tamper-config :tamper-config="tamperConfigData" :prop-host-code="formData.code" @update="val => tamperConfigData = val"></tamper-config>
+          </t-tab-panel>
           <t-tab-panel :value="15">
             <template #label>
               <t-icon name="swap" style="margin-right: 4px;color:#0052d9"/>
@@ -583,9 +603,10 @@
   import ResponseCompressConfig from '../components/ResponseCompressConfig.vue';
   import CookieSecurityConfig from '../components/CookieSecurityConfig.vue';
   import CsrfConfig from '../components/CsrfConfig.vue';
+  import TamperConfig from '../components/TamperConfig.vue';
   import PathRuleConfig from '../components/PathRuleConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,INITIAL_CSRF,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,INITIAL_CSRF,INITIAL_TAMPER,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -607,6 +628,7 @@
       ResponseCompressConfig,
       CookieSecurityConfig,
       CsrfConfig,
+      TamperConfig,
       PathRuleConfig,
     },
     props: {
@@ -669,6 +691,7 @@
         responseCompressConfigData: { ...INITIAL_RESPONSE_COMPRESS },
         cookieSecurityConfigData: { ...INITIAL_COOKIE_SECURITY },
         csrfConfigData: { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] },
+        tamperConfigData: { ...INITIAL_TAMPER },
         activeTab: 1, // 当前激活的配置 Tab（受控，供防御总览开关「配置详情」跳转）
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
@@ -1085,6 +1108,23 @@
             this.csrfConfigData = { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] };
           }
 
+          // 解析网页防篡改配置
+          if (this.formData.tamper_json && this.formData.tamper_json !== '') {
+            try {
+              const tp = JSON.parse(this.formData.tamper_json);
+              this.tamperConfigData = {
+                is_enable: String(tp.is_enable !== undefined ? tp.is_enable : 0),
+                action: tp.action || 'replace',
+                max_size_kb: tp.max_size_kb !== undefined ? tp.max_size_kb : 1024,
+              };
+            } catch (e) {
+              console.error('解析tamper_json失败', e);
+              this.tamperConfigData = { ...INITIAL_TAMPER };
+            }
+          } else {
+            this.tamperConfigData = { ...INITIAL_TAMPER };
+          }
+
           // 解析静态网站配置
           if (this.formData.static_site_json) {
             try {
@@ -1453,6 +1493,13 @@
               allowed_origins: this.csrfConfigData.allowed_origins || '',
               allow_empty_ref: parseInt(this.csrfConfigData.allow_empty_ref, 10) || 0,
               exclude_paths: this.csrfConfigData.exclude_paths || '',
+            });
+
+            // 处理网页防篡改配置
+            postdata['tamper_json'] = JSON.stringify({
+              is_enable: parseInt(this.tamperConfigData.is_enable, 10) || 0,
+              action: this.tamperConfigData.action || 'replace',
+              max_size_kb: parseInt(this.tamperConfigData.max_size_kb, 10) || 1024,
             });
 
             // 处理静态网站配置
