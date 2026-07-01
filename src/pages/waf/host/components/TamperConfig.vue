@@ -33,9 +33,16 @@
     <template v-if="propHostCode">
       <div style="margin-bottom: 8px;">
         <t-button size="small" @click="handleAdd">{{ $t('page.host.tamper.add_url') }}</t-button>
+        <t-button size="small" theme="primary" variant="outline" style="margin-left: 8px;" @click="openExtract">{{ $t('page.host.tamper.extract_urls') }}</t-button>
+        <t-button size="small" variant="outline" style="margin-left: 8px;" :disabled="selectedRowKeys.length === 0" @click="handleRelearnBatch">{{ $t('page.host.tamper.relearn_selected') }}</t-button>
+        <t-button size="small" variant="outline" style="margin-left: 8px;" @click="handleRelearnAll">{{ $t('page.host.tamper.relearn_all') }}</t-button>
+        <t-button size="small" theme="danger" variant="outline" style="margin-left: 8px;" :disabled="selectedRowKeys.length === 0" @click="handleDelBatch">{{ $t('page.host.tamper.del_selected') }}</t-button>
         <t-button size="small" variant="outline" style="margin-left: 8px;" @click="getList">{{ $t('common.refresh') }}</t-button>
       </div>
-      <t-table :columns="columns" :data="data" rowKey="id" :loading="dataLoading" size="small" :pagination="pagination" @page-change="onPageChange">
+      <t-table :columns="columns" :data="data" rowKey="id" :loading="dataLoading" size="small" :pagination="pagination"
+               :max-height="360" :sort="sort" :filter-value="filterValue"
+               :selected-row-keys="selectedRowKeys" @select-change="onSelectChange"
+               @sort-change="onSortChange" @filter-change="onFilterChange" @page-change="onPageChange">
         <template #is_enable="{ row }">
           <t-tag :theme="row.is_enable === 1 ? 'success' : 'default'" variant="light">
             {{ row.is_enable === 1 ? $t('common.on') : $t('common.off') }}
@@ -127,6 +134,36 @@
         <t-alert v-else theme="info" :message="$t('page.host.tamper.binary_hint')" />
       </div>
     </t-dialog>
+
+    <!-- 从页面提取URL弹窗 -->
+    <t-dialog :header="$t('page.host.tamper.extract_title')" :visible.sync="extractVisible" :width="720" :footer="false">
+      <div slot="body">
+        <t-alert theme="info" :message="$t('page.host.tamper.extract_hint')" style="margin-bottom: 12px;" />
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <t-select v-model="extractDomain" :style="{ width: '220px' }" :placeholder="$t('page.host.tamper.extract_domain')">
+            <t-option v-for="d in domainOptions" :key="d" :value="d" :label="d" />
+          </t-select>
+          <t-input v-model="extractPageUrl" :placeholder="$t('page.host.tamper.extract_placeholder')" style="flex: 1;" @enter="doExtract" />
+          <t-button theme="primary" :loading="extractLoading" @click="doExtract">{{ $t('page.host.tamper.extract_btn') }}</t-button>
+        </div>
+        <template v-if="extractResult.length > 0">
+          <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span>{{ $t('page.host.tamper.extract_found', { n: extractResult.length }) }}</span>
+            <t-checkbox v-model="extractIgnoreQuery">{{ $t('page.host.tamper.ignore_query') }}</t-checkbox>
+            <t-button size="small" theme="primary" :disabled="extractSelected.length === 0" @click="doAddBatch">
+              {{ $t('page.host.tamper.add_selected', { n: extractSelected.length }) }}
+            </t-button>
+          </div>
+          <t-table :columns="extractColumns" :data="extractResult" rowKey="url" size="small" max-height="360"
+                   :selected-row-keys="extractSelected" @select-change="onExtractSelectChange">
+            <template #type="{ row }">
+              <t-tag size="small" variant="light" :theme="typeTheme(row.type)">{{ row.type }}</t-tag>
+            </template>
+          </t-table>
+        </template>
+        <t-alert v-else-if="extractDone" theme="warning" :message="$t('page.host.tamper.extract_empty')" />
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -139,6 +176,10 @@ import {
   wafTamperRuleDetailApi,
   wafTamperRuleRelearnApi,
   wafTamperRuleBaselineApi,
+  wafTamperRuleRelearnBatchApi,
+  wafTamperRuleExtractApi,
+  wafTamperRuleAddBatchApi,
+  wafTamperRuleDelBatchApi,
 } from '@/apis/tamper_rule';
 
 const INITIAL_RULE = {
@@ -156,6 +197,8 @@ export default {
   props: {
     tamperConfig: { type: Object, required: true },
     propHostCode: { type: String, default: '' },
+    propHost: { type: String, default: '' },
+    propBindMoreHost: { type: String, default: '' },
   },
   data() {
     return {
@@ -164,6 +207,8 @@ export default {
       data: [],
       dataLoading: false,
       pagination: { total: 0, current: 1, pageSize: 10 },
+      sort: undefined,
+      filterValue: {},
       formVisible: false,
       editMode: false,
       formData: { ...INITIAL_RULE },
@@ -176,19 +221,53 @@ export default {
       baselineVisible: false,
       baselineData: null,
       baselineExpanded: false,
+      // 提取URL弹窗
+      selectedRowKeys: [],
+      extractVisible: false,
+      extractDomain: '',
+      extractPageUrl: '/',
+      extractLoading: false,
+      extractDone: false,
+      extractResult: [],
+      extractSelected: [],
+      extractIgnoreQuery: true,
+      extractColumns: [
+        { colKey: 'row-select', type: 'multiple', width: 40 },
+        { title: this.$t('page.host.tamper.url'), colKey: 'url', ellipsis: true },
+        { title: this.$t('page.host.tamper.col_type'), colKey: 'type', width: 90 },
+      ],
       columns: [
-        { title: this.$t('page.host.tamper.url'), colKey: 'url', width: 200, ellipsis: true },
-        { title: this.$t('page.host.tamper.rule_name'), colKey: 'rule_name', width: 130, ellipsis: true },
-        { title: this.$t('page.host.tamper.rule_enable'), colKey: 'is_enable', width: 80 },
-        { title: this.$t('page.host.tamper.ignore_query'), colKey: 'ignore_query', width: 90 },
-        { title: this.$t('page.host.tamper.baseline_status'), colKey: 'baseline_status', width: 100 },
-        { title: this.$t('page.host.tamper.col_size'), colKey: 'content_size', width: 90 },
-        { title: this.$t('page.host.tamper.tamper_count'), colKey: 'tamper_count', width: 80 },
+        { colKey: 'row-select', type: 'multiple', width: 40 },
+        { title: this.$t('page.host.tamper.url'), colKey: 'url', width: 200, ellipsis: true, sorter: true, filter: { type: 'input' } },
+        { title: this.$t('page.host.tamper.rule_name'), colKey: 'rule_name', width: 130, ellipsis: true, sorter: true, filter: { type: 'input' } },
+        {
+          title: this.$t('page.host.tamper.rule_enable'), colKey: 'is_enable', width: 90, sorter: true,
+          filter: { type: 'single', list: [{ label: this.$t('common.on'), value: 1 }, { label: this.$t('common.off'), value: 0 }] },
+        },
+        {
+          title: this.$t('page.host.tamper.ignore_query'), colKey: 'ignore_query', width: 100, sorter: true,
+          filter: { type: 'single', list: [{ label: this.$t('common.yes'), value: 1 }, { label: this.$t('common.no'), value: 0 }] },
+        },
+        {
+          title: this.$t('page.host.tamper.baseline_status'), colKey: 'baseline_status', width: 110, sorter: true,
+          filter: { type: 'single', list: [{ label: this.$t('page.host.tamper.status_unlearned'), value: 0 }, { label: this.$t('page.host.tamper.status_learned'), value: 1 }, { label: this.$t('page.host.tamper.status_failed'), value: 2 }] },
+        },
+        { title: this.$t('page.host.tamper.col_size'), colKey: 'content_size', width: 90, sorter: true },
+        { title: this.$t('page.host.tamper.tamper_count'), colKey: 'tamper_count', width: 90, sorter: true },
         { align: 'left', fixed: 'right', width: 220, colKey: 'op', title: this.$t('common.op') },
       ],
     };
   },
   computed: {
+    domainOptions() {
+      const list = [];
+      if (this.propHost) list.push(this.propHost.trim());
+      (this.propBindMoreHost || '').split('\n').forEach((line) => {
+        const d = line.trim();
+        if (d && !list.includes(d)) list.push(d);
+      });
+      return list;
+    },
     displayBaselineText() {
       const c = (this.baselineData && this.baselineData.content) || '';
       if (this.baselineExpanded || c.length <= 300) return c;
@@ -236,14 +315,38 @@ export default {
       if (v < 1024 * 1024) return (v / 1024).toFixed(1) + ' KB';
       return (v / 1024 / 1024).toFixed(2) + ' MB';
     },
-    getList() {
-      if (!this.propHostCode) return;
-      this.dataLoading = true;
-      wafTamperRuleListApi({
+    buildListParams() {
+      const params = {
         pageSize: this.pagination.pageSize,
         pageIndex: this.pagination.current,
         host_code: this.propHostCode,
-      })
+      };
+      if (this.sort && this.sort.sortBy) {
+        params.order_key = this.sort.sortBy;
+        params.order_dir = this.sort.descending ? 'desc' : 'asc';
+      }
+      const f = this.filterValue || {};
+      if (f.url) params.url = f.url;
+      if (f.rule_name) params.rule_name = f.rule_name;
+      if (typeof f.is_enable === 'number') params.is_enable = f.is_enable;
+      if (typeof f.ignore_query === 'number') params.ignore_query = f.ignore_query;
+      if (typeof f.baseline_status === 'number') params.baseline_status = f.baseline_status;
+      return params;
+    },
+    onSortChange(sort) {
+      this.sort = sort;
+      this.pagination.current = 1;
+      this.getList();
+    },
+    onFilterChange(filters) {
+      this.filterValue = filters || {};
+      this.pagination.current = 1;
+      this.getList();
+    },
+    getList() {
+      if (!this.propHostCode) return;
+      this.dataLoading = true;
+      wafTamperRuleListApi(this.buildListParams())
         .then((res) => {
           if (res.code === 0) {
             this.data = res.data.list ?? [];
@@ -311,6 +414,95 @@ export default {
         if (res.code === 0) { this.$message.success(res.msg); this.getList(); }
         else { this.$message.warning(res.msg); }
       }).catch((e) => console.log(e));
+    },
+    onSelectChange(value) {
+      this.selectedRowKeys = value;
+    },
+    handleRelearnBatch() {
+      if (this.selectedRowKeys.length === 0) return;
+      wafTamperRuleRelearnBatchApi({ host_code: this.propHostCode, ids: this.selectedRowKeys }).then((res) => {
+        if (res.code === 0) { this.$message.success(res.msg); this.selectedRowKeys = []; this.getList(); }
+        else { this.$message.warning(res.msg); }
+      }).catch((e) => console.log(e));
+    },
+    handleRelearnAll() {
+      const confirmDia = this.$dialog.confirm({
+        header: this.$t('page.host.tamper.relearn_all'),
+        body: this.$t('page.host.tamper.relearn_all_confirm'),
+        onConfirm: () => {
+          wafTamperRuleRelearnBatchApi({ host_code: this.propHostCode, ids: [] }).then((res) => {
+            if (res.code === 0) { this.$message.success(res.msg); this.selectedRowKeys = []; this.getList(); }
+            else { this.$message.warning(res.msg); }
+          }).catch((e) => console.log(e));
+          confirmDia.hide();
+        },
+        onClose: () => confirmDia.hide(),
+      });
+    },
+    handleDelBatch() {
+      if (this.selectedRowKeys.length === 0) return;
+      const confirmDia = this.$dialog.confirm({
+        header: this.$t('page.host.tamper.del_selected'),
+        body: this.$t('common.data_delete_warning'),
+        theme: 'warning',
+        onConfirm: () => {
+          wafTamperRuleDelBatchApi({ host_code: this.propHostCode, ids: this.selectedRowKeys }).then((res) => {
+            if (res.code === 0) { this.$message.success(res.msg); this.selectedRowKeys = []; this.getList(); }
+            else { this.$message.warning(res.msg); }
+          }).catch((e) => console.log(e));
+          confirmDia.hide();
+        },
+        onClose: () => confirmDia.hide(),
+      });
+    },
+    openExtract() {
+      this.extractDomain = this.domainOptions[0] || '';
+      this.extractPageUrl = '/';
+      this.extractResult = [];
+      this.extractSelected = [];
+      this.extractDone = false;
+      this.extractIgnoreQuery = true;
+      this.extractVisible = true;
+    },
+    doExtract() {
+      this.extractLoading = true;
+      this.extractDone = false;
+      wafTamperRuleExtractApi({ host_code: this.propHostCode, domain: this.extractDomain, page_url: this.extractPageUrl }).then((res) => {
+        if (res.code === 0) {
+          this.extractResult = res.data.list ?? [];
+          // 默认勾选全部候选
+          this.extractSelected = this.extractResult.map((r) => r.url);
+        } else {
+          this.extractResult = [];
+          this.extractSelected = [];
+          this.$message.warning(res.msg);
+        }
+        this.extractDone = true;
+      }).catch((e) => { console.log(e); this.extractDone = true; }).finally(() => { this.extractLoading = false; });
+    },
+    onExtractSelectChange(value) {
+      this.extractSelected = value;
+    },
+    doAddBatch() {
+      if (this.extractSelected.length === 0) return;
+      wafTamperRuleAddBatchApi({
+        host_code: this.propHostCode,
+        urls: this.extractSelected,
+        is_enable: 1,
+        ignore_query: this.extractIgnoreQuery ? 1 : 0,
+      }).then((res) => {
+        if (res.code === 0) {
+          this.$message.success(res.msg);
+          this.extractVisible = false;
+          this.getList();
+        } else {
+          this.$message.warning(res.msg);
+        }
+      }).catch((e) => console.log(e));
+    },
+    typeTheme(type) {
+      const map = { js: 'primary', css: 'success', html: 'warning', img: 'default' };
+      return map[type] || 'default';
     },
     handleDelete(row) {
       this.deleteIdx = row.rowIndex;

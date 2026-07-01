@@ -1342,7 +1342,21 @@ export default {
         download_baseline: "下载基线",
         expand: "展开全部",
         collapse: "收起",
-        binary_hint: "二进制内容，可点击“下载基线”查看。"
+        binary_hint: "二进制内容，可点击“下载基线”查看。",
+        col_type: "类型",
+        extract_urls: "从页面提取",
+        relearn_selected: "批量重新学习",
+        relearn_all: "全部重新学习",
+        del_selected: "批量删除",
+        extract_domain: "选择域名",
+        relearn_all_confirm: "确认对本站点所有受保护URL重新学习基线？下次访问相关URL将重新捕获。",
+        extract_title: "从页面提取受保护URL",
+        extract_hint: "输入本站点一个页面地址（或路径），SamWaf 通过该站点已配置的后端抓取，列出页面中引用的同站 js/css/html/图片，勾选后可批量添加。仅抓本站点后端，不访问外部地址。",
+        extract_placeholder: "页面地址或路径，如 / 或 /index.html",
+        extract_btn: "提取",
+        extract_found: "共发现 {n} 个同站候选",
+        add_selected: "添加选中({n})",
+        extract_empty: "未发现可添加的同站静态资源（可能是动态页或引用均为第三方地址）。"
       },
       transport: {
         max_idle_conns: '最大空闲连接数',

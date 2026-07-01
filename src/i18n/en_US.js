@@ -1339,7 +1339,21 @@ export default {
         download_baseline: "Download Baseline",
         expand: "Expand All",
         collapse: "Collapse",
-        binary_hint: "Binary content; click 'Download Baseline' to inspect."
+        binary_hint: "Binary content; click 'Download Baseline' to inspect.",
+        col_type: "Type",
+        extract_urls: "Extract from Page",
+        relearn_selected: "Relearn Selected",
+        relearn_all: "Relearn All",
+        del_selected: "Delete Selected",
+        extract_domain: "Domain",
+        relearn_all_confirm: "Relearn baselines for ALL protected URLs of this site? They will be re-captured on next access.",
+        extract_title: "Extract Protected URLs from Page",
+        extract_hint: "Enter a page URL (or path) of this site. SamWaf fetches it via this site's configured backend and lists same-site js/css/html/images referenced by the page; select and batch-add. Only this site's backend is fetched, no external address is accessed.",
+        extract_placeholder: "Page URL or path, e.g. / or /index.html",
+        extract_btn: "Extract",
+        extract_found: "Found {n} same-site candidates",
+        add_selected: "Add Selected ({n})",
+        extract_empty: "No addable same-site static resources found (page may be dynamic or all references are third-party)."
       },
       transport: {
         max_idle_conns: 'Max Idle Connections',
