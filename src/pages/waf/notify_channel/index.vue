@@ -220,6 +220,14 @@
                 <t-radio value="starttls">{{ $t('page.notify_channel.email_ssl_starttls') }}</t-radio>
               </t-radio-group>
             </t-form-item>
+            <t-form-item v-if="formData.email_ssl_mode !== 'none'" :label="$t('page.notify_channel.email_skip_verify')" name="email_skip_verify">
+              <div :style="{ width: '480px' }">
+                <t-checkbox v-model="formData.email_skip_verify" class="skip-verify-checkbox">{{ $t('page.notify_channel.email_skip_verify_label') }}</t-checkbox>
+                <div style="font-size: 12px; color: #666; margin-top: 4px; line-height: 1.5;">
+                  ⚠️ {{ $t('page.notify_channel.email_skip_verify_tip') }}
+                </div>
+              </div>
+            </t-form-item>
           </template>
           <t-form-item :label="$t('page.notify_channel.label_status')" name="status">
             <t-radio-group v-model="formData.status">
@@ -397,6 +405,14 @@
                 <t-radio value="starttls">{{ $t('page.notify_channel.email_ssl_starttls') }}</t-radio>
               </t-radio-group>
             </t-form-item>
+            <t-form-item v-if="formEditData.email_ssl_mode !== 'none'" :label="$t('page.notify_channel.email_skip_verify')" name="email_skip_verify">
+              <div :style="{ width: '480px' }">
+                <t-checkbox v-model="formEditData.email_skip_verify" class="skip-verify-checkbox">{{ $t('page.notify_channel.email_skip_verify_label') }}</t-checkbox>
+                <div style="font-size: 12px; color: #666; margin-top: 4px; line-height: 1.5;">
+                  ⚠️ {{ $t('page.notify_channel.email_skip_verify_tip') }}
+                </div>
+              </div>
+            </t-form-item>
           </template>
           <t-form-item :label="$t('page.notify_channel.label_status')" name="status">
             <t-radio-group v-model="formEditData.status">
@@ -450,6 +466,7 @@ const INITIAL_DATA = {
   email_from_name: '',
   email_to: '',
   email_ssl_mode: 'none',
+  email_skip_verify: false,
 };
 
 export default Vue.extend({
@@ -553,6 +570,7 @@ export default Vue.extend({
           row.email_from_name = config.from_name || '';
           row.email_to = (config.to_emails || []).join(',');
           row.email_ssl_mode = config.enable_ssl ? 'ssl' : (config.enable_starttls ? 'starttls' : 'none');
+          row.email_skip_verify = config.skip_verify || false;
         } catch (e) {
           console.error('解析邮件配置失败', e);
         }
@@ -607,6 +625,7 @@ export default Vue.extend({
               to_emails: submitData.email_to.split(',').map((email: string) => email.trim()),
               enable_ssl: submitData.email_ssl_mode === 'ssl',
               enable_starttls: submitData.email_ssl_mode === 'starttls',
+              skip_verify: submitData.email_ssl_mode !== 'none' && !!submitData.email_skip_verify,
             };
             submitData.config_json = JSON.stringify(emailConfig);
             // 清空webhook_url和secret字段
@@ -650,6 +669,7 @@ export default Vue.extend({
               to_emails: submitData.email_to.split(',').map((email: string) => email.trim()),
               enable_ssl: submitData.email_ssl_mode === 'ssl',
               enable_starttls: submitData.email_ssl_mode === 'starttls',
+              skip_verify: submitData.email_ssl_mode !== 'none' && !!submitData.email_skip_verify,
             };
             submitData.config_json = JSON.stringify(emailConfig);
             // 清空webhook_url和secret字段
@@ -717,6 +737,7 @@ export default Vue.extend({
         this.formData.email_from_name = '';
         this.formData.email_to = '';
         this.formData.email_ssl_mode = 'none';
+        this.formData.email_skip_verify = false;
       } else {
         this.formData.access_token = '';
         this.formData.email_smtp_host = '';
@@ -727,6 +748,7 @@ export default Vue.extend({
         this.formData.email_from_name = '';
         this.formData.email_to = '';
         this.formData.email_ssl_mode = 'none';
+        this.formData.email_skip_verify = false;
       }
     },
     handleEditTypeChange(value: string) {
@@ -746,6 +768,7 @@ export default Vue.extend({
         this.formEditData.email_from_name = '';
         this.formEditData.email_to = '';
         this.formEditData.email_ssl_mode = 'none';
+        this.formEditData.email_skip_verify = false;
       } else {
         this.formEditData.access_token = '';
         this.formEditData.email_smtp_host = '';
@@ -756,6 +779,7 @@ export default Vue.extend({
         this.formEditData.email_from_name = '';
         this.formEditData.email_to = '';
         this.formEditData.email_ssl_mode = 'none';
+        this.formEditData.email_skip_verify = false;
       }
     },
   },
@@ -778,6 +802,20 @@ export default Vue.extend({
 .left-operation-container {
   .t-button {
     margin-right: 8px;
+  }
+}
+
+// 防止复选框方块在标签换行时被压扁
+.skip-verify-checkbox {
+  align-items: flex-start;
+
+  /deep/ .t-checkbox__input {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /deep/ .t-checkbox__label {
+    line-height: 1.4;
   }
 }
 </style>
