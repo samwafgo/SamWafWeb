@@ -222,139 +222,39 @@
               {{$t('page.host.tab_engine')}}
             </template>
 
-            <t-form-item :label="$t('page.host.bot_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.bot_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.bot">
+            <t-table
+              :data="defenseRows"
+              :columns="defenseColumns"
+              row-key="key"
+              size="small"
+              :max-height="440"
+              bordered
+              hover
+            >
+              <template #detection="{ row }">
+                <t-tooltip class="placement top center" :content="row.tips" placement="top"
+                           :overlay-style="{ width: '300px' }" show-arrow>
+                  <span>{{ row.label }}</span>
+                </t-tooltip>
+              </template>
+              <template #status="{ row }">
+                <t-radio-group :value="getDefenseValue(row)" @change="val => setDefenseValue(row, val)"
+                               style="white-space:nowrap;flex-wrap:nowrap">
                   <t-radio value="0">{{$t('common.off')}}</t-radio>
                   <t-radio value="1">{{$t('common.on')}}</t-radio>
                 </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.sql_injection_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.sql_injection_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.sqli">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.xss_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.xss_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.xss">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.scan_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.scan_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.scan">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.rce_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.rce_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.rce">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.sensitive_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.sensitive_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.sensitive">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.dir_traversal_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.dir_traversal_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.traversal">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-            </t-form-item>
-            <t-form-item :label="$t('page.host.owaspset_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.owaspset_detection_tips')" placement="top"
-                       :overlay-style="{ width: '200px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.owaspset">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-              <t-link theme="primary" size="small" style="margin-left:12px" @click="$router.push({name:'OwaspManage'})">
-                {{ $t('page.host.owasp_manage_link') }} <t-icon name="jump" />
-              </t-link>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.ai_detection')">
-              <t-tooltip class="placement top center" :content="$t('page.host.ai_detection_tips')" placement="top"
-                       :overlay-style="{ width: '240px' }" show-arrow>
-                <t-radio-group v-model="hostDefenseData.ai">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-              <t-link theme="primary" size="small" style="margin-left:12px" @click="$router.push({name:'AIModelManage'})">
-                {{ $t('page.host.ai_manage_link') }} <t-icon name="jump" />
-              </t-link>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.tab_cookie_security')">
-              <t-tooltip class="placement top center" :content="$t('page.host.cookie_security.intro')" placement="top"
-                       :overlay-style="{ width: '320px' }" show-arrow>
-                <t-radio-group v-model="cookieSecurityConfigData.is_enable">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-              <t-link theme="primary" size="small" style="margin-left:12px" @click="activeTab = 16">
-                {{ $t('page.host.config_detail') }} <t-icon name="jump" />
-              </t-link>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.tab_csrf')">
-              <t-tooltip class="placement top center" :content="$t('page.host.csrf.intro')" placement="top"
-                       :overlay-style="{ width: '320px' }" show-arrow>
-                <t-radio-group v-model="csrfConfigData.is_enable">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-              <t-link theme="primary" size="small" style="margin-left:12px" @click="activeTab = 17">
-                {{ $t('page.host.config_detail') }} <t-icon name="jump" />
-              </t-link>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.host.tab_tamper')">
-              <t-tooltip class="placement top center" :content="$t('page.host.tamper.intro')" placement="top"
-                       :overlay-style="{ width: '320px' }" show-arrow>
-                <t-radio-group v-model="tamperConfigData.is_enable">
-                  <t-radio value="0">{{$t('common.off')}}</t-radio>
-                  <t-radio value="1">{{$t('common.on')}}</t-radio>
-                </t-radio-group>
-              </t-tooltip>
-              <t-link theme="primary" size="small" style="margin-left:12px" @click="activeTab = 18">
-                {{ $t('page.host.config_detail') }} <t-icon name="jump" />
-              </t-link>
-            </t-form-item>
+              </template>
+              <template #op="{ row }">
+                <t-link v-if="row.action && row.action.type==='route'" theme="primary" size="small"
+                        @click="$router.push({name: row.action.name})">
+                  {{ row.action.text }} <t-icon name="jump" />
+                </t-link>
+                <t-link v-else-if="row.action && row.action.type==='tab'" theme="primary" size="small"
+                        @click="activeTab = row.action.tab">
+                  {{ $t('page.host.config_detail') }} <t-icon name="jump" />
+                </t-link>
+              </template>
+            </t-table>
           </t-tab-panel>
 
           <t-tab-panel :value="4">
@@ -547,6 +447,13 @@
             </template>
             <tamper-config :tamper-config="tamperConfigData" :prop-host-code="formData.code" :prop-host="formData.host" :prop-bind-more-host="formData.bind_more_host" @update="val => tamperConfigData = val"></tamper-config>
           </t-tab-panel>
+          <t-tab-panel :value="19">
+            <template #label>
+              <t-icon name="file-safety" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_upload_security')}}
+            </template>
+            <upload-security-config :upload-security-config="uploadSecurityConfigData" @update="val => uploadSecurityConfigData = val"></upload-security-config>
+          </t-tab-panel>
           <t-tab-panel :value="15">
             <template #label>
               <t-icon name="swap" style="margin-right: 4px;color:#0052d9"/>
@@ -604,9 +511,10 @@
   import CookieSecurityConfig from '../components/CookieSecurityConfig.vue';
   import CsrfConfig from '../components/CsrfConfig.vue';
   import TamperConfig from '../components/TamperConfig.vue';
+  import UploadSecurityConfig from '../components/UploadSecurityConfig.vue';
   import PathRuleConfig from '../components/PathRuleConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,INITIAL_CSRF,INITIAL_TAMPER,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,INITIAL_CSRF,INITIAL_TAMPER,INITIAL_UPLOAD_SECURITY,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -629,6 +537,7 @@
       CookieSecurityConfig,
       CsrfConfig,
       TamperConfig,
+      UploadSecurityConfig,
       PathRuleConfig,
     },
     props: {
@@ -692,6 +601,7 @@
         cookieSecurityConfigData: { ...INITIAL_COOKIE_SECURITY },
         csrfConfigData: { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] },
         tamperConfigData: { ...INITIAL_TAMPER },
+        uploadSecurityConfigData: { ...INITIAL_UPLOAD_SECURITY },
         activeTab: 1, // 当前激活的配置 Tab（受控，供防御总览开关「配置详情」跳转）
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
@@ -781,9 +691,35 @@
       },
       // 获取HTTPS重定向服务器状态文本
       httpsRedirectStatusText() {
-        return this.httpsRedirectConfig.enable_https_redirect === '1' 
+        return this.httpsRedirectConfig.enable_https_redirect === '1'
           ? this.$t('page.host.auto_jump_https.https_redirect_server_on')
           : this.$t('page.host.auto_jump_https.https_redirect_server_off');
+      },
+      // 引擎自带防护表格列
+      defenseColumns() {
+        return [
+          { colKey: 'detection', title: this.$t('page.host.defense_col_item'), width: 220 },
+          { colKey: 'status', title: this.$t('page.host.defense_col_status'), width: 220 },
+          { colKey: 'op', title: this.$t('page.host.defense_col_op'), width: 120, align: 'left' },
+        ];
+      },
+      // 引擎自带防护行（src 决定开关绑定到 defense_json 还是各子配置的 is_enable）
+      defenseRows() {
+        return [
+          { key: 'bot', src: 'defense', label: this.$t('page.host.bot_detection'), tips: this.$t('page.host.bot_detection_tips') },
+          { key: 'sqli', src: 'defense', label: this.$t('page.host.sql_injection_detection'), tips: this.$t('page.host.sql_injection_detection_tips') },
+          { key: 'xss', src: 'defense', label: this.$t('page.host.xss_detection'), tips: this.$t('page.host.xss_detection_tips') },
+          { key: 'scan', src: 'defense', label: this.$t('page.host.scan_detection'), tips: this.$t('page.host.scan_detection_tips') },
+          { key: 'rce', src: 'defense', label: this.$t('page.host.rce_detection'), tips: this.$t('page.host.rce_detection_tips') },
+          { key: 'sensitive', src: 'defense', label: this.$t('page.host.sensitive_detection'), tips: this.$t('page.host.sensitive_detection_tips') },
+          { key: 'traversal', src: 'defense', label: this.$t('page.host.dir_traversal_detection'), tips: this.$t('page.host.dir_traversal_detection_tips') },
+          { key: 'owaspset', src: 'defense', label: this.$t('page.host.owaspset_detection'), tips: this.$t('page.host.owaspset_detection_tips'), action: { type: 'route', name: 'OwaspManage', text: this.$t('page.host.owasp_manage_link') } },
+          { key: 'ai', src: 'defense', label: this.$t('page.host.ai_detection'), tips: this.$t('page.host.ai_detection_tips'), action: { type: 'route', name: 'AIModelManage', text: this.$t('page.host.ai_manage_link') } },
+          { key: 'cookie', src: 'cookie', label: this.$t('page.host.tab_cookie_security'), tips: this.$t('page.host.cookie_security.intro'), action: { type: 'tab', tab: 16 } },
+          { key: 'csrf', src: 'csrf', label: this.$t('page.host.tab_csrf'), tips: this.$t('page.host.csrf.intro'), action: { type: 'tab', tab: 17 } },
+          { key: 'tamper', src: 'tamper', label: this.$t('page.host.tab_tamper'), tips: this.$t('page.host.tamper.intro'), action: { type: 'tab', tab: 18 } },
+          { key: 'upload', src: 'upload', label: this.$t('page.host.tab_upload_security'), tips: this.$t('page.host.upload_security.intro'), action: { type: 'tab', tab: 19 } },
+        ];
       }
     },
     watch: {
@@ -1125,6 +1061,30 @@
             this.tamperConfigData = { ...INITIAL_TAMPER };
           }
 
+          // 解析文件上传内容检测配置
+          if (this.formData.upload_security_json && this.formData.upload_security_json !== '') {
+            try {
+              const up = JSON.parse(this.formData.upload_security_json);
+              this.uploadSecurityConfigData = {
+                is_enable: String(up.is_enable !== undefined ? up.is_enable : 0),
+                check_ext: String(up.check_ext !== undefined ? up.check_ext : 0),
+                ext_blacklist: up.ext_blacklist || '',
+                check_content: String(up.check_content !== undefined ? up.check_content : 0),
+                check_magic: String(up.check_magic !== undefined ? up.check_magic : 0),
+                check_size: String(up.check_size !== undefined ? up.check_size : 0),
+                max_size_kb: up.max_size_kb !== undefined ? up.max_size_kb : 10240,
+                over_limit_action: up.over_limit_action || 'block',
+                include_paths: up.include_paths || '',
+                exclude_paths: up.exclude_paths || '',
+              };
+            } catch (e) {
+              console.error('解析upload_security_json失败', e);
+              this.uploadSecurityConfigData = { ...INITIAL_UPLOAD_SECURITY };
+            }
+          } else {
+            this.uploadSecurityConfigData = { ...INITIAL_UPLOAD_SECURITY };
+          }
+
           // 解析静态网站配置
           if (this.formData.static_site_json) {
             try {
@@ -1214,6 +1174,42 @@
       this.getHttpsRedirectConfig();
     },
     methods: {
+      // 引擎自带防护表格：按 row.src 读开关值（defense_json 各项 或 各子配置的 is_enable）
+      getDefenseValue(row) {
+        switch (row.src) {
+          case 'cookie': return this.cookieSecurityConfigData.is_enable;
+          case 'csrf': return this.csrfConfigData.is_enable;
+          case 'tamper': return this.tamperConfigData.is_enable;
+          case 'upload': return this.uploadSecurityConfigData.is_enable;
+          default: return this.hostDefenseData[row.key];
+        }
+      },
+      // 引擎自带防护表格：按 row.src 写开关值
+      setDefenseValue(row, val) {
+        switch (row.src) {
+          case 'cookie': this.cookieSecurityConfigData.is_enable = val; break;
+          case 'csrf': this.csrfConfigData.is_enable = val; break;
+          case 'tamper': this.tamperConfigData.is_enable = val; break;
+          case 'upload':
+            this.uploadSecurityConfigData.is_enable = val;
+            // 一键开启时若四个检测维度全关，自动套用推荐策略（否则总开关开了也不检测）
+            if (val === '1') {
+              const u = this.uploadSecurityConfigData;
+              const allOff = ['check_ext', 'check_content', 'check_magic', 'check_size']
+                .every(k => String(u[k]) !== '1');
+              if (allOff) {
+                u.check_ext = '1';
+                u.check_content = '1';
+                u.check_magic = '1';
+                u.check_size = '1';
+                u.over_limit_action = u.over_limit_action || 'block';
+                u.max_size_kb = u.max_size_kb || 10240;
+              }
+            }
+            break;
+          default: this.hostDefenseData[row.key] = val; break;
+        }
+      },
       // 获取HTTPS重定向服务器配置
       async getHttpsRedirectConfig() {
         try {
@@ -1500,6 +1496,20 @@
               is_enable: parseInt(this.tamperConfigData.is_enable, 10) || 0,
               action: this.tamperConfigData.action || 'replace',
               max_size_kb: parseInt(this.tamperConfigData.max_size_kb, 10) || 1024,
+            });
+
+            // 处理文件上传内容检测配置
+            postdata['upload_security_json'] = JSON.stringify({
+              is_enable: parseInt(this.uploadSecurityConfigData.is_enable, 10) || 0,
+              check_ext: parseInt(this.uploadSecurityConfigData.check_ext, 10) || 0,
+              ext_blacklist: this.uploadSecurityConfigData.ext_blacklist || '',
+              check_content: parseInt(this.uploadSecurityConfigData.check_content, 10) || 0,
+              check_magic: parseInt(this.uploadSecurityConfigData.check_magic, 10) || 0,
+              check_size: parseInt(this.uploadSecurityConfigData.check_size, 10) || 0,
+              max_size_kb: parseInt(this.uploadSecurityConfigData.max_size_kb, 10) || 10240,
+              over_limit_action: this.uploadSecurityConfigData.over_limit_action || 'block',
+              include_paths: this.uploadSecurityConfigData.include_paths || '',
+              exclude_paths: this.uploadSecurityConfigData.exclude_paths || '',
             });
 
             // 处理静态网站配置

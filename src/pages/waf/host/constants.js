@@ -36,6 +36,7 @@ export const INITIAL_DATA = {
   cookie_security_json: '{"is_enable":0,"http_only":1,"secure":2,"same_site":"Lax","exclude_cookies":""}',
   csrf_json: '{"is_enable":0,"protect_methods":"POST,PUT,DELETE,PATCH","allowed_origins":"","allow_empty_ref":1,"exclude_paths":""}',
   tamper_json: '{"is_enable":0,"action":"replace","max_size_kb":1024}',
+  upload_security_json: '{"is_enable":0,"check_ext":0,"ext_blacklist":"","check_content":0,"check_magic":0,"check_size":0,"max_size_kb":10240,"over_limit_action":"block","include_paths":"","exclude_paths":""}',
   static_site_json: '{"is_enable_static_site":0,"static_site_path":"","static_site_prefix":"/","sensitive_paths":"/etc/passwd,/etc/shadow,/etc/group,/etc/gshadow,/etc/hosts,/etc/hostname,/etc/resolv.conf,/etc/ssh/,/var/log/,/.ssh/,/.bash_history,/.profile,/.bashrc,/etc/crontab,/var/spool/cron/,/etc/apache2/,/etc/nginx/,/etc/httpd/,/var/www/,/usr/share/,/var/tmp/,/var/run/,c:\\windows\\,c:\\program files\\,c:\\program files (x86)\\,c:\\users\\,c:\\documents and settings\\,c:\\windows\\system32\\,c:\\windows\\syswow64\\,c:\\boot.ini,c:\\autoexec.bat,c:\\config.sys,\\windows\\,\\program files\\,\\program files (x86)\\,\\users\\,\\documents and settings\\,\\windows\\system32\\,\\windows\\syswow64\\,boot.ini,autoexec.bat,config.sys,ntuser.dat,pagefile.sys,hiberfil.sys,swapfile.sys","sensitive_extensions":"key,.pem,.crt,.p12,.pfx,.jks,.bak,.backup,.old,.orig,.save,.sql,.db,.sqlite,.mdb,.env,.htaccess,.htpasswd,.git,.svn,.hg,.bzr,.DS_Store,Thumbs.db,desktop.ini,.tmp,.temp,.lock,.pid","allowed_extensions":".html,.htm,.css,.js,.json,.png,.jpg,.jpeg,.gif,.svg,.ico,.webp,.pdf,.txt,.md,.xml,.woff,.woff2,.ttf,.eot,.mp4,.webm,.ogg,.mp3,.wav,.zip,.tar,.gz,.rar","sensitive_patterns":"(?i)\\.git(/|\\\\),(?i)\\.svn(/|\\\\),(?i)\\.env,(?i)database\\.(php|xml|json|yaml|yml),(?i)(backup|dump|export)\\.(sql|db|tar|zip|gz),(?i)(id_rsa|id_dsa|id_ecdsa|id_ed25519),(?i)\\.ssh(/|\\\\).*,(?i)(access|error|debug)\\.log,(?i)web\\.config,(?i)phpinfo\\.php","security_headers":[]}', // 新增静态网站配置
   default_encoding: "auto",//默认编码 utf-8 或者 gbk auto字符串自动选择 
   log_only_mode: "0",//仅记录模式 1 启动仅记录模式 0 关闭仅记录模式
@@ -160,6 +161,20 @@ export const INITIAL_TAMPER = {
   is_enable: "0",
   action: "replace",
   max_size_kb: 1024,
+};
+
+// 文件上传内容检测初始化数据（开关类为字符串便于 t-radio 绑定）
+export const INITIAL_UPLOAD_SECURITY = {
+  is_enable: "0",
+  check_ext: "0",
+  ext_blacklist: "",
+  check_content: "0",
+  check_magic: "0",
+  check_size: "0",
+  max_size_kb: 10240,
+  over_limit_action: "block",
+  include_paths: "",
+  exclude_paths: "",
 };
 
 // CSRF 防护初始化数据（is_enable/allow_empty_ref 为字符串便于 t-radio 绑定；protect_methods 为数组便于 t-checkbox-group 绑定）
