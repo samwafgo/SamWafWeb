@@ -3,37 +3,102 @@
     <t-card class="list-card-container">
       <t-tabs v-model="activeTab" @change="handleTabChange">
 
-        <!-- ── SQL 查询 Tab ─────────────────────────────────────────────────── -->
+        <!-- ── 结构化查询 Tab ───────────────────────────────────────────────── -->
         <t-tab-panel :value="'query'" :label="$t('page.sql_query.tab_query')">
           <div style="padding-top: 16px;">
-            <t-form :labelWidth="120">
+            <t-alert theme="info" :message="$t('page.sql_query.query_tip')" style="margin-bottom: 16px;" />
+
+            <t-form :labelWidth="90">
               <t-row :gutter="16">
-                <t-col :span="6">
+                <t-col :span="4">
                   <t-form-item :label="$t('page.sql_query.db_type')">
-                    <t-select v-model="dbType" :style="{ width: '100%' }">
+                    <t-select v-model="dbType" :style="{ width: '100%' }" @change="onDbTypeChange">
                       <t-option value="local"  :label="$t('page.sql_query.db_type_local')"></t-option>
                       <t-option value="log"    :label="$t('page.sql_query.db_type_log')"></t-option>
                       <t-option value="stats"  :label="$t('page.sql_query.db_type_stats')"></t-option>
                     </t-select>
                   </t-form-item>
                 </t-col>
-              </t-row>
-
-              <t-row :gutter="16" style="margin-top: 16px;">
-                <!-- 与「选择数据库」同一列宽 span=6，控件右边缘对齐 -->
-                <t-col :span="6">
-                  <t-form-item :label="$t('page.sql_query.sql_input')">
-                    <t-textarea
-                      v-model="sqlQuery"
-                      :placeholder="$t('page.sql_query.sql_placeholder')"
-                      :autosize="{ minRows: 5, maxRows: 10 }"
-                      :style="{ width: '100%' }"
-                    />
+                <t-col :span="4">
+                  <t-form-item :label="$t('page.sql_query.query_mode')">
+                    <t-radio-group v-model="mode" variant="default-filled">
+                      <t-radio-button value="list">{{ $t('page.sql_query.mode_list') }}</t-radio-button>
+                      <t-radio-button value="count">{{ $t('page.sql_query.mode_count') }}</t-radio-button>
+                    </t-radio-group>
                   </t-form-item>
                 </t-col>
               </t-row>
 
-              <t-row style="margin-top: 16px;">
+              <t-row :gutter="16" style="margin-top: 8px;">
+                <t-col :span="4">
+                  <t-form-item :label="$t('page.sql_query.table_label')">
+                    <t-select
+                      v-model="selectedTable"
+                      filterable
+                      :loading="schemaLoading"
+                      :placeholder="$t('page.sql_query.table_placeholder')"
+                      :style="{ width: '100%' }"
+                      @change="onTableChange"
+                    >
+                      <t-option v-for="t in queryableTables" :key="t.table_name" :value="t.table_name" :label="t.table_name"></t-option>
+                    </t-select>
+                  </t-form-item>
+                </t-col>
+                <t-col :span="8" v-if="mode === 'list'">
+                  <t-form-item :label="$t('page.sql_query.columns_label')">
+                    <t-select
+                      v-model="selectedColumns"
+                      multiple
+                      filterable
+                      :minCollapsedNum="4"
+                      :disabled="!selectedTable"
+                      :placeholder="$t('page.sql_query.columns_placeholder')"
+                      :style="{ width: '100%' }"
+                    >
+                      <t-option v-for="c in currentTableColumns" :key="c.name" :value="c.name" :label="c.name + ' (' + c.type + ')'"></t-option>
+                    </t-select>
+                  </t-form-item>
+                </t-col>
+              </t-row>
+
+              <!-- 条件构造器 -->
+              <t-form-item :label="$t('page.sql_query.filters_label')">
+                <div style="width: 100%;">
+                  <div v-for="(f, i) in filters" :key="i" class="filter-row">
+                    <t-select
+                      v-model="f.column"
+                      filterable
+                      :disabled="!selectedTable"
+                      :placeholder="$t('page.sql_query.filter_column')"
+                      style="width: 220px;"
+                    >
+                      <t-option v-for="c in currentTableColumns" :key="c.name" :value="c.name" :label="c.name"></t-option>
+                    </t-select>
+                    <t-select v-model="f.op" style="width: 110px;">
+                      <t-option v-for="op in opOptions" :key="op" :value="op" :label="op"></t-option>
+                    </t-select>
+                    <t-input
+                      v-model="f.value"
+                      :placeholder="f.op === 'in' ? $t('page.sql_query.filter_in_placeholder') : $t('page.sql_query.filter_value_placeholder')"
+                      style="width: 260px;"
+                    />
+                    <t-button theme="danger" variant="text" @click="removeFilter(i)">✕</t-button>
+                  </div>
+                  <t-button theme="default" variant="dashed" :disabled="!selectedTable" @click="addFilter">
+                    + {{ $t('page.sql_query.filter_add') }}
+                  </t-button>
+                </div>
+              </t-form-item>
+
+              <t-row :gutter="16" v-if="mode === 'list'">
+                <t-col :span="4">
+                  <t-form-item :label="$t('page.sql_query.top_label')">
+                    <t-input-number v-model="top" :min="1" :max="1000" theme="normal" :style="{ width: '100%' }" />
+                  </t-form-item>
+                </t-col>
+              </t-row>
+
+              <t-row style="margin-top: 8px;">
                 <t-col>
                   <t-button theme="primary" @click="executeQuery" :loading="queryLoading">
                     {{ $t('page.sql_query.execute_query') }}
@@ -44,7 +109,14 @@
 
             <t-divider style="margin-top: 24px; margin-bottom: 24px;"></t-divider>
 
-            <div v-if="queryResult.columns.length > 0">
+            <!-- 计数结果 -->
+            <div v-if="queryResult.mode === 'count' && hasQueried && !queryLoading">
+              <h3>{{ $t('page.sql_query.count_result') }}</h3>
+              <p class="count-value">{{ $t('page.sql_query.count_value', { count: queryResult.total }) }}</p>
+            </div>
+
+            <!-- 列表结果 -->
+            <div v-else-if="queryResult.columns.length > 0">
               <h3>{{ $t('page.sql_query.query_result') }}</h3>
               <p style="margin-bottom: 16px; color: #666;">
                 {{ $t('page.sql_query.total_records', { count: queryResult.total }) }}
@@ -181,7 +253,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { sql_query_execute_api, sql_query_table_info_api } from '@/apis/sqlquery';
+import { sql_query_execute_api, sql_query_table_info_api, sql_query_queryable_api } from '@/apis/sqlquery';
 import { MessagePlugin } from 'tdesign-vue';
 
 export default Vue.extend({
@@ -190,20 +262,28 @@ export default Vue.extend({
     return {
       activeTab: 'query',
 
-      // ── SQL 查询 ──────────────────────────────────────────────────────────
+      // ── 结构化查询 ────────────────────────────────────────────────────────
       dbType: 'local',
-      sqlQuery: '',
+      mode: 'list',                       // list | count
+      queryableTables: [] as any[],       // [{ table_name, columns:[{name,type}] }]
+      schemaLoading: false,
+      selectedTable: '',
+      selectedColumns: [] as string[],
+      filters: [] as any[],               // [{ column, op, value }]
+      top: 100,
+      opOptions: ['=', '!=', '>', '>=', '<', '<=', 'like', 'in'],
+
       queryLoading: false,
       hasQueried: false,
-      queryResult: { columns: [], data: [], total: 0 },
-      queryColumns: [],
+      queryResult: { mode: 'list', columns: [], data: [], total: 0 } as any,
+      queryColumns: [] as any[],
       pagination: { total: 0, current: 1, pageSize: 50 },
-      allData: [],
+      allData: [] as any[],
 
       // ── 数据库结构 ────────────────────────────────────────────────────────
       structDbType: 'local',
       structLoading: false,
-      tableInfoList: [],
+      tableInfoList: [] as any[],
       // 默认按行数倒序
       structSort: { sortBy: 'row_count', descending: true } as any,
 
@@ -213,11 +293,7 @@ export default Vue.extend({
 
       // 结构表格列定义（在 data 里声明避免 this 上下文问题）
       structTableCols: [] as any[],
-
-      // 字段信息列
       columnInfoCols: [] as any[],
-
-      // 索引信息列
       indexInfoCols: [] as any[],
     };
   },
@@ -227,6 +303,11 @@ export default Vue.extend({
     },
     totalRows(): number {
       return (this.tableInfoList as any[]).reduce((s, t) => s + (t.row_count || 0), 0);
+    },
+    // 当前所选表的可见列
+    currentTableColumns(): any[] {
+      const t = (this.queryableTables as any[]).find((x) => x.table_name === this.selectedTable);
+      return t ? (t.columns || []) : [];
     },
     // 手动排序（col_count / idx_count 已作为真实字段预计算好）
     sortedTableInfoList(): any[] {
@@ -248,6 +329,7 @@ export default Vue.extend({
     this.initCols();
   },
   mounted() {
+    this.loadQueryableSchema();
     this.loadTableInfo();
   },
   methods: {
@@ -266,7 +348,6 @@ export default Vue.extend({
           title: this.$t('page.sql_query.structure_row_count'),
           width: 140,
           sorter: true,
-          // 千位分隔符显示
           cell: (h, { row }) => h('span', Number(row.row_count).toLocaleString()),
         },
         {
@@ -274,14 +355,12 @@ export default Vue.extend({
           title: this.$t('page.sql_query.structure_col_count'),
           width: 100,
           sorter: true,
-          // col_count 已在 loadTableInfo 预计算为真实字段
         },
         {
           colKey: 'idx_count',
           title: this.$t('page.sql_query.structure_idx_count'),
           width: 100,
           sorter: true,
-          // idx_count 已在 loadTableInfo 预计算为真实字段
         },
         {
           colKey: 'action',
@@ -363,31 +442,105 @@ export default Vue.extend({
       }
     },
 
-    // ── SQL 查询 ──────────────────────────────────────────────────────────────
+    // ── 结构化查询 ────────────────────────────────────────────────────────────
+    async loadQueryableSchema() {
+      this.schemaLoading = true;
+      try {
+        const res = await sql_query_queryable_api({ db_type: this.dbType });
+        if (res.code === 0) {
+          this.queryableTables = res.data.tables || [];
+          // 当前所选表已不在可查列表则清空
+          if (this.selectedTable && !(this.queryableTables as any[]).find((t) => t.table_name === this.selectedTable)) {
+            this.selectedTable = '';
+            this.selectedColumns = [];
+            this.filters = [];
+          }
+        } else {
+          MessagePlugin.error(res.msg || this.$t('page.sql_query.structure_load_failed'));
+        }
+      } catch {
+        MessagePlugin.error(this.$t('page.sql_query.structure_load_failed'));
+      } finally {
+        this.schemaLoading = false;
+      }
+    },
+
+    onDbTypeChange() {
+      this.selectedTable = '';
+      this.selectedColumns = [];
+      this.filters = [];
+      this.loadQueryableSchema();
+    },
+
+    onTableChange() {
+      // 换表后列/条件失效，清空重来
+      this.selectedColumns = [];
+      this.filters = [];
+    },
+
+    addFilter() {
+      (this.filters as any[]).push({ column: '', op: '=', value: '' });
+    },
+
+    removeFilter(i) {
+      (this.filters as any[]).splice(i, 1);
+    },
+
+    // 组装结构化条件：跳过未选列；in 运算符按英文逗号拆成数组
+    buildFilters() {
+      return (this.filters as any[])
+        .filter((f) => f.column)
+        .map((f) => {
+          if (f.op === 'in') {
+            const arr = String(f.value == null ? '' : f.value)
+              .split(',')
+              .map((s) => s.trim())
+              .filter((s) => s !== '');
+            return { column: f.column, op: f.op, value: arr };
+          }
+          return { column: f.column, op: f.op, value: f.value };
+        });
+    },
+
     async executeQuery() {
-      if (!this.sqlQuery.trim()) {
-        MessagePlugin.warning('请输入SQL查询语句');
+      if (!this.selectedTable) {
+        MessagePlugin.warning(this.$t('page.sql_query.select_table_first'));
         return;
       }
       this.queryLoading = true;
       this.hasQueried   = true;
       try {
-        const res = await sql_query_execute_api({ db_type: this.dbType, sql: this.sqlQuery, limit: 1000 });
+        const payload: any = {
+          db_type: this.dbType,
+          table: this.selectedTable,
+          mode: this.mode,
+          filters: this.buildFilters(),
+        };
+        if (this.mode === 'list') {
+          payload.columns = this.selectedColumns;
+          payload.top = this.top;
+        }
+        const res = await sql_query_execute_api(payload);
         if (res.code === 0) {
-          const result     = res.data;
-          const rows       = (result.data || []).map((r, i) => ({ ...r, __idx: i }));
-          this.allData     = rows;
-          this.queryResult = { columns: result.columns || [], data: rows, total: result.total || 0 };
-          this.pagination  = { ...this.pagination, total: result.total || 0, current: 1 };
-          this.buildQueryColumns(result.columns || []);
+          const result = res.data;
+          if (result.mode === 'count') {
+            this.queryResult = { mode: 'count', columns: [], data: [], total: result.total || 0 };
+            this.queryColumns = [];
+          } else {
+            const rows = (result.data || []).map((r, i) => ({ ...r, __idx: i }));
+            this.allData = rows;
+            this.queryResult = { mode: 'list', columns: result.columns || [], data: rows, total: result.total || 0 };
+            this.pagination = { ...this.pagination, total: result.total || 0, current: 1 };
+            this.buildQueryColumns(result.columns || []);
+          }
           MessagePlugin.success(this.$t('page.sql_query.query_success'));
         } else {
           MessagePlugin.error(res.msg || this.$t('page.sql_query.query_failed'));
-          this.queryResult = { columns: [], data: [], total: 0 };
+          this.queryResult = { mode: this.mode, columns: [], data: [], total: 0 };
         }
       } catch (error) {
         MessagePlugin.error(this.$t('page.sql_query.query_failed'));
-        this.queryResult = { columns: [], data: [], total: 0 };
+        this.queryResult = { mode: this.mode, columns: [], data: [], total: 0 };
       } finally {
         this.queryLoading = false;
       }
@@ -448,12 +601,16 @@ export default Vue.extend({
       this.detailVisible = true;
     },
 
+    // 结构页「查询Top100」：同步库类型 → 载入可查结构 → 结构化 list 查询该表前 100 行
     async queryTop100(row) {
-      // 同步 db 类型到查询 Tab，填入 SQL，切换到查询 Tab 后执行
-      this.dbType   = this.structDbType;
-      this.sqlQuery = `SELECT * FROM ${row.table_name} LIMIT 100`;
-      this.activeTab = 'query';
-      // 等待 DOM 更新后再执行，避免 Tab 切换动画干扰
+      this.dbType = this.structDbType;
+      await this.loadQueryableSchema();
+      this.mode           = 'list';
+      this.selectedTable  = row.table_name;
+      this.selectedColumns = [];
+      this.filters        = [];
+      this.top            = 100;
+      this.activeTab      = 'query';
       await this.$nextTick();
       this.executeQuery();
     },
@@ -482,6 +639,21 @@ export default Vue.extend({
 <style lang="less" scoped>
 .list-card-container {
   padding: 24px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.count-value {
+  margin: 12px 0 8px;
+  font-size: 26px;
+  line-height: 1.6;
+  font-weight: 600;
+  color: var(--td-brand-color, #0052d9);
 }
 
 .stat-card {
@@ -516,9 +688,5 @@ export default Vue.extend({
     padding-left: 8px;
     border-left: 3px solid var(--td-brand-color, #0052d9);
   }
-}
-
-::v-deep .t-textarea__inner {
-  font-family: 'Courier New', monospace;
 }
 </style>
