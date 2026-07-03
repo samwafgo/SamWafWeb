@@ -15,7 +15,8 @@ const CODE = {
   REQUEST_SUCCESS: 0,
   REQUEST_FOBID: 1001,
   AUTH_FAILURE: -999,
-  NEED_BIND_2FA: -3
+  NEED_BIND_2FA: -3,
+  NEED_CHANGE_PWD: -4
 };
 
 const instance = axios.create({
@@ -107,6 +108,13 @@ instance.interceptors.response.use(
 
           console.log("需要2Fa强制绑定")
           router.replace({ path: '/account/OTP' })
+        }
+        else if (!remoteBean && data.code === CODE.NEED_CHANGE_PWD) {
+          // 服务端强制改密门：令牌未改密即访问其他接口时触发，引导回登录重新进入强制改密流程
+          saveCurrentUrl();
+          clearLocalStorageExceptPreserved();
+          console.log("需要强制修改初始/重置密码")
+          router.replace({ path: '/login' })
         }
         else if (remoteBean && data.code === CODE.AUTH_FAILURE) {
           remoteBean = JSON.parse(localStorage.getItem("current_server"))

@@ -176,16 +176,17 @@ export default Vue.extend({
           if (res.code == 0) {
             localStorage.setItem("access_token", res.data.access_token);
             localStorage.setItem("current_account", this.formData.account);
-            this.$store.dispatch('user/login', this.formData);
-            this.$store.dispatch('sysparams/fetchParams');
 
             // 首次登录/口令到期：强制改密，改密成功后再进入系统
+            // 注意：改密前不要触发受服务端"强制改密门"拦截的接口(如 fetchParams)，否则会拿到 -4
             if (res.data.need_change_password) {
               this.changePwdReason = res.data.change_password_reason || '';
               this.showChangePwd = true;
               return;
             }
 
+            this.$store.dispatch('user/login', this.formData);
+            this.$store.dispatch('sysparams/fetchParams');
             this.$message.success(this.$t('login.login_success'));
 
             setTimeout(() => {
@@ -210,8 +211,10 @@ export default Vue.extend({
         });
       }
     },
-    // 强制改密成功后进入系统
+    // 强制改密成功后再加载受保护的系统参数并进入系统（此时服务端已清除令牌的强制改密标记）
     onChangePwdSuccess() {
+      this.$store.dispatch('user/login', this.formData);
+      this.$store.dispatch('sysparams/fetchParams');
       this.$message.success(this.$t('login.login_success'));
       setTimeout(() => {
         const redirectUrl = getSafeRedirectUrl();
