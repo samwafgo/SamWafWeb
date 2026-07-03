@@ -7,12 +7,28 @@ export function updateIpWhitelistApi(data) {
     data: data
   })
 }
-//更新Vp配置文件的ip白名单 
+//更新Vp配置文件的ip白名单
 export function getIpWhitelistApi(params) {
   return request({
     url: 'vipconfig/getIpWhitelist',
     method: 'get',
     params: params
+  })
+}
+//获取管理端可信代理网段
+export function getManageTrustedProxiesApi(params) {
+  return request({
+    url: 'vipconfig/getManageTrustedProxies',
+    method: 'get',
+    params: params
+  })
+}
+//更新管理端可信代理网段
+export function updateManageTrustedProxiesApi(data) {
+  return request({
+    url: 'vipconfig/updateManageTrustedProxies',
+    method: 'post',
+    data: data
   })
 }
 //更新SSL启用状态

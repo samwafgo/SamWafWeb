@@ -32,6 +32,39 @@
         </t-loading>
       </t-card>
 
+      <!-- 管理端可信代理网段卡片 -->
+      <t-card class="list-card-container">
+        <template #header>
+          <t-row justify="space-between">
+            <div class="card-header-title">
+              <t-space>
+                <div>{{ $t('page.vpconfig.trusted_proxies_title') }}</div>
+                <t-tooltip :content="$t('page.vpconfig.trusted_proxies_description')">
+                  <t-icon name="help-circle" />
+                </t-tooltip>
+              </t-space>
+            </div>
+            <t-space>
+              <t-button theme="primary" @click="handleTrustedProxiesRefresh">{{ $t('common.refresh') }}</t-button>
+              <t-button theme="primary" @click="handleTrustedProxiesSave">{{ $t('common.save') }}</t-button>
+            </t-space>
+          </t-row>
+        </template>
+
+        <t-loading :loading="trustedProxiesLoading">
+          <t-form :data="trustedProxiesFormData" :label-width="180">
+            <t-form-item :label="$t('page.vpconfig.trusted_proxies')">
+              <t-textarea
+                v-model="trustedProxiesFormData.trusted_proxies"
+                :placeholder="$t('page.vpconfig.trusted_proxies_placeholder')"
+                :autosize="{ minRows: 3, maxRows: 8 }"
+              />
+              <div class="form-item-tips">{{ $t('page.vpconfig.trusted_proxies_tips') }}</div>
+            </t-form-item>
+          </t-form>
+        </t-loading>
+      </t-card>
+
       <!-- 域名白名单卡片 -->
       <t-card class="list-card-container">
         <template #header>
@@ -351,7 +384,7 @@
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -391,6 +424,11 @@
         formData: {
           ip_whitelist: ''
         },
+        // 管理端可信代理网段（配置存 config.yml，被白名单挡住时可改文件+重启自救）
+        trustedProxiesFormData: {
+          trusted_proxies: ''
+        },
+        trustedProxiesLoading: false,
         sslFormData: {
           ssl_enable: false,
           has_cert: false,
@@ -468,6 +506,7 @@
     },
     mounted() {
       this.fetchData();
+      this.fetchTrustedProxies();
       this.fetchDomainWhitelist();
       this.fetchSslStatus();
       this.fetchSslForceHttps();
@@ -496,6 +535,45 @@
       },
       handleRefresh() {
         this.fetchData();
+      },
+      fetchTrustedProxies() {
+        this.trustedProxiesLoading = true;
+        getManageTrustedProxiesApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.trustedProxiesFormData.trusted_proxies = res.data.trusted_proxies || '';
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.api_error'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.api_error'));
+          })
+          .finally(() => {
+            this.trustedProxiesLoading = false;
+          });
+      },
+      handleTrustedProxiesRefresh() {
+        this.fetchTrustedProxies();
+      },
+      handleTrustedProxiesSave() {
+        this.trustedProxiesLoading = true;
+        updateManageTrustedProxiesApi({
+          trusted_proxies: this.trustedProxiesFormData.trusted_proxies
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              MessagePlugin.success(this.$t('common.tips.save_success'));
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.trustedProxiesLoading = false;
+          });
       },
       fetchDomainWhitelist() {
         this.domainLoading = true;
