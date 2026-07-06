@@ -65,6 +65,39 @@
         </t-loading>
       </t-card>
 
+      <!-- CORS 跨域白名单卡片 -->
+      <t-card class="list-card-container">
+        <template #header>
+          <t-row justify="space-between">
+            <div class="card-header-title">
+              <t-space>
+                <div>{{ $t('page.vpconfig.cors_title') }}</div>
+                <t-tooltip :content="$t('page.vpconfig.cors_description')">
+                  <t-icon name="help-circle" />
+                </t-tooltip>
+              </t-space>
+            </div>
+            <t-space>
+              <t-button theme="primary" @click="handleCorsRefresh">{{ $t('common.refresh') }}</t-button>
+              <t-button theme="primary" @click="handleCorsSave">{{ $t('common.save') }}</t-button>
+            </t-space>
+          </t-row>
+        </template>
+
+        <t-loading :loading="corsLoading">
+          <t-form :data="corsFormData" :label-width="180">
+            <t-form-item :label="$t('page.vpconfig.cors_origins')">
+              <t-textarea
+                v-model="corsFormData.cors_allow_origins"
+                :placeholder="$t('page.vpconfig.cors_placeholder')"
+                :autosize="{ minRows: 3, maxRows: 8 }"
+              />
+              <div class="form-item-tips">{{ $t('page.vpconfig.cors_tips') }}</div>
+            </t-form-item>
+          </t-form>
+        </t-loading>
+      </t-card>
+
       <!-- 域名白名单卡片 -->
       <t-card class="list-card-container">
         <template #header>
@@ -384,7 +417,7 @@
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getCorsAllowOriginsApi, updateCorsAllowOriginsApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -429,6 +462,11 @@
           trusted_proxies: ''
         },
         trustedProxiesLoading: false,
+        // CORS 跨域来源白名单（配置存 config.yml，回环/本机始终放行）
+        corsFormData: {
+          cors_allow_origins: ''
+        },
+        corsLoading: false,
         sslFormData: {
           ssl_enable: false,
           has_cert: false,
@@ -507,6 +545,7 @@
     mounted() {
       this.fetchData();
       this.fetchTrustedProxies();
+      this.fetchCors();
       this.fetchDomainWhitelist();
       this.fetchSslStatus();
       this.fetchSslForceHttps();
@@ -573,6 +612,45 @@
           })
           .finally(() => {
             this.trustedProxiesLoading = false;
+          });
+      },
+      fetchCors() {
+        this.corsLoading = true;
+        getCorsAllowOriginsApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.corsFormData.cors_allow_origins = res.data.cors_allow_origins || '';
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.api_error'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.api_error'));
+          })
+          .finally(() => {
+            this.corsLoading = false;
+          });
+      },
+      handleCorsRefresh() {
+        this.fetchCors();
+      },
+      handleCorsSave() {
+        this.corsLoading = true;
+        updateCorsAllowOriginsApi({
+          cors_allow_origins: this.corsFormData.cors_allow_origins
+        })
+          .then((res) => {
+            if (res.code === 0) {
+              MessagePlugin.success(this.$t('common.tips.save_success'));
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.save_failed'));
+          })
+          .finally(() => {
+            this.corsLoading = false;
           });
       },
       fetchDomainWhitelist() {

@@ -4,6 +4,21 @@ import proxy from '../config/host';
 import router from '../router/index';
 import { AesDecrypt, AesEncrypt, isObject, isInList } from './usuallytool'
 import { clearLocalStorageExceptPreserved,saveCurrentUrl } from '@/constants';
+import { NotifyPlugin, DialogPlugin } from 'tdesign-vue';
+
+// 连接失败(网络/跨域)提示：每次页面加载最多提示一次，避免刷屏
+let netErrNotified = false;
+
+// 弹出"解决办法"详情对话框（内容较长，用对话框保证完整可读，不被通知截断）
+function showNetErrDetail(origin: string) {
+  let dialog: any;
+  dialog = DialogPlugin.alert({
+    header: '无法连接后端（可能跨域 CORS 被拦截）',
+    body: `请确认后端服务已启动。若前端跨域访问被拦截(CORS)，请把当前来源 ${origin} 填入后端 conf/config.yml 的 security.cors_allow_origins 字段（多个用英文逗号分隔）后重启后端；或登录后在「系统配置」页的「CORS 跨域白名单」卡片填写。`,
+    confirmBtn: '知道了',
+    onConfirm: () => dialog.hide(),
+  });
+}
 
 const env = import.meta.env.MODE || 'development';
 
@@ -127,6 +142,31 @@ instance.interceptors.response.use(
     }
   },
   (err) => {
+    // 网络失败/跨域被拦截：axios 对 CORS/网络错误可能给出 err.response.status===0（而非无 response），
+    // 故用 ERR_NETWORK / 无 response / status 0 三者兜底判定，避免 !err.response 漏判导致提示不弹。
+    if (err.code === 'ERR_NETWORK' || !err.response || err.response.status === 0) {
+      try {
+        if (!netErrNotified) {
+          netErrNotified = true;
+          const origin = window.location.origin || '';
+          NotifyPlugin.error({
+            title: '无法连接后端',
+            content: '可能后端未启动，或前端跨域(CORS)被拦截。',
+            footer: (h: any) =>
+              h(
+                't-button',
+                {
+                  props: { theme: 'primary', variant: 'base', size: 'small' },
+                  on: { click: () => showNetErrDetail(origin) },
+                },
+                '查看解决办法',
+              ),
+            duration: 0,
+            closeBtn: true,
+          });
+        }
+      } catch (e) { /* ignore */ }
+    }
     // 处理403错误，直接显示禁止访问页面
     if (err.response && err.response.status === 403) {
       const accessDeniedHtml = `
