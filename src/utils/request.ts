@@ -2,12 +2,15 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import proxy from '../config/host';
 import router from '../router/index';
+import store from '@/store';
 import { AesDecrypt, AesEncrypt, isObject, isInList } from './usuallytool'
 import { clearLocalStorageExceptPreserved,saveCurrentUrl } from '@/constants';
-import { NotifyPlugin, DialogPlugin } from 'tdesign-vue';
+import { NotifyPlugin, DialogPlugin, MessagePlugin } from 'tdesign-vue';
 
 // 连接失败(网络/跨域)提示：每次页面加载最多提示一次，避免刷屏
 let netErrNotified = false;
+// 请求超时提示的节流时间戳：并发超时时 3 秒内只提示一次，避免刷屏
+let lastTimeoutNotifyAt = 0;
 
 // 弹出"解决办法"详情对话框（内容较长，用对话框保证完整可读，不被通知截断）
 function showNetErrDetail(origin: string) {
@@ -17,6 +20,44 @@ function showNetErrDetail(origin: string) {
     body: `请确认后端服务已启动。若前端跨域访问被拦截(CORS)，请把当前来源 ${origin} 填入后端 conf/config.yml 的 security.cors_allow_origins 字段（多个用英文逗号分隔）后重启后端；或登录后在「系统配置」页的「CORS 跨域白名单」卡片填写。`,
     confirmBtn: '知道了',
     onConfirm: () => dialog.hide(),
+  });
+}
+
+// 超时后“重试”：重新发起同一请求（请求拦截器会刷新 X-Request-Time/X-Request-Id，不会触发防重放）。
+// 仅重发这一条请求，不刷新整页，避免丢失表单等状态。
+function retryTimedOutRequest(config: any) {
+  if (!config) return;
+  instance
+    .request(config)
+    .then(() => MessagePlugin.success('重试成功'))
+    .catch(() => { /* 再次失败会由拦截器再次提示，无需重复处理 */ });
+}
+
+// 应急恢复入口：原 App.vue 的「检测到前端运行异常 → 进入紧急模式」合并到此，仅在后端配置了应急入口时可用。
+function getEmergencyPath(): string {
+  try {
+    return (store as any)?.state?.sysparams?.emergencyPath || '';
+  } catch (e) {
+    return '';
+  }
+}
+function showEmergencyRecovery() {
+  const path = getEmergencyPath();
+  if (!path) {
+    MessagePlugin.warning('当前未启用应急入口，无法进入应急模式');
+    return;
+  }
+  let dialog: any;
+  dialog = DialogPlugin.confirm({
+    header: '应急恢复模式',
+    body: '[适用于升级异常场景] 若升级后前端/后端异常，可进入应急恢复模式，在不依赖前端的情况下执行版本回退。是否进入？',
+    confirmBtn: '进入紧急模式',
+    cancelBtn: '取消',
+    onConfirm: () => {
+      window.location.href = path + '?back=' + encodeURIComponent(window.location.href);
+      dialog.hide();
+    },
+    onCancel: () => dialog.hide(),
   });
 }
 
@@ -142,8 +183,58 @@ instance.interceptors.response.use(
     }
   },
   (err) => {
+    // 超时：后端“可达但响应过慢”（或网络慢），并非连不上/跨域。axios 超时表现为 code=ECONNABORTED 且无 response，
+    // 若不单独处理会落入下面的「无法连接后端(CORS)」分支造成误导。这里单独提示（含超时秒数）并提供“重试”。
+    const isTimeout =
+      err.code === 'ECONNABORTED' ||
+      (typeof err.message === 'string' && err.message.indexOf('timeout') !== -1);
+    if (isTimeout) {
+      try {
+        const seconds = Math.round((((err.config && err.config.timeout) || 5000)) / 1000);
+        const now = Date.now();
+        if (now - lastTimeoutNotifyAt > 3000) {
+          lastTimeoutNotifyAt = now;
+          const cfg = err.config;
+          NotifyPlugin.warning({
+            title: '请求超时',
+            content: `请求已超过 ${seconds} 秒未响应，后端可能繁忙或网络较慢，请重试。`,
+            footer: (h: any) => {
+              const hasEmergency = !!getEmergencyPath();
+              return h(
+                'div',
+                { style: 'display:flex;gap:8px;justify-content:flex-end' },
+                [
+                  h(
+                    't-button',
+                    {
+                      props: { theme: 'primary', variant: 'base', size: 'small' },
+                      on: { click: () => retryTimedOutRequest(cfg) },
+                    },
+                    '重试',
+                  ),
+                  hasEmergency
+                    ? h(
+                        't-button',
+                        {
+                          props: { theme: 'default', variant: 'outline', size: 'small' },
+                          on: { click: () => showEmergencyRecovery() },
+                        },
+                        '应急恢复',
+                      )
+                    : null,
+                ],
+              );
+            },
+            duration: 0,
+            closeBtn: true,
+          });
+        }
+      } catch (e) { /* ignore */ }
+      return Promise.reject(err);
+    }
     // 网络失败/跨域被拦截：axios 对 CORS/网络错误可能给出 err.response.status===0（而非无 response），
     // 故用 ERR_NETWORK / 无 response / status 0 三者兜底判定，避免 !err.response 漏判导致提示不弹。
+    // 注意：超时已在上方 return，不会走到这里，因此这里不会把“慢响应”误报成“连不上”。
     if (err.code === 'ERR_NETWORK' || !err.response || err.response.status === 0) {
       try {
         if (!netErrNotified) {

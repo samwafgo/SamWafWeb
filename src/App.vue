@@ -60,6 +60,9 @@ export default Vue.extend({
           /network\s*error/i,
           /failed\s*to\s*fetch/i,
           /request\s*(aborted|cancelled|canceled|timed?\s*out)/i,
+          // 请求超时（axios: "timeout of 5000ms exceeded"）：属后端慢/连接问题，已由 utils/request.ts 的
+          // 「请求超时」通知统一处理（含重试与应急恢复入口），此处不再弹「前端运行异常」对话框，避免重复。
+          /timeout\s+of\s+\d+\s*ms/i,
           /the\s*user\s*aborted/i,
           /ResizeObserver\s*loop/i,
           /NavigationDuplicated/i,
