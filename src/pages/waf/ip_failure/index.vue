@@ -36,7 +36,7 @@
   when
     MF.GetIPFailureCount(5) > 10
   then
-    Retract("R80798f795d7947419ba6f593708b4013");
+    RF.Deny();
 }</pre>
                   </div>
                   <div class="rule-section">

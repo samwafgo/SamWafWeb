@@ -1,52 +1,57 @@
 <template>
   <div>
     <t-card class="list-card-container">
-      <t-row justify="space-between">
+      <!-- 操作区：左侧增删操作 + 右侧编排模式(配置入口) -->
+      <div class="rule-toolbar-actions">
         <div class="left-operation-container">
           <t-button @click="handleAddRule"> {{ $t('page.rule.button_add_rule') }} </t-button>
-          <t-button 
-            theme="danger" 
-            variant="outline" 
+          <t-button
+            theme="danger"
+            variant="outline"
             @click="handleBatchDelete"
             :disabled="selectedRowKeys.length === 0"
           >
             {{ $t('page.rule.button_batch_delete') }}
           </t-button>
-          <t-button 
-            theme="danger" 
+          <t-button
+            theme="danger"
             :disabled="data.length === 0"
             @click="handleClearAll"
           >
             {{ $t('page.rule.button_clear_all') }}
           </t-button>
         </div>
-        <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
-            <t-form-item :label="$t('page.rule.label_website')" name="host_code">
-              <t-select v-model="searchformData.host_code" clearable filterable :style="{ width: '150px' }">
-                <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
-                  {{ item }}
-                </t-option>
-              </t-select>
-            </t-form-item>
-            <t-form-item :label="$t('page.rule.label_rule_name')" name="rule_name">
-              <t-input v-model="searchformData.rule_name" class="search-input" clearable>
-              </t-input>
-            </t-form-item>
-            <t-form-item :label="$t('page.rule.label_rule_code')" name="rule_code">
-              <t-input v-model="searchformData.rule_code" class="search-input" clearable>
-              </t-input>
-            </t-form-item>
-            <t-form-item>
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')">
-                {{ $t('common.search') }}
-              </t-button>
-            </t-form-item>
-          </t-form>
+        <t-button theme="primary" variant="outline" class="chain-mode-btn" @click="openChainMode">
+          <template #icon><swap-icon /></template>
+          {{ $t('page.rule.chain_mode.entry') }}
+        </t-button>
+      </div>
 
-        </div>
-
-      </t-row>
+      <!-- 筛选区：单独一行 -->
+      <div class="rule-toolbar-search">
+        <t-form ref="form" :data="searchformData" :label-width="70" layout="inline" colon>
+          <t-form-item :label="$t('page.rule.label_website')" name="host_code">
+            <t-select v-model="searchformData.host_code" clearable filterable :style="{ width: '150px' }">
+              <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
+                {{ item }}
+              </t-option>
+            </t-select>
+          </t-form-item>
+          <t-form-item :label="$t('page.rule.label_rule_name')" name="rule_name">
+            <t-input v-model="searchformData.rule_name" class="search-input" clearable>
+            </t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.rule.label_rule_code')" name="rule_code">
+            <t-input v-model="searchformData.rule_code" class="search-input" clearable>
+            </t-input>
+          </t-form-item>
+          <t-form-item>
+            <t-button theme="primary" @click="getList('all')">
+              {{ $t('common.search') }}
+            </t-button>
+          </t-form-item>
+        </t-form>
+      </div>
 
       <t-alert theme="info" :message="$t('page.rule.alert_message')" close>
         <template #operation>
@@ -117,14 +122,40 @@
         {{ $t('page.rule.confirm_clear_all') }}
       </div>
     </t-dialog>
+
+    <!-- 规则编排模式设置(rule_chain_mode) -->
+    <t-dialog
+      :header="$t('page.rule.chain_mode.title')"
+      :visible.sync="chainModeVisible"
+      width="640px"
+      :footer="false"
+    >
+      <t-alert theme="info" :message="$t('page.rule.chain_mode.intro')" style="margin-bottom: 12px;" />
+      <t-radio-group v-model="chainMode" class="chain-mode-group">
+        <div class="chain-mode-item" v-for="opt in chainModeOptions" :key="opt.value" @click="chainMode = opt.value">
+          <t-radio :value="opt.value">
+            <span class="chain-mode-label">{{ opt.label }}</span>
+            <t-tag v-if="opt.recommend" theme="success" variant="light" size="small" class="chain-mode-tag">
+              {{ $t('page.rule.chain_mode.recommend') }}
+            </t-tag>
+          </t-radio>
+          <div class="chain-mode-desc">{{ opt.desc }}</div>
+        </div>
+      </t-radio-group>
+      <div class="ai-prompt-ops" style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
+        <t-button theme="primary" :loading="chainModeSaving" @click="saveChainMode">{{ $t('common.save') }}</t-button>
+        <t-button variant="outline" @click="chainModeVisible = false">{{ $t('common.close') }}</t-button>
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
 import Vue from 'vue';
-import { SearchIcon } from 'tdesign-icons-vue';
+import { SearchIcon, SwapIcon } from 'tdesign-icons-vue';
 import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
 import { wafRuleListApi,wafRuleDelApi,wafRuleBatchDelApi,wafRuleDelAllApi,changeRuleStatus } from '@/apis/rules';
+import { get_detail_by_item_api, edit_system_config_by_item_api } from '@/apis/systemconfig';
 import { allhost } from '@/apis/host';
 import { RULE_STATUS,CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
 
@@ -143,6 +174,7 @@ export default Vue.extend({
   name: 'ListBase',
   components: {
     SearchIcon,
+    SwapIcon,
     Trend,
   },
   data() {
@@ -151,6 +183,10 @@ export default Vue.extend({
       editFormVisible:false,
       batchDeleteVisible: false,
       clearAllVisible: false,
+      // 规则编排模式(rule_chain_mode)：0 默认(CC之后)，1 规则优先(推荐/最新)
+      chainModeVisible: false,
+      chainModeSaving: false,
+      chainMode: '0',
       formData: { ...INITIAL_DATA },
       formEditData: { ...INITIAL_DATA },
       rules: {
@@ -241,6 +277,22 @@ export default Vue.extend({
     offsetTop() {
       return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
     },
+    chainModeOptions() {
+      return [
+        {
+          value: '0',
+          label: this.$t('page.rule.chain_mode.mode0_label'),
+          desc: this.$t('page.rule.chain_mode.mode0_desc'),
+          recommend: false,
+        },
+        {
+          value: '1',
+          label: this.$t('page.rule.chain_mode.mode1_label'),
+          desc: this.$t('page.rule.chain_mode.mode1_desc'),
+          recommend: true,
+        },
+      ];
+    },
   },
   mounted() {
     this.loadHostList().then(() => {
@@ -249,6 +301,35 @@ export default Vue.extend({
   },
 
   methods: {
+    // 打开"规则编排模式"设置并读取当前值
+    openChainMode() {
+      this.chainModeVisible = true;
+      get_detail_by_item_api({ item: 'rule_chain_mode' })
+        .then((res) => {
+          if (res.code === 0 && res.data) {
+            this.chainMode = res.data.value === '1' ? '1' : '0';
+          }
+        })
+        .catch((e) => { console.log(e); });
+    },
+    // 保存"规则编排模式"（走系统配置 editByItem，后端会热同步到 global）
+    saveChainMode() {
+      this.chainModeSaving = true;
+      edit_system_config_by_item_api({ item: 'rule_chain_mode', value: this.chainMode })
+        .then((res) => {
+          if (res.code === 0) {
+            this.$message.success(this.$t('page.rule.chain_mode.saved'));
+            this.chainModeVisible = false;
+          } else {
+            this.$message.warning(res.msg || this.$t('page.rule.chain_mode.save_fail'));
+          }
+        })
+        .catch((e) => {
+          console.log(e);
+          this.$message.error(this.$t('page.rule.chain_mode.save_fail'));
+        })
+        .finally(() => { this.chainModeSaving = false; });
+    },
     loadHostList() {
       return new Promise((resolve, reject) => {
         allhost()
@@ -501,9 +582,43 @@ export default Vue.extend({
 @import '@/style/variables';
 
 
+/* 操作区：增删操作(左) + 编排模式(右) 一行分列 */
+.rule-toolbar-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* 筛选区：单独一行，与操作区用分隔线区隔 */
+.rule-toolbar-search {
+  padding-top: 12px;
+  border-top: 1px solid var(--td-component-stroke, #e7e7e7);
+  margin-bottom: 8px;
+
+  .t-form {
+    margin-bottom: 0;
+  }
+
+  .t-form__item {
+    margin-bottom: 8px;
+  }
+}
+
+/* 编排模式：图标 + 强调描边，突出这是个配置入口 */
+.chain-mode-btn {
+  .t-icon {
+    margin-right: 4px;
+  }
+}
+
 .left-operation-container {
-  padding: 0 0 6px 0;
-  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 
   .selected-count {
     display: inline-block;
@@ -513,10 +628,44 @@ export default Vue.extend({
 }
 
 .search-input {
-  width: 360px;
+  width: 220px;
 }
 
 .t-button + .t-button {
     margin-left: @spacer;
  }
+
+/* 操作区用 flex gap 控制间距，避免与上面的相邻按钮 margin 叠加 */
+.rule-toolbar-actions .t-button + .t-button,
+.left-operation-container .t-button + .t-button {
+  margin-left: 0;
+}
+
+.chain-mode-group {
+  display: block;
+  width: 100%;
+}
+.chain-mode-item {
+  border: 1px solid var(--td-component-border, #e7e7e7);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.chain-mode-item:hover {
+  border-color: var(--td-brand-color, #0052d9);
+}
+.chain-mode-label {
+  font-weight: 500;
+}
+.chain-mode-tag {
+  margin-left: 8px;
+}
+.chain-mode-desc {
+  color: var(--td-text-color-secondary, #666);
+  font-size: 12px;
+  margin-top: 6px;
+  padding-left: 24px;
+  line-height: 1.6;
+}
 </style>

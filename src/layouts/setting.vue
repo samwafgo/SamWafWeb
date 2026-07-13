@@ -10,6 +10,8 @@
       class="setting-drawer-container"
     >
       <div class="setting-container">
+        <t-tabs default-value="theme" class="setting-tabs">
+        <t-tab-panel value="theme" :label="$t('page.right_setting.tab_theme')">
         <t-form :data="formData" size="large" ref="form" labelAlign="left" @reset="onReset" @submit="onSubmit">
           <div class="setting-group-title">{{ $t('page.right_setting.theme_mode') }}</div>
           <t-radio-group v-model="formData.mode">
@@ -108,6 +110,30 @@
             {{ $t('page.right_setting.clear_settings') }}
           </t-button>
         </div>
+        </t-tab-panel>
+
+        <t-tab-panel value="general" :label="$t('page.right_setting.tab_general')">
+          <div class="setting-general">
+            <div class="setting-group-title">{{ $t('page.right_setting.local_timeout_title') }}</div>
+            <div class="local-timeout-body">
+              <t-input-number
+                v-model="localTimeoutSec"
+                :min="localTimeoutMinSec"
+                :max="localTimeoutMaxSec"
+                :step="1"
+                theme="column"
+                style="width: 150px;"
+              />
+              <span class="local-timeout-unit">{{ $t('page.right_setting.local_timeout_unit') }}</span>
+              <t-button theme="primary" @click="saveLocalTimeout">{{ $t('common.save') }}</t-button>
+              <t-button variant="outline" @click="resetLocalTimeout">{{ $t('page.right_setting.local_timeout_reset') }}</t-button>
+            </div>
+            <div class="local-timeout-tip">
+              {{ $t('page.right_setting.local_timeout_tip', { def: localTimeoutDefaultSec }) }}
+            </div>
+          </div>
+        </t-tab-panel>
+        </t-tabs>
       </div>
     </t-drawer>
   </div>
@@ -127,6 +153,9 @@ import SettingDarkIcon from '@/assets/assets-setting-dark.svg';
 import SettingLightIcon from '@/assets/assets-setting-light.svg';
 import SettingAutoIcon from '@/assets/assets-setting-auto.svg';
 import i18n from "./../i18n";
+import {
+  getRequestTimeout, setRequestTimeout, DEFAULT_REQUEST_TIMEOUT, MIN_REQUEST_TIMEOUT, MAX_REQUEST_TIMEOUT
+} from '@/config/requestTimeout';
 
 const SETTING_STORAGE_KEY = 'samwaf_page_setting';
 const LAYOUT_OPTION = ['side', 'top', 'mix'];
@@ -151,6 +180,11 @@ export default {
       visible: false,
       formData: { ...STYLE_CONFIG },
       isColoPickerDisplay: false,
+      // 前端请求超时（浏览器本地设置，单位秒）
+      localTimeoutSec: Math.round(getRequestTimeout() / 1000),
+      localTimeoutMinSec: Math.round(MIN_REQUEST_TIMEOUT / 1000),
+      localTimeoutMaxSec: Math.round(MAX_REQUEST_TIMEOUT / 1000),
+      localTimeoutDefaultSec: Math.round(DEFAULT_REQUEST_TIMEOUT / 1000),
     };
   },
   computed: {
@@ -197,6 +231,18 @@ export default {
     });
   },
   methods: {
+    // 保存前端请求超时（浏览器本地设置，立即生效，无需刷新）
+    saveLocalTimeout() {
+      const savedMs = setRequestTimeout(Number(this.localTimeoutSec) * 1000);
+      this.localTimeoutSec = Math.round(savedMs / 1000);
+      this.$message.success(this.$t('page.right_setting.local_timeout_saved'));
+    },
+    // 恢复默认超时
+    resetLocalTimeout() {
+      const savedMs = setRequestTimeout(DEFAULT_REQUEST_TIMEOUT);
+      this.localTimeoutSec = Math.round(savedMs / 1000);
+      this.$message.success(this.$t('page.right_setting.local_timeout_saved'));
+    },
     onPopupVisibleChange(visible: boolean, context: PopupVisibleChangeContext) {
       if (!visible && context.trigger === 'document') this.isColoPickerDisplay = visible;
     },
@@ -361,6 +407,26 @@ export default {
   font-style: normal;
   font-weight: 500;
   color: var(--td-text-color-primary);
+}
+
+.setting-general {
+  .local-timeout-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .local-timeout-unit {
+    color: var(--td-text-color-secondary);
+  }
+
+  .local-timeout-tip {
+    color: var(--td-text-color-placeholder);
+    font-size: 12px;
+    margin-top: 12px;
+    line-height: 1.6;
+  }
 }
 
 .setting-group-color {
