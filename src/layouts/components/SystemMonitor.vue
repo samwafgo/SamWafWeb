@@ -164,6 +164,15 @@ import { RefreshIcon, DashboardIcon } from 'tdesign-icons-vue';
 import { getSystemMonitorApi } from '@/apis/monitor';
 import { mapGetters, mapMutations } from 'vuex';
 
+// 后端 database.driver 取值 -> 展示名。
+// 不能用「不是 mysql 就当 sqlite」的兜底：新增 postgres 后会被误显示成 SQLite。
+// 未知 driver 直接原样显示，比错报一个数据库名要好。
+const DB_DRIVER_LABELS = {
+  sqlite: 'SQLite',
+  mysql: 'MySQL',
+  postgres: 'PostgreSQL',
+};
+
 export default Vue.extend({
   name: 'SystemMonitor',
   components: {
@@ -202,9 +211,8 @@ export default Vue.extend({
     },
     dbLabel() {
       const d = this.runtimeDb;
-      if (d.driver === 'mysql') return 'MySQL';
       if (!d.driver) return '-';
-      return 'SQLite';
+      return DB_DRIVER_LABELS[d.driver] || d.driver;
     },
     cacheLabel() {
       const c = this.runtimeCache;
@@ -214,9 +222,10 @@ export default Vue.extend({
     },
     dbDetail() {
       const d = this.runtimeDb;
-      if (d.driver === 'mysql') return d.host ? `MySQL (${d.host}:${d.port})` : 'MySQL';
       if (!d.driver) return '-';
-      return 'SQLite';
+      const name = DB_DRIVER_LABELS[d.driver] || d.driver;
+      // 服务端数据库(mysql/postgres)才有 host/port，sqlite 是本地文件
+      return d.host ? `${name} (${d.host}:${d.port})` : name;
     },
     cacheDetail() {
       const c = this.runtimeCache;
