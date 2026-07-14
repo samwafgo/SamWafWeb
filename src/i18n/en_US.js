@@ -1514,6 +1514,7 @@ export default {
       confirm_batch_delete: "Confirm to delete selected data?",
       batch_delete_success: "Batch delete successful",
       no_data_selected: "Please select data to delete first",
+      unavailable_alert: "System firewall blocking is not available in the current environment. Add / Enable / Sync are disabled (existing records can still be viewed and deleted). Reason: ",
     },
     ldpurl: {
       new_privacy_url: "Add New Privacy Protection URL",

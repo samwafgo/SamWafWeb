@@ -1518,6 +1518,7 @@ export default {
       confirm_batch_delete: "确认删除选中的数据？",
       batch_delete_success: "批量删除成功",
       no_data_selected: "请先选择要删除的数据",
+      unavailable_alert: "当前环境不支持系统防火墙封禁，新增/启用/同步已停用（已有记录仍可查看和删除）。原因：",
     },
     ldpurl: {
       new_privacy_url: "新建隐私保护Url",
