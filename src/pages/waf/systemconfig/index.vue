@@ -1,81 +1,98 @@
 <template>
   <div>
     <t-card class="list-card-container">
-      <t-row justify="space-between">
-        <div class="left-operation-container">
-          <t-button @click="handleAddAccount"> {{$t('page.systemconfig.new_system_configuration')}} </t-button>
-        </div>
+      <t-row justify="end" align="middle" :style="{ marginBottom: '12px' }">
         <div class="right-operation-container">
-          <t-form ref="form" :data="searchformData" :label-width="140" layout="inline" colon :style="{ marginBottom: '8px' }">
-            <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
-              <t-input v-model="searchformData.item" class="search-input" style="width:200px" clearable>
-              </t-input>
-            </t-form-item>
-            <t-form-item :label="$t('common.remarks')" name="remarks">
-              <t-input v-model="searchformData.remarks" class="search-input" style="width:200px" clearable>
-              </t-input>
-            </t-form-item>
-            <t-form-item>
-              <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')">
-                {{ $t('common.search') }}
-              </t-button>
-            </t-form-item>
-          </t-form>
+          <t-input
+            v-model="keyword"
+            class="config-search-input"
+            :placeholder="$t('page.systemconfig.search_placeholder')"
+            clearable
+          >
+            <template #prefix-icon>
+              <search-icon />
+            </template>
+          </t-input>
         </div>
       </t-row>
 
-      <div class="table-container">
-        <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
-          :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
-          @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
-          :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
+      <t-loading :loading="dataLoading" size="small">
+        <div class="config-layout">
+          <!-- 左侧：分组导航 -->
+          <div class="config-sidebar">
+            <div
+              class="config-cate"
+              :class="{ active: selectedGroup === '__all__' }"
+              @click="selectedGroup = '__all__'"
+            >
+              <span class="config-cate-title">{{ $t('common.all') }}</span>
+              <t-tag size="small" variant="light" theme="default">{{ filteredData.length }}</t-tag>
+            </div>
+            <div
+              v-for="cate in categories"
+              :key="cate.key"
+              class="config-cate"
+              :class="{ active: selectedGroup === cate.key }"
+              @click="selectedGroup = cate.key"
+            >
+              <span class="config-cate-title" :title="cate.title">{{ cate.title }}</span>
+              <t-tag
+                size="small"
+                variant="light"
+                :theme="selectedGroup === cate.key ? 'primary' : 'default'"
+                >{{ cate.count }}</t-tag
+              >
+            </div>
+          </div>
 
+          <!-- 右侧：配置项明细 -->
+          <div class="config-detail">
+            <div v-if="rightItems.length === 0" class="config-empty">
+              {{ $t('page.systemconfig.empty_result') }}
+            </div>
+            <div v-for="row in rightItems" :key="row.id" class="config-row">
+              <div class="config-row-main">
+                <div class="config-item-title">
+                  {{ row.remarks || row.item }}
+                  <t-tag
+                    v-if="selectedGroup === '__all__' && row.item_class"
+                    size="small"
+                    variant="outline"
+                    class="config-item-cate-tag"
+                    >{{ cateTitle(row.item_class) }}</t-tag
+                  >
+                </div>
+                <div class="config-item-ops">
+                  <a class="t-button-link" @click="handleClickEditRow(row)">{{ $t('common.edit') }}</a>
+                </div>
+              </div>
+              <div v-if="row.remarks" class="config-item-key" :title="row.item">{{ row.item }}</div>
+              <div class="config-item-value">{{ row.value }}</div>
+            </div>
+          </div>
+        </div>
+      </t-loading>
 
-
-          <template #op="slotProps">
-            <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
-            <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
-          </template>
-        </t-table>
-      </div>
       <div>
-      <router-view></router-view>
+        <router-view></router-view>
       </div>
     </t-card>
-
-    <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
-      <div slot="body">
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150">
-          <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
-              <t-input :style="{ width: '480px' }" v-model="formData.item"  ></t-input>
-          </t-form-item>
-          <t-form-item :label="$t('page.systemconfig.label_configuration_value')" name="value">
-            <t-input :style="{ width: '480px' }" v-model="formData.value" ></t-input>
-          </t-form-item>
-          <t-form-item :label="$t('common.remarks')" name="remarks">
-            <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"   name="remarks">
-            </t-textarea>
-          </t-form-item>
-          <t-form-item style="float: right">
-            <t-button variant="outline" @click="onClickCloseBtn">{{ $t('common.close') }}</t-button>
-            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
-          </t-form-item>
-        </t-form>
-      </div>
-    </t-dialog>
-
 
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="150">
           <t-form-item :label="$t('page.systemconfig.label_configuration_item')" name="item">
-           <t-input :style="{ width: '480px' }" v-model="formEditData.item" ></t-input>
+            <t-input :style="{ width: '480px' }" v-model="formEditData.item" readonly></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.systemconfig.label_configuration_value')" name="value">
-           <t-input :style="{ width: '480px' }" v-model="formEditData.value" ></t-input>
+            <t-textarea
+              :style="{ width: '480px' }"
+              :autosize="{ minRows: 1, maxRows: 12 }"
+              v-model="formEditData.value"
+            ></t-textarea>
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
-            <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks"  name="remarks">
+            <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks" name="remarks">
             </t-textarea>
           </t-form-item>
           <t-form-item style="float: right">
@@ -85,378 +102,295 @@
         </t-form>
       </div>
     </t-dialog>
-
-    <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
-      :onCancel="onCancel">
-    </t-dialog>
   </div>
 </template>
 <script lang="ts">
-  import Vue from 'vue';
-  import {
-    SearchIcon
-  } from 'tdesign-icons-vue';
-  import Trend from '@/components/trend/index.vue';
-  import {
-    prefix
-  } from '@/config/global';
-  import {
-    system_config_list_api,get_detail_by_id_api,get_detail_by_item_api,add_system_config_api,edit_system_config_api,del_detail_api
-  } from '@/apis/systemconfig';
+import Vue from 'vue';
+import { SearchIcon } from 'tdesign-icons-vue';
+import { prefix } from '@/config/global';
+import {
+  system_config_list_api,
+  get_detail_by_id_api,
+  edit_system_config_api,
+} from '@/apis/systemconfig';
 
+const INITIAL_DATA = {
+  item_class: 'system',
+  item: '',
+  value: '',
+  item_type: 'string',
+  options: '',
+  remarks: '',
+};
 
-
-  const INITIAL_DATA = {
-    item_class:'system',
-    item: '',
-    value: '',
-    item_type: 'string',
-    options: '',
-    remarks : ''
-  };
-  export default Vue.extend({
-    name: 'ListBase',
-    components: {
-      SearchIcon,
+export default Vue.extend({
+  name: 'ListBase',
+  components: {
+    SearchIcon,
+  },
+  data() {
+    return {
+      editFormVisible: false,
+      formEditData: { ...INITIAL_DATA },
+      rules: {},
+      prefix,
+      dataLoading: false,
+      allData: [], // 全量配置数据（一次拉取，前端分组+过滤）
+      detail_data: [],
+      keyword: '', // 实时搜索关键字
+      selectedGroup: '__all__', // 左侧选中的分组，默认全部
+    };
+  },
+  computed: {
+    // 关键字过滤后的数据（作用于全量）
+    filteredData() {
+      const kw = (this.keyword || '').trim().toLowerCase();
+      if (!kw) return this.allData;
+      return this.allData.filter((row) => (
+        String(row.item || '').toLowerCase().includes(kw) ||
+        String(row.value || '').toLowerCase().includes(kw) ||
+        String(row.remarks || '').toLowerCase().includes(kw)
+      ));
     },
-    data() {
-      return {
-        addFormVisible: false,
-        editFormVisible: false,
-        guardVisible: false,
-        confirmVisible: false,
-        formData: {
-          ...INITIAL_DATA
-        },
-        formEditData: {
-          ...INITIAL_DATA
-        },
-        rules: {
-          item: [{
-            required: true,
-            message: this.$t('common.placeholder')+this.$t('page.systemconfig.label_configuration_item'),
-            type: 'error'
-          }],
-        },
-        textareaValue: '',
-        prefix,
-        dataLoading: false,
-        data: [], //列表数据信息
-        detail_data: [], //加载详情信息用于编辑
-        selectedRowKeys: [],
-        value: 'first',
-        columns: [
-          {
-            title: this.$t('page.systemconfig.label_configuration_item'),
-            align: 'left',
-            width: 250,
-            ellipsis: true,
-            colKey: 'item',
-          },
-          {
-            title: this.$t('page.systemconfig.label_configuration_value'),
-            width: 200,
-            ellipsis: true,
-            colKey: 'value',
-          },
-          {
-            title: this.$t('common.remarks'),
-            width: 200,
-            ellipsis: true,
-            colKey: 'remarks',
-          },
-          {
-            title: this.$t('common.create_time'),
-            width: 200,
-            ellipsis: true,
-            colKey: 'create_time',
-          },
-
-          {
-            align: 'left',
-            width: 200,
-            colKey: 'op',
-            title: this.$t('common.op'),
-          },
-        ],
-        rowKey: 'code',
-        tableLayout: 'auto',
-        verticalAlign: 'top',
-        hover: true,
-        rowClassName: (rowKey: string) => `${rowKey}-class`,
-        pagination: {
-          total: 0,
-          current: 1,
-          pageSize: 10
-        },
-        //顶部搜索
-        searchformData: {
-          item:"",
-          remarks:"",
-        },
-        //索引区域
-        deleteIdx: -1,
-        guardStatusIdx :-1,
-      };
-    },
-    computed: {
-      confirmBody() {
-        if (this.deleteIdx > -1) {
-          const {
-            url
-          } = this.data?. [this.deleteIdx];
-          return this.$t('common.data_delete_warning');
+    // 左侧分组列表（含每组数量，随搜索联动）
+    categories() {
+      const map = {};
+      const order = [];
+      this.filteredData.forEach((row) => {
+        const cls = row.item_class || '__uncategorized__';
+        if (map[cls] === undefined) {
+          map[cls] = 0;
+          order.push(cls);
         }
-        return '';
-      },
-      offsetTop() {
-        return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
-      },
+        map[cls] += 1;
+      });
+      return order.map((cls) => ({
+        key: cls,
+        title: this.cateTitle(cls),
+        count: map[cls],
+      }));
     },
-    mounted() {
-      this.getList("")
+    // 右侧展示的配置项：全部 或 选中分组
+    rightItems() {
+      if (this.selectedGroup === '__all__') return this.filteredData;
+      return this.filteredData.filter(
+        (row) => (row.item_class || '__uncategorized__') === this.selectedGroup,
+      );
     },
-
-    methods: {
-      getList(keyword) {
-        let that = this
-        system_config_list_api({
-              pageSize: that.pagination.pageSize,
-              pageIndex: that.pagination.current,
-              ...that.searchformData
-         })
+  },
+  watch: {
+    // 搜索或数据变化后，若选中分组已无数据则回退到“全部”
+    categories(list) {
+      if (
+        this.selectedGroup !== '__all__' &&
+        !list.some((c) => c.key === this.selectedGroup)
+      ) {
+        this.selectedGroup = '__all__';
+      }
+    },
+  },
+  mounted() {
+    this.getList();
+  },
+  methods: {
+    // 分组 key 转多语言名称，缺失时回退原始值
+    cateTitle(cls) {
+      if (!cls || cls === '__uncategorized__') {
+        return this.$t('page.systemconfig.category_uncategorized');
+      }
+      const key = `page.systemconfig.category.${cls}`;
+      return this.$te(key) ? this.$t(key) : cls;
+    },
+    getList() {
+      this.dataLoading = true;
+      system_config_list_api({
+        pageSize: 1000,
+        pageIndex: 1,
+      })
+        .then((res) => {
+          const resdata = res;
+          if (resdata.code === 0) {
+            this.allData = resdata.data.list ?? [];
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        })
+        .finally(() => {
+          this.dataLoading = false;
+        });
+    },
+    handleClickEditRow(row) {
+      this.editFormVisible = true;
+      this.getDetail(row.id);
+    },
+    onSubmitEdit({ firstError }): void {
+      if (!firstError) {
+        const postdata = { ...this.formEditData };
+        edit_system_config_api({ ...postdata })
           .then((res) => {
-            let resdata = res
-            console.log(resdata)
+            const resdata = res;
             if (resdata.code === 0) {
-
-              this.data = resdata.data.list??[];
-              this.data_attach = []
-              console.log('getList',this.data)
-              this.pagination = {
-                ...this.pagination,
-                total: resdata.data.total,
-              };
-            }
-          })
-          .catch((e: Error) => {
-            console.log(e);
-          })
-          .finally(() => {
-            this.dataLoading = false;
-          });
-        this.dataLoading = true;
-      },
-      getContainer() {
-        return document.querySelector('.tdesign-starter-layout');
-      },
-      rehandlePageChange(curr, pageInfo) {
-        this.pagination.current = curr.current
-        if (this.pagination.pageSize != curr.pageSize) {
-          this.pagination.current = 1
-          this.pagination.pageSize = curr.pageSize
-        }
-        this.getList("")
-      },
-      rehandleSelectChange(selectedRowKeys: number[]) {
-        this.selectedRowKeys = selectedRowKeys;
-      },
-      rehandleChange(changeParams, triggerAndData) {
-      },
-      handleClickDetail(e) {
-        console.log(e)
-        const {
-          id
-        } = e.row
-        console.log('list',id)
-        this.$router.push({
-          path: '/systemconfig/detail',
-          query: {
-            id: id,
-          },
-        }, );
-      },
-      handleClickEdit(e) {
-        console.log(e)
-        const {
-          id
-        } = e.row
-        console.log(id)
-        this.editFormVisible = true
-        this.getDetail(id)
-      },
-      handleAddAccount() {
-        //添加
-        this.addFormVisible = true
-        this.formData =  {
-          item: '',
-          value: '',
-        };
-      },
-      onSubmit({
-        result,
-        firstError
-      }): void {
-        let that = this
-        if (!firstError) {
-
-          let postdata = {
-            ...that.formData
-          }
-          add_system_config_api({
-            ...postdata
-          }).then((res) => {
-              let resdata = res
-              console.log(resdata)
-              if (resdata.code === 0) {
-                that.$message.success(resdata.msg);
-                that.addFormVisible = false;
-                that.pagination.current = 1
-                that.getList("")
-              } else {
-                that.$message.warning(resdata.msg);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            })
-            .finally(() => {});
-        } else {
-          console.log('Errors: ', result);
-          that.$message.warning(firstError);
-        }
-      },
-      onSubmitEdit({
-        result,
-        firstError
-      }): void {
-        let that = this
-        if (!firstError) {
-
-          let postdata = {
-            ...that.formEditData
-          }
-          edit_system_config_api({
-           ...postdata
-          }).then((res) => {
-              let resdata = res
-              console.log(resdata)
-              if (resdata.code === 0) {
-                that.$message.success(resdata.msg);
-                that.editFormVisible = false;
-                that.getList("")
-              } else {
-                that.$message.warning(resdata.msg);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            })
-            .finally(() => {});
-        } else {
-          console.log('Errors: ', result);
-          that.$message.warning(firstError);
-        }
-      },
-      onClickCloseBtn(): void {
-        this.addFormVisible = false;
-        this.formData = {...INITIAL_DATA};
-      },
-      onClickCloseEditBtn(): void {
-        this.editFormVisible = false;
-        this.formEditData = {...INITIAL_DATA};
-      },
-      handleClickDelete(row) {
-        console.log(row)
-        this.deleteIdx = row.rowIndex;
-        this.confirmVisible = true;
-      },
-      onConfirmDelete() {
-        this.confirmVisible = false;
-        console.log('delete', this.data)
-        console.log('delete', this.data[this.deleteIdx])
-        let {
-          id
-        } = this.data[this.deleteIdx]
-        let that = this
-        del_detail_api({ 
-           id: id,
-        }).then((res) => {
-            let resdata = res
-            console.log(resdata)
-            if (resdata.code === 0) {
-              that.getList("")
-              that.$message.success(resdata.msg);
+              this.$message.success(resdata.msg);
+              this.editFormVisible = false;
+              this.getList();
             } else {
-              that.$message.warning(resdata.msg);
+              this.$message.warning(resdata.msg);
             }
           })
           .catch((e: Error) => {
             console.log(e);
-          })
-          .finally(() => {});
-
-
-        this.resetIdx();
-      },
-      onCancel() {
-        this.resetIdx();
-      },
-      resetIdx() {
-        this.deleteIdx = -1;
-      },
-      getDetail(id) {
-        let that = this
-        get_detail_by_id_api({ 
-           id: id,
-        }).then((res) => {
-            let resdata = res
-            console.log(resdata)
-            if (resdata.code === 0) {
-              that.detail_data = resdata.data;
-              that.formEditData = {
-                ...that.detail_data
-              }
-            }
-          })
-          .catch((e: Error) => {
-            console.log(e);
-          })
-          .finally(() => {});
-      },
+          });
+      } else {
+        this.$message.warning(firstError);
+      }
     },
-  });
+    onClickCloseEditBtn(): void {
+      this.editFormVisible = false;
+      this.formEditData = { ...INITIAL_DATA };
+    },
+    getDetail(id) {
+      get_detail_by_id_api({ id })
+        .then((res) => {
+          const resdata = res;
+          if (resdata.code === 0) {
+            this.detail_data = resdata.data;
+            this.formEditData = { ...this.detail_data };
+          }
+        })
+        .catch((e: Error) => {
+          console.log(e);
+        });
+    },
+  },
+});
 </script>
 
 <style lang="less" scoped>
   @import '@/style/variables';
 
-  .payment-col {
+  .right-operation-container {
     display: flex;
-
-    .trend-container {
-      display: flex;
-      align-items: center;
-      margin-left: 8px;
-    }
+    align-items: center;
   }
 
-  .left-operation-container {
-    padding: 0 0 6px 0;
-    margin-bottom: 16px;
-
-    .selected-count {
-      display: inline-block;
-      margin-left: 8px;
-      color: var(--td-text-color-secondary);
-    }
-  }
-
-  .search-input {
+  .config-search-input {
     width: 360px;
   }
 
-  .t-button+.t-button {
-    margin-left: @spacer;
+  /* 左右布局 */
+  .config-layout {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    min-height: 420px;
   }
+
+  .config-sidebar {
+    flex: 0 0 200px;
+    width: 200px;
+    padding: 8px;
+    border: 1px solid var(--td-component-stroke);
+    border-radius: var(--td-radius-medium);
+    background: var(--td-bg-color-container);
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+  }
+
+  .config-cate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border-radius: var(--td-radius-default);
+    cursor: pointer;
+    color: var(--td-text-color-primary);
+    transition: background 0.2s;
+
+    &:hover {
+      background: var(--td-bg-color-container-hover);
+    }
+
+    &.active {
+      background: var(--td-brand-color-light);
+      color: var(--td-brand-color);
+      font-weight: 600;
+    }
+  }
+
+  .config-cate-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .config-detail {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 8px;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+  }
+
+  .config-empty {
+    padding: 48px 0;
+    text-align: center;
+    color: var(--td-text-color-placeholder);
+  }
+
+  .config-row {
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--td-component-stroke);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .config-row-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .config-item-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--td-text-color-primary);
+    word-break: break-all;
+  }
+
+  .config-item-key {
+    margin-top: 2px;
+    font-family: var(--td-font-family-medium, monospace);
+    font-size: 12px;
+    color: var(--td-text-color-placeholder);
+    word-break: break-all;
+  }
+
+  .config-item-cate-tag {
+    margin-left: 8px;
+    font-weight: 400;
+  }
+
+  .config-item-ops {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .config-item-value {
+    margin-top: 4px;
+    padding: 6px 8px;
+    background: var(--td-bg-color-container-hover);
+    border-radius: var(--td-radius-small);
+    font-family: var(--td-font-family-medium, monospace);
+    font-size: 13px;
+    color: var(--td-text-color-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow: auto;
+  }
+
 </style>
