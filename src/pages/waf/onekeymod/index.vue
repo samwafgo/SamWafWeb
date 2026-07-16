@@ -1,6 +1,8 @@
 <template>
   <div>
     <t-card class="list-card-container">
+      <t-tabs v-model="activeTab">
+        <t-tab-panel value="port" :label="$t('page.one_key_mod.tab_port_modify')">
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-form :label-width="300" colon layout="inline"  :style="{ marginBottom: '8px' }">
@@ -45,6 +47,11 @@
       <div>
       <router-view></router-view>
       </div>
+        </t-tab-panel>
+        <t-tab-panel value="import" :label="$t('page.one_key_mod.tab_import_nginx')">
+          <import-nginx />
+        </t-tab-panel>
+      </t-tabs>
     </t-card>
 
 
@@ -99,6 +106,7 @@
 import {
     wafOneKeyModDelApi,wafOneKeyModDetailApi,wafOneKeyModListApi,wafDoOneKeyModApi,wafRestoreOneKeyModApi
   } from '@/apis/onekeymod';
+  import ImportNginx from './components/ImportNginx.vue';
   import {
     SSL_STATUS,
     GUARD_STATUS,
@@ -116,9 +124,11 @@ import {
     components: {
       SearchIcon,
       Trend,
+      ImportNginx,
     },
     data() {
       return {
+        activeTab: 'port',
         defaultFilePath:"/www/server/panel/vhost/nginx",
         addFormVisible: false,
         editFormVisible: false,
@@ -211,6 +221,9 @@ import {
       },
     },
     mounted() {
+      if (this.$route.query.tab === 'import') {
+        this.activeTab = 'import'
+      }
       this.getList("")
     },
 

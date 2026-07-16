@@ -8,6 +8,7 @@
           <t-button variant="base" theme="default" @click="HandleImportExcel()"> {{ $t('page.host.import_data') }}</t-button>
           <t-button variant="base" theme="warning" @click="handleModifyAllGuardStatus()"> {{ $t('page.host.modify_all_guard_status') }}</t-button>
           <t-button variant="base" theme="primary" @click="handleBatchCopyConfig()"> {{ $t('page.host.batch_copy_config') }}</t-button>
+          <t-button variant="base" theme="success" @click="handleImportNginx()"> {{ $t('page.host.import_nginx') }}</t-button>
         </div>
         <div class="right-operation-container">
           <t-form ref="form" :data="searchformData" :label-width="80" colon   layout="inline" :style="{ marginBottom: '8px' }">
@@ -909,6 +910,13 @@ export default Vue.extend({
       this.$set(this.formData, 'code', uuidv4());
       console.log("新增主机code信息", this.formData.code)
       this.addFormVisible = true
+    },
+    // 跳转到一键修改页的“批量导入网址”标签
+    handleImportNginx() {
+      this.$router.push({
+        name: 'OneKeyMod',
+        query: { tab: 'import' },
+      });
     },
     onSubmit(data ): void {
       console.log(data)

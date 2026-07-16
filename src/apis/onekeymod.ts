@@ -35,6 +35,14 @@ export function wafDoOneKeyModApi(params) {
 export function wafRestoreOneKeyModApi(params) {
   return request({
     url: '/wafhost/onekeymod/restore?id=' + params.id,
-    method: 'get', 
+    method: 'get',
+  })
+}
+//解析nginx配置为待添加主机候选（source: text 粘贴 / scan 扫描目录）
+export function wafParseNginxApi(params) {
+  return request({
+    url: '/wafhost/onekeymod/parseNginx',
+    method: 'post',
+    data: params
   })
 }
