@@ -1221,6 +1221,12 @@ export default {
         enable_failed: "HTTPS重定向服务器启用失败",
         config_not_found: "未找到HTTPS重定向配置"
       },
+      disable_http2: {
+        label: "对外HTTP/2",
+        enable: "启用（默认）",
+        disable: "关闭（兼容原生WebSocket）",
+        tips: "默认对该站点启用HTTP/2。当有安卓等原生WebSocket客户端(如uni.connectSocket)连接本站握手失败时，选择“关闭”让该站点只走HTTP/1.1即可修复；不影响其他站点。若已开启HTTP/3，关闭后该站点也不再广告h3。仅作用于HTTPS站点，改完对新连接立即生效。"
+      },
       is_enable_http_auth_base: "网站密码访问",
       is_enable_http_auth_base_tips: "开启后该网站都是使用密码进行访问，并请添加帐号和密码",
       http_auth_base_type: "认证方式",

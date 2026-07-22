@@ -21,6 +21,7 @@ export const INITIAL_DATA = {
   unrestricted_port: '0',
   bind_ssl_id: '',
   auto_jump_https: '0',
+  disable_http2: '0',//对外HTTP/2开关 0启用(默认) 1关闭(该站点只走http/1.1,兼容原生WebSocket客户端)
   expiration_info: '',//仅对ssl前端处理
   bind_more_host: '',//多域名情况
   is_trans_back_domain: "0",//是否传递后端域名

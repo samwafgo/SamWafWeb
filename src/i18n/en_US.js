@@ -1218,6 +1218,12 @@ export default {
         enable_failed: "Failed to enable HTTPS redirect server",
         config_not_found: "HTTPS redirect configuration not found"
       },
+      disable_http2: {
+        label: "Outbound HTTP/2",
+        enable: "Enabled (default)",
+        disable: "Disabled (native WebSocket compatible)",
+        tips: "HTTP/2 is enabled for this site by default. If a native WebSocket client (e.g. Android uni.connectSocket) fails to handshake against this site, choose \"Disabled\" to force it to HTTP/1.1 only — this fixes it without affecting other sites. When HTTP/3 is enabled, disabling here also stops advertising h3 for this site. Applies to HTTPS sites only; takes effect on new connections immediately."
+      },
       is_enable_http_auth_base: "Web Password Visit",
       is_enable_http_auth_base_tips: "After enabled, the website will require a password for access. Please add a username and password.",
       http_auth_base_type: "Authentication Type",

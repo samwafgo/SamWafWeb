@@ -115,6 +115,16 @@
                 </t-alert>
               </div>
             </t-form-item>
+
+            <t-form-item :label="$t('page.host.disable_http2.label')" name="disable_http2" v-if="formData.ssl=='1'">
+              <t-tooltip class="placement top center" :content="$t('page.host.disable_http2.tips')" placement="top"
+                       :overlay-style="{ width: '260px' }" show-arrow>
+                <t-radio-group v-model="formData.disable_http2">
+                  <t-radio value="0">{{ $t('page.host.disable_http2.enable') }}</t-radio>
+                  <t-radio value="1">{{ $t('page.host.disable_http2.disable') }}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+            </t-form-item>
             <t-form-item :label="$t('page.host.certfile')" name="certfile" v-if="formData.ssl=='1' && (isEdit || formData.ssl_config_mode === 'existing')">
               <t-tooltip class="placement top center"
                        :content="$t('page.host.certfile_content')" placement="top"
@@ -737,6 +747,7 @@
           this.formData.is_enable_load_balance = this.formData.is_enable_load_balance != null ? this.formData.is_enable_load_balance.toString() : "0"
           this.formData.load_balance_stage = this.formData.load_balance_stage != null ? this.formData.load_balance_stage.toString() : "1"
           this.formData.auto_jump_https = this.formData.auto_jump_https != null ? this.formData.auto_jump_https.toString() : "0"
+          this.formData.disable_http2 = this.formData.disable_http2 != null ? this.formData.disable_http2.toString() : "0"
           this.formData.is_trans_back_domain = this.formData.is_trans_back_domain != null ? this.formData.is_trans_back_domain.toString() : "0"
           this.formData.is_enable_http_auth_base = this.formData.is_enable_http_auth_base != null ? this.formData.is_enable_http_auth_base.toString() : "0"
           this.formData.http_auth_base_type = this.formData.http_auth_base_type != null ? this.formData.http_auth_base_type : "authorization"
@@ -1385,6 +1396,7 @@
             postdata['is_enable_load_balance'] = Number(postdata['is_enable_load_balance']);
             postdata['load_balance_stage'] = Number(postdata['load_balance_stage']);
             postdata['auto_jump_https'] = Number(postdata['auto_jump_https']);
+            postdata['disable_http2'] = Number(postdata['disable_http2']);
             postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain']);
             postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base']);
             postdata['response_time_out'] = Number(postdata['response_time_out']);
