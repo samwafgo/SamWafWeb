@@ -55,3 +55,11 @@ export function wafIPBlockDelAllApi(params) {
     data: params
   })
 }
+//推荐封禁层级(智能默认)
+export function wafIPBlockRecommendLayerApi(params) {
+  return request({
+    url: '/wafhost/ipblock/recommend-layer',
+    method: 'get',
+    params: params
+  })
+}

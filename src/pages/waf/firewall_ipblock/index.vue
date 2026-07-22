@@ -1,5 +1,7 @@
 <template>
   <div>
+    <t-tabs v-model="activeSourceTab" @change="onSourceTabChange">
+    <t-tab-panel value="manual" :label="$t('page.firewall_ipblock.tab_manual')">
     <t-card class="list-card-container">
       <t-row justify="space-between">
         <div class="left-operation-container">
@@ -96,6 +98,14 @@
             </div>
           </t-card>
         </t-col>
+        <t-col :span="3">
+          <t-card size="small">
+            <div class="stat-card">
+              <div class="stat-label">{{ $t('page.firewall_ipblock.stat_sub_landed') }}</div>
+              <div class="stat-value stat-sub">{{ subLandedTotal }}</div>
+            </div>
+          </t-card>
+        </t-col>
       </t-row>
 
       <t-alert
@@ -164,6 +174,13 @@
         </t-table>
       </div>
     </t-card>
+    </t-tab-panel>
+    <t-tab-panel value="sub" :label="$t('page.firewall_ipblock.tab_sub_source')">
+      <t-card class="list-card-container">
+        <threat-sub-source-panel ref="subPanel" land="system" />
+      </t-card>
+    </t-tab-panel>
+    </t-tabs>
 
     <!-- 添加对话框 -->
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
@@ -322,6 +339,8 @@ import Vue from 'vue';
 import { SearchIcon } from 'tdesign-icons-vue';
 import { prefix } from '@/config/global';
 import { allhost } from '@/apis/host';
+import ThreatSubSourcePanel from '@/pages/waf/threatip/components/ThreatSubSourcePanel.vue';
+import { wafThreatIPLandedSummaryApi } from '@/apis/threatip';
 import {
   wafFirewallIPBlockListApi,
   wafFirewallIPBlockAddApi,
@@ -360,9 +379,11 @@ export default Vue.extend({
   name: 'FirewallIPBlockList',
   components: {
     SearchIcon,
+    ThreatSubSourcePanel,
   },
   data() {
     return {
+      activeSourceTab: 'manual',
       addFormVisible: false,
       batchAddFormVisible: false,
       editFormVisible: false,
@@ -411,6 +432,8 @@ export default Vue.extend({
         inactive: 0,
         expired: 0
       },
+      // 订阅落地到系统防火墙(ipset)的总条数(各系统层渠道快照条数之和)
+      subLandedTotal: 0,
       // 当前环境是否具备系统防火墙封禁能力（容器内未装 iptables / 缺少权限时为 false）
       fwCapability: {
         available: true,
@@ -511,8 +534,26 @@ export default Vue.extend({
       this.getList("");
       this.getStatistics();
     });
+    this.loadSubLandedTotal();
   },
   methods: {
+    onSourceTabChange(val) {
+      // 切到"订阅来源"Tab 时刷新汇总
+      if (val === 'sub' && this.$refs.subPanel) {
+        (this.$refs.subPanel as any).refresh();
+      }
+    },
+    // 汇总订阅落地到系统防火墙的总条数(供统计卡片对照展示)
+    loadSubLandedTotal() {
+      wafThreatIPLandedSummaryApi({ land: 'system' })
+        .then((res) => {
+          if (res.code === 0) {
+            const list = res.data ?? [];
+            this.subLandedTotal = list.reduce((sum, it) => sum + (it.count || 0), 0);
+          }
+        })
+        .catch((e: Error) => { console.log(e); });
+    },
     getCapability() {
       wafFirewallIPBlockCapabilityApi({})
         .then((res) => {
@@ -944,6 +985,10 @@ export default Vue.extend({
 
     &.stat-expired {
       color: #faad14;
+    }
+
+    &.stat-sub {
+      color: #1677ff;
     }
   }
 }

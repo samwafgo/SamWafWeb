@@ -1,5 +1,7 @@
 <template>
   <div>
+    <t-tabs v-model="activeSourceTab" @change="onSourceTabChange">
+    <t-tab-panel value="manual" :label="$t('page.ipblock.tab_manual')">
     <t-card class="list-card-container">
       <t-row justify="space-between">
         <div class="left-operation-container">
@@ -66,12 +68,19 @@
       <router-view></router-view>
       </div>
     </t-card>
+    </t-tab-panel>
+    <t-tab-panel value="sub" :label="$t('page.ipblock.tab_sub_source')">
+      <t-card class="list-card-container">
+        <threat-sub-source-panel ref="subPanel" land="waf" />
+      </t-card>
+    </t-tab-panel>
+    </t-tabs>
 
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
           <t-form-item :label="$t('page.ipblock.label_website')" name="host_code">
-            <t-select v-model="formData.host_code" clearable filterable :style="{ width: '480px' }">
+            <t-select v-model="formData.host_code" clearable filterable :style="{ width: '480px' }" @change="onHostChange">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item"
                 :key="index">
                 {{ item }}
@@ -80,6 +89,20 @@
           </t-form-item>
           <t-form-item :label="$t('page.ipblock.label_ip')" name="ip">
             <t-input :style="{ width: '480px' }" v-model="formData.ip" ></t-input>
+          </t-form-item>
+          <t-form-item name="target_layer">
+            <template #label>
+              <span>{{ $t('page.ipblock.label_target_layer') }}</span>
+              <t-tooltip :content="$t('page.ipblock.target_layer_tips')" placement="top" :overlay-style="{ width: '300px' }" show-arrow>
+                <t-icon name="help-circle" style="margin-left:4px;cursor:pointer" />
+              </t-tooltip>
+            </template>
+            <t-select v-model="formData.target_layer" :style="{ width: '480px' }">
+              <t-option value="waf" :label="$t('page.ipblock.target_layer_waf')" />
+              <t-option value="system" :label="$t('page.ipblock.target_layer_system')" />
+              <t-option value="both" :label="$t('page.ipblock.target_layer_both')" />
+            </t-select>
+            <div v-if="recommendReason" style="margin-top:4px;font-size:12px;color:var(--td-text-color-secondary)">{{ recommendReason }}</div>
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"  name="remarks">
@@ -148,6 +171,7 @@
     SearchIcon
   } from 'tdesign-icons-vue';
   import Trend from '@/components/trend/index.vue';
+  import ThreatSubSourcePanel from '@/pages/waf/threatip/components/ThreatSubSourcePanel.vue';
   import {
     prefix
   } from '@/config/global';
@@ -155,7 +179,7 @@
     allhost
   } from '@/apis/host';
   import {
-    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi
+    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi,wafIPBlockRecommendLayerApi
   } from '@/apis/ipblock';
   import {
     export_api
@@ -173,15 +197,18 @@
     host_code: '',
     ip: '',
     remarks: '',
+    target_layer: 'waf',
   };
   export default Vue.extend({
     name: 'ListBase',
     components: {
       SearchIcon,
       Trend,
+      ThreatSubSourcePanel,
     },
     data() {
       return {
+        activeSourceTab: 'manual',
         addFormVisible: false,
         editFormVisible: false,
         confirmVisible: false,
@@ -266,7 +293,9 @@
         deleteIdx: -1,
         guardStatusIdx :-1,
         //主机字典
-        host_dic:{}
+        host_dic:{},
+        //推荐封禁层级的理由文案
+        recommendReason: ''
       };
     },
     computed: {
@@ -290,6 +319,12 @@
     },
 
     methods: {
+      onSourceTabChange(val) {
+        // 切到"订阅来源"Tab 时刷新汇总
+        if (val === 'sub' && this.$refs.subPanel) {
+          (this.$refs.subPanel as any).refresh();
+        }
+      },
       loadHostList() {
         return new Promise((resolve, reject) => {
           allhost()
@@ -369,11 +404,26 @@
       },
       handleAddipblock() {
         this.addFormVisible = true
+        this.recommendReason = ''
         this.formData = {
           host_code: '',
           ip: '',
           remarks: '',
+          target_layer: 'waf',
         };
+      },
+      // 站点变化时按后端智能推荐预选封禁层级
+      onHostChange(hostCode) {
+        let that = this
+        if (!hostCode) { that.recommendReason = ''; return }
+        wafIPBlockRecommendLayerApi({ host_code: hostCode })
+          .then((res) => {
+            if (res.code === 0 && res.data) {
+              that.formData.target_layer = res.data.layer || 'waf'
+              that.recommendReason = res.data.reason || ''
+            }
+          })
+          .catch((e: Error) => { console.log(e) })
       },
       onSubmit({
         result,

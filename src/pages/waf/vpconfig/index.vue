@@ -53,6 +53,28 @@
 
         <t-loading :loading="trustedProxiesLoading">
           <t-form :data="trustedProxiesFormData" :label-width="180">
+            <t-form-item :label="$t('page.vpconfig.manage_cdn_provider')">
+              <t-space>
+                <t-select v-model="manageCdnProvider" :style="{ width: '240px' }"
+                          :placeholder="$t('page.vpconfig.manage_cdn_provider_placeholder')" clearable
+                          @change="handleManageCdnProviderChange">
+                  <t-option value="cloudflare" label="Cloudflare" />
+                  <t-option value="fastly" label="Fastly" />
+                  <t-option value="cloudfront" label="AWS CloudFront" />
+                  <t-option value="edgeone" label="腾讯云 EdgeOne" />
+                  <t-option value="aliyun" label="阿里云 CDN" />
+                  <t-option value="akamai" label="Akamai" />
+                </t-select>
+                <span v-if="manageCdnInfo && manageCdnProvider">
+                  <span v-if="manageCdnInfo.count > 0" style="color: var(--td-success-color);">
+                    {{ $t('page.vpconfig.manage_cdn_downloaded', { count: manageCdnInfo.count }) }}
+                  </span>
+                  <span v-else style="color: var(--td-warning-color);">{{ $t('page.vpconfig.manage_cdn_not_fetched') }}</span>
+                </span>
+                <a class="t-button-link" @click="goCdnPage">{{ $t('page.vpconfig.manage_cdn_link') }}</a>
+              </t-space>
+              <div class="form-item-tips">{{ $t('page.vpconfig.manage_cdn_provider_tips') }}</div>
+            </t-form-item>
             <t-form-item :label="$t('page.vpconfig.trusted_proxies')">
               <t-textarea
                 v-model="trustedProxiesFormData.trusted_proxies"
@@ -417,7 +439,8 @@
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getCorsAllowOriginsApi, updateCorsAllowOriginsApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getManageCDNProviderApi, updateManageCDNProviderApi, getCorsAllowOriginsApi, updateCorsAllowOriginsApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
+  import { wafCDNProviderInfoApi } from '@/apis/cdnip';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -462,6 +485,9 @@
           trusted_proxies: ''
         },
         trustedProxiesLoading: false,
+        // 管理端引用的CDN厂商(管理端也可能挂在CDN后，自动读中心库最新回源段)
+        manageCdnProvider: '',
+        manageCdnInfo: null,
         // CORS 跨域来源白名单（配置存 config.yml，回环/本机始终放行）
         corsFormData: {
           cors_allow_origins: ''
@@ -545,6 +571,7 @@
     mounted() {
       this.fetchData();
       this.fetchTrustedProxies();
+      this.fetchManageCdnProvider();
       this.fetchCors();
       this.fetchDomainWhitelist();
       this.fetchSslStatus();
@@ -594,6 +621,40 @@
       },
       handleTrustedProxiesRefresh() {
         this.fetchTrustedProxies();
+      },
+      // 加载管理端引用的CDN厂商 + 其中心库状态
+      fetchManageCdnProvider() {
+        getManageCDNProviderApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.manageCdnProvider = res.data.provider || '';
+              if (this.manageCdnProvider) this.loadManageCdnInfo(this.manageCdnProvider);
+            }
+          })
+          .catch(() => {});
+      },
+      loadManageCdnInfo(provider) {
+        wafCDNProviderInfoApi({ provider })
+          .then((res) => { if (res.code === 0) this.manageCdnInfo = res.data; })
+          .catch(() => {});
+      },
+      // 切换/清除管理端引用CDN厂商(立即保存到 config.yml)
+      handleManageCdnProviderChange(v) {
+        updateManageCDNProviderApi({ provider: v || '' })
+          .then((res) => {
+            if (res.code === 0) {
+              MessagePlugin.success(this.$t('common.tips.save_success'));
+              this.manageCdnInfo = null;
+              if (v) this.loadManageCdnInfo(v);
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+            }
+          })
+          .catch(() => { MessagePlugin.error(this.$t('common.tips.api_error')); });
+      },
+      goCdnPage() {
+        const route = this.$router.resolve({ name: 'WafCDNIP' });
+        window.open(route.href, '_blank');
       },
       handleTrustedProxiesSave() {
         this.trustedProxiesLoading = true;

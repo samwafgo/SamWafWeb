@@ -31,6 +31,30 @@ export function updateManageTrustedProxiesApi(data) {
     data: data
   })
 }
+//CDN厂商快捷填充：获取某厂商官方回源段CIDR
+export function getCdnProviderRangesApi(params) {
+  return request({
+    url: 'vipconfig/cdnProviderRanges',
+    method: 'get',
+    params: params
+  })
+}
+//获取管理端引用的CDN厂商
+export function getManageCDNProviderApi(params) {
+  return request({
+    url: 'vipconfig/getManageCDNProvider',
+    method: 'get',
+    params: params
+  })
+}
+//更新管理端引用的CDN厂商
+export function updateManageCDNProviderApi(data) {
+  return request({
+    url: 'vipconfig/updateManageCDNProvider',
+    method: 'post',
+    data: data
+  })
+}
 //获取CORS跨域来源白名单
 export function getCorsAllowOriginsApi(params) {
   return request({
