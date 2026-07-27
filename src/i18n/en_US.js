@@ -646,6 +646,7 @@ export default {
       trigger_rule: "Trigger Rule",
       time: "Time",
       domain: "Domain",
+      host_nickname: "Site Nickname",
       request: "Request",
       source_ip: "Source IP",
       country: "Country",

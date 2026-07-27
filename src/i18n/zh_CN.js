@@ -647,6 +647,7 @@ export default {
       trigger_rule: "触发规则",
       time: "时间",
       domain: "域名",
+      host_nickname: "网站昵称",
       request: "请求",
       source_ip: "来源IP",
       country: "国家",

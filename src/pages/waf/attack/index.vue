@@ -228,6 +228,9 @@
             </t-tag>
             <span v-else>-</span>
           </template>
+          <template #host_nickname="{ row }">
+            <span>{{ host_nickname_dic[row.host_code] || '-' }}</span>
+          </template>
           <template #src_ip="{ row }">
             <span>{{ row.src_ip }}</span>
             <t-button theme="primary" shape="round" size="small" style="margin-left: 8px;" @click="handleAddipblock(row)">
@@ -391,6 +394,9 @@ import {
 import { CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
 
 const staticColumn = ['action', 'op'];
+
+// 默认不显示的可选列：新增后不会被"新列自动加入"逻辑塞进已有用户的可见列，需用户主动勾选
+const OPT_OUT_NEW_COLUMNS = ['host_nickname'];
 
 const GROUP_COLUMNS = [
   {
@@ -573,6 +579,15 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'host',
         },
+        {
+          //网站昵称：非 web_logs 真实列，由 host_code 在前端换取，故不支持排序/过滤
+          title: this.$t('page.visit_log.host_nickname'),
+          align: 'left',
+          width: 130,
+          ellipsis: true,
+          colKey: 'host_nickname',
+          cell: 'host_nickname',
+        },
 
         {
           title: this.$t('page.visit_log.request'),
@@ -701,6 +716,8 @@ export default Vue.extend({
       },
       //主机字典
       host_dic: {},
+      //主机昵称字典 host_code -> 纯昵称
+      host_nickname_dic: {},
       //日志存档字典
       share_db_dic: {},
       //当前是否为文件型数据库(SQLite)：仅 SQLite 支持日志文件导出，MySQL 隐藏导出按钮
@@ -778,6 +795,7 @@ export default Vue.extend({
         { value: 'rule', label: this.$t('page.visit_log.trigger_rule') },
         { value: 'create_time', label: this.$t('common.create_time') },
         { value: 'host', label: this.$t('page.visit_log.domain') },
+        { value: 'host_nickname', label: this.$t('page.visit_log.host_nickname') },
         { value: 'method', label: this.$t('page.visit_log.access_method') },
         { value: 'url', label: this.$t('page.visit_log.access_url') },
         { value: 'header', label: this.$t('page.visit_log.request') },
@@ -921,6 +939,8 @@ export default Vue.extend({
           // 仅自动加入"用户从未见过的新功能列"（如新增的 ai_score），
           // 用户主动取消勾选的列刷新后不再被强行加回
           allFieldKeys.forEach((col) => {
+            // 默认不显示的新列（需用户主动在列配置里勾选），不参与"新列自动加入"
+            if (OPT_OUT_NEW_COLUMNS.includes(col)) return;
             if (!knownKeys.includes(col) && !merged.includes(col)) merged.push(col);
           });
         }
@@ -1008,9 +1028,13 @@ export default Vue.extend({
             console.log(resdata);
             if (resdata.code === 0) {
               let host_options = resdata.data;
+              //昵称字典整体替换赋值，保证表格列能重新渲染(Vue2 对新增 key 不响应)
+              const nicknameDic = {};
               for (let i = 0; i < host_options.length; i++) {
                 this.host_dic[host_options[i].value] = host_options[i].label;
+                nicknameDic[host_options[i].value] = host_options[i].nickname || '';
               }
+              this.host_nickname_dic = nicknameDic;
             }
             resolve(); // 调用 resolve 表示加载完成
           })
