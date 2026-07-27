@@ -828,6 +828,8 @@ export default {
       auto_start_on: "自动启动",
       auto_start_off: "手工启动",
       tab_base: "基础内容",
+      tab_layout_horizontal: "切换为横向标签",
+      tab_layout_vertical: "切换为竖向标签",
       tab_engine: "引擎自带防护",
       tab_other: "其他配置",
       tab_more_domain: "绑定多个域名",

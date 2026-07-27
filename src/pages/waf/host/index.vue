@@ -146,7 +146,7 @@
     </t-card>
 
     <!-- New WebSite Dialog -->
-    <t-dialog :visible.sync="addFormVisible" :width="750" :footer="false">
+    <t-dialog :visible.sync="addFormVisible" :width="hostFormDialogWidth" :footer="false">
       <div slot="header">
         {{ $t('common.new') }}
         <t-link theme="primary" :href="hostAddUrl" target="_blank">
@@ -160,12 +160,13 @@
           :select-can-filter="selectCanFilter"
           @close="onClickCloseBtn"
           @submit="onSubmit"
+          @tab-placement-change="onHostTabPlacementChange"
         ></host-form>
       </div>
     </t-dialog>
 
     <!-- Edit WebSite Dialog -->
-    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="750" :footer="false">
+    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="hostFormDialogWidth" :footer="false">
       <div slot="body">
         <host-form
         :value="formEditData"
@@ -173,6 +174,7 @@
         :is-edit="true"
         @close="onClickCloseEditBtn"
         @submit="onSubmitEdit"
+        @tab-placement-change="onHostTabPlacementChange"
         ></host-form>
       </div>
     </t-dialog>
@@ -395,6 +397,8 @@ export default Vue.extend({
   },
   data() {
     return {
+      // 网站表单弹窗宽度：Tab 竖向布局(left)需要更宽，横向(top)保持 750
+      hostFormDialogWidth: localStorage.getItem('samwaf_host_tab_placement') === 'top' ? 750 : 920,
       // 批量复制配置相关数据
       batchCopyVisible: false,
       batchCopyLoading: false,
@@ -717,6 +721,10 @@ export default Vue.extend({
   },
 
   methods: {
+    // HostForm 内切换 Tab 布局时联动调整弹窗宽度
+    onHostTabPlacementChange(placement: string) {
+      this.hostFormDialogWidth = placement === 'top' ? 750 : 920;
+    },
     formatTrafficBytes(bytes) {
       if (!bytes || bytes === 0) return '0 B';
       const units = ['B', 'KB', 'MB', 'GB', 'TB'];

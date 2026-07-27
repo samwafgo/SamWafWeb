@@ -826,6 +826,8 @@ export default {
       log_only_mode_off: "Off",
       log_only_mode_tips: "Log Only Mode: When enabled, SamWaf will only record attack logs, but will not block attack requests.",
       tab_base: "Basic Information",
+      tab_layout_horizontal: "Switch to horizontal tabs",
+      tab_layout_vertical: "Switch to vertical tabs",
       tab_engine: "Engine Built-in Protection",
       tab_other: "Other Configurations",
       tab_more_domain: "Bind More Domain",

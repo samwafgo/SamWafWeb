@@ -3,8 +3,21 @@
 
   <div class="host-form">
       <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="230">
-        <t-tabs v-model="activeTab">
-          <t-tab-panel :value="1" :label="$t('page.host.tab_base')">
+        <div class="host-tabs-wrapper" :class="{ 'host-tabs-wrapper--left': tabPlacement === 'left' }">
+          <div class="tab-placement-bar">
+            <t-tooltip :content="tabPlacement === 'left' ? $t('page.host.tab_layout_horizontal') : $t('page.host.tab_layout_vertical')"
+                       placement="top" show-arrow>
+              <t-button variant="text" shape="square" size="small" @click="toggleTabPlacement">
+                <t-icon :name="tabPlacement === 'left' ? 'view-list' : 'view-column'"/>
+              </t-button>
+            </t-tooltip>
+          </div>
+          <t-tabs v-model="activeTab" :placement="tabPlacement">
+          <t-tab-panel :value="1">
+            <template #label>
+              <t-icon name="home" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_base')}}
+            </template>
             
             <t-form-item :label="$t('page.host.website')" name="host">
               <t-tooltip class="placement top center" :content="$t('page.host.host_tips')" placement="top"
@@ -214,6 +227,7 @@
 
           <t-tab-panel :value="2">
             <template #label>
+              <t-icon name="layers" style="margin-right: 4px;color:#0052d9"/>
               {{$t('page.host.tab_more_domain')}}
             </template>
             <t-form-item :label="$t('page.host.more_domain')" name="bind_more_host">
@@ -269,6 +283,7 @@
 
           <t-tab-panel :value="4">
             <template #label>
+              <t-icon name="setting" style="margin-right: 4px;color:#0052d9"/>
               {{$t('page.host.tab_other')}}
             </template>
             <!-- IP提取模式：不要用 t-tooltip 包裹整组单选，否则会拦截点击导致无法切换 -->
@@ -332,6 +347,7 @@
 
           <t-tab-panel :value="5">
             <template #label>
+              <t-icon name="user-password" style="margin-right: 4px;color:#0052d9"/>
               {{$t('page.host.tab_password')}}
             </template>
             <t-form-item :label="$t('page.host.is_enable_http_auth_base')" name="is_enable_http_auth_base">
@@ -371,7 +387,7 @@
 
           <t-tab-panel :value="6">
             <template #label>
-              <t-icon name="health" style="margin-right: 4px;color:#00a870"/>
+              <t-icon name="activity" style="margin-right: 4px;color:#00a870"/>
               {{$t('page.host.tab_health_check')}}
             </template>
             <healthy-config :healthy-config="healthyConfigData" @update="val => healthyConfigData = val"></healthy-config>
@@ -396,7 +412,7 @@
           </t-tab-panel>
           <t-tab-panel :value="9">
             <template #label>
-              <t-icon name="memory" style="margin-right: 4px;color:#0052d9"/>
+              <t-icon name="hard-disk-storage" style="margin-right: 4px;color:#0052d9"/>
               {{$t('page.host.tab_cache')}}
             </template>
             <cache-config :cache-config="cacheConfigData" :prop-host-code="formData.code" @update="val => cacheConfigData = val"></cache-config>
@@ -417,14 +433,14 @@
           </t-tab-panel>
           <t-tab-panel :value="12">
             <template #label>
-              <t-icon name="filter" style="margin-right: 4px;color:#0052d9"/>
+              <t-icon name="arrow-up-circle" style="margin-right: 4px;color:#0052d9"/>
               {{$t('page.host.tab_custom_headers')}}
             </template>
             <custom-headers-config :custom-headers-config="customHeadersConfigData" @update="val => customHeadersConfigData = val"></custom-headers-config>
           </t-tab-panel>
           <t-tab-panel :value="13">
             <template #label>
-              <t-icon name="filter" style="margin-right: 4px;color:#0052d9"/>
+              <t-icon name="arrow-down-circle" style="margin-right: 4px;color:#0052d9"/>
               {{$t('page.host.tab_custom_response_headers')}}
             </template>
             <custom-response-headers-config :custom-response-headers-config="customResponseHeadersConfigData" @update="val => customResponseHeadersConfigData = val"></custom-response-headers-config>
@@ -472,6 +488,7 @@
             <path-rule-config :prop-host-code="formData.code"></path-rule-config>
           </t-tab-panel>
           </t-tabs>
+        </div>
 
         <t-form-item style="float: right;margin-top:5px">
           <t-button variant="outline" @click="$emit('close')">{{ $t('common.close') }}</t-button>
@@ -613,6 +630,8 @@
         tamperConfigData: { ...INITIAL_TAMPER },
         uploadSecurityConfigData: { ...INITIAL_UPLOAD_SECURITY },
         activeTab: 1, // 当前激活的配置 Tab（受控，供防御总览开关「配置详情」跳转）
+        // Tab 布局：left=竖向（默认），top=横向；用户偏好持久化到 localStorage
+        tabPlacement: localStorage.getItem('samwaf_host_tab_placement') === 'top' ? 'top' : 'left',
         rules: {
           host: [{required: true,message: this.$t('common.placeholder')+this.$t('page.host.host'), type: 'error'},
             {
@@ -733,6 +752,15 @@
       }
     },
     watch: {
+      // 切换 Tab 后把内容区和弹窗滚动位置复位到顶部，避免左侧导航过长时右侧内容"看起来是空的"
+      activeTab() {
+        this.$nextTick(() => {
+          const content = this.$el.querySelector('.t-tabs__content');
+          if (content) content.scrollTop = 0;
+          const dialogBody = this.$el.closest && this.$el.closest('.t-dialog__body');
+          if (dialogBody) dialogBody.scrollTop = 0;
+        });
+      },
       value: {
         handler(newVal) {
           this.formData = {
@@ -1185,6 +1213,12 @@
       this.getHttpsRedirectConfig();
     },
     methods: {
+      // 切换 Tab 横向/竖向布局，偏好持久化并通知父级调整弹窗宽度
+      toggleTabPlacement() {
+        this.tabPlacement = this.tabPlacement === 'left' ? 'top' : 'left';
+        localStorage.setItem('samwaf_host_tab_placement', this.tabPlacement);
+        this.$emit('tab-placement-change', this.tabPlacement);
+      },
       // 引擎自带防护表格：按 row.src 读开关值（defense_json 各项 或 各子配置的 is_enable）
       getDefenseValue(row) {
         switch (row.src) {
@@ -1589,6 +1623,46 @@
   </script>
 
 <style scoped>
+/* 切换 Tab 布局按钮独占一行、右对齐，避免遮挡标签或内容 */
+.tab-placement-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2px;
+}
+/* 竖向布局：限制整体高度，左侧导航与右侧内容各自独立滚动；
+   否则导航过长会把弹窗撑高，切换靠下的 Tab 时内容在顶部，看起来像空的 */
+.host-tabs-wrapper--left >>> .t-tabs__header,
+.host-tabs-wrapper--left >>> .t-tabs__content {
+  max-height: 65vh;
+  overflow-y: auto;
+  /* 滚动条平时隐藏、悬停才显示，避免左右两根粗滚动条并排刺眼 */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.host-tabs-wrapper--left >>> .t-tabs__header:hover,
+.host-tabs-wrapper--left >>> .t-tabs__content:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+.host-tabs-wrapper--left >>> .t-tabs__header::-webkit-scrollbar,
+.host-tabs-wrapper--left >>> .t-tabs__content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.host-tabs-wrapper--left >>> .t-tabs__header::-webkit-scrollbar-thumb,
+.host-tabs-wrapper--left >>> .t-tabs__content::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+.host-tabs-wrapper--left >>> .t-tabs__header:hover::-webkit-scrollbar-thumb,
+.host-tabs-wrapper--left >>> .t-tabs__content:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+}
+.host-tabs-wrapper--left >>> .t-tabs__header::-webkit-scrollbar-track,
+.host-tabs-wrapper--left >>> .t-tabs__content::-webkit-scrollbar-track,
+.host-tabs-wrapper--left >>> .t-tabs__header::-webkit-scrollbar-button,
+.host-tabs-wrapper--left >>> .t-tabs__content::-webkit-scrollbar-button {
+  display: none;
+}
 .host-form-ip-mode-help-icon {
   margin-left: 6px;
   vertical-align: middle;
