@@ -109,29 +109,34 @@ export default {
   methods: {
     jumpLog(title){
       console.log(title)
+      // 三张卡片都必须带上显式 query：空 query 与"从菜单点进去"无法区分，
+      // 会导致访问日志页沿用上次缓存的筛选条件（issue #893 问题2）
       switch (title){
         case 0: //今日攻击数量
           this.$router.push({
         		path: '/waf/wafvisitlog',
         		query: {
-        			action: "阻止"
+        			action: "阻止",
+        			src_ip: ""
         		}
-        	});
+        	}).catch((err) => { if (!err || err.name !== 'NavigationDuplicated') console.warn(err); });
           break;
         case 1: //今天总访问量
         this.$router.push({
         	path: '/waf/wafvisitlog',
         	query: {
-
+        		action: "",
+        		src_ip: ""
         	}
-        });break;
+        }).catch((err) => { if (!err || err.name !== 'NavigationDuplicated') console.warn(err); });break;
         case 2: //今天异常IP（个）
         this.$router.push({
         	path: '/waf/wafvisitlog',
         	query: {
-        		action: "禁止"
+        		action: "禁止",
+        		src_ip: ""
         	}
-        });
+        }).catch((err) => { if (!err || err.name !== 'NavigationDuplicated') console.warn(err); });
         break;
         default:
           break;

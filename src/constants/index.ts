@@ -2,9 +2,13 @@
 // localStorage 保留字段配置
 export const LOCALSTORAGE_PRESERVE_KEYS = [
   'lang',                    // 语言设置
-  'lastUpdatePopupTime',     // 最后更新弹窗时间 
-  'attack_table_display_columns',                // 攻击日志列表的保存 
+  'lastUpdatePopupTime',     // 最后更新弹窗时间
+  'attack_table_display_columns',                // 访问日志列配置本地缓存（服务端为准，这里只是首屏秒开+兜底）
   'lastVisitedUrl',          // 上次访问的URL（新增）
+  'samwaf_page_setting',     // 页面布局/主题设置 (layouts/setting.vue)
+  'samwaf_host_tab_placement', // 网站编辑 Tab 横竖排布偏好 (host/components/HostForm.vue)
+  'waf_request_timeout_ms',  // 前端请求超时 (config/requestTimeout.ts)
+  '__samwaf_security_path__', // 安全入口路径，决定 API/WS 地址 (config/host.ts)，清掉会连不上后端
 ];
 
 // localStorage 清理工具函数
