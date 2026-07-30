@@ -224,12 +224,17 @@ export default {
     handleIpClick(ip) {
       console.log('点击IP:', ip);
       if (ip && ip.trim() !== '') {
+        // 带上当前榜单的时间口径（今日/近7天），否则点"近7天"榜里的 IP 落地页只查当天会是空列表
+        const beginDay = this.rangeType === 'week' ? LAST_7_DAYS[0] : NowDate;
         this.$router.push({
           name: 'WafvisitLog',
           query: {
-            src_ip: ip
+            src_ip: ip,
+            action: '',   // 显式清空状态筛选，避免沿用上次的"阻止/禁止"
+            date_begin: beginDay + ' 00:00:00',
+            date_end: NowDate + ' 23:59:59'
           }
-        });
+        }).catch((err) => { if (!err || err.name !== 'NavigationDuplicated') console.warn(err); });
       }
     }
   },

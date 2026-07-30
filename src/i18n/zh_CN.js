@@ -80,6 +80,7 @@ export default {
     column_config_reset_success: "列配置已重置为默认设置",
     column_config_reset_confirm: "确定要重置列配置为默认设置吗？",
     column_config_load_failed: "加载列配置失败",
+    column_config_sync_failed: "列配置已保存到本地，同步服务端失败",
     seconds: "秒",
     generate_rule: '生成规则',
     unit_minute: "分钟",
@@ -649,6 +650,7 @@ export default {
       trigger_rule: "触发规则",
       time: "时间",
       domain: "域名",
+      host_nickname: "网站昵称",
       request: "请求",
       source_ip: "来源IP",
       country: "国家",
@@ -830,6 +832,8 @@ export default {
       auto_start_on: "自动启动",
       auto_start_off: "手工启动",
       tab_base: "基础内容",
+      tab_layout_horizontal: "切换为横向标签",
+      tab_layout_vertical: "切换为竖向标签",
       tab_engine: "引擎自带防护",
       tab_other: "其他配置",
       tab_more_domain: "绑定多个域名",
@@ -1240,6 +1244,12 @@ export default {
         enable_success: "HTTPS重定向服务器启用成功",
         enable_failed: "HTTPS重定向服务器启用失败",
         config_not_found: "未找到HTTPS重定向配置"
+      },
+      disable_http2: {
+        label: "对外HTTP/2",
+        enable: "启用（默认）",
+        disable: "关闭（兼容原生WebSocket）",
+        tips: "默认对该站点启用HTTP/2。当有安卓等原生WebSocket客户端(如uni.connectSocket)连接本站握手失败时，选择“关闭”让该站点只走HTTP/1.1即可修复；不影响其他站点。若已开启HTTP/3，关闭后该站点也不再广告h3。仅作用于HTTPS站点，改完对新连接立即生效。"
       },
       is_enable_http_auth_base: "网站密码访问",
       is_enable_http_auth_base_tips: "开启后该网站都是使用密码进行访问，并请添加帐号和密码",

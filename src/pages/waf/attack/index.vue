@@ -228,6 +228,9 @@
             </t-tag>
             <span v-else>-</span>
           </template>
+          <template #host_nickname="{ row }">
+            <span>{{ host_nickname_dic[row.host_code] || '-' }}</span>
+          </template>
           <template #src_ip="{ row }">
             <span>{{ row.src_ip }}</span>
             <t-button theme="primary" shape="round" size="small" style="margin-left: 8px;" @click="handleAddipblock(row)">
@@ -387,10 +390,31 @@ import {
   get_detail_by_item_api,
   edit_system_config_api
 } from '@/apis/systemconfig';
+import {
+  get_ui_preference_api,
+  save_ui_preference_api
+} from '@/apis/uipreference';
 
 import { CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYMENT_TYPES } from '@/constants';
 
 const staticColumn = ['action', 'op'];
+
+// 默认不显示的可选列：新增后不会被"新列自动加入"逻辑塞进已有用户的可见列，需用户主动勾选
+const OPT_OUT_NEW_COLUMNS = ['host_nickname', 'ai_score'];
+
+// 列配置持久化：服务端（按登录账号）为准，localStorage 只作首屏秒开缓存 + 接口不可用兜底。
+// v2 起把"可见列"与"用户已见过的列基线"合并到同一个 key，
+// 避免 401 清缓存时只保留其中一个，导致列配置被重置（issue #893）
+const COLUMN_CONFIG_KEY = 'attack_table_display_columns';
+const LEGACY_KNOWN_COLUMNS_KEY = 'attack_table_known_columns'; // v1 遗留，迁移后删除
+const COLUMN_CONFIG_VERSION = 2;
+const COLUMN_PREF_NAME = 'visit_log_columns'; // 服务端偏好名（后端白名单内）
+
+// 可由外部路由 query 预设的筛选字段（必须是 searchformData 的合法键，防止任意 query 注入）。
+// 不含 unix_add_time_begin/end（由日期控件驱动）和 current_db_name（由 loadShareDbList 异步定值）
+const ROUTE_FILTER_QUERY_KEYS = ['action', 'src_ip', 'host_code', 'rule', 'req_uuid', 'status_code', 'method', 'log_only_mode'];
+// 外部页面可用这两个 query 指定日期区间（形如 2026-07-01 00:00:00），不传则用"今天"
+const ROUTE_DATE_QUERY_KEYS = ['date_begin', 'date_end'];
 
 const GROUP_COLUMNS = [
   {
@@ -573,6 +597,15 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'host',
         },
+        {
+          //网站昵称：非 web_logs 真实列，由 host_code 在前端换取，故不支持排序/过滤
+          title: this.$t('page.visit_log.host_nickname'),
+          align: 'left',
+          width: 130,
+          ellipsis: true,
+          colKey: 'host_nickname',
+          cell: 'host_nickname',
+        },
 
         {
           title: this.$t('page.visit_log.request'),
@@ -701,6 +734,8 @@ export default Vue.extend({
       },
       //主机字典
       host_dic: {},
+      //主机昵称字典 host_code -> 纯昵称
+      host_nickname_dic: {},
       //日志存档字典
       share_db_dic: {},
       //当前是否为文件型数据库(SQLite)：仅 SQLite 支持日志文件导出，MySQL 隐藏导出按钮
@@ -778,6 +813,7 @@ export default Vue.extend({
         { value: 'rule', label: this.$t('page.visit_log.trigger_rule') },
         { value: 'create_time', label: this.$t('common.create_time') },
         { value: 'host', label: this.$t('page.visit_log.domain') },
+        { value: 'host_nickname', label: this.$t('page.visit_log.host_nickname') },
         { value: 'method', label: this.$t('page.visit_log.access_method') },
         { value: 'url', label: this.$t('page.visit_log.access_url') },
         { value: 'header', label: this.$t('page.visit_log.request') },
@@ -789,7 +825,8 @@ export default Vue.extend({
         { value: 'guest_identification', label: this.$t('page.visit_log.guest_identity') },
         { value: 'time_spent', label: this.$t('page.visit_log.time_spent') },
         { value: 'log_only_mode', label: this.$t('page.visit_log.log_only_mode') },
-        { value: 'req_uuid',label:this.$t('page.visit_log.req_uuid')}
+        { value: 'req_uuid',label:this.$t('page.visit_log.req_uuid')},
+        { value: 'ai_score', label: this.$t('page.visit_log.ai_score') }
 
       ];
     }
@@ -806,27 +843,39 @@ export default Vue.extend({
   },
   mounted() {
     console.log("attack list mounted ");
-    // 加载保存的列配置
+    // 先用本地缓存的列配置渲染首屏
     this.loadColumnConfig();
     // 加载日志配置
     this.loadLogConfig();
-    
-    if (this.$route.query.action != null) {
-      console.log(this.$route.query.action)
-      this.searchformData.action = this.$route.query.action
-    }
-    // 处理从其他页面传来的IP参数
-    if (this.$route.query.src_ip != null) {
-      console.log('从路由获取src_ip:', this.$route.query.src_ip)
-      this.searchformData.src_ip = this.$route.query.src_ip
-    }
-    // 判断 vuex 中是否有保存的搜索参数
 
-    if (this.$store.state.attacklog.msgData) {
+    // 作为弹窗子组件内嵌时（风险日志 / IP失败页），$route 是宿主页面的路由，不参与列配置同步与 query 预设
+    const isOwnRoute = this.$route.name === 'WafvisitLog';
+    if (isOwnRoute) {
+      // 服务端为准，异步覆盖本地缓存结果
+      this.loadColumnConfigFromServer();
+    }
+
+    const routeFilter = isOwnRoute ? this.collectRouteFilterQuery() : {};
+    if (Object.keys(routeFilter).length > 0) {
+      // 【issue #893 问题2】外部页面（首页卡片 / IP排行）带着筛选条件跳进来时必须以 query 为准：
+      // 跳过 vuex 里上次离开时的搜索条件恢复，否则 searchformData 会被整体覆盖，
+      // 预设筛选丢失（表现为"刷新一次才生效"）
+      this.applyRouteFilterQuery(routeFilter);
+      // 换了筛选条件，停在第 N 页没有意义；只沿用用户的每页条数偏好
+      this.pagination.current = 1;
+      const cached = this.$store.state.attacklog.msgData;
+      if (cached && cached.pagesize) {
+        this.pagination.pageSize = cached.pagesize;
+      }
+      // 日期区间保持 created() 里设置的"今天"，与首页卡片的"今日"口径一致
+    } else if (this.$store.state.attacklog.msgData) {
+      // 判断 vuex 中是否有保存的搜索参数
       const attack = this.$store.state.attacklog;
       this.pagination.current = attack.msgData.currentpage;
       this.pagination.pageSize = attack.msgData.pagesize;
-      this.searchformData = attack.msgData.searchData;   // 可以直接取出整个对象
+      // 浅拷贝 + 当前默认对象打底：直接引用 store 里的对象会让后续表单编辑绕过 mutation 改 state，
+      // 也会让弹窗内嵌实例把 src_ip 写脏主列表页缓存；历史缓存可能缺字段，打底避免 v-model 绑到 undefined
+      this.searchformData = { ...this.searchformData, ...attack.msgData.searchData };
       console.log('daysrc', attack.msgData.searchData)
       let newrange = Array()
       newrange[0] = ConvertUnixToDate(parseInt(attack.msgData.searchData.unix_add_time_begin))
@@ -841,17 +890,23 @@ export default Vue.extend({
     });
   },
   watch: {
-    '$route.query.action'(newVal, oldVal) {
-      console.log('action changed', newVal, oldVal)
-      this.searchformData.action = newVal
-      this.getList("")
-    },
-    '$route.query.src_ip'(newVal, oldVal) {
-      console.log('src_ip changed', newVal, oldVal)
-      if (newVal) {
-        this.searchformData.src_ip = newVal
-        this.getList("")
-      }
+    // 同一路由内 query 变化（浏览器前进/后退等）；首次进入由 mounted 处理，此处不触发
+    '$route.query': {
+      deep: true,
+      handler(newQuery, oldQuery) {
+        if (this.$route.name !== 'WafvisitLog') return;
+        if (JSON.stringify(newQuery) === JSON.stringify(oldQuery)) return;
+        const picked = this.collectRouteFilterQuery();
+        // 未在 query 中出现的筛选字段一律清空，避免上一次的筛选残留；
+        // query 全空（如从带筛选的 URL 点侧边栏菜单回来）同样按"清空重查"处理
+        ROUTE_FILTER_QUERY_KEYS.forEach((key) => {
+          this.$set(this.searchformData, key, Object.prototype.hasOwnProperty.call(picked, key) ? picked[key] : '');
+        });
+        // 日期区间与分页复位，口径与 mounted 分支一致
+        this.applyRouteDateQuery(picked);
+        this.pagination.current = 1;
+        this.getList("");
+      },
     },
     attack_ip(newVal) {
       if (newVal !== "") {
@@ -866,11 +921,47 @@ export default Vue.extend({
       //query: this.queryParam,
       pagesize: this.pagination.pageSize,
       currentpage: this.pagination.current,
-      searchData: this.searchformData,
+      searchData: { ...this.searchformData },  // 存快照，避免 store 持有活引用被后续编辑写脏
     })
     next(); // 继续后续的导航解析过程
   },
   methods: {
+    // 收集路由 query 中的显式筛选意图。
+    // 用 hasOwnProperty 判定"存在"：?action= 得到 ''、?action 得到 null，
+    // 这两种都属于"调用方明确要求把该字段设成空"，用 != null 判定会漏掉后者
+    collectRouteFilterQuery() {
+      const query = (this.$route && this.$route.query) || {};
+      const picked = {};
+      ROUTE_FILTER_QUERY_KEYS.concat(ROUTE_DATE_QUERY_KEYS).forEach((key) => {
+        if (!Object.prototype.hasOwnProperty.call(query, key)) return;
+        const v = query[key];
+        // vue-router 对重复 key 会给数组，取第一个；null（?key 无值）归一成空串
+        picked[key] = Array.isArray(v) ? (v[0] == null ? '' : String(v[0])) : (v == null ? '' : String(v));
+      });
+      return picked;
+    },
+
+    // 把 query 预设应用到当前（created 已初始化为今天）的搜索表单上
+    applyRouteFilterQuery(picked) {
+      Object.keys(picked).forEach((key) => {
+        if (ROUTE_DATE_QUERY_KEYS.includes(key)) return; // 日期区间单独处理
+        this.$set(this.searchformData, key, picked[key]);
+      });
+      this.applyRouteDateQuery(picked);
+    },
+
+    // 应用路由带来的日期区间；未指定则复位成"今天"，与首页"今日"类入口口径一致
+    applyRouteDateQuery(picked) {
+      const begin = picked.date_begin;
+      const end = picked.date_end;
+      const newRange = (begin && end)
+        ? [begin, end]
+        : [NowDate + " 00:00:00", NowDate + " 23:59:59"];
+      this.$set(this.dateControl, "range1", newRange);
+      this.searchformData.unix_add_time_begin = ConvertStringToUnix(newRange[0]).toString();
+      this.searchformData.unix_add_time_end = ConvertStringToUnix(newRange[1]).toString();
+    },
+
     // 切换列配置弹窗
     toggleColumnController() {
       this.tempDisplayColumns = [...this.displayColumns];
@@ -888,69 +979,188 @@ export default Vue.extend({
       this.columnControllerVisible = false;
       this.tempDisplayColumns = [];
     },
-    // 加载保存的列配置
-    loadColumnConfig() {
+    // 全部可选列（列配置弹窗里能勾选的字段）
+    allColumnFieldKeys() {
+      return this.availableFields.map((f) => f.value);
+    },
+
+    // 读取 v1 遗留的 known 基线（仅迁移期使用）。无记录/损坏返回 null，以区别于"空数组"
+    readLegacyKnownColumns() {
       try {
-        const savedConfig = localStorage.getItem('attack_table_display_columns');
-        if (!savedConfig) {
-          return;
-        }
-        const parsedConfig = JSON.parse(savedConfig);
-        if (!Array.isArray(parsedConfig) || parsedConfig.length === 0) {
-          return;
-        }
-
-        // 全部可选列（列配置弹窗里能勾选的字段）
-        const allFieldKeys = this.availableFields.map((f) => f.value);
-        // 用户上次见过的可选列集合，用于区分"用户主动取消的列"和"程序新增的列"
-        let knownKeys = [];
-        try {
-          const parsedKnown = JSON.parse(localStorage.getItem('attack_table_known_columns'));
-          if (Array.isArray(parsedKnown)) knownKeys = parsedKnown;
-        } catch (e) {
-          knownKeys = [];
-        }
-
-        const merged = [...parsedConfig];
-        if (knownKeys.length === 0) {
-          // 兼容旧缓存（无 known 记录）：仅此一次按默认列补齐，之后以 known 记录为准
-          this.defaultDisplayColumns.forEach((col) => {
-            if (!merged.includes(col)) merged.push(col);
-          });
-        } else {
-          // 仅自动加入"用户从未见过的新功能列"（如新增的 ai_score），
-          // 用户主动取消勾选的列刷新后不再被强行加回
-          allFieldKeys.forEach((col) => {
-            if (!knownKeys.includes(col) && !merged.includes(col)) merged.push(col);
-          });
-        }
-        this.displayColumns = merged;
-        // 记录当前全部可选列，作为下次判断"新列"的基线
-        localStorage.setItem('attack_table_known_columns', JSON.stringify(allFieldKeys));
-      } catch (error) {
-        console.error(this.$t('common.column_config_load_failed'), error);
-        // 如果加载失败，使用默认配置
-        this.displayColumns = [...this.defaultDisplayColumns];
+        const raw = localStorage.getItem(LEGACY_KNOWN_COLUMNS_KEY);
+        if (!raw) return null;
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) && arr.length > 0 ? arr : null;
+      } catch (e) {
+        return null;
       }
     },
 
-    // 保存列配置到localStorage
-    saveColumnConfig() {
+    // 统一落盘本地缓存：columns 与 known 必须成对写入，杜绝两者脱节。
+    // 写成功后才删除 v1 遗留 key，避免写失败（配额/无痕模式）时基线丢失
+    persistColumnConfigLocal(columns, knownKeys) {
+      const payload = {
+        v: COLUMN_CONFIG_VERSION,
+        account: localStorage.getItem('current_account') || '',
+        columns: Array.from(new Set(columns)),
+        known: (knownKeys && knownKeys.length) ? Array.from(new Set(knownKeys)) : this.allColumnFieldKeys(),
+      };
+      localStorage.setItem(COLUMN_CONFIG_KEY, JSON.stringify(payload)); // 异常交由调用方处理
       try {
-        localStorage.setItem('attack_table_display_columns', JSON.stringify(this.displayColumns));
-        this.$message.success(this.$t('common.column_config_saved'));
-      } catch (error) {
-        console.error(this.$t('common.column_config_save_failed'), error);
-        this.$message.error(this.$t('common.column_config_save_failed'));
+        localStorage.removeItem(LEGACY_KNOWN_COLUMNS_KEY);
+      } catch (e) { /* ignore */ }
+    },
+
+    // 合并列配置：known 为空则一次性按默认列补齐；否则只补"用户从未见过的新列"
+    mergeColumnConfig(columns, known) {
+      const allFieldKeys = this.allColumnFieldKeys();
+      const merged = [...columns];
+      if (!known || known.length === 0) {
+        // 兼容旧缓存（无 known 记录）：仅此一次按默认列补齐，之后以 known 记录为准
+        this.defaultDisplayColumns.forEach((col) => {
+          if (!merged.includes(col)) merged.push(col);
+        });
+      } else {
+        // 仅自动加入"用户从未见过的新功能列"（如新增的 ai_score），
+        // 用户主动取消勾选的列刷新后不再被强行加回
+        allFieldKeys.forEach((col) => {
+          // 默认不显示的新列（需用户主动在列配置里勾选），不参与"新列自动加入"
+          if (OPT_OUT_NEW_COLUMNS.includes(col)) return;
+          if (!known.includes(col) && !merged.includes(col)) merged.push(col);
+        });
       }
+      return merged;
+    },
+
+    // 落盘本地缓存但不让写失败影响界面（无痕模式/配额满时只告警）
+    persistColumnConfigLocalSafe(columns, knownKeys) {
+      try {
+        this.persistColumnConfigLocal(columns, knownKeys);
+      } catch (e) {
+        console.warn('写入本地列配置缓存失败（不影响使用）:', e);
+      }
+    },
+
+    // 加载本地缓存的列配置（同步，首屏立即渲染，避免闪一下默认列）
+    loadColumnConfig() {
+      const allFieldKeys = this.allColumnFieldKeys();
+      let columns = null;
+      let known = null; // null = 无基线记录
+      try {
+        const raw = localStorage.getItem(COLUMN_CONFIG_KEY);
+        // 全新用户：以当前默认可见列为准并立刻写下基线，
+        // 否则下次挂载会因 known 缺失而走"旧缓存兼容"分支强行补齐默认列
+        if (!raw) {
+          this.persistColumnConfigLocalSafe(this.displayColumns, allFieldKeys);
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          // v1 旧格式：纯数组，基线只能来自遗留 key（必须读，否则用户主动取消的默认列会被加回来）
+          columns = parsed;
+          known = this.readLegacyKnownColumns();
+        } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.columns)) {
+          // v2 格式；账号不一致时忽略缓存（多账号切换不把 A 的配置显示给 B），
+          // 先落到默认配置，等服务端返回本账号的真实配置
+          const currentAccount = localStorage.getItem('current_account') || '';
+          if (parsed.account && currentAccount && parsed.account !== currentAccount) {
+            this.displayColumns = [...this.defaultDisplayColumns];
+            return;
+          }
+          columns = parsed.columns;
+          known = Array.isArray(parsed.known) && parsed.known.length > 0 ? parsed.known : null;
+        }
+      } catch (error) {
+        console.error(this.$t('common.column_config_load_failed'), error);
+        // 解析失败：内存里用默认配置，但不覆盖 localStorage，避免一次解析异常永久丢配置
+        this.displayColumns = [...this.defaultDisplayColumns];
+        return;
+      }
+
+      if (!columns || columns.length === 0) {
+        // 空/损坏：回退默认并重建基线，保证下次挂载稳定
+        this.displayColumns = [...this.defaultDisplayColumns];
+        this.persistColumnConfigLocalSafe(this.displayColumns, allFieldKeys);
+        return;
+      }
+
+      const merged = this.mergeColumnConfig(columns, known);
+      this.displayColumns = merged;
+      // 关键：合并结果 + 最新基线一起落盘，让加载幂等（旧实现只回写 known 不回写 columns，
+      // 导致"本次挂载合并出 A、下次挂载读出 B"的不对称，正是 #893 的根因）。
+      // 落盘失败不能影响已经算对的界面配置，所以走 Safe 版本
+      this.persistColumnConfigLocalSafe(merged, allFieldKeys);
+    },
+
+    // 从服务端加载列配置（异步，服务端为准，覆盖本地缓存结果）
+    loadColumnConfigFromServer() {
+      get_ui_preference_api({ pref_name: COLUMN_PREF_NAME })
+        .then((res) => {
+          if (res.code !== 0) {
+            console.warn('获取服务端列配置失败:', res.msg);
+            return;
+          }
+          if (res.data && res.data.id && res.data.pref_json) {
+            const payload = JSON.parse(res.data.pref_json);
+            if (payload && Array.isArray(payload.columns) && payload.columns.length > 0) {
+              const known = Array.isArray(payload.known) && payload.known.length > 0 ? payload.known : null;
+              const merged = this.mergeColumnConfig(payload.columns, known);
+              this.displayColumns = merged;
+              this.persistColumnConfigLocalSafe(merged, this.allColumnFieldKeys());
+              return;
+            }
+          }
+          // 服务端还没有记录：把当前（本地缓存/默认）配置同步上去一次，
+          // 让存量用户的 localStorage 配置无感迁移到服务端
+          this.syncColumnConfigToServer().catch(() => { });
+        })
+        .catch((err) => {
+          // 接口不可用（如后端为老版本）时保持本地缓存结果，不打扰用户
+          console.warn('获取服务端列配置异常:', err);
+        });
+    },
+
+    // 把当前列配置同步到服务端
+    syncColumnConfigToServer() {
+      const payload = {
+        v: COLUMN_CONFIG_VERSION,
+        columns: Array.from(new Set(this.displayColumns)),
+        known: this.allColumnFieldKeys(),
+      };
+      return save_ui_preference_api({
+        pref_name: COLUMN_PREF_NAME,
+        pref_json: JSON.stringify(payload),
+      }).then((res) => {
+        if (res.code !== 0) {
+          return Promise.reject(new Error(res.msg || 'save failed'));
+        }
+        return res;
+      });
+    },
+
+    // 保存列配置（本地缓存 + 服务端）
+    saveColumnConfig(successMsgKey) {
+      // known 更新为全量：用户此刻正看着列配置弹窗里的全部字段，等价于"全部已见过"，
+      // 这保证他主动取消的列（含 OPT_OUT_NEW_COLUMNS 里的列）之后不会被"新列自动加入"逻辑加回
+      this.persistColumnConfigLocalSafe(this.displayColumns, this.allColumnFieldKeys());
+      // 成功提示等服务端返回后再弹，避免与调用方的提示重复/乱序
+      const successKey = successMsgKey || 'common.column_config_saved';
+      this.syncColumnConfigToServer()
+        .then(() => {
+          this.$message.success(this.$t(successKey));
+        })
+        .catch((error) => {
+          console.warn('同步列配置到服务端失败:', error);
+          this.$message.warning(this.$t('common.column_config_sync_failed'));
+        });
     },
 
     // 重置列配置为默认值
     resetColumnConfig() {
       if (confirm(this.$t('common.column_config_reset_confirm'))) {
         this.displayColumns = [...this.defaultDisplayColumns];
-        this.saveColumnConfig();
-        this.$message.success(this.$t('common.column_config_reset_success'));
+        this.saveColumnConfig('common.column_config_reset_success');
       }
     },
 
@@ -1008,9 +1218,13 @@ export default Vue.extend({
             console.log(resdata);
             if (resdata.code === 0) {
               let host_options = resdata.data;
+              //昵称字典整体替换赋值，保证表格列能重新渲染(Vue2 对新增 key 不响应)
+              const nicknameDic = {};
               for (let i = 0; i < host_options.length; i++) {
                 this.host_dic[host_options[i].value] = host_options[i].label;
+                nicknameDic[host_options[i].value] = host_options[i].nickname || '';
               }
+              this.host_nickname_dic = nicknameDic;
             }
             resolve(); // 调用 resolve 表示加载完成
           })

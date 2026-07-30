@@ -80,6 +80,7 @@ export default {
     column_config_reset_success: "Column configuration reset to default",
     column_config_reset_confirm: "Are you sure you want to reset column configuration to default?",
     column_config_load_failed: "Failed to load column configuration",
+    column_config_sync_failed: "Column configuration saved locally, but failed to sync to server",
     seconds: "seconds",
     generate_rule: 'Generate Rule',
     unit_minute: "minute",
@@ -648,6 +649,7 @@ export default {
       trigger_rule: "Trigger Rule",
       time: "Time",
       domain: "Domain",
+      host_nickname: "Site Nickname",
       request: "Request",
       source_ip: "Source IP",
       country: "Country",
@@ -828,6 +830,8 @@ export default {
       log_only_mode_off: "Off",
       log_only_mode_tips: "Log Only Mode: When enabled, SamWaf will only record attack logs, but will not block attack requests.",
       tab_base: "Basic Information",
+      tab_layout_horizontal: "Switch to horizontal tabs",
+      tab_layout_vertical: "Switch to vertical tabs",
       tab_engine: "Engine Built-in Protection",
       tab_other: "Other Configurations",
       tab_more_domain: "Bind More Domain",
@@ -1237,6 +1241,12 @@ export default {
         enable_success: "HTTPS redirect server enabled successfully",
         enable_failed: "Failed to enable HTTPS redirect server",
         config_not_found: "HTTPS redirect configuration not found"
+      },
+      disable_http2: {
+        label: "Outbound HTTP/2",
+        enable: "Enabled (default)",
+        disable: "Disabled (native WebSocket compatible)",
+        tips: "HTTP/2 is enabled for this site by default. If a native WebSocket client (e.g. Android uni.connectSocket) fails to handshake against this site, choose \"Disabled\" to force it to HTTP/1.1 only — this fixes it without affecting other sites. When HTTP/3 is enabled, disabling here also stops advertising h3 for this site. Applies to HTTPS sites only; takes effect on new connections immediately."
       },
       is_enable_http_auth_base: "Web Password Visit",
       is_enable_http_auth_base_tips: "After enabled, the website will require a password for access. Please add a username and password.",
