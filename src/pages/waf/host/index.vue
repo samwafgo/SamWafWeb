@@ -166,7 +166,11 @@
     </t-dialog>
 
     <!-- Edit WebSite Dialog -->
-    <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="hostFormDialogWidth" :footer="false">
+    <t-dialog :visible.sync="editFormVisible" :width="hostFormDialogWidth" :footer="false">
+      <div slot="header">
+        {{ $t('common.edit') }}
+        <span v-if="editHostLabel" class="dialog-header-host">{{ editHostLabel }}</span>
+      </div>
       <div slot="body">
         <host-form
         :value="formEditData"
@@ -679,6 +683,27 @@ export default Vue.extend({
       return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
     },
     /**
+     * 编辑弹窗标题上显示的站点信息，格式与顶部站点下拉一致：域名:端口(昵称,SSL,备注)
+     */
+    editHostLabel() {
+      const data = this.formEditData || {};
+      if (!data.host) {
+        return '';
+      }
+      const bracketContent = [];
+      if (data.nickname) {
+        bracketContent.push(data.nickname);
+      }
+      if (Number(data.ssl) === 1) {
+        bracketContent.push('SSL');
+      }
+      if (data.remarks) {
+        bracketContent.push(data.remarks);
+      }
+      const baseLabel = `${data.host}:${data.port}`;
+      return bracketContent.length > 0 ? `${baseLabel}(${bracketContent.join(',')})` : baseLabel;
+    },
+    /**
      * 可用的目标主机列表（排除源主机）
      */
     availableTargetHosts() {
@@ -911,6 +936,10 @@ export default Vue.extend({
         return
       }
       console.log(code)
+      // 先清空，避免详情返回前弹窗标题上还显示上一个站点信息
+      this.formEditData = {
+        code: ''
+      }
       this.editFormVisible = true
       this.getDetail(code)
     },
@@ -1554,6 +1583,14 @@ export default Vue.extend({
 /* 批量复制配置弹窗样式 */
 .batch-copy-section {
   margin-bottom: 20px;
+}
+
+.dialog-header-host {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--td-text-color-secondary);
+  word-break: break-all;
 }
 
 .batch-copy-label {
