@@ -19,6 +19,7 @@
         </div>
       </t-row>
       <t-alert theme="info" :message="$t('page.threatip.alert_message')" close />
+      <t-alert theme="warning" :message="$t('page.threatip.op_help')" close />
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange"
@@ -48,6 +49,15 @@
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="120">
+          <t-form-item :label="$t('page.threatip.quick_fill_label')">
+            <div style="width: 100%;">
+              <t-select :style="{ width: '480px', maxWidth: '100%' }" :placeholder="$t('page.threatip.quick_fill_placeholder')"
+                        clearable filterable @change="applyFeedPreset">
+                <t-option v-for="p in feedPresets" :value="p.code" :label="p.optionLabel" :key="p.code" />
+              </t-select>
+              <div class="quick-fill-tips">{{ $t('page.threatip.quick_fill_tips') }}</div>
+            </div>
+          </t-form-item>
           <t-form-item :label="$t('page.threatip.label_code')" name="code">
             <t-input :style="{ width: '480px' }" v-model="formData.code" :placeholder="$t('page.threatip.code_tips')"></t-input>
           </t-form-item>
@@ -180,6 +190,19 @@
           { value: 'system', label: this.$t('page.threatip.land_system') },
           { value: 'both', label: this.$t('page.threatip.land_both') },
         ],
+        // 常用威胁情报IP订阅源预设：点选自动填 code/name/url/parser/threshold(仍可改)。
+        // parser_type 已与各源实际格式对齐(均跳过#注释；plain_mixed 取每行首字段容忍行尾注释)。
+        feedPresets: [
+          { code: 'ustc', name: '科技大学 USTC', url: 'https://blackip.ustc.edu.cn/list.php?txt', parser_type: 'cidr_only', threshold: 0, optionLabel: '科技大学 USTC · blackip.ustc.edu.cn（国内综合恶意IP）' },
+          { code: 'ipsum', name: 'stamparm ipsum', url: 'https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt', parser_type: 'ipsum', threshold: 3, optionLabel: 'stamparm ipsum · github（多源聚合，阈值默认3）' },
+          { code: 'firehol1', name: 'FireHOL Level1', url: 'https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/firehol_level1.netset', parser_type: 'cidr_only', threshold: 0, optionLabel: 'FireHOL Level1 · github（低误报聚合，含Spamhaus/DShield）' },
+          { code: 'blocklistde', name: 'blocklist.de', url: 'https://lists.blocklist.de/lists/all.txt', parser_type: 'cidr_only', threshold: 0, optionLabel: 'blocklist.de · lists.blocklist.de（攻击者IP，全量）' },
+          { code: 'ciarmy', name: 'CINS Army', url: 'https://cinsscore.com/list/ci-badguys.txt', parser_type: 'cidr_only', threshold: 0, optionLabel: 'CINS Army · cinsscore.com（活跃恶意IP）' },
+          { code: 'greensnow', name: 'GreenSnow', url: 'https://blocklist.greensnow.co/greensnow.txt', parser_type: 'cidr_only', threshold: 0, optionLabel: 'GreenSnow · greensnow.co（暴力破解/扫描）' },
+          { code: 'et_comp', name: 'ET Compromised', url: 'https://rules.emergingthreats.net/blockrules/compromised-ips.txt', parser_type: 'cidr_only', threshold: 0, optionLabel: 'ET Compromised · emergingthreats.net（已失陷主机）' },
+          { code: 'spamhaus', name: 'Spamhaus DROP', url: 'https://www.spamhaus.org/drop/drop.txt', parser_type: 'plain_mixed', threshold: 0, optionLabel: 'Spamhaus DROP · spamhaus.org（被劫持网段，低误报）' },
+          { code: 'feodo', name: 'Feodo Tracker', url: 'https://feodotracker.abuse.ch/downloads/ipblocklist.txt', parser_type: 'cidr_only', threshold: 0, optionLabel: 'Feodo Tracker · abuse.ch（僵尸网络C2）' },
+        ],
         columns: [
           { title: this.$t('page.threatip.label_name'), align: 'left', width: 160, ellipsis: true, colKey: 'name' },
           { title: this.$t('page.threatip.label_code'), width: 120, ellipsis: true, colKey: 'code' },
@@ -253,6 +276,17 @@
       handleAdd() {
         this.addFormVisible = true;
         this.formData = { ...INITIAL_DATA };
+      },
+      // 点选常用订阅源 → 自动填入 code/name/url/解析格式/阈值(仍可修改)
+      applyFeedPreset(code) {
+        if (!code) return;
+        const p = this.feedPresets.find((x) => x.code === code);
+        if (!p) return;
+        this.formData.code = p.code;
+        this.formData.name = p.name;
+        this.formData.url = p.url;
+        this.formData.parser_type = p.parser_type;
+        this.formData.threshold = p.threshold || 0;
       },
       handleClickEdit(e) {
         this.editFormVisible = true;
@@ -366,5 +400,12 @@
   }
   .t-button+.t-button {
     margin-left: @spacer;
+  }
+  .quick-fill-tips {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.45);
+    margin-top: 6px;
+    width: 100%;
+    line-height: 1.5;
   }
 </style>

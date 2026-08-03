@@ -99,10 +99,14 @@
           </t-card>
         </t-col>
         <t-col :span="3">
-          <t-card size="small">
+          <t-card size="small" class="stat-card-clickable" @click.native="goSubSourceTab">
             <div class="stat-card">
-              <div class="stat-label">{{ $t('page.firewall_ipblock.stat_sub_landed') }}</div>
+              <div class="stat-label">
+                {{ $t('page.firewall_ipblock.stat_sub_landed') }}
+                <t-icon name="chevron-right" />
+              </div>
               <div class="stat-value stat-sub">{{ subLandedTotal }}</div>
+              <div class="stat-sub-hint">{{ $t('page.firewall_ipblock.stat_sub_landed_hint') }}</div>
             </div>
           </t-card>
         </t-col>
@@ -324,12 +328,21 @@
     </t-dialog>
 
     <!-- 批量删除确认对话框 -->
-    <t-dialog 
-      :header="$t('page.firewall_ipblock.confirm_batch_delete')" 
-      :body="$t('common.data_delete_warning')" 
-      :visible.sync="batchDeleteConfirmVisible" 
+    <t-dialog
+      :header="$t('page.firewall_ipblock.confirm_batch_delete')"
+      :body="$t('common.data_delete_warning')"
+      :visible.sync="batchDeleteConfirmVisible"
       @confirm="onConfirmBatchDelete"
       :onCancel="onCancelBatchDelete">
+    </t-dialog>
+
+    <!-- 清理过期确认对话框（会删除已过期记录，不可恢复） -->
+    <t-dialog
+      :header="$t('page.firewall_ipblock.confirm_clear_expired')"
+      :body="$t('page.firewall_ipblock.confirm_clear_expired_body')"
+      :visible.sync="clearExpiredConfirmVisible"
+      @confirm="onConfirmClearExpired"
+      :onCancel="onCancelClearExpired">
     </t-dialog>
   </div>
 </template>
@@ -389,6 +402,7 @@ export default Vue.extend({
       editFormVisible: false,
       confirmVisible: false,
       batchDeleteConfirmVisible: false,
+      clearExpiredConfirmVisible: false,
       formData: { ...INITIAL_DATA },
       batchAddFormData: { ...BATCH_ADD_INITIAL_DATA },
       formEditData: { ...INITIAL_DATA },
@@ -542,6 +556,15 @@ export default Vue.extend({
       if (val === 'sub' && this.$refs.subPanel) {
         (this.$refs.subPanel as any).refresh();
       }
+    },
+    // 点击"订阅落地(系统层)"统计卡 → 切到"订阅来源"Tab 看逐渠道详情
+    goSubSourceTab() {
+      this.activeSourceTab = 'sub';
+      this.$nextTick(() => {
+        if (this.$refs.subPanel) {
+          (this.$refs.subPanel as any).refresh();
+        }
+      });
     },
     // 汇总订阅落地到系统防火墙的总条数(供统计卡片对照展示)
     loadSubLandedTotal() {
@@ -874,6 +897,14 @@ export default Vue.extend({
         });
     },
     handleClearExpired() {
+      // 清理过期会【删除】已过期记录(不可恢复)，先二次确认
+      this.clearExpiredConfirmVisible = true;
+    },
+    onCancelClearExpired() {
+      this.clearExpiredConfirmVisible = false;
+    },
+    onConfirmClearExpired() {
+      this.clearExpiredConfirmVisible = false;
       let that = this;
       wafFirewallIPBlockClearExpiredApi({})
         .then((res) => {
@@ -990,6 +1021,22 @@ export default Vue.extend({
     &.stat-sub {
       color: #1677ff;
     }
+  }
+
+  .stat-sub-hint {
+    font-size: 12px;
+    color: #1677ff;
+    margin-top: 4px;
+  }
+}
+
+.stat-card-clickable {
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+
+  &:hover {
+    border-color: #1677ff;
+    box-shadow: 0 2px 8px rgba(22, 119, 255, 0.2);
   }
 }
 </style>

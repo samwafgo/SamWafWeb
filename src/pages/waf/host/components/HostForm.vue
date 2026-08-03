@@ -326,6 +326,7 @@
                 <t-option value="xff_depth" :label="$t('page.host.ip_source_xff')" />
                 <t-option value="cdn_preset" :label="$t('page.host.ip_source_cdn')" />
               </t-select>
+              <div class="limit-mode-desc">{{ ipSourceModeDesc }}</div>
             </t-form-item>
             <t-form-item v-if="formData.ip_mode === 'proxy' && formData.ip_source_mode === 'cdn_preset'" :label="$t('page.host.cdn_provider')" name="cdn_provider">
               <t-select v-model="formData.cdn_provider" :style="{ width: '320px' }" @change="onCdnProviderChange">
@@ -768,6 +769,16 @@
       };
     },
     computed: {
+      // 真实IP来源：随所选模式返回对应解释文案(显示在下拉框下方)
+      ipSourceModeDesc() {
+        const map = {
+          '': 'page.host.ip_source_compat_desc',
+          header: 'page.host.ip_source_header_desc',
+          xff_depth: 'page.host.ip_source_xff_desc',
+          cdn_preset: 'page.host.ip_source_cdn_desc',
+        };
+        return this.$t(map[this.formData.ip_source_mode] || 'page.host.ip_source_compat_desc');
+      },
       // 判断是否需要显示HTTPS重定向提示
       shouldShowHttpsRedirectTip() {
         // 1. 开启了SSL

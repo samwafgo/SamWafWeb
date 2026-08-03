@@ -52,8 +52,40 @@
         </template>
 
         <t-loading :loading="trustedProxiesLoading">
+          <t-alert theme="info" :message="$t('page.vpconfig.trusted_proxies_union_tip')" style="margin-bottom: 12px;" />
           <t-form :data="trustedProxiesFormData" :label-width="180">
-            <t-form-item :label="$t('page.vpconfig.manage_cdn_provider')">
+            <t-form-item :label="$t('page.vpconfig.manage_proxy_enable')">
+              <t-switch v-model="enableManageProxy" @change="onEnableManageProxyChange" />
+              <div class="form-item-tips">{{ $t('page.vpconfig.manage_proxy_enable_tips') }}</div>
+            </t-form-item>
+            <t-form-item v-if="enableManageProxy" :label="$t('page.vpconfig.manage_proxy_header')">
+              <t-input
+                v-model="manageProxyHeader"
+                :placeholder="$t('page.vpconfig.manage_proxy_header_placeholder')"
+                clearable
+              />
+              <div class="proxy-header-presets">
+                <span class="preset-label">{{ $t('page.vpconfig.manage_proxy_header_quickfill') }}</span>
+                <t-tag
+                  v-for="p in proxyHeaderPresets"
+                  :key="p.value"
+                  size="small"
+                  variant="outline"
+                  theme="primary"
+                  style="cursor: pointer; margin: 2px 6px 2px 0;"
+                  @click="addProxyHeaderToken(p.value)"
+                >{{ p.label }}</t-tag>
+                <t-tag
+                  size="small"
+                  variant="outline"
+                  theme="default"
+                  style="cursor: pointer; margin: 2px 0;"
+                  @click="manageProxyHeader = ''"
+                >{{ $t('page.vpconfig.manage_proxy_header_clear') }}</t-tag>
+              </div>
+              <div class="form-item-tips">{{ $t('page.vpconfig.manage_proxy_header_tips') }}</div>
+            </t-form-item>
+            <t-form-item v-if="enableManageProxy" :label="$t('page.vpconfig.manage_cdn_provider')">
               <t-space>
                 <t-select v-model="manageCdnProvider" :style="{ width: '240px' }"
                           :placeholder="$t('page.vpconfig.manage_cdn_provider_placeholder')" clearable
@@ -75,7 +107,7 @@
               </t-space>
               <div class="form-item-tips">{{ $t('page.vpconfig.manage_cdn_provider_tips') }}</div>
             </t-form-item>
-            <t-form-item :label="$t('page.vpconfig.trusted_proxies')">
+            <t-form-item v-if="enableManageProxy" :label="$t('page.vpconfig.trusted_proxies')">
               <t-textarea
                 v-model="trustedProxiesFormData.trusted_proxies"
                 :placeholder="$t('page.vpconfig.trusted_proxies_placeholder')"
@@ -441,6 +473,7 @@
   import { prefix } from '@/config/global';
   import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getManageCDNProviderApi, updateManageCDNProviderApi, getCorsAllowOriginsApi, updateCorsAllowOriginsApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi } from '@/apis/vpconfig';
   import { wafCDNProviderInfoApi } from '@/apis/cdnip';
+  import { get_detail_by_item_api, edit_system_config_by_item_api } from '@/apis/systemconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   
@@ -485,6 +518,21 @@
           trusted_proxies: ''
         },
         trustedProxiesLoading: false,
+        // 管理端代理头(DB参数 gwaf_manage_proxy_header)：从哪些头识别真实客户端IP，留空=直接用网络IP
+        manageProxyHeader: '',
+        // 总开关：代理头有值即开启；关闭=按直连网络IP判定，并隐藏下面代理头/①CDN/②网段
+        enableManageProxy: false,
+        // 代理头快捷填写预设(头名与后端 clientip 厂商注册表逐一对齐)
+        proxyHeaderPresets: [
+          { label: 'X-Forwarded-For', value: 'X-Forwarded-For' },
+          { label: 'X-Real-IP', value: 'X-Real-IP' },
+          { label: 'Cloudflare · CF-Connecting-IP', value: 'CF-Connecting-IP' },
+          { label: 'Fastly · Fastly-Client-IP', value: 'Fastly-Client-IP' },
+          { label: 'AWS CloudFront · CloudFront-Viewer-Address', value: 'CloudFront-Viewer-Address' },
+          { label: '腾讯云 EdgeOne · EO-Client-IP', value: 'EO-Client-IP' },
+          { label: '阿里云 CDN · Ali-Cdn-Real-Ip', value: 'Ali-Cdn-Real-Ip' },
+          { label: 'Akamai · True-Client-IP', value: 'True-Client-IP' },
+        ],
         // 管理端引用的CDN厂商(管理端也可能挂在CDN后，自动读中心库最新回源段)
         manageCdnProvider: '',
         manageCdnInfo: null,
@@ -618,6 +666,38 @@
           .finally(() => {
             this.trustedProxiesLoading = false;
           });
+        // 加载管理端代理头(DB参数)
+        this.fetchManageProxyHeader();
+      },
+      // 快捷追加一个代理头(逗号优先级列表，已存在则忽略、大小写不敏感去重)
+      addProxyHeaderToken(token) {
+        const tokens = (this.manageProxyHeader || '')
+          .split(',')
+          .map((t) => t.trim())
+          .filter((t) => t !== '');
+        if (tokens.some((t) => t.toLowerCase() === token.toLowerCase())) {
+          return;
+        }
+        tokens.push(token);
+        this.manageProxyHeader = tokens.join(',');
+      },
+      // 读取管理端代理头 DB 参数 gwaf_manage_proxy_header
+      fetchManageProxyHeader() {
+        get_detail_by_item_api({ item: 'gwaf_manage_proxy_header' })
+          .then((res) => {
+            if (res.code === 0 && res.data) {
+              this.manageProxyHeader = res.data.value || '';
+            }
+            // 开关状态跟随代理头是否有值：有值即开启
+            this.enableManageProxy = (this.manageProxyHeader || '').trim() !== '';
+          })
+          .catch(() => {});
+      },
+      // 总开关切换：关闭=清空代理头(按网络层IP判定)并隐藏下方项；开启=展开供填写
+      onEnableManageProxyChange(val) {
+        if (!val) {
+          this.manageProxyHeader = '';
+        }
       },
       handleTrustedProxiesRefresh() {
         this.fetchTrustedProxies();
@@ -658,14 +738,24 @@
       },
       handleTrustedProxiesSave() {
         this.trustedProxiesLoading = true;
-        updateManageTrustedProxiesApi({
-          trusted_proxies: this.trustedProxiesFormData.trusted_proxies
-        })
-          .then((res) => {
-            if (res.code === 0) {
+        // 一并保存：代理头(DB参数 gwaf_manage_proxy_header) + 手填可信代理网段(config.yml)
+        Promise.all([
+          edit_system_config_by_item_api({
+            item: 'gwaf_manage_proxy_header',
+            value: (this.manageProxyHeader || '').trim()
+          }),
+          updateManageTrustedProxiesApi({
+            trusted_proxies: this.trustedProxiesFormData.trusted_proxies
+          })
+        ])
+          .then(([headerRes, proxiesRes]) => {
+            if (headerRes.code === 0 && proxiesRes.code === 0) {
               MessagePlugin.success(this.$t('common.tips.save_success'));
             } else {
-              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+              MessagePlugin.error(
+                (headerRes.code !== 0 ? headerRes.msg : proxiesRes.msg) ||
+                  this.$t('common.tips.save_failed')
+              );
             }
           })
           .catch(() => {
@@ -1255,7 +1345,20 @@
     font-size: 12px;
     margin-top: 8px;
   }
-  
+
+  .proxy-header-presets {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .preset-label {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 12px;
+      margin-right: 4px;
+    }
+  }
+
   .cert-info {
     color: rgba(0, 0, 0, 0.6);
     font-size: 14px;

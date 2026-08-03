@@ -16,7 +16,10 @@
         <t-tag v-else theme="default" variant="light">{{ $t('page.threatip.disabled') }}</t-tag>
       </template>
       <template #count="{ row }">
-        <t-tag theme="primary" variant="light">{{ row.count }}</t-tag>
+        <t-tag :theme="row.enable === 1 ? 'primary' : 'default'" variant="light">{{ row.count }}</t-tag>
+        <span v-if="row.enable !== 1 && row.snapshot_count > 0" class="snapshot-hint">
+          {{ $t('page.threatip.snapshot_hint', { count: row.snapshot_count }) }}
+        </span>
       </template>
       <template #last_sync_at="{ row }">
         <span>{{ formatTs(row.last_sync_at) }}</span>
@@ -76,7 +79,7 @@
           { title: this.$t('page.threatip.label_code'), width: 120, ellipsis: true, colKey: 'code' },
           { title: this.$t('page.threatip.label_land'), width: 100, colKey: 'land_target' },
           { title: this.$t('page.threatip.label_enable'), width: 90, colKey: 'enable' },
-          { title: this.$t('page.threatip.landed_count'), width: 110, colKey: 'count' },
+          { title: this.$t('page.threatip.landed_count'), width: 190, colKey: 'count' },
           { title: this.$t('page.threatip.last_status'), align: 'left', ellipsis: true, colKey: 'last_status' },
           { title: this.$t('page.threatip.last_sync_at'), width: 170, colKey: 'last_sync_at' },
           { align: 'left', width: 100, colKey: 'op', title: this.$t('common.op') },
@@ -163,3 +166,11 @@
     },
   });
 </script>
+
+<style lang="less" scoped>
+  .snapshot-hint {
+    margin-left: 6px;
+    font-size: 12px;
+    color: var(--td-text-color-placeholder);
+  }
+</style>
