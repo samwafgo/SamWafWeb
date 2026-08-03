@@ -58,6 +58,16 @@
           <template #host_code="{ row }">
             <span> {{host_dic[row.host_code]}}</span>
           </template>
+          <template #ip_type="{ row }">
+            <t-tag v-if="row.ip_type === 'group'" theme="primary" variant="light">
+              {{ $t('page.ipblock.entry_type_group') }}
+            </t-tag>
+            <span v-else>{{ $t('page.ipblock.entry_type_ip') }}</span>
+          </template>
+          <template #ip="{ row }">
+            <span v-if="row.ip_type === 'group'">{{ groupLabel(row.group_code) }}</span>
+            <span v-else>{{ row.ip }}</span>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -87,8 +97,25 @@
               </t-option>
             </t-select>
           </t-form-item>
-          <t-form-item :label="$t('page.ipblock.label_ip')" name="ip">
-            <t-input :style="{ width: '480px' }" v-model="formData.ip" ></t-input>
+          <t-form-item :label="$t('page.ipblock.label_entry_type')" name="ip_type">
+            <t-radio-group v-model="formData.ip_type">
+              <t-radio-button value="ip">{{ $t('page.ipblock.entry_type_ip') }}</t-radio-button>
+              <t-radio-button value="group">{{ $t('page.ipblock.entry_type_group') }}</t-radio-button>
+            </t-radio-group>
+          </t-form-item>
+          <t-form-item v-if="formData.ip_type !== 'group'" :label="$t('page.ipblock.label_ip')" name="ip">
+            <t-input :style="{ width: '480px' }" v-model="formData.ip"
+              :placeholder="$t('page.ipblock.ip_placeholder')"></t-input>
+            <div class="form-tips">{{ $t('page.ipblock.ip_pattern_tips') }}</div>
+          </t-form-item>
+          <t-form-item v-else :label="$t('page.ipblock.label_group')" name="group_code">
+            <t-select v-model="formData.group_code" clearable filterable :style="{ width: '480px' }">
+              <t-option v-for="g in group_options" :key="g.group_code" :value="g.group_code"
+                :label="g.group_name + ' (' + g.item_count + ')'"></t-option>
+            </t-select>
+            <a class="t-button-link" style="margin-left:8px" @click="$router.push({ name: 'WafIpGroup' })">
+              {{ $t('page.ipblock.goto_group_manage') }}
+            </a>
           </t-form-item>
           <t-form-item name="target_layer">
             <template #label>
@@ -99,9 +126,10 @@
             </template>
             <t-select v-model="formData.target_layer" :style="{ width: '480px' }">
               <t-option value="waf" :label="$t('page.ipblock.target_layer_waf')" />
-              <t-option value="system" :label="$t('page.ipblock.target_layer_system')" />
-              <t-option value="both" :label="$t('page.ipblock.target_layer_both')" />
+              <t-option value="system" :label="$t('page.ipblock.target_layer_system')" :disabled="systemLayerDisabled" />
+              <t-option value="both" :label="$t('page.ipblock.target_layer_both')" :disabled="systemLayerDisabled" />
             </t-select>
+            <div v-if="systemLayerDisabled" class="form-tips">{{ $t('page.ipblock.system_layer_unsupported') }}</div>
             <div v-if="recommendReason" style="margin-top:4px;font-size:12px;color:var(--td-text-color-secondary)">{{ recommendReason }}</div>
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
@@ -118,7 +146,7 @@
 
     <t-dialog :header=" $t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="100">
+        <t-form :data="formEditData" ref="form" :rules="editRules" @submit="onSubmitEdit" :labelWidth="100">
           <t-form-item :label="$t('page.ipblock.label_website')" name="host_code">
             <t-select v-model="formEditData.host_code" clearable filterable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item"
@@ -127,9 +155,23 @@
               </t-option>
             </t-select>
           </t-form-item>
-         <t-form-item :label="$t('page.ipblock.label_ip')" name="ip">
-           <t-input :style="{ width: '480px' }" v-model="formEditData.ip" ></t-input>
-         </t-form-item>
+          <t-form-item :label="$t('page.ipblock.label_entry_type')" name="ip_type">
+            <t-radio-group v-model="formEditData.ip_type">
+              <t-radio-button value="ip">{{ $t('page.ipblock.entry_type_ip') }}</t-radio-button>
+              <t-radio-button value="group">{{ $t('page.ipblock.entry_type_group') }}</t-radio-button>
+            </t-radio-group>
+          </t-form-item>
+          <t-form-item v-if="formEditData.ip_type !== 'group'" :label="$t('page.ipblock.label_ip')" name="ip">
+            <t-input :style="{ width: '480px' }" v-model="formEditData.ip"
+              :placeholder="$t('page.ipblock.ip_placeholder')"></t-input>
+            <div class="form-tips">{{ $t('page.ipblock.ip_pattern_tips') }}</div>
+          </t-form-item>
+          <t-form-item v-else :label="$t('page.ipblock.label_group')" name="group_code">
+            <t-select v-model="formEditData.group_code" clearable filterable :style="{ width: '480px' }">
+              <t-option v-for="g in group_options" :key="g.group_code" :value="g.group_code"
+                :label="g.group_name + ' (' + g.item_count + ')'"></t-option>
+            </t-select>
+          </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks"  name="remarks">
             </t-textarea>
@@ -193,11 +235,17 @@
     CONTRACT_PAYMENT_TYPES
   } from '@/constants';
 
+  import {
+    wafIPGroupOptionsApi
+  } from '@/apis/ipgroup';
+
   const INITIAL_DATA = {
     host_code: '',
     ip: '',
     remarks: '',
     target_layer: 'waf',
+    ip_type: 'ip',
+    group_code: '',
   };
   export default Vue.extend({
     name: 'ListBase',
@@ -220,6 +268,8 @@
         formEditData: {
           ...INITIAL_DATA
         },
+        // 新增与编辑各用一份校验规则：两个弹窗共用同一份时，
+        // 依赖 ip_type 的条件校验会读到另一个弹窗的表单值而误判
         rules: {
           host_code: [{
             required: true,
@@ -227,11 +277,35 @@
             type: 'error'
           }],
           ip: [{
-            required: true,
+            validator: (val) => this.formData.ip_type === 'group' || !!val,
             message: this.$t('common.placeholder')+this.$t('page.ipblock.label_ip'),
             type: 'error'
           }],
+          group_code: [{
+            validator: (val) => this.formData.ip_type !== 'group' || !!val,
+            message: this.$t('common.placeholder')+this.$t('page.ipblock.label_group'),
+            type: 'error'
+          }],
         },
+        editRules: {
+          host_code: [{
+            required: true,
+            message: this.$t('common.placeholder')+this.$t('page.ipblock.label_website'),
+            type: 'error'
+          }],
+          ip: [{
+            validator: (val) => this.formEditData.ip_type === 'group' || !!val,
+            message: this.$t('common.placeholder')+this.$t('page.ipblock.label_ip'),
+            type: 'error'
+          }],
+          group_code: [{
+            validator: (val) => this.formEditData.ip_type !== 'group' || !!val,
+            message: this.$t('common.placeholder')+this.$t('page.ipblock.label_group'),
+            type: 'error'
+          }],
+        },
+        //IP组下拉选项
+        group_options: [],
         textareaValue: '',
         prefix,
         dataLoading: false,
@@ -247,6 +321,11 @@
             width: 250,
             ellipsis: true,
             colKey: 'host_code',
+          },
+          {
+            title: this.$t('page.ipblock.col_entry_type'),
+            width: 110,
+            colKey: 'ip_type',
           },
           {
             title: this.$t('page.ipblock.label_ip'),
@@ -311,14 +390,46 @@
       offsetTop() {
         return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
       },
+      // 系统防火墙(iptables/netsh)只认单IP与CIDR，通配符/区间/IP组都表达不了。
+      // 这里只是前端体验层的拦截，后端 api/waf_ip_entry_validate.go 还会再挡一次。
+      systemLayerDisabled() {
+        if (this.formData.ip_type === 'group') {
+          return true;
+        }
+        return /[*\-]/.test(this.formData.ip || '');
+      },
+    },
+    watch: {
+      // 切到不支持系统层的写法时，把已选的层级拉回 WAF 应用层，避免提交时才报错
+      systemLayerDisabled(disabled) {
+        if (disabled && this.formData.target_layer !== 'waf') {
+          this.formData.target_layer = 'waf';
+        }
+      },
     },
     mounted() {
       this.loadHostList().then(() => {
         this.getList("");
       });
+      this.loadGroupOptions();
     },
 
     methods: {
+      loadGroupOptions() {
+        let that = this
+        wafIPGroupOptionsApi()
+          .then((res) => {
+            if (res.code === 0) {
+              that.group_options = res.data ?? [];
+            }
+          })
+          .catch((e: Error) => { console.log(e); });
+      },
+      // 列表里组引用行显示「组名(条目数)」；组已被删时退回显示短码
+      groupLabel(groupCode) {
+        const g = (this.group_options || []).find((x) => x.group_code === groupCode);
+        return g ? `${g.group_name} (${g.item_count})` : groupCode;
+      },
       onSourceTabChange(val) {
         // 切到"订阅来源"Tab 时刷新汇总
         if (val === 'sub' && this.$refs.subPanel) {
@@ -405,12 +516,8 @@
       handleAddipblock() {
         this.addFormVisible = true
         this.recommendReason = ''
-        this.formData = {
-          host_code: '',
-          ip: '',
-          remarks: '',
-          target_layer: 'waf',
-        };
+        this.formData = {...INITIAL_DATA};
+        this.loadGroupOptions();
       },
       // 站点变化时按后端智能推荐预选封禁层级
       onHostChange(hostCode) {
@@ -550,7 +657,10 @@
             if (resdata.code === 0) {
               that.detail_data = resdata.data;
               that.formEditData = {
-                ...that.detail_data
+                ...that.detail_data,
+                //存量记录的 ip_type 是空串，等价于「单条IP」
+                ip_type: that.detail_data.ip_type || 'ip',
+                group_code: that.detail_data.group_code || '',
               }
             }
           })
@@ -675,6 +785,12 @@
 
   .search-input {
     width: 360px;
+  }
+
+  .form-tips {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--td-text-color-secondary);
   }
 
   .t-button+.t-button {
