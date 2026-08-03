@@ -223,6 +223,12 @@ export default Vue.extend({
           ellipsis: true,
           colKey: 'rule_code',
         },
+        {
+          title: this.$t('page.rule.label_rule_salience'),
+          align: 'left',
+          width: 90,
+          colKey: 'salience',
+        },
         { title: this.$t('page.rule.label_rule_version'), colKey: 'rule_version', width: 70, cell: { col: 'version' } },
         { title: this.$t('page.rule.label_rule_status'), colKey: 'rule_status', width: 70, cell: { col: 'rule_status' } },
         {

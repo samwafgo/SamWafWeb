@@ -21,6 +21,11 @@
         </t-form-item>
         <t-form-item :label="$t('page.rule.detail.rule_salience')" name="salience">
           <t-input :placeholder="$t('common.placeholder')" v-model="formData.rule_base.salience" />
+          <div class="form-item-tips">
+            <div>{{ $t('page.rule.detail.rule_salience_tips_1') }}</div>
+            <div>{{ $t('page.rule.detail.rule_salience_tips_2') }}</div>
+            <div>{{ $t('page.rule.detail.rule_salience_tips_3') }}</div>
+          </div>
         </t-form-item>
         <t-form-item :label="$t('page.rule.detail.rule_manual')" name="is_manual_rule">
           <t-select :style="{ width: '480px' }" @change="changeManualRule" v-model="formData.is_manual_rule">
@@ -1495,6 +1500,13 @@ export default {
 </script>
 <style lang="less" scoped>
 @import './index';
+
+.form-item-tips {
+  color: #999;
+  font-size: 12px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
 
 .rule-example-container {
   margin-top: 16px;
