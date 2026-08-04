@@ -426,6 +426,17 @@
                 </t-radio-group>
               </t-tooltip>
             </t-form-item>
+            <t-form-item v-if="formData.is_enable_http_auth_base === '1' && formData.http_auth_base_type === 'custom'">
+              <t-alert theme="info" :close="false">
+                <div>
+                  <div style="margin-bottom: 8px;"><strong>{{$t('page.host.http_auth_custom_page_tips_title')}}</strong></div>
+                  <div>1. {{$t('page.host.http_auth_custom_page_tips_path')}}</div>
+                  <div>2. {{$t('page.host.http_auth_custom_page_tips_lock')}}</div>
+                  <div>3. {{$t('page.host.http_auth_custom_page_tips_global')}}</div>
+                  <div>4. {{$t('page.host.http_auth_custom_page_tips_validate')}}</div>
+                </div>
+              </t-alert>
+            </t-form-item>
             <t-form-item v-if="formData.is_enable_http_auth_base === '1'" :label="$t('page.host.http_auth_path_prefix')" name="http_auth_path_prefix">
               <t-tooltip class="placement top center" :content="$t('page.host.http_auth_path_prefix_tips')" placement="top"
                        :overlay-style="{ width: '500px' }" show-arrow>
