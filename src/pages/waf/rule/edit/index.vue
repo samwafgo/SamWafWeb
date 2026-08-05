@@ -340,17 +340,19 @@
       :footer="false"
     >
       <t-loading :loading="gptConfigLoading" size="small">
-        <t-form :data="gptConfig" :label-width="110" @submit.prevent>
+        <!-- autocomplete 关掉：URL/模型文本框 + Token 密码框会被浏览器当成登录表单，填进 admin 口令 -->
+        <t-form :data="gptConfig" :label-width="110" @submit.prevent autocomplete="off">
           <t-form-item :label="$t('page.rule.detail.gpt_url')" name="gpt_url">
-            <t-input v-model="gptConfig.gpt_url" :placeholder="'https://api.deepseek.com'" />
+            <t-input v-model="gptConfig.gpt_url" :placeholder="'https://api.deepseek.com'" autocomplete="off" />
           </t-form-item>
           <t-form-item :label="$t('page.rule.detail.gpt_model')" name="gpt_model">
-            <t-input v-model="gptConfig.gpt_model" :placeholder="'deepseek-chat'" />
+            <t-input v-model="gptConfig.gpt_model" :placeholder="'deepseek-chat'" autocomplete="off" />
           </t-form-item>
           <t-form-item :label="$t('page.rule.detail.gpt_token')" name="gpt_token">
             <t-input
               v-model="gptConfig.gpt_token"
               type="password"
+              autocomplete="new-password"
               :placeholder="gptConfig.has_token ? $t('page.rule.detail.gpt_token_set_placeholder') : $t('page.rule.detail.gpt_token_empty_placeholder')"
             />
           </t-form-item>

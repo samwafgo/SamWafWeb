@@ -156,6 +156,7 @@ export default Vue.extend({
         { type: 'email', name: '邮箱', theme: 'warning', titleSlot: 'email-title' },
         { type: 'serverchan', name: 'Server酱', theme: 'danger', titleSlot: 'serverchan-title' },
         { type: 'wechatwork', name: '企业微信', theme: 'primary', titleSlot: 'wechatwork-title' },
+        { type: 'webhook', name: '自定义Webhook', theme: 'success', titleSlot: 'webhook-title' },
       ],
       messageTypes: [
         {

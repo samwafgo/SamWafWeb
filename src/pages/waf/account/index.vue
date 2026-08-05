@@ -40,9 +40,11 @@
     <t-dialog :header="$t('page.account.create_account')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
         <!-- 表单内容 -->
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150">
+        <!-- autocomplete 必须显式关掉：浏览器看到「文本框 + 紧跟着的密码框」就当成登录表单，
+             会把保存的管理端 admin 账号密码填进来。Chrome 只认 new-password（off 对密码框无效）。 -->
+        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="150" autocomplete="off">
           <t-form-item :label="$t('page.account.login_account_label')" name="login_account">
-              <t-input :style="{ width: '480px' }" v-model="formData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')"></t-input>
+              <t-input :style="{ width: '480px' }" v-model="formData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')" autocomplete="off"></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.account.role')" name="role">
             <t-select v-model="formData.role" clearable :style="{ width: '480px' }">
@@ -53,7 +55,7 @@
             </t-select>
           </t-form-item>
           <t-form-item :label="$t('page.account.login_password')" name="login_password">
-            <t-input :style="{ width: '480px' }" type="password"  v-model="formData.login_password" :placeholder="$t('common.placeholder')+$t('page.account.login_password')"></t-input>
+            <t-input :style="{ width: '480px' }" type="password"  v-model="formData.login_password" :placeholder="$t('common.placeholder')+$t('page.account.login_password')" autocomplete="new-password"></t-input>
           </t-form-item>
           <t-form-item :label="$t('common.status')" name="rate">
             <t-input-number :style="{ width: '480px' }" v-model="formData.status" :placeholder="$t('common.placeholder')+$t('common.status')"></t-input-number>
@@ -104,18 +106,18 @@
     <t-dialog :header="$t('page.account.reset_password')" :visible.sync="resetPwdFormVisible" :width="680" :footer="false">
       <div slot="body">
         <!-- 表单内容 -->
-        <t-form :data="formResetPwdData" ref="form" :rules="resetPwdRules" @submit="onSubmitResetPwd" :labelWidth="150">
+        <t-form :data="formResetPwdData" ref="form" :rules="resetPwdRules" @submit="onSubmitResetPwd" :labelWidth="150" autocomplete="off">
           <t-form-item :label="$t('page.account.login_account_label')" name="login_account">
-            <t-input :style="{ width: '480px' }" v-model="formResetPwdData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')"></t-input>
+            <t-input :style="{ width: '480px' }" v-model="formResetPwdData.login_account" :placeholder="$t('common.placeholder')+$t('page.account.login_account_label')" autocomplete="off"></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.account.super_admin_password')" name="login_super_password">
-            <t-input :style="{ width: '480px' }" type="password" v-model="formResetPwdData.login_super_password" :placeholder="$t('common.placeholder')+$t('page.account.super_admin_password')"></t-input>
+            <t-input :style="{ width: '480px' }" type="password" v-model="formResetPwdData.login_super_password" :placeholder="$t('common.placeholder')+$t('page.account.super_admin_password')" autocomplete="new-password"></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.account.new_password')" name="login_new_password">
-            <t-input :style="{ width: '480px' }" type="password"  v-model="formResetPwdData.login_new_password" :placeholder="$t('common.placeholder')+$t('page.account.new_password')"></t-input>
+            <t-input :style="{ width: '480px' }" type="password"  v-model="formResetPwdData.login_new_password" :placeholder="$t('common.placeholder')+$t('page.account.new_password')" autocomplete="new-password"></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.account.confirm_password')" name="login_new_password2">
-            <t-input :style="{ width: '480px' }" type="password"  v-model="formResetPwdData.login_new_password2" :placeholder="$t('common.placeholder')+$t('page.account.confirm_password')"></t-input>
+            <t-input :style="{ width: '480px' }" type="password"  v-model="formResetPwdData.login_new_password2" :placeholder="$t('common.placeholder')+$t('page.account.confirm_password')" autocomplete="new-password"></t-input>
           </t-form-item>
           <t-form-item style="float: right">
             <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>

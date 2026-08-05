@@ -45,7 +45,8 @@
         </t-input>
       </t-form-item>
       <t-form-item name="secretCode" v-if="showSecretCode">
-        <t-input v-model="formData.secret_code" size="large" :type="'password'"  clearable  :placeholder="$t('login.input_secret_code_placeholder')" >
+        <!-- 安全码是 2FA，不能被浏览器塞进登录口令；账号/密码框的自动填充保持不动 -->
+        <t-input v-model="formData.secret_code" size="large" :type="'password'"  clearable  autocomplete="one-time-code" :placeholder="$t('login.input_secret_code_placeholder')" >
           <template #prefix-icon>
             <lock-on-icon />
           </template>

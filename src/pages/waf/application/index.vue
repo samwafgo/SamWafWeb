@@ -129,9 +129,11 @@
     >
       <div slot="body" style="padding: 8px 0">
         <p style="margin-bottom:12px;color:#666;font-size:13px">{{ $t('page.application.op_password_hint') }}</p>
+        <!-- autocomplete 关掉：否则浏览器会把 admin 登录口令填进应用操作密码框 -->
         <t-input
           v-model="opPasswordInput"
           type="password"
+          autocomplete="new-password"
           :placeholder="$t('page.application.op_password_placeholder')"
           @keyup.enter.native="onOpPasswordConfirm"
           autofocus

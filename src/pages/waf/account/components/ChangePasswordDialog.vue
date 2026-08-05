@@ -11,17 +11,18 @@
   >
     <div slot="body">
       <t-alert v-if="forced && reason" theme="warning" :message="reason" :style="{ marginBottom: '12px' }" />
-      <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="120">
+      <!-- autocomplete 关掉：否则浏览器会把保存的登录口令自动填进三个密码框 -->
+      <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="120" autocomplete="off">
         <t-form-item v-if="!hideOld" :label="$t('page.account.old_password')" name="old_password">
-          <t-input :style="{ width: '380px' }" type="password" v-model="formData.old_password"
+          <t-input :style="{ width: '380px' }" type="password" autocomplete="new-password" v-model="formData.old_password"
                    :placeholder="$t('common.placeholder') + $t('page.account.old_password')"></t-input>
         </t-form-item>
         <t-form-item :label="$t('page.account.new_password')" name="new_password">
-          <t-input :style="{ width: '380px' }" type="password" v-model="formData.new_password"
+          <t-input :style="{ width: '380px' }" type="password" autocomplete="new-password" v-model="formData.new_password"
                    :placeholder="$t('common.placeholder') + $t('page.account.new_password')"></t-input>
         </t-form-item>
         <t-form-item :label="$t('page.account.confirm_password')" name="new_password2">
-          <t-input :style="{ width: '380px' }" type="password" v-model="formData.new_password2"
+          <t-input :style="{ width: '380px' }" type="password" autocomplete="new-password" v-model="formData.new_password2"
                    :placeholder="$t('common.placeholder') + $t('page.account.confirm_password')"></t-input>
         </t-form-item>
         <t-form-item style="float: right">

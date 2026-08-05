@@ -45,13 +45,15 @@
 
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
+        <!-- autocomplete 必须显式关掉：浏览器看到「文本框 + 紧跟着的密码框」就当成登录表单，
+             会把保存的管理端 admin 账号密码填进来。Chrome 只认 new-password（off 对密码框无效）。 -->
+        <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100" autocomplete="off">
            <t-form-item :label="$t('page.http_auth_base.user_name')" name="user_name">
-                 <t-input :style="{ width: '480px' }" v-model="formData.user_name" ></t-input>
+                 <t-input :style="{ width: '480px' }" v-model="formData.user_name" autocomplete="off"></t-input>
             </t-form-item>
 
            <t-form-item :label="$t('page.http_auth_base.password')" name="password">
-                 <t-input type="password" :style="{ width: '480px' }" v-model="formData.password" ></t-input>
+                 <t-input type="password" :style="{ width: '480px' }" v-model="formData.password" autocomplete="new-password"></t-input>
            </t-form-item>
 
           <t-form-item style="float: right">
@@ -64,13 +66,13 @@
 
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
-        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="100">
+        <t-form :data="formEditData" ref="form" :rules="rules" @submit="onSubmitEdit" :labelWidth="100" autocomplete="off">
            <t-form-item :label="$t('page.http_auth_base.user_name')" name="user_name">
-               <t-input :style="{ width: '480px' }" v-model="formEditData.user_name" ></t-input>
+               <t-input :style="{ width: '480px' }" v-model="formEditData.user_name" autocomplete="off"></t-input>
           </t-form-item>
 
             <t-form-item :label="$t('page.http_auth_base.password')" name="password">
-               <t-input type="password" :style="{ width: '480px' }" v-model="formEditData.password" ></t-input>
+               <t-input type="password" :style="{ width: '480px' }" v-model="formEditData.password" autocomplete="new-password"></t-input>
           </t-form-item>
           <t-form-item style="float: right">
             <t-button variant="outline" @click="onClickCloseEditBtn">{{ $t('common.close') }}</t-button>
