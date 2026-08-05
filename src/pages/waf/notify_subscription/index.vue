@@ -2,14 +2,19 @@
   <div>
     <t-card class="list-card-container">
       <div class="page-header">
-        <h3>{{ $t('page.notify_subscription.page_title') }} </h3>
-        <p class="page-desc">{{ $t('page.notify_subscription.alert_message') }}</p>
+        <div class="page-header-main">
+          <h3>{{ $t('page.notify_subscription.page_title') }} </h3>
+          <p class="page-desc">{{ $t('page.notify_subscription.alert_message') }}</p>
+        </div>
+        <t-button variant="outline" @click="globalDialogVisible = true">
+          <t-icon name="setting" /> {{ $t('page.notify_subscription.button_global_config') }}
+        </t-button>
       </div>
 
       <t-loading :loading="dataLoading" size="large">
-        <t-table 
-          :data="tableData" 
-          :columns="tableColumns" 
+        <t-table
+          :data="tableData"
+          :columns="tableColumns"
           row-key="messageType"
           :bordered="true"
           :hover="true"
@@ -22,251 +27,55 @@
             </div>
           </template>
 
-          <!-- 钉钉渠道表头 -->
-          <template #dingtalk-title>
-            <div class="channel-header-wrapper">
-              <t-tag theme="primary" size="small">钉钉</t-tag>
-              <t-dropdown :min-column-width="120">
-                <t-button variant="text" size="small" shape="square">
-                  <t-icon name="ellipsis" />
-                </t-button>
-                <t-dropdown-menu>
-                  <t-dropdown-item @click="handleBatchAdd('dingtalk')">
-                    <t-icon name="add" /> {{ $t('page.notify_subscription.batch_action_add') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchEnable('dingtalk')">
-                    <t-icon name="check-circle" /> {{ $t('page.notify_subscription.batch_action_enable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDisable('dingtalk')">
-                    <t-icon name="close-circle" /> {{ $t('page.notify_subscription.batch_action_disable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDelete('dingtalk')">
-                    <t-icon name="delete" /> {{ $t('page.notify_subscription.batch_action_delete') }}
-                  </t-dropdown-item>
-                </t-dropdown-menu>
-              </t-dropdown>
-            </div>
+          <!-- 渠道表头：5 个渠道共用一个组件，加菜单项只改一处 -->
+          <template v-for="ct in channelTypes" v-slot:[ct.titleSlot]>
+            <channel-header :key="ct.type" :type="ct.type" :label="ct.name" :theme="ct.theme" @batch="handleBatchAction" />
           </template>
 
-          <!-- 飞书渠道表头 -->
-          <template #feishu-title>
-            <div class="channel-header-wrapper">
-              <t-tag theme="success" size="small">飞书</t-tag>
-              <t-dropdown :min-column-width="120">
-                <t-button variant="text" size="small" shape="square">
-                  <t-icon name="ellipsis" />
-                </t-button>
-                <t-dropdown-menu>
-                  <t-dropdown-item @click="handleBatchAdd('feishu')">
-                    <t-icon name="add" /> {{ $t('page.notify_subscription.batch_action_add') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchEnable('feishu')">
-                    <t-icon name="check-circle" /> {{ $t('page.notify_subscription.batch_action_enable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDisable('feishu')">
-                    <t-icon name="close-circle" /> {{ $t('page.notify_subscription.batch_action_disable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDelete('feishu')">
-                    <t-icon name="delete" /> {{ $t('page.notify_subscription.batch_action_delete') }}
-                  </t-dropdown-item>
-                </t-dropdown-menu>
-              </t-dropdown>
-            </div>
-          </template>
-
-          <!-- 邮箱渠道表头 -->
-          <template #email-title>
-            <div class="channel-header-wrapper">
-              <t-tag theme="warning" size="small">邮箱</t-tag>
-              <t-dropdown :min-column-width="120">
-                <t-button variant="text" size="small" shape="square">
-                  <t-icon name="ellipsis" />
-                </t-button>
-                <t-dropdown-menu>
-                  <t-dropdown-item @click="handleBatchAdd('email')">
-                    <t-icon name="add" /> {{ $t('page.notify_subscription.batch_action_add') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchEnable('email')">
-                    <t-icon name="check-circle" /> {{ $t('page.notify_subscription.batch_action_enable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDisable('email')">
-                    <t-icon name="close-circle" /> {{ $t('page.notify_subscription.batch_action_disable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDelete('email')">
-                    <t-icon name="delete" /> {{ $t('page.notify_subscription.batch_action_delete') }}
-                  </t-dropdown-item>
-                </t-dropdown-menu>
-              </t-dropdown>
-            </div>
-          </template>
-
-          <!-- Server酱渠道表头 -->
-          <template #serverchan-title>
-            <div class="channel-header-wrapper">
-              <t-tag theme="danger" size="small">Server酱</t-tag>
-              <t-dropdown :min-column-width="120">
-                <t-button variant="text" size="small" shape="square">
-                  <t-icon name="ellipsis" />
-                </t-button>
-                <t-dropdown-menu>
-                  <t-dropdown-item @click="handleBatchAdd('serverchan')">
-                    <t-icon name="add" /> {{ $t('page.notify_subscription.batch_action_add') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchEnable('serverchan')">
-                    <t-icon name="check-circle" /> {{ $t('page.notify_subscription.batch_action_enable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDisable('serverchan')">
-                    <t-icon name="close-circle" /> {{ $t('page.notify_subscription.batch_action_disable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDelete('serverchan')">
-                    <t-icon name="delete" /> {{ $t('page.notify_subscription.batch_action_delete') }}
-                  </t-dropdown-item>
-                </t-dropdown-menu>
-              </t-dropdown>
-            </div>
-          </template>
-
-          <!-- 企业微信渠道表头 -->
-          <template #wechatwork-title>
-            <div class="channel-header-wrapper">
-              <t-tag theme="primary" size="small">企业微信</t-tag>
-              <t-dropdown :min-column-width="120">
-                <t-button variant="text" size="small" shape="square">
-                  <t-icon name="ellipsis" />
-                </t-button>
-                <t-dropdown-menu>
-                  <t-dropdown-item @click="handleBatchAdd('wechatwork')">
-                    <t-icon name="add" /> {{ $t('page.notify_subscription.batch_action_add') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchEnable('wechatwork')">
-                    <t-icon name="check-circle" /> {{ $t('page.notify_subscription.batch_action_enable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDisable('wechatwork')">
-                    <t-icon name="close-circle" /> {{ $t('page.notify_subscription.batch_action_disable') }}
-                  </t-dropdown-item>
-                  <t-dropdown-item @click="handleBatchDelete('wechatwork')">
-                    <t-icon name="delete" /> {{ $t('page.notify_subscription.batch_action_delete') }}
-                  </t-dropdown-item>
-                </t-dropdown-menu>
-              </t-dropdown>
-            </div>
-          </template>
-
-          <!-- 钉钉渠道 -->
-          <template #dingtalk="{ row }">
-            <div class="channel-cell-content">
-              <div v-for="channel in row.channels.dingtalk" :key="channel.id" class="channel-item-inline">
-                <div v-if="!channel.subscription" class="add-btn-inline">
-                  <t-button size="small" variant="dashed" :disabled="channel.status === 0" @click="handleAddSubscription(row.messageType, channel)">
-                    <t-icon name="add" size="14px" />
-                    {{ channel.name }}
-                  </t-button>
-                </div>
-                <div v-else class="subscription-inline">
-                  <t-switch :value="channel.subscription.status === 1" :disabled="channel.status === 0" @change="(val) => handleChannelToggle(row.messageType, channel, val)" size="small" />
-                  <div class="channel-info-inline">
-                    <span class="channel-name">{{ channel.name }}</span>
-                  </div>
-                  <t-icon name="close-circle-filled" size="16px" class="delete-icon-inline" @click="handleDeleteSubscription(row.messageType, channel.id)" />
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- 飞书渠道 -->
-          <template #feishu="{ row }">
-            <div class="channel-cell-content">
-              <div v-for="channel in row.channels.feishu" :key="channel.id" class="channel-item-inline">
-                <div v-if="!channel.subscription" class="add-btn-inline">
-                  <t-button size="small" variant="dashed" :disabled="channel.status === 0" @click="handleAddSubscription(row.messageType, channel)">
-                    <t-icon name="add" size="14px" />
-                    {{ channel.name }}
-                  </t-button>
-                </div>
-                <div v-else class="subscription-inline">
-                  <t-switch :value="channel.subscription.status === 1" :disabled="channel.status === 0" @change="(val) => handleChannelToggle(row.messageType, channel, val)" size="small" />
-                  <div class="channel-info-inline">
-                    <span class="channel-name">{{ channel.name }}</span>
-                  </div>
-                  <t-icon name="close-circle-filled" size="16px" class="delete-icon-inline" @click="handleDeleteSubscription(row.messageType, channel.id)" />
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- 邮箱渠道 -->
-          <template #email="{ row }">
-            <div class="channel-cell-content">
-              <div v-for="channel in row.channels.email" :key="channel.id" class="channel-item-inline">
-                <div v-if="!channel.subscription" class="add-btn-inline">
-                  <t-button size="small" variant="dashed" :disabled="channel.status === 0" @click="handleAddSubscription(row.messageType, channel)">
-                    <t-icon name="add" size="14px" />
-                    {{ channel.name }}
-                  </t-button>
-                </div>
-                <div v-else class="subscription-inline">
-                  <t-switch :value="channel.subscription.status === 1" :disabled="channel.status === 0" @change="(val) => handleChannelToggle(row.messageType, channel, val)" size="small" />
-                  <div class="channel-info-inline">
-                    <span class="channel-name">{{ channel.name }}</span>
-                    <span v-if="channel.subscription.recipients" class="channel-detail">{{ channel.subscription.recipients }}</span>
-                    <a class="edit-link-inline" @click="handleEditRecipients(row.messageType, channel)">修改</a>
-                  </div>
-                  <t-icon name="close-circle-filled" size="16px" class="delete-icon-inline" @click="handleDeleteSubscription(row.messageType, channel.id)" />
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- Server酱渠道 -->
-          <template #serverchan="{ row }">
-            <div class="channel-cell-content">
-              <div v-for="channel in row.channels.serverchan" :key="channel.id" class="channel-item-inline">
-                <div v-if="!channel.subscription" class="add-btn-inline">
-                  <t-button size="small" variant="dashed" :disabled="channel.status === 0" @click="handleAddSubscription(row.messageType, channel)">
-                    <t-icon name="add" size="14px" />
-                    {{ channel.name }}
-                  </t-button>
-                </div>
-                <div v-else class="subscription-inline">
-                  <t-switch :value="channel.subscription.status === 1" :disabled="channel.status === 0" @change="(val) => handleChannelToggle(row.messageType, channel, val)" size="small" />
-                  <div class="channel-info-inline">
-                    <span class="channel-name">{{ channel.name }}</span>
-                  </div>
-                  <t-icon name="close-circle-filled" size="16px" class="delete-icon-inline" @click="handleDeleteSubscription(row.messageType, channel.id)" />
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- 企业微信渠道 -->
-          <template #wechatwork="{ row }">
-            <div class="channel-cell-content">
-              <div v-for="channel in row.channels.wechatwork" :key="channel.id" class="channel-item-inline">
-                <div v-if="!channel.subscription" class="add-btn-inline">
-                  <t-button size="small" variant="dashed" :disabled="channel.status === 0" @click="handleAddSubscription(row.messageType, channel)">
-                    <t-icon name="add" size="14px" />
-                    {{ channel.name }}
-                  </t-button>
-                </div>
-                <div v-else class="subscription-inline">
-                  <t-switch :value="channel.subscription.status === 1" :disabled="channel.status === 0" @change="(val) => handleChannelToggle(row.messageType, channel, val)" size="small" />
-                  <div class="channel-info-inline">
-                    <span class="channel-name">{{ channel.name }}</span>
-                  </div>
-                  <t-icon name="close-circle-filled" size="16px" class="delete-icon-inline" @click="handleDeleteSubscription(row.messageType, channel.id)" />
-                </div>
-              </div>
-            </div>
+          <!-- 渠道单元格 -->
+          <template v-for="ct in channelTypes" v-slot:[ct.type]="{ row }">
+            <channel-cell
+              :key="ct.type"
+              :channels="row.channels[ct.type]"
+              :message-type="row.messageType"
+              :channel-type="ct.type"
+              @add="onCellAdd"
+              @toggle="onCellToggle"
+              @edit-recipients="onCellEditRecipients"
+              @config="onCellConfig"
+              @remove="onCellRemove"
+            />
           </template>
         </t-table>
       </t-loading>
     </t-card>
 
+    <!-- 单个订阅的精细化配置（频控/模板/过滤/测试） -->
+    <config-drawer
+      :visible.sync="configDrawerVisible"
+      :subscription="configSubscription"
+      :channel-name="configChannelName"
+      :channel-type="configChannelType"
+      :message-type-name="configMessageTypeName"
+      @saved="loadSubscriptionList"
+    />
+
+    <!-- 按渠道类型批量套用频控配置 -->
+    <batch-config-dialog
+      :visible.sync="batchConfigVisible"
+      :channel-type="batchConfigChannelType"
+      :channel-label="batchConfigChannelName"
+      @saved="loadSubscriptionList"
+    />
+
+    <!-- 全局默认频控配置 -->
+    <global-throttle-dialog :visible.sync="globalDialogVisible" />
+
     <!-- 邮箱收件人配置对话框 -->
-    <t-dialog 
-      :header="'配置邮件收件人 - ' + getChannelName(emailFormData.channel_id)" 
-      :visible.sync="emailDialogVisible" 
-      :width="600" 
+    <t-dialog
+      :header="'配置邮件收件人 - ' + getChannelName(emailFormData.channel_id)"
+      :visible.sync="emailDialogVisible"
+      :width="600"
       :footer="false"
     >
       <div slot="body">
@@ -275,9 +84,9 @@
             <t-tag theme="primary">{{ getMessageTypeName(emailFormData.message_type) }}</t-tag>
           </t-form-item>
           <t-form-item :label="$t('page.notify_subscription.label_recipients')" name="recipients">
-            <t-input 
-              :style="{ width: '100%' }" 
-              v-model="emailFormData.recipients" 
+            <t-input
+              :style="{ width: '100%' }"
+              v-model="emailFormData.recipients"
               :placeholder="$t('page.notify_subscription.recipients_placeholder')"
             />
             <div style="font-size: 12px; color: #666; margin-top: 4px;">
@@ -293,21 +102,21 @@
     </t-dialog>
 
     <!-- 删除确认对话框 -->
-    <t-dialog 
-      :header="$t('common.confirm_delete')" 
-      :body="confirmBody" 
-      :visible.sync="confirmVisible" 
-      @confirm="onConfirmDelete" 
+    <t-dialog
+      :header="$t('common.confirm_delete')"
+      :body="confirmBody"
+      :visible.sync="confirmVisible"
+      @confirm="onConfirmDelete"
       :onCancel="onCancel"
     >
     </t-dialog>
 
     <!-- 批量操作确认对话框 -->
-    <t-dialog 
-      :header="batchConfirmType === 'delete' ? $t('page.notify_subscription.batch_delete_confirm', { channel: batchConfirmChannelName }) : $t('page.notify_subscription.batch_disable_confirm', { channel: batchConfirmChannelName })" 
-      :body="batchConfirmType === 'delete' ? $t('page.notify_subscription.batch_delete_confirm_content') : $t('page.notify_subscription.batch_disable_confirm_content')" 
-      :visible.sync="batchConfirmVisible" 
-      @confirm="onBatchConfirm" 
+    <t-dialog
+      :header="batchConfirmType === 'delete' ? $t('page.notify_subscription.batch_delete_confirm', { channel: batchConfirmChannelName }) : $t('page.notify_subscription.batch_disable_confirm', { channel: batchConfirmChannelName })"
+      :body="batchConfirmType === 'delete' ? $t('page.notify_subscription.batch_delete_confirm_content') : $t('page.notify_subscription.batch_disable_confirm_content')"
+      :visible.sync="batchConfirmVisible"
+      @confirm="onBatchConfirm"
       :confirm-btn="$t('common.confirm')"
       :cancel-btn="$t('common.cancel')"
     >
@@ -317,7 +126,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { MessagePlugin, DialogPlugin } from 'tdesign-vue';
+import { MessagePlugin } from 'tdesign-vue';
 import {
   getNotifySubscriptionList,
   addNotifySubscription,
@@ -325,20 +134,28 @@ import {
   deleteNotifySubscription,
 } from '@/apis/notify_subscription';
 import { getNotifyChannelList } from '@/apis/notify_channel';
+import ChannelHeader from './components/ChannelHeader.vue';
+import ChannelCell from './components/ChannelCell.vue';
+import ConfigDrawer from './components/ConfigDrawer.vue';
+import BatchConfigDialog from './components/BatchConfigDialog.vue';
+import GlobalThrottleDialog from './components/GlobalThrottleDialog.vue';
 
 export default Vue.extend({
   name: 'NotifySubscription',
+  components: { ChannelHeader, ChannelCell, ConfigDrawer, BatchConfigDialog, GlobalThrottleDialog },
   data() {
     return {
       dataLoading: false,
       channelList: [],
       subscriptionList: [],
+      // titleSlot 预先算好：Vue2 的动态插槽名不允许表达式里出现引号，
+      // 写成 v-slot:[ct.type+'-title'] 会直接编译失败
       channelTypes: [
-        { type: 'dingtalk', name: '钉钉', theme: 'primary' },
-        { type: 'feishu', name: '飞书', theme: 'success' },
-        { type: 'email', name: '邮箱', theme: 'warning' },
-        { type: 'serverchan', name: 'Server酱', theme: 'danger' },
-        { type: 'wechatwork', name: '企业微信', theme: 'primary' },
+        { type: 'dingtalk', name: '钉钉', theme: 'primary', titleSlot: 'dingtalk-title' },
+        { type: 'feishu', name: '飞书', theme: 'success', titleSlot: 'feishu-title' },
+        { type: 'email', name: '邮箱', theme: 'warning', titleSlot: 'email-title' },
+        { type: 'serverchan', name: 'Server酱', theme: 'danger', titleSlot: 'serverchan-title' },
+        { type: 'wechatwork', name: '企业微信', theme: 'primary', titleSlot: 'wechatwork-title' },
       ],
       messageTypes: [
         {
@@ -392,8 +209,6 @@ export default Vue.extend({
         recipients: '',
         status: 1,
       } as any,
-      addChannelDialogVisible: false,
-      addChannelType: '',
       confirmVisible: false,
       confirmBody: '',
       formEditData: {} as any,
@@ -402,6 +217,16 @@ export default Vue.extend({
       batchConfirmType: '', // 'delete' or 'disable'
       batchConfirmChannelType: '',
       batchConfirmChannelName: '',
+      // 精细化配置（issue #822）
+      configDrawerVisible: false,
+      configSubscription: {} as any,
+      configChannelName: '',
+      configChannelType: '',
+      configMessageTypeName: '',
+      batchConfigVisible: false,
+      batchConfigChannelType: '',
+      batchConfigChannelName: '',
+      globalDialogVisible: false,
     };
   },
   computed: {
@@ -414,16 +239,16 @@ export default Vue.extend({
           fixed: 'left',
         },
       ];
-      
+
       // 动态添加渠道类型列
       this.channelTypes.forEach((channelType: any) => {
         columns.push({
           colKey: channelType.type,
           title: `${channelType.type}-title`, // 指定title slot名称
-          minWidth: 180,
+          minWidth: 200,
         });
       });
-      
+
       return columns;
     },
     tableData() {
@@ -433,7 +258,7 @@ export default Vue.extend({
           messageTypeName: msgType.name,
           channels: {},
         };
-        
+
         // 为每个渠道类型收集该类型的所有渠道及其订阅状态
         this.channelTypes.forEach((channelType: any) => {
           const channelsOfType = this.channelList
@@ -449,7 +274,7 @@ export default Vue.extend({
             });
           row.channels[channelType.type] = channelsOfType;
         });
-        
+
         return row;
       });
     },
@@ -494,26 +319,10 @@ export default Vue.extend({
     getChannelsByType(type: string) {
       return this.channelList.filter((c: any) => c.type === type);
     },
-    isSubscribed(messageType: string, channelId: string) {
-      return this.subscriptionList.some(
-        (sub: any) => sub.message_type === messageType && sub.channel_id === channelId && sub.status === 1
-      );
-    },
     getSubscription(messageType: string, channelId: string) {
       return this.subscriptionList.find(
         (sub: any) => sub.message_type === messageType && sub.channel_id === channelId
       );
-    },
-    getSubscriptionInfo(messageType: string, channelId: string) {
-      const sub = this.getSubscription(messageType, channelId);
-      if (sub && sub.recipients) {
-        return sub.recipients;
-      }
-      return '';
-    },
-    getChannelType(channelId: string) {
-      const channel = this.channelList.find((c: any) => c.id === channelId);
-      return channel ? channel.type : '';
     },
     getChannelName(channelId: string) {
       const channel = this.channelList.find((c: any) => c.id === channelId);
@@ -523,6 +332,64 @@ export default Vue.extend({
       const msgType = this.messageTypes.find((m: any) => m.type === type);
       return msgType ? msgType.name : type;
     },
+    // 获取渠道类型名称
+    getChannelTypeName(channelType: string) {
+      const type = this.channelTypes.find((t: any) => t.type === channelType);
+      return type ? type.name : channelType;
+    },
+
+    // ===== 单元格事件 =====
+    onCellAdd({ messageType, channel }: any) {
+      this.handleAddSubscription(messageType, channel);
+    },
+    onCellToggle({ messageType, channel, value }: any) {
+      this.handleChannelToggle(messageType, channel, value);
+    },
+    onCellEditRecipients({ messageType, channel }: any) {
+      this.handleEditRecipients(messageType, channel);
+    },
+    onCellRemove({ messageType, channelId }: any) {
+      this.handleDeleteSubscription(messageType, channelId);
+    },
+    // 打开精细化配置抽屉
+    onCellConfig({ messageType, channel }: any) {
+      const subscription = this.getSubscription(messageType, channel.id);
+      if (!subscription) {
+        MessagePlugin.warning('订阅不存在');
+        return;
+      }
+      this.configSubscription = subscription;
+      this.configChannelName = channel.name;
+      this.configChannelType = channel.type;
+      this.configMessageTypeName = this.getMessageTypeName(messageType);
+      this.configDrawerVisible = true;
+    },
+
+    // ===== 表头批量菜单 =====
+    handleBatchAction({ action, type }: any) {
+      switch (action) {
+        case 'add':
+          this.handleBatchAdd(type);
+          break;
+        case 'enable':
+          this.handleBatchEnable(type);
+          break;
+        case 'disable':
+          this.handleBatchDisable(type);
+          break;
+        case 'delete':
+          this.handleBatchDelete(type);
+          break;
+        case 'config':
+          this.batchConfigChannelType = type;
+          this.batchConfigChannelName = this.getChannelTypeName(type);
+          this.batchConfigVisible = true;
+          break;
+        default:
+          break;
+      }
+    },
+
     async onConfirmDelete() {
       if (this.formEditData && this.formEditData.id) {
         await this.deleteSubscription(this.formEditData.id);
@@ -538,7 +405,7 @@ export default Vue.extend({
         MessagePlugin.warning('该渠道已被禁用，无法添加订阅');
         return;
       }
-      
+
       // 邮箱渠道需要配置收件人
       if (channel.type === 'email') {
         this.emailFormData = {
@@ -567,13 +434,13 @@ export default Vue.extend({
     },
     async handleChannelToggle(messageType: string, channel: any, enabled: boolean) {
       const subscription = this.getSubscription(messageType, channel.id);
-      
+
       if (!subscription) {
         // 不应该发生这种情况，因为没有订阅时显示的是+号
         MessagePlugin.warning('订阅不存在');
         return;
       }
-      
+
       // 切换启用/禁用状态
       subscription.status = enabled ? 1 : 0;
       try {
@@ -593,7 +460,7 @@ export default Vue.extend({
     handleDeleteSubscription(messageType: string, channelId: string) {
       const subscription = this.getSubscription(messageType, channelId);
       if (!subscription) return;
-      
+
       // 使用t-dialog的确认对话框
       this.formEditData = subscription;
       this.confirmBody = '确定要删除这个订阅吗？';
@@ -609,7 +476,7 @@ export default Vue.extend({
           filter_json: '',
           remarks: '',
         };
-        
+
         const res = await addNotifySubscription(data);
         if (res.code === 0) {
           if (!silent) {
@@ -641,7 +508,9 @@ export default Vue.extend({
           MessagePlugin.error('订阅信息不存在');
           return;
         }
-        
+
+        // 只提交编辑相关字段：频控/模板由独立接口保存，
+        // 这里带上它们反而可能因为前端缓存过期把用户配好的内容覆盖掉
         const data = {
           id: subscriptionId,
           message_type: subscription.message_type,
@@ -651,7 +520,7 @@ export default Vue.extend({
           filter_json: subscription.filter_json || '',
           remarks: subscription.remarks || '',
         };
-        
+
         const res = await editNotifySubscription(data);
         if (res.code === 0) {
           MessagePlugin.success('修改收件人成功');
@@ -726,10 +595,10 @@ export default Vue.extend({
         MessagePlugin.warning(`当前没有可用的${this.getChannelTypeName(channelType)}渠道`);
         return;
       }
-      
+
       let successCount = 0;
       let failCount = 0;
-      
+
       // 为所有消息类型和该类型的所有渠道添加订阅
       for (const messageType of this.messageTypes) {
         for (const channel of channelsOfType) {
@@ -744,7 +613,7 @@ export default Vue.extend({
           }
         }
       }
-      
+
       // 显示汇总结果
       if (successCount > 0 || failCount > 0) {
         const channelName = this.getChannelTypeName(channelType);
@@ -766,7 +635,7 @@ export default Vue.extend({
         MessagePlugin.warning(`当前没有${this.getChannelTypeName(channelType)}渠道的订阅`);
         return;
       }
-      
+
       const subscriptionsToDelete: string[] = [];
       for (const channel of channelsOfType) {
         for (const subscription of this.subscriptionList) {
@@ -775,12 +644,12 @@ export default Vue.extend({
           }
         }
       }
-      
+
       if (subscriptionsToDelete.length === 0) {
         MessagePlugin.warning(`当前没有${this.getChannelTypeName(channelType)}渠道的订阅`);
         return;
       }
-      
+
       // 显示确认对话框
       this.batchConfirmType = 'delete';
       this.batchConfirmChannelType = channelType;
@@ -794,7 +663,7 @@ export default Vue.extend({
         MessagePlugin.warning(`当前没有${this.getChannelTypeName(channelType)}渠道的订阅`);
         return;
       }
-      
+
       // 先检查该渠道类型是否有订阅
       let totalCount = 0;
       let updatedCount = 0;
@@ -809,7 +678,7 @@ export default Vue.extend({
           }
         }
       }
-      
+
       const channelName = this.getChannelTypeName(channelType);
       if (totalCount === 0) {
         MessagePlugin.info(this.$t('page.notify_subscription.batch_enable_no_subscription', { channel: channelName }));
@@ -826,12 +695,12 @@ export default Vue.extend({
         MessagePlugin.warning(`当前没有${this.getChannelTypeName(channelType)}渠道的订阅`);
         return;
       }
-      
+
       // 先检查该渠道类型是否有订阅以及需要禁用的订阅数量
       let totalCount = 0;
       let toDisableCount = 0;
       const channelName = this.getChannelTypeName(channelType);
-      
+
       for (const channel of channelsOfType) {
         for (const subscription of this.subscriptionList) {
           if (subscription.channel_id === channel.id) {
@@ -842,17 +711,17 @@ export default Vue.extend({
           }
         }
       }
-      
+
       if (totalCount === 0) {
         MessagePlugin.info(this.$t('page.notify_subscription.batch_disable_no_subscription', { channel: channelName }));
         return;
       }
-      
+
       if (toDisableCount === 0) {
         MessagePlugin.info(this.$t('page.notify_subscription.batch_disable_all_disabled', { channel: channelName, count: totalCount }));
         return;
       }
-      
+
       // 显示确认对话框
       this.batchConfirmType = 'disable';
       this.batchConfirmChannelType = channelType;
@@ -865,7 +734,7 @@ export default Vue.extend({
       if (!subscription) {
         return;
       }
-      
+
       const data = {
         id: subscriptionId,
         message_type: subscription.message_type,
@@ -875,19 +744,14 @@ export default Vue.extend({
         filter_json: subscription.filter_json || '',
         remarks: subscription.remarks || '',
       };
-      
+
       await editNotifySubscription(data);
       await this.loadSubscriptionList();
-    },
-    // 获取渠道类型名称
-    getChannelTypeName(channelType: string) {
-      const type = this.channelTypes.find((t: any) => t.type === channelType);
-      return type ? type.name : channelType;
     },
     // 批量操作确认处理
     async onBatchConfirm() {
       this.batchConfirmVisible = false;
-      
+
       if (this.batchConfirmType === 'delete') {
         await this.executeBatchDelete();
       } else if (this.batchConfirmType === 'disable') {
@@ -898,7 +762,7 @@ export default Vue.extend({
     async executeBatchDelete() {
       const channelsOfType = this.getChannelsByType(this.batchConfirmChannelType);
       const subscriptionsToDelete: string[] = [];
-      
+
       for (const channel of channelsOfType) {
         for (const subscription of this.subscriptionList) {
           if (subscription.channel_id === channel.id) {
@@ -906,10 +770,10 @@ export default Vue.extend({
           }
         }
       }
-      
+
       let successCount = 0;
       let failCount = 0;
-      
+
       for (const id of subscriptionsToDelete) {
         const result = await this.deleteSubscription(id, true);
         if (result) {
@@ -918,7 +782,7 @@ export default Vue.extend({
           failCount++;
         }
       }
-      
+
       const channelName = this.batchConfirmChannelName;
       if (failCount === 0) {
         MessagePlugin.success(this.$t('page.notify_subscription.batch_delete_success', { channel: channelName, count: successCount }));
@@ -932,7 +796,7 @@ export default Vue.extend({
     async executeBatchDisable() {
       const channelsOfType = this.getChannelsByType(this.batchConfirmChannelType);
       let updatedCount = 0;
-      
+
       for (const channel of channelsOfType) {
         for (const subscription of this.subscriptionList) {
           if (subscription.channel_id === channel.id && subscription.status === 1) {
@@ -941,7 +805,7 @@ export default Vue.extend({
           }
         }
       }
-      
+
       if (updatedCount > 0) {
         MessagePlugin.success(this.$t('page.notify_subscription.batch_disable_success', { channel: this.batchConfirmChannelName, count: updatedCount }));
       }
@@ -957,13 +821,20 @@ export default Vue.extend({
 
 .page-header {
   margin-bottom: 24px;
-  
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  .page-header-main {
+    flex: 1;
+  }
+
   h3 {
     margin: 0 0 8px 0;
     font-size: 18px;
     font-weight: 600;
   }
-  
+
   .page-desc {
     margin: 0;
     color: #666;
@@ -979,87 +850,11 @@ export default Vue.extend({
     color: #333;
     margin-bottom: 4px;
   }
-  
+
   .message-type-code {
     font-size: 12px;
     color: #999;
     font-family: monospace;
-  }
-}
-
-// 渠道表头包装器
-.channel-header-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-// 渠道单元格
-.channel-cell-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  
-  .channel-item-inline {
-    display: flex;
-    align-items: center;
-    
-    .add-btn-inline {
-      width: 100%;
-    }
-    
-    .subscription-inline {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      
-      .channel-info-inline {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0;
-        
-        .channel-name {
-          font-size: 13px;
-          color: #333;
-          font-weight: 500;
-        }
-        
-        .channel-detail {
-          font-size: 12px;
-          color: #0052d9;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        
-        .edit-link-inline {
-          font-size: 12px;
-          color: #0052d9;
-          cursor: pointer;
-          text-decoration: none;
-          
-          &:hover {
-            text-decoration: underline;
-          }
-        }
-      }
-      
-      .delete-icon-inline {
-        color: #666;
-        cursor: pointer;
-        transition: all 0.2s;
-        flex-shrink: 0;
-        
-        &:hover {
-          color: #e34d59;
-          transform: scale(1.15);
-        }
-      }
-    }
   }
 }
 </style>
