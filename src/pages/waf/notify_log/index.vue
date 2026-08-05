@@ -14,6 +14,8 @@
                 <t-option value="ssl_expire" :label="$t('page.notify_log.message_type_ssl_expire')"></t-option>
                 <t-option value="system_error" :label="$t('page.notify_log.message_type_system_error')"></t-option>
                 <t-option value="ip_ban" :label="$t('page.notify_log.message_type_ip_ban')"></t-option>
+                <t-option value="access_login" :label="$t('page.notify_log.message_type_access_login')"></t-option>
+                <t-option value="access_abnormal" :label="$t('page.notify_log.message_type_access_abnormal')"></t-option>
               </t-select>
             </t-form-item>
             <t-form-item :label="$t('page.notify_log.label_send_status')" name="status">
@@ -202,6 +204,8 @@ export default Vue.extend({
         ssl_expire: this.$t('page.notify_log.message_type_ssl_expire'),
         system_error: this.$t('page.notify_log.message_type_system_error'),
         ip_ban: this.$t('page.notify_log.message_type_ip_ban'),
+        access_login: this.$t('page.notify_log.message_type_access_login'),
+        access_abnormal: this.$t('page.notify_log.message_type_access_abnormal'),
       };
       return typeMap[type] || type;
     },

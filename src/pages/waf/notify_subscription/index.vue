@@ -373,6 +373,16 @@ export default Vue.extend({
           type: 'operation_notice',
           name: this.$t('page.notify_subscription.message_type_operation_notice'),
         },
+        // 统一访问认证拆成两类：登录成功是日常告知，异常是安全告警。
+        // 合成一类的话，只想收告警的人会被每次正常登录打扰，最后干脆退订，告警也就收不到了。
+        {
+          type: 'access_login',
+          name: this.$t('page.notify_subscription.message_type_access_login'),
+        },
+        {
+          type: 'access_abnormal',
+          name: this.$t('page.notify_subscription.message_type_access_abnormal'),
+        },
       ],
       emailDialogVisible: false,
       emailFormData: {

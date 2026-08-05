@@ -1,6 +1,6 @@
 import {
   UserSafetyIcon, SystemSettingIcon, UsergroupIcon, SystemLogIcon, ApplicationIcon, LightingCircleIcon,
-  ServerIcon, ForkIcon, NotificationIcon, CloudIcon
+  ServerIcon, ForkIcon, NotificationIcon, CloudIcon, UserCircleIcon
 } from 'tdesign-icons-vue';
 import Layout from '@/layouts/index.vue';
 
@@ -235,6 +235,41 @@ export default [
         name: 'AppList',
         component: () => import('@/pages/waf/application/index.vue'),
         meta: { title: 'menu.application.list_title' },
+      },
+    ],
+  },
+  {
+    // 统一访问认证(Access 模式)自成一个菜单组：它是一套完整的访客身份体系
+    // （账号 / 策略 / 会话 / 审计），与「网站防护」里那些按站点配的防护规则不是一类东西。
+    path: '/waf-access',
+    name: 'wafaccess',
+    component: Layout,
+    redirect: '/waf-access/wafaccessconfig',
+    meta: { title: 'menu.access.parent_title', icon: UserCircleIcon },
+    children: [
+      {
+        path: 'wafaccessconfig',
+        name: 'WafAccessConfig',
+        component: () => import('@/pages/waf/access_config/index.vue'),
+        meta: { title: 'menu.access.config' },
+      },
+      {
+        path: 'wafaccessaccount',
+        name: 'WafAccessAccount',
+        component: () => import('@/pages/waf/access_account/index.vue'),
+        meta: { title: 'menu.access.account' },
+      },
+      {
+        path: 'wafaccesssession',
+        name: 'WafAccessSession',
+        component: () => import('@/pages/waf/access_session/index.vue'),
+        meta: { title: 'menu.access.session' },
+      },
+      {
+        path: 'wafaccessaudit',
+        name: 'WafAccessAudit',
+        component: () => import('@/pages/waf/access_audit/index.vue'),
+        meta: { title: 'menu.access.audit' },
       },
     ],
   },

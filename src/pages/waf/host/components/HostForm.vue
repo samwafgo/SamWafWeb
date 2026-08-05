@@ -549,6 +549,15 @@
             </template>
             <upload-security-config :upload-security-config="uploadSecurityConfigData" @update="val => uploadSecurityConfigData = val"></upload-security-config>
           </t-tab-panel>
+          <t-tab-panel :value="20">
+            <template #label>
+              <t-icon name="user-safety" style="margin-right: 4px;color:#0052d9"/>
+              {{$t('page.host.tab_access')}}
+            </template>
+            <access-config :access-config="accessConfigData"
+                           :cache-enabled="cacheConfigData && String(cacheConfigData.is_enable_cache) === '1'"
+                           @update="val => accessConfigData = val"></access-config>
+          </t-tab-panel>
           <t-tab-panel :value="15">
             <template #label>
               <t-icon name="swap" style="margin-right: 4px;color:#0052d9"/>
@@ -606,11 +615,12 @@
   import ResponseCompressConfig from '../components/ResponseCompressConfig.vue';
   import CookieSecurityConfig from '../components/CookieSecurityConfig.vue';
   import CsrfConfig from '../components/CsrfConfig.vue';
+  import AccessConfig from '../components/AccessConfig.vue';
   import TamperConfig from '../components/TamperConfig.vue';
   import UploadSecurityConfig from '../components/UploadSecurityConfig.vue';
   import PathRuleConfig from '../components/PathRuleConfig.vue';
   import SslForm from '../components/SslForm.vue';
-  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,INITIAL_CSRF,INITIAL_TAMPER,INITIAL_UPLOAD_SECURITY,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
+  import { INITIAL_HEALTHY, INITIAL_CAPTCHA, INITIAL_ANTILEECH,INITIAL_SSL_DATA,INITIAL_CACHE,INITIAL_STATIC_SITE,INITIAL_TRANSPORT,INITIAL_CUSTOM_HEADERS,INITIAL_CUSTOM_RESPONSE_HEADERS,INITIAL_RESPONSE_COMPRESS,INITIAL_COOKIE_SECURITY,INITIAL_CSRF,INITIAL_ACCESS,INITIAL_TAMPER,INITIAL_UPLOAD_SECURITY,DEFAULT_STATIC_SECURITY_HEADERS } from '../constants';
   import {sslConfigListApi,sslConfigAddApi,sslConfigEditApi,sslConfigDetailApi} from '@/apis/sslconfig';
   import {getOrDefault} from '@/utils/usuallytool';
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
@@ -633,6 +643,7 @@
       ResponseCompressConfig,
       CookieSecurityConfig,
       CsrfConfig,
+      AccessConfig,
       TamperConfig,
       UploadSecurityConfig,
       PathRuleConfig,
@@ -698,6 +709,7 @@
         responseCompressConfigData: { ...INITIAL_RESPONSE_COMPRESS },
         cookieSecurityConfigData: { ...INITIAL_COOKIE_SECURITY },
         csrfConfigData: { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] },
+        accessConfigData: { ...INITIAL_ACCESS },
         tamperConfigData: { ...INITIAL_TAMPER },
         uploadSecurityConfigData: { ...INITIAL_UPLOAD_SECURITY },
         activeTab: 1, // 当前激活的配置 Tab（受控，供防御总览开关「配置详情」跳转）
@@ -1162,6 +1174,27 @@
             }
           } else {
             this.csrfConfigData = { ...INITIAL_CSRF, protect_methods: [...INITIAL_CSRF.protect_methods] };
+          }
+
+          // 解析统一访问认证(Access 模式)配置
+          // 空值必须落在 mode="0"(继承全局)：存量站点的 access_json 是空的，
+          // 若误落成强制开启，用户升级后整站会立刻要求登录。
+          if (this.formData.access_json && this.formData.access_json !== '') {
+            try {
+              const ac = JSON.parse(this.formData.access_json);
+              this.accessConfigData = {
+                mode: String(ac.mode !== undefined ? ac.mode : 0),
+                exclude_paths: ac.exclude_paths != null ? ac.exclude_paths : '',
+                require_otp: String(ac.require_otp !== undefined ? ac.require_otp : 0),
+                unauth_action: ac.unauth_action != null ? ac.unauth_action : '',
+                allow_ip_group_code: ac.allow_ip_group_code != null ? ac.allow_ip_group_code : '',
+              };
+            } catch (e) {
+              console.error('解析access_json失败', e);
+              this.accessConfigData = { ...INITIAL_ACCESS };
+            }
+          } else {
+            this.accessConfigData = { ...INITIAL_ACCESS };
           }
 
           // 解析网页防篡改配置
@@ -1638,6 +1671,15 @@
               allowed_origins: this.csrfConfigData.allowed_origins || '',
               allow_empty_ref: parseInt(this.csrfConfigData.allow_empty_ref, 10) || 0,
               exclude_paths: this.csrfConfigData.exclude_paths || '',
+            });
+
+            // 处理统一访问认证(Access 模式)配置
+            postdata['access_json'] = JSON.stringify({
+              mode: parseInt(this.accessConfigData.mode, 10) || 0,
+              exclude_paths: this.accessConfigData.exclude_paths || '',
+              require_otp: parseInt(this.accessConfigData.require_otp, 10) || 0,
+              unauth_action: this.accessConfigData.unauth_action || '',
+              allow_ip_group_code: this.accessConfigData.allow_ip_group_code || '',
             });
 
             // 处理网页防篡改配置
