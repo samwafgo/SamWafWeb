@@ -21,6 +21,8 @@ import './permission';
 import store from './store';
 import { purifyHtml } from './utils/purify';  // 引入 purify.js
 Vue.prototype.$purifyHtml = purifyHtml;  // 将清理函数注册为全局方法
+import { setupDialogOverlayGuard } from './utils/dialogOverlayGuard';  // 修复弹窗内按下、遮罩上松开被误关闭
+setupDialogOverlayGuard();
 
 
 Vue.use(VueRouter);
