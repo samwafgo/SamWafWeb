@@ -34,11 +34,20 @@
             <t-tag v-if="row.enable === 1" theme="success" variant="light">{{ $t('page.threatip.enabled') }}</t-tag>
             <t-tag v-else theme="default" variant="light">{{ $t('page.threatip.disabled') }}</t-tag>
           </template>
+          <template #last_status="{ row }">
+            <t-tag v-if="row.syncing" theme="warning" variant="light">
+              {{ $t('page.threatip.syncing') }}{{ syncElapsedText(row) }}
+            </t-tag>
+            <span v-else>{{ row.last_status }}</span>
+          </template>
           <template #last_sync_at="{ row }">
             <span>{{ formatTs(row.last_sync_at) }}</span>
           </template>
           <template #op="slotProps">
-            <a class="t-button-link" @click="handleSync(slotProps)">{{ $t('page.threatip.sync') }}</a>
+            <a v-if="slotProps.row.syncing" class="t-button-link t-is-disabled" :style="{ color: '#bbb', cursor: 'not-allowed' }">
+              {{ $t('page.threatip.sync') }}
+            </a>
+            <a v-else class="t-button-link" @click="handleSync(slotProps)">{{ $t('page.threatip.sync') }}</a>
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
           </template>
@@ -220,6 +229,12 @@
         pagination: { total: 0, current: 1, pageSize: 10 },
         searchformData: { name: '' },
         deleteIdx: -1,
+        // 同步是后台异步跑的(拉取最长 2 分钟)，点完立刻刷新必然看不到结果，
+        // 所以这里用定时轮询，直到没有渠道处于 syncing 或达到上限为止。
+        syncPollTimer: null,
+        syncPollLeft: 0,
+        syncPollDone: 0,
+        syncPollSawSyncing: false,
       };
     },
     computed: {
@@ -229,6 +244,9 @@
     },
     mounted() {
       this.getList('');
+    },
+    beforeDestroy() {
+      this.stopSyncPolling();
     },
     methods: {
       landTargetLabel(v) {
@@ -244,7 +262,8 @@
         const d = new Date(ts * 1000);
         return d.toLocaleString();
       },
-      getList() {
+      // silent=true 用于轮询刷新：不显示表格 loading，避免每 3 秒闪一次
+      getList(_scope, silent) {
         let that = this;
         wafThreatIPListApi({
           pageSize: that.pagination.pageSize,
@@ -256,11 +275,21 @@
             if (resdata.code === 0) {
               this.data = resdata.data.list ?? [];
               this.pagination = { ...this.pagination, total: resdata.data.total };
+              // 收工条件：已经观察到过"同步中"、或连轮几次都没看到，就不用再轮了。
+              // (后端是异步起的 goroutine，第一次轮询时可能还没标上 syncing，所以留几次余量)
+              if (this.syncPollTimer) {
+                const anySyncing = this.data.some((row) => row.syncing);
+                if (anySyncing) {
+                  this.syncPollSawSyncing = true;
+                } else if (this.syncPollSawSyncing || this.syncPollDone >= 3) {
+                  this.stopSyncPolling();
+                }
+              }
             }
           })
           .catch((e: Error) => { console.log(e); })
-          .finally(() => { this.dataLoading = false; });
-        this.dataLoading = true;
+          .finally(() => { if (!silent) this.dataLoading = false; });
+        if (!silent) this.dataLoading = true;
       },
       getContainer() {
         return document.querySelector('.tdesign-starter-layout');
@@ -344,12 +373,44 @@
           .then((res) => {
             if (res.code === 0) {
               that.$message.success(res.msg);
+              // 后台已经开始跑了，启动轮询把结果等出来
+              that.startSyncPolling();
             } else {
               that.$message.warning(res.msg);
+              that.getList('');
             }
-            that.getList('');
           })
           .catch((e: Error) => { console.log(e); });
+      },
+      // 同步中已持续时长，例如 "（12秒）"
+      syncElapsedText(row) {
+        if (!row.syncing || !row.sync_started_at) return '';
+        const sec = Math.max(0, Math.floor(Date.now() / 1000) - row.sync_started_at);
+        return `（${sec}s）`;
+      },
+      // 启动轮询：每 3 秒刷一次列表，最多 ~2 分钟(覆盖后端 2 分钟的拉取超时)。
+      // 列表里已经没有 syncing 的行时提前收工。
+      startSyncPolling() {
+        this.stopSyncPolling();
+        this.syncPollLeft = 40;
+        this.syncPollDone = 0;
+        this.syncPollSawSyncing = false;
+        this.syncPollTimer = setInterval(() => {
+          if (this.syncPollLeft <= 0) {
+            this.stopSyncPolling();
+            return;
+          }
+          this.syncPollLeft -= 1;
+          this.syncPollDone += 1;
+          this.getList('', true);
+        }, 3000);
+      },
+      stopSyncPolling() {
+        if (this.syncPollTimer) {
+          clearInterval(this.syncPollTimer);
+          this.syncPollTimer = null;
+        }
+        this.syncPollLeft = 0;
       },
       handleClickDelete(row) {
         this.deleteIdx = row.rowIndex;
