@@ -35,21 +35,57 @@
     </t-card>
 
     <!-- 凭证配置弹窗(认证型厂商) -->
-    <t-dialog :header="credTitle" :visible.sync="credVisible" :width="620" :footer="false">
+    <t-dialog :header="credTitle" :visible.sync="credVisible" :width="720" :footer="false">
       <div slot="body">
+        <!-- 操作指引：告诉用户密钥去哪拿、要什么权限、站点ID在哪看 -->
+        <div class="cred-guide">
+          <div class="cred-guide-title">{{ $t('page.cdnip.guide_title') }}</div>
+          <ol class="cred-guide-list">
+            <li v-for="(step, idx) in credGuideSteps" :key="idx">
+              <span>{{ step.text }}</span>
+              <a v-if="step.link" class="cred-guide-link" :href="step.link" target="_blank" rel="noopener noreferrer">{{ step.linkText }}</a>
+            </li>
+          </ol>
+        </div>
         <t-alert theme="warning" :message="$t('page.cdnip.credential_tips')" style="margin-bottom: 12px;" />
-        <t-form :data="credForm" :labelWidth="130">
+        <t-form :data="credForm" :labelWidth="150">
+          <!-- EdgeOne：中国站 / 国际站 二选一(账号与密钥各自独立、接口域名也不同) -->
+          <t-form-item v-if="credProvider === 'edgeone'" :label="$t('page.cdnip.eo_edition')" name="edition">
+            <t-radio-group v-model="eoForm.edition">
+              <t-radio value="cn">{{ $t('page.cdnip.eo_edition_cn') }}</t-radio>
+              <t-radio value="intl">{{ $t('page.cdnip.eo_edition_intl') }}</t-radio>
+            </t-radio-group>
+            <div class="form-item-tips">{{ $t('page.cdnip.eo_edition_tips') }}</div>
+          </t-form-item>
           <t-form-item :label="$t('page.cdnip.secret_id')" name="secret_id">
             <t-input v-model="credForm.secret_id" :style="{ width: '420px' }"
-                     :placeholder="credHasCredential ? $t('page.cdnip.secret_keep') : 'SecretId / AccessKeyId'" />
+                     :placeholder="credHasCredential ? $t('page.cdnip.secret_keep') : credSecretIdPlaceholder" />
+            <div class="form-item-tips">{{ credSecretTips }}</div>
           </t-form-item>
           <t-form-item :label="$t('page.cdnip.secret_key')" name="secret_key">
             <t-input v-model="credForm.secret_key" type="password" :style="{ width: '420px' }"
-                     :placeholder="credHasCredential ? $t('page.cdnip.secret_keep') : 'SecretKey / AccessKeySecret'" />
+                     :placeholder="credHasCredential ? $t('page.cdnip.secret_keep') : credSecretKeyPlaceholder" />
           </t-form-item>
-          <t-form-item :label="$t('page.cdnip.extra_param')" name="extra_param">
-            <t-input v-model="credForm.extra_param" :style="{ width: '420px' }" :placeholder="credExtraPlaceholder" />
-            <div class="form-item-tips">{{ credExtraTips }}</div>
+          <!-- EdgeOne 站点ID -->
+          <template v-if="credProvider === 'edgeone'">
+            <t-form-item :label="$t('page.cdnip.eo_zone_id')" name="zone_id">
+              <t-input v-model="eoForm.zone_id" :style="{ width: '420px' }" placeholder="zone-xxxxxxxxxxxx" />
+              <div class="form-item-tips">{{ $t('page.cdnip.eo_zone_id_tips') }}</div>
+            </t-form-item>
+          </template>
+          <!-- 阿里云 加速域名 + 地域 -->
+          <template v-else-if="credProvider === 'aliyun'">
+            <t-form-item :label="$t('page.cdnip.ali_domain')" name="domain">
+              <t-input v-model="aliForm.domain" :style="{ width: '420px' }" placeholder="cdn.example.com" />
+              <div class="form-item-tips">{{ $t('page.cdnip.ali_domain_tips') }}</div>
+            </t-form-item>
+            <t-form-item :label="$t('page.cdnip.ali_region')" name="region">
+              <t-input v-model="aliForm.region" :style="{ width: '420px' }" placeholder="cn-hangzhou" />
+            </t-form-item>
+          </template>
+          <!-- 其它厂商：保留原始 JSON 输入 -->
+          <t-form-item v-else :label="$t('page.cdnip.extra_param')" name="extra_param">
+            <t-input v-model="credForm.extra_param" :style="{ width: '420px' }" />
           </t-form-item>
           <t-form-item style="float: right">
             <t-button v-if="credHasCredential" theme="danger" variant="outline" @click="onClearCredential">{{ $t('page.cdnip.clear_credential') }}</t-button>
@@ -107,9 +143,11 @@
         credTitle: '',
         credProvider: '',
         credHasCredential: false,
-        credExtraPlaceholder: '',
-        credExtraTips: '',
         credForm: { secret_id: '', secret_key: '', extra_param: '' },
+        // EdgeOne：站点版本(中国站/国际站) + 站点ID
+        eoForm: { edition: 'cn', zone_id: '', region: '' },
+        // 阿里云：加速域名 + 地域
+        aliForm: { domain: '', region: 'cn-hangzhou' },
         // IP 浏览
         ipDialogVisible: false,
         ipDialogTitle: '',
@@ -120,6 +158,46 @@
         ipPagination: { total: 0, current: 1, pageSize: 10 },
         ipColumns: [{ title: 'IP / CIDR', align: 'left', colKey: 'ip' }],
       };
+    },
+    computed: {
+      // 是否国际版 EdgeOne(edgeone.ai)：控制台/密钥/接口域名都与中国站不同
+      isEdgeOneIntl() {
+        return this.credProvider === 'edgeone' && this.eoForm.edition === 'intl';
+      },
+      credSecretIdPlaceholder() {
+        return this.credProvider === 'aliyun' ? 'AccessKeyId' : 'SecretId';
+      },
+      credSecretKeyPlaceholder() {
+        return this.credProvider === 'aliyun' ? 'AccessKeySecret' : 'SecretKey';
+      },
+      credSecretTips() {
+        if (this.credProvider === 'edgeone') return this.$t('page.cdnip.eo_secret_tips');
+        if (this.credProvider === 'aliyun') return this.$t('page.cdnip.ali_secret_tips');
+        return '';
+      },
+      // 弹窗顶部的分步指引(含官方链接)
+      credGuideSteps() {
+        if (this.credProvider === 'edgeone') {
+          const intl = this.isEdgeOneIntl;
+          const consoleUrl = intl ? 'https://console.tencentcloud.com/edgeone' : 'https://console.cloud.tencent.com/edgeone';
+          const capiUrl = intl ? 'https://console.tencentcloud.com/cam/capi' : 'https://console.cloud.tencent.com/cam/capi';
+          const docUrl = intl ? 'https://edgeone.ai/document/zh/48535' : 'https://cloud.tencent.com/document/product/1552/120406';
+          return [
+            { text: this.$t('page.cdnip.eo_guide_1'), link: consoleUrl, linkText: this.$t('page.cdnip.link_console') },
+            { text: this.$t('page.cdnip.eo_guide_2'), link: consoleUrl, linkText: this.$t('page.cdnip.link_zone') },
+            { text: this.$t('page.cdnip.eo_guide_3'), link: capiUrl, linkText: this.$t('page.cdnip.link_capi') },
+            { text: this.$t('page.cdnip.eo_guide_4'), link: docUrl, linkText: this.$t('page.cdnip.link_doc') },
+          ];
+        }
+        if (this.credProvider === 'aliyun') {
+          return [
+            { text: this.$t('page.cdnip.ali_guide_1'), link: 'https://ram.console.aliyun.com/manage/ak', linkText: this.$t('page.cdnip.link_capi') },
+            { text: this.$t('page.cdnip.ali_guide_2'), link: 'https://cdn.console.aliyun.com/domain/list', linkText: this.$t('page.cdnip.link_console') },
+            { text: this.$t('page.cdnip.ali_guide_3'), link: 'https://help.aliyun.com/zh/cdn/developer-reference/api-cdn-2018-05-10-describel2vipsbydomain', linkText: this.$t('page.cdnip.link_doc') },
+          ];
+        }
+        return [];
+      },
     },
     mounted() {
       this.loadList();
@@ -167,24 +245,48 @@
         this.credTitle = row.name + ' ' + this.$t('page.cdnip.credential');
         this.credHasCredential = row.has_credential;
         this.credForm = { secret_id: '', secret_key: '', extra_param: row.extra_param || '' };
-        if (row.provider === 'edgeone') {
-          this.credExtraPlaceholder = '{"zone_id":"zone-xxxx","region":""}';
-          this.credExtraTips = this.$t('page.cdnip.extra_tips_edgeone');
-        } else if (row.provider === 'aliyun') {
-          this.credExtraPlaceholder = '{"domain":"cdn.example.com","region":"cn-hangzhou"}';
-          this.credExtraTips = this.$t('page.cdnip.extra_tips_aliyun');
-        } else {
-          this.credExtraPlaceholder = '';
-          this.credExtraTips = '';
+        // 把已存的扩展参数 JSON 回填到结构化表单
+        let extra = {};
+        try {
+          extra = JSON.parse(row.extra_param || '{}') || {};
+        } catch (e) {
+          extra = {};
         }
+        this.eoForm = { edition: extra.edition === 'intl' ? 'intl' : 'cn', zone_id: extra.zone_id || '', region: extra.region || '' };
+        this.aliForm = { domain: extra.domain || '', region: extra.region || 'cn-hangzhou' };
         this.credVisible = true;
       },
+      // 结构化表单 → 后端存储用的扩展参数 JSON
+      buildExtraParam() {
+        if (this.credProvider === 'edgeone') {
+          return JSON.stringify({
+            zone_id: (this.eoForm.zone_id || '').trim(),
+            edition: this.eoForm.edition,
+            region: (this.eoForm.region || '').trim(),
+          });
+        }
+        if (this.credProvider === 'aliyun') {
+          return JSON.stringify({
+            domain: (this.aliForm.domain || '').trim(),
+            region: (this.aliForm.region || '').trim(),
+          });
+        }
+        return this.credForm.extra_param;
+      },
       onSaveCredential() {
+        if (this.credProvider === 'edgeone' && !(this.eoForm.zone_id || '').trim()) {
+          this.$message.warning(this.$t('page.cdnip.eo_zone_id_required'));
+          return;
+        }
+        if (this.credProvider === 'aliyun' && !(this.aliForm.domain || '').trim()) {
+          this.$message.warning(this.$t('page.cdnip.ali_domain_required'));
+          return;
+        }
         wafCDNProviderCredentialApi({
           provider: this.credProvider,
           secret_id: this.credForm.secret_id,
           secret_key: this.credForm.secret_key,
-          extra_param: this.credForm.extra_param,
+          extra_param: this.buildExtraParam(),
         })
           .then((res) => {
             if (res.code === 0) {
@@ -252,6 +354,27 @@
 </script>
 
 <style lang="less" scoped>
+  .cred-guide {
+    background: var(--td-bg-color-container-hover);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .cred-guide-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .cred-guide-list {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--td-text-color-secondary);
+    font-size: 12px;
+    line-height: 20px;
+  }
+  .cred-guide-link {
+    margin-left: 6px;
+    color: var(--td-brand-color);
+  }
   .form-item-tips {
     color: var(--td-text-color-placeholder);
     font-size: 12px;
