@@ -19,7 +19,12 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.ipgroup.alert_message')" close></t-alert>
+      <t-alert theme="info" :message="$t('page.ipgroup.alert_message')" close>
+        <!-- 手工维护之外还能定时批量导入，这里给个入口，否则用户不知道有这功能 -->
+        <template #operation>
+          <span class="link-text" @click="handleJumpBatchTask">{{ $t('page.ipgroup.goto_batch_task') }}</span>
+        </template>
+      </t-alert>
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange"
@@ -90,6 +95,10 @@
             <t-button theme="danger" :disabled="itemData.length === 0" @click="clearItemsConfirmVisible = true">
               {{ $t('page.ipgroup.button_clear_items') }}
             </t-button>
+            <!-- 一次性手工批量添加之外，还能建定时任务从文件/远程源自动同步 -->
+            <a class="t-button-link" style="margin-left: 8px" @click="handleJumpBatchTask">
+              {{ $t('page.ipgroup.goto_batch_task') }}
+            </a>
           </div>
           <div class="right-operation-container">
             <t-form :data="itemSearchData" :label-width="40" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -469,6 +478,14 @@ export default Vue.extend({
     rehandleItemSelectChange(keys) {
       this.selectedItemKeys = keys;
     },
+    // 跳到批量任务页；在某个组的抽屉里点的话把组带过去，直接预填成该组的导入任务
+    handleJumpBatchTask() {
+      const groupCode = this.itemDrawerVisible ? this.currentGroup.group_code : '';
+      this.$router.push({
+        name: 'WafBatchTaskList',
+        query: groupCode ? { ip_group_code: groupCode } : {},
+      });
+    },
     handleAddItem() {
       this.itemFormData = { id: '', ip: '', remarks: '' };
       this.itemFormVisible = true;
@@ -614,5 +631,10 @@ export default Vue.extend({
 
 .t-button+.t-button {
   margin-left: @spacer;
+}
+
+.link-text {
+  cursor: pointer;
+  color: var(--td-brand-color);
 }
 </style>
