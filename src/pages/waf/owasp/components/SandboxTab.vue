@@ -483,7 +483,8 @@ export default Vue.extend({
       this.aiDialog.visible = true;
     },
     confirmSendAi() {
-      this.$bus.$emit('sendAi', this.aiDialog.prompt);
+      // 规则解读走 OWASP 规则提示词，不套风险评分格式
+      this.$bus.$emit('sendAi', { q: this.aiDialog.prompt, scene: 'owasp_rule' });
       this.aiDialog.visible = false;
     },
     onDisableRule(row: any) {

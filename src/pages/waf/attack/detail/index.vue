@@ -459,7 +459,8 @@
       },
       handelToAi(){
         console.log("handelToAi",this.httpAiMask)
-        this.$bus.$emit("sendAi",  this.httpAiMask)
+        // 日志详情走"安全风险分析"提示词
+        this.$bus.$emit("sendAi", { q: this.httpAiMask, scene: 'security_log' })
         this.httpAiMaskVisible = false
       },
       beforeSendAi(){

@@ -9,6 +9,14 @@ export function SysVersionApi(params) {
   })
 }
 
+//查询系统运行环境信息（操作系统/内核/容器/运行时长等）
+export function SysRuntimeInfoApi() {
+  return request({
+    url: 'sysinfo/runtimeinfo',
+    method: 'get'
+  })
+}
+
 //查询是否需要升级版本信息
 export function CheckVersionApi(params) {
   return request({

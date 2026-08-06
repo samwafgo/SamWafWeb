@@ -191,7 +191,32 @@
   margin-left: 24px;
 }
 
-.version-container {
-  color: var(--td-text-color-primary);
-  opacity: 0.4;
+/* 左下角版本号 = 系统信息入口，需要看起来可点 */
+.version-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: var(--td-radius-default);
+  color: var(--td-brand-color);
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.version-entry:hover {
+  background-color: var(--td-brand-color-light);
+}
+
+.version-entry-icon {
+  flex: 0 0 auto;
+  font-size: 16px;
+}
+
+.version-entry-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }

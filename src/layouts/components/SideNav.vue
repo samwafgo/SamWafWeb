@@ -15,11 +15,21 @@
       </template>
       <menu-content :navData="menu" />
       <template #operations>
-        <span class="version-container"> {{ !collapsed && '' }} {{ getversion.version_name  }}({{ getversion.version  }})
-        <span v-if="getversion.version_release=='false'" style="color:red"> {{ $t('common.debug') }}</span></span>
+        <!-- 版本号即“系统信息”入口：做成带图标的可点击块，避免用户看不出来能点 -->
+        <t-tooltip placement="top" :content="$t('common.system_info.tooltip')">
+          <div class="version-entry" @click="sysinfo_visible = true">
+            <device-icon class="version-entry-icon" />
+            <span v-if="!collapsed" class="version-entry-text">
+              {{ getversion.version_name }}({{ getversion.version }})
+              <span v-if="getversion.version_release=='false'" style="color:red">{{ $t('common.debug') }}</span>
+            </span>
+          </div>
+        </t-tooltip>
       </template>
     </t-menu>
     <div :class="`${prefix}-side-nav-placeholder${collapsed ? '-hidden' : ''}`"></div>
+    <!-- 点击版本号查看系统信息与在线交流渠道 -->
+    <system-info-dialog :visible.sync="sysinfo_visible" />
   </div>
 </template>
 
@@ -31,7 +41,10 @@ import { ClassName } from '@/interface';
 import Logo from '@/assets/assets-t-logo.svg';
 import LogoFull from '@/assets/assets-logo-full.svg';
 
+import { DeviceIcon } from 'tdesign-icons-vue';
+
 import MenuContent from './MenuContent.vue';
+import SystemInfoDialog from './SystemInfoDialog.vue';
 import pgk from '../../../package.json';
 import { SysVersionApi } from '@/apis/sysinfo';
 const MIN_POINT = 992 - 1;
@@ -40,6 +53,8 @@ export default Vue.extend({
   name: 'sideNav',
   components: {
     MenuContent,
+    SystemInfoDialog,
+    DeviceIcon,
   },
   props: {
     menu: Array,
@@ -73,6 +88,7 @@ export default Vue.extend({
     return {
       prefix,
       pgk,
+      sysinfo_visible: false,
     };
   },
   computed: {

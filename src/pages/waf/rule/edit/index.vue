@@ -162,10 +162,17 @@
                   </t-link>
                   <t-link theme="default" hover="color" size="small" class="ai-gen-setting" @click="openGptConfig">
                     <setting-icon />
-                    <span>{{ $t('page.rule.detail.gpt_config_entry') }}</span>
+                    <span>{{ $t('page.gpt.config.entry') }}</span>
                   </t-link>
                 </div>
                 <div class="ai-gen-body">
+                  <!-- 没配密钥先提示，别让用户填完意图才发现生成不了 -->
+                  <div v-if="gptChecked && !gptHasToken" class="ai-gen-unset">
+                    <span>{{ $t('page.rule.detail.gpt_not_configured') }}</span>
+                    <t-link theme="primary" hover="color" size="small" @click="openGptConfig">
+                      {{ $t('page.gpt.unset_action') }}
+                    </t-link>
+                  </div>
                   <t-textarea v-model="aiGenIntent" :autosize="{ minRows: 2, maxRows: 4 }"
                     :placeholder="$t('page.rule.detail.ai_gen_placeholder')" />
                   <div class="ai-gen-ops">
@@ -332,64 +339,8 @@
       </div>
     </t-dialog>
 
-    <!-- GPT 参数设置弹窗 -->
-    <t-dialog
-      :header="$t('page.rule.detail.gpt_config_title')"
-      :visible.sync="gptConfigDialogVisible"
-      width="760px"
-      :footer="false"
-    >
-      <t-loading :loading="gptConfigLoading" size="small">
-        <!-- autocomplete 关掉：URL/模型文本框 + Token 密码框会被浏览器当成登录表单，填进 admin 口令 -->
-        <t-form :data="gptConfig" :label-width="110" @submit.prevent autocomplete="off">
-          <t-form-item :label="$t('page.rule.detail.gpt_url')" name="gpt_url">
-            <t-input v-model="gptConfig.gpt_url" :placeholder="'https://api.deepseek.com'" autocomplete="off" />
-          </t-form-item>
-          <t-form-item :label="$t('page.rule.detail.gpt_model')" name="gpt_model">
-            <t-input v-model="gptConfig.gpt_model" :placeholder="'deepseek-chat'" autocomplete="off" />
-          </t-form-item>
-          <t-form-item :label="$t('page.rule.detail.gpt_token')" name="gpt_token">
-            <t-input
-              v-model="gptConfig.gpt_token"
-              type="password"
-              autocomplete="new-password"
-              :placeholder="gptConfig.has_token ? $t('page.rule.detail.gpt_token_set_placeholder') : $t('page.rule.detail.gpt_token_empty_placeholder')"
-            />
-          </t-form-item>
-        </t-form>
-        <div class="gpt-token-tip">{{ $t('page.rule.detail.gpt_token_tip') }}</div>
-
-        <div class="gpt-preset-title">{{ $t('page.rule.detail.gpt_preset_title') }}</div>
-        <div class="gpt-preset-list">
-          <div class="gpt-preset-item" v-for="(p, pIndex) in gptProviders" :key="pIndex">
-            <div class="gpt-preset-main">
-              <span class="gpt-preset-name">{{ p.name }}</span>
-              <span class="gpt-preset-desc">{{ gptPresetDesc(p) }}</span>
-            </div>
-            <div class="gpt-preset-url">{{ p.url }}</div>
-            <div class="gpt-preset-models">
-              <t-tag
-                v-for="(m, mIndex) in p.models"
-                :key="mIndex"
-                size="small"
-                variant="light"
-                class="gpt-preset-model"
-                @click="applyGptPreset(p, m)"
-              >{{ m }}</t-tag>
-            </div>
-            <div class="gpt-preset-ops">
-              <t-button size="small" variant="outline" @click="applyGptPreset(p)">{{ $t('page.rule.detail.gpt_preset_use') }}</t-button>
-              <t-link theme="primary" hover="color" size="small" :href="p.home" target="_blank">{{ $t('page.rule.detail.gpt_preset_apply_key') }}</t-link>
-            </div>
-          </div>
-        </div>
-
-        <div class="ai-prompt-ops">
-          <t-button theme="primary" :loading="gptConfigSaving" @click="saveGptConfig">{{ $t('common.submit') }}</t-button>
-          <t-button variant="outline" @click="gptConfigDialogVisible = false">{{ $t('common.close') }}</t-button>
-        </div>
-      </t-loading>
-    </t-dialog>
+    <!-- GPT 参数设置弹窗（与 AI 助手共用同一个组件） -->
+    <gpt-config-dialog :visible.sync="gptConfigDialogVisible" @saved="checkGptConfig" />
 
     <!-- 测试规则弹窗 -->
     <t-dialog
@@ -507,8 +458,8 @@ import {
   allhost
 } from '@/apis/host';
 import { wafRuleListApi, wafRuleDelApi, wafRuleEditApi, wafRuleAddApi, wafRuleDetailApi, wafRuleFormatApi, wafRuleTestApi, wafRuleAiGenApi, wafRuleAiPromptApi } from '@/apis/rules';
-import { wafGptConfigGetApi, wafGptConfigSaveApi } from '@/apis/gpt';
-import { GPT_PROVIDERS } from '@/utils/gptProviders';
+import { wafGptConfigGetApi } from '@/apis/gpt';
+import GptConfigDialog from '@/components/gpt-config/index.vue';
 import { v4 as uuidv4 } from 'uuid';
 
 export default {
@@ -518,6 +469,7 @@ export default {
     CodeIcon,
     HelpCircleIcon,
     SettingIcon,
+    GptConfigDialog,
   },
   data() {
     return {
@@ -729,10 +681,8 @@ export default {
       aiPromptText: '',
       // GPT 参数设置弹窗
       gptConfigDialogVisible: false,
-      gptConfigLoading: false,
-      gptConfigSaving: false,
-      gptConfig: { gpt_url: '', gpt_model: '', gpt_token: '', has_token: false },
-      gptProviders: GPT_PROVIDERS,
+      gptChecked: false,   // 是否已检测过 AI 配置
+      gptHasToken: false,  // AI 密钥是否已配置
       // AI 生成规则
       aiGenIntent: '',
       aiGenLoading: false,
@@ -773,6 +723,8 @@ export default {
     let that = this
 
     this.loadHostList()
+    // 进页面就检测一次 AI 密钥，没配的话在 AI 生成面板里先提示
+    this.checkGptConfig()
     console.log('----mounted----')
     console.log(RULE)
     this.$bus.$on('codeedit', (e) => {
@@ -1313,63 +1265,22 @@ export default {
     copyAiPrompt() {
       this.copyExample(this.aiPromptText)
     },
-    // 预设服务商说明（按界面语言）
-    gptPresetDesc(p) {
-      const en = ((this.$i18n && this.$i18n.locale) || '').toLowerCase().indexOf('en') === 0
-      return en ? p.en : p.zh
-    },
-    // 打开 GPT 参数设置弹窗并拉取当前配置（密钥不回传明文）
-    async openGptConfig() {
+    // 打开 GPT 参数设置弹窗（表单/预设都在共用组件里）
+    openGptConfig() {
       this.gptConfigDialogVisible = true
-      this.gptConfigLoading = true
-      this.gptConfig.gpt_token = ''
+    },
+    // 检测 AI 是否已配置密钥（后端只回 has_token，不下发明文）
+    async checkGptConfig() {
       try {
         const res = await wafGptConfigGetApi()
-        if (res.code === 0 && res.data) {
-          this.gptConfig.gpt_url = res.data.gpt_url || ''
-          this.gptConfig.gpt_model = res.data.gpt_model || ''
-          this.gptConfig.has_token = !!res.data.has_token
-        }
+        this.gptHasToken = !!(res && res.code === 0 && res.data && res.data.has_token)
       } catch (e) {
         console.log(e)
+        this.gptHasToken = false
       } finally {
-        this.gptConfigLoading = false
+        this.gptChecked = true
       }
-    },
-    // 应用预设：填 url + 选定/默认模型
-    applyGptPreset(p, model) {
-      this.gptConfig.gpt_url = p.url
-      this.gptConfig.gpt_model = model || (p.models && p.models[0]) || ''
-    },
-    // 保存 GPT 参数（token 留空表示保留原密钥）
-    async saveGptConfig() {
-      if (!this.gptConfig.gpt_url || !this.gptConfig.gpt_model) {
-        this.$message.warning(this.$t('page.rule.detail.gpt_url_model_required'))
-        return
-      }
-      this.gptConfigSaving = true
-      try {
-        const res = await wafGptConfigSaveApi({
-          gpt_url: this.gptConfig.gpt_url.trim(),
-          gpt_model: this.gptConfig.gpt_model.trim(),
-          gpt_token: (this.gptConfig.gpt_token || '').trim(),
-        })
-        if (res.code === 0) {
-          this.$message.success(this.$t('page.rule.detail.gpt_save_ok'))
-          if ((this.gptConfig.gpt_token || '').trim()) {
-            this.gptConfig.has_token = true
-          }
-          this.gptConfig.gpt_token = ''
-          this.gptConfigDialogVisible = false
-        } else {
-          this.$message.warning(res.msg || this.$t('page.rule.detail.gpt_save_fail'))
-        }
-      } catch (e) {
-        console.log(e)
-        this.$message.error(this.$t('page.rule.detail.gpt_save_fail'))
-      } finally {
-        this.gptConfigSaving = false
-      }
+      return this.gptHasToken
     },
     // 调用后台 AI 生成规则（后端已做校验/修复闭环）
     async onAiGenRule() {
@@ -1377,6 +1288,15 @@ export default {
       if (!intent) {
         this.$message.warning(this.$t('page.rule.detail.ai_gen_empty'))
         return
+      }
+      // 没配密钥直接引导去配置，不用等后端报错
+      if (!this.gptHasToken) {
+        const configured = await this.checkGptConfig()
+        if (!configured) {
+          this.$message.warning(this.$t('page.rule.detail.gpt_not_configured'))
+          this.gptConfigDialogVisible = true
+          return
+        }
       }
       this.aiGenLoading = true
       this.aiGenResult = null
@@ -1703,65 +1623,25 @@ export default {
   justify-content: flex-end;
 }
 
-/* GPT 参数设置 */
+/* GPT 参数设置入口（表单样式在 components/gpt-config 里） */
 .ai-gen-setting {
   display: inline-flex;
   align-items: center;
   gap: 2px;
 }
-.gpt-token-tip {
-  color: var(--td-text-color-placeholder, #999);
-  font-size: 12px;
-  margin: 4px 0 12px 110px;
-}
-.gpt-preset-title {
-  font-weight: 500;
-  margin: 8px 0;
-}
-.gpt-preset-list {
-  max-height: 320px;
-  overflow-y: auto;
-  border: 1px solid var(--td-component-border, #e7e7e7);
-  border-radius: 6px;
-}
-.gpt-preset-item {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--td-component-border, #eee);
-}
-.gpt-preset-item:last-child {
-  border-bottom: none;
-}
-.gpt-preset-main {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.gpt-preset-name {
-  font-weight: 500;
-}
-.gpt-preset-desc {
-  color: var(--td-text-color-secondary, #888);
-  font-size: 12px;
-}
-.gpt-preset-url {
-  color: var(--td-text-color-secondary, #666);
-  font-size: 12px;
-  margin: 2px 0;
-  word-break: break-all;
-}
-.gpt-preset-models {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 4px 0;
-}
-.gpt-preset-model {
-  cursor: pointer;
-}
-.gpt-preset-ops {
+/* 未配置密钥提示条 */
+.ai-gen-unset {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: var(--td-warning-color-1, #fff1e9);
+  color: var(--td-warning-color-7, #be6a1b);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 /* 编辑器内 AI 生成规则面板 */
