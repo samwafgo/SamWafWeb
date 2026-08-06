@@ -293,6 +293,12 @@ export default [
         meta: { title: 'menu.account.account_log_title' },
       },
       {
+        path: 'LoginHistory',
+        name: 'LoginHistory',
+        component: () => import('@/pages/waf/login_history/index.vue'),
+        meta: { title: 'menu.account.login_history_title' },
+      },
+      {
         path: 'OTP',
         name: 'OTP',
         component: () => import('@/pages/waf/otp/index.vue'),

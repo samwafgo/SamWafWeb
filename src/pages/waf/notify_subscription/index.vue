@@ -201,6 +201,11 @@ export default Vue.extend({
           type: 'access_abnormal',
           name: this.$t('page.notify_subscription.message_type_access_abnormal'),
         },
+        // 管理端登录来源变化：同理和 user_login 拆开，只想收"可能是别人登进来了"的人不必订阅日常登录
+        {
+          type: 'manage_login_abnormal',
+          name: this.$t('page.notify_subscription.message_type_manage_login_abnormal'),
+        },
       ],
       emailDialogVisible: false,
       emailFormData: {
