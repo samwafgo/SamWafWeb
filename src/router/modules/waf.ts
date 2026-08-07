@@ -323,6 +323,14 @@ export default [
         }
       },
       {
+        path: 'HostGuard',
+        name: 'HostGuard',
+        component: () => import('@/pages/waf/hostguard/index.vue'),
+        meta: {
+          title: 'menu.system.host_guard_title',
+        }
+      },
+      {
         path: 'FileManage',
         name: 'FileManage',
         component: () => import('@/pages/waf/filemanage/index.vue'),
