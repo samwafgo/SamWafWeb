@@ -2309,6 +2309,7 @@ export default {
       label_ip_group: "Target IP Group",
       ip_group_tips: "An IP group belongs to no website; after import, every website and custom rule referencing it takes effect at once",
       ip_group_goto_manage: "Manage IP Groups",
+      ip_group_quick_add: "New IP Group",
       ip_group_empty_tips: "No IP group yet, please create one on the \"IP Group\" page first",
       ip_group_overwrite_tips: "Overwrite mode deletes group entries that no longer exist in this source, keeping the group in sync with the source. Nothing is deleted when the source fails to load or is empty.",
       batch_type: {

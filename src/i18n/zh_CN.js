@@ -2314,6 +2314,7 @@ export default {
       label_ip_group: "目标IP组",
       ip_group_tips: "IP组不属于任何网站，导入后所有引用该组的网站与自定义规则同时生效",
       ip_group_goto_manage: "去管理IP组",
+      ip_group_quick_add: "新建IP组",
       ip_group_empty_tips: "还没有IP组，请先去「IP组」页面创建",
       ip_group_overwrite_tips: "覆盖模式会删除组内本次来源中已不存在的IP，使组内容与来源保持一致；来源读取失败或来源为空时不会执行删除。",
       batch_type: {

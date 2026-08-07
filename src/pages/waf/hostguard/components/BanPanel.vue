@@ -199,9 +199,9 @@ export default Vue.extend({
     handleRelease(row) {
       const dialogInstance = this.$dialog.confirm({
         header: this.$t('page.hostguard.confirm_release_title'),
-        body: this.$t('page.hostguard.confirm_release_body', { ip: row.row.ip }),
+        body: this.$t('page.hostguard.confirm_release_body', { ip: row.ip }),
         onConfirm: () =>
-          wafHostGuardBanReleaseApi({ id: row.row.id })
+          wafHostGuardBanReleaseApi({ id: row.id })
             .then((res) => {
               if (res.code === 0) {
                 this.$message.success(res.msg);
@@ -220,9 +220,9 @@ export default Vue.extend({
     handlePermanent(row) {
       const dialogInstance = this.$dialog.confirm({
         header: this.$t('page.hostguard.confirm_permanent_title'),
-        body: this.$t('page.hostguard.confirm_permanent_body', { ip: row.row.ip }),
+        body: this.$t('page.hostguard.confirm_permanent_body', { ip: row.ip }),
         onConfirm: () =>
-          wafHostGuardBanPermanentApi({ id: row.row.id })
+          wafHostGuardBanPermanentApi({ id: row.id })
             .then((res) => {
               if (res.code === 0) {
                 this.$message.success(res.msg);
@@ -239,7 +239,7 @@ export default Vue.extend({
       });
     },
     handleWhitelist(row) {
-      const ip = row.row.ip;
+      const ip = row.ip;
       const dialogInstance = this.$dialog.confirm({
         header: this.$t('page.hostguard.confirm_whitelist_title'),
         body: this.$t('page.hostguard.confirm_whitelist_body', { ip }),

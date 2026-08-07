@@ -242,7 +242,7 @@ export default Vue.extend({
       }
     },
     handleBlock(row) {
-      this.banIP = row.row.remote_ip;
+      this.banIP = row.remote_ip;
       this.banVisible = true;
     },
     onBanDone() {

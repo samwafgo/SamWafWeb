@@ -102,6 +102,9 @@
             <t-option v-for="g in group_options" :key="g.group_code" :value="g.group_code"
               :label="g.group_name + ' (' + g.item_count + ')'"></t-option>
           </t-select>
+          <a class="t-button-link" style="margin-left: 8px" @click="handleQuickAddGroup('add')">
+            {{ $t('page.batchtask.ip_group_quick_add') }}
+          </a>
           <a class="t-button-link" style="margin-left: 8px" @click="handleJumpIPGroup">
             {{ $t('page.batchtask.ip_group_goto_manage') }}
           </a>
@@ -183,6 +186,9 @@
                 <t-option v-for="g in group_options" :key="g.group_code" :value="g.group_code"
                   :label="g.group_name + ' (' + g.item_count + ')'"></t-option>
               </t-select>
+              <a class="t-button-link" style="margin-left: 8px" @click="handleQuickAddGroup('edit')">
+                {{ $t('page.batchtask.ip_group_quick_add') }}
+              </a>
               <a class="t-button-link" style="margin-left: 8px" @click="handleJumpIPGroup">
                 {{ $t('page.batchtask.ip_group_goto_manage') }}
               </a>
@@ -243,6 +249,24 @@
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
               :onCancel="onCancel">
     </t-dialog>
+
+    <!-- 就地新建IP组：不用离开当前表单，建完自动选中 -->
+    <t-dialog :header="$t('page.batchtask.ip_group_quick_add')" :visible.sync="quickAddVisible" :width="600" :footer="false">
+      <div slot="body">
+        <t-form :data="quickAddData" ref="quickAddForm" :rules="quickAddRules" @submit="onSubmitQuickAdd" :labelWidth="100">
+          <t-form-item :label="$t('page.ipgroup.label_name')" name="group_name">
+            <t-input v-model="quickAddData.group_name" :style="{ width: '420px' }"></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('common.remarks')" name="remarks">
+            <t-textarea v-model="quickAddData.remarks" :style="{ width: '420px' }" rows="3"></t-textarea>
+          </t-form-item>
+          <t-form-item style="float: right">
+            <t-button variant="outline" @click="quickAddVisible = false">{{ $t('common.close') }}</t-button>
+            <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -262,7 +286,7 @@ import {
     allhost
   } from '@/apis/host';
   import {
-    wafIPGroupOptionsApi
+    wafIPGroupOptionsApi, wafIPGroupAddApi
   } from '@/apis/ipgroup';
 const INITIAL_DATA = {
   batch_task_name: '',
@@ -548,6 +572,17 @@ export default Vue.extend({
       default_host_code:"",
       //IP组下拉选项
       group_options: [],
+      //就地新建IP组
+      quickAddVisible: false,
+      quickAddTarget: 'add', //建完后把新组填回哪个表单
+      quickAddData: { group_name: '', remarks: '' },
+      quickAddRules: {
+        group_name: [{
+          required: true,
+          message: this.$t('common.placeholder') + this.$t('page.ipgroup.label_name'),
+          type: 'error',
+        }],
+      },
       //end data
     };
   },
@@ -573,12 +608,15 @@ export default Vue.extend({
     }
   },
   methods: {
-    loadGroupOptions() {
+    loadGroupOptions(onLoaded) {
       let that = this;
       wafIPGroupOptionsApi()
         .then((res) => {
           if (res.code === 0) {
             that.group_options = res.data ?? [];
+          }
+          if (onLoaded) {
+            onLoaded();
           }
         })
         .catch((e: Error) => { console.log(e); });
@@ -605,6 +643,39 @@ export default Vue.extend({
     },
     handleJumpIPGroup() {
       this.$router.push({ name: 'WafIpGroup' });
+    },
+    // 就地新建IP组：跳去IP组页面再跳回来会丢掉正在填的任务表单，所以直接在这里建
+    handleQuickAddGroup(target) {
+      this.quickAddTarget = target;
+      this.quickAddData = { group_name: '', remarks: '' };
+      this.quickAddVisible = true;
+    },
+    onSubmitQuickAdd({ firstError }) {
+      if (firstError) {
+        return;
+      }
+      let that = this;
+      wafIPGroupAddApi({ ...this.quickAddData })
+        .then((res) => {
+          if (res.code !== 0) {
+            that.$message.warning(res.msg);
+            return;
+          }
+          that.$message.success('添加成功');
+          that.quickAddVisible = false;
+          // 刷新下拉后自动选中刚建的组，省掉用户再去下拉里找一遍
+          const newCode = res.data?.group_code;
+          that.loadGroupOptions(() => {
+            if (!newCode) {
+              return;
+            }
+            if (that.quickAddTarget === 'edit') {
+              that.formEditData.ip_group_code = newCode;
+            } else {
+              that.formData.ip_group_code = newCode;
+            }
+          });
+        });
     },
     // 当任务类型改变时，自动填充默认配置
     onBatchTypeChange(value) {

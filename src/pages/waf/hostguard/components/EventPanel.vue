@@ -162,11 +162,11 @@ export default Vue.extend({
       this.getList();
     },
     handleFilterIP(row) {
-      this.searchFormData.ip = row.row.ip;
+      this.searchFormData.ip = row.ip;
       this.onSearch();
     },
     handleBan(row) {
-      this.banIP = row.row.ip;
+      this.banIP = row.ip;
       this.banVisible = true;
     },
     onBanDone() {
@@ -174,7 +174,7 @@ export default Vue.extend({
       this.$emit('changed');
     },
     handleWhitelist(row) {
-      const ip = row.row.ip;
+      const ip = row.ip;
       const dialogInstance = this.$dialog.confirm({
         header: this.$t('page.hostguard.confirm_whitelist_title'),
         body: this.$t('page.hostguard.confirm_whitelist_body', { ip }),

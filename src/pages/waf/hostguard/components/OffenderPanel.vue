@@ -161,25 +161,25 @@ export default Vue.extend({
     handleReset(row) {
       this.confirmThen(
         this.$t('page.hostguard.confirm_reset_title'),
-        this.$t('page.hostguard.confirm_reset_body', { ip: row.row.ip }),
-        () => wafHostGuardOffenderResetApi({ id: row.row.id }),
+        this.$t('page.hostguard.confirm_reset_body', { ip: row.ip }),
+        () => wafHostGuardOffenderResetApi({ id: row.id }),
       );
     },
     handleDelete(row) {
       this.confirmThen(
         this.$t('common.confirm_delete'),
         this.$t('common.data_delete_warning'),
-        () => wafHostGuardOffenderDelApi({ id: row.row.id }),
+        () => wafHostGuardOffenderDelApi({ id: row.id }),
       );
     },
     handlePermanentBan(row) {
       this.confirmThen(
         this.$t('page.hostguard.confirm_permanent_title'),
-        this.$t('page.hostguard.confirm_permanent_body', { ip: row.row.ip }),
+        this.$t('page.hostguard.confirm_permanent_body', { ip: row.ip }),
         () =>
           wafHostGuardBanManualApi({
-            ip: row.row.ip,
-            source: row.row.source,
+            ip: row.ip,
+            source: row.source,
             ban_minutes: 0,
             reason: this.$t('page.hostguard.reason_manual_permanent'),
           }),
@@ -188,8 +188,8 @@ export default Vue.extend({
     handleWhitelist(row) {
       this.confirmThen(
         this.$t('page.hostguard.confirm_whitelist_title'),
-        this.$t('page.hostguard.confirm_whitelist_body', { ip: row.row.ip }),
-        () => wafHostGuardWhitelistAddApi({ ip: row.row.ip }),
+        this.$t('page.hostguard.confirm_whitelist_body', { ip: row.ip }),
+        () => wafHostGuardWhitelistAddApi({ ip: row.ip }),
       );
     },
   },
