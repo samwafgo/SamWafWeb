@@ -34,6 +34,16 @@
             <t-tag v-if="row.enable === 1" theme="success" variant="light">{{ $t('page.threatip.enabled') }}</t-tag>
             <t-tag v-else theme="default" variant="light">{{ $t('page.threatip.disabled') }}</t-tag>
           </template>
+          <template #last_count="{ row }">
+            <span>{{ row.last_count }}</span>
+            <!-- 落地层含系统防火墙、但系统层还没确认落到当前快照：
+                 这正是"页面显示 ok、防火墙里其实只封了一半"的那种静默失效，必须让用户看得见 -->
+            <t-tooltip v-if="!row.landed_ok" :content="$t('page.threatip.landed_incomplete_tip')">
+              <t-tag theme="warning" variant="light" size="small" style="margin-left: 6px;">
+                {{ $t('page.threatip.landed_incomplete') }}
+              </t-tag>
+            </t-tooltip>
+          </template>
           <template #last_status="{ row }">
             <t-tag v-if="row.syncing" theme="warning" variant="light">
               {{ $t('page.threatip.syncing') }}{{ syncElapsedText(row) }}
@@ -44,7 +54,11 @@
             <span>{{ formatTs(row.last_sync_at) }}</span>
           </template>
           <template #op="slotProps">
-            <a v-if="slotProps.row.syncing" class="t-button-link t-is-disabled" :style="{ color: '#bbb', cursor: 'not-allowed' }">
+            <!-- 后端同一时刻只跑一个渠道的同步，所以只要有渠道在同步，所有行的按钮都禁用：
+                 留着能点只会让用户白等一轮再收到"已跳过" -->
+            <a v-if="anySyncing" class="t-button-link t-is-disabled"
+               :style="{ color: '#bbb', cursor: 'not-allowed' }"
+               :title="slotProps.row.syncing ? $t('page.threatip.sync_self_busy') : $t('page.threatip.sync_other_busy')">
               {{ $t('page.threatip.sync') }}
             </a>
             <a v-else class="t-button-link" @click="handleSync(slotProps)">{{ $t('page.threatip.sync') }}</a>
@@ -218,7 +232,7 @@
           { title: this.$t('page.threatip.label_parser'), width: 120, colKey: 'parser_type' },
           { title: this.$t('page.threatip.label_land'), width: 110, colKey: 'land_target' },
           { title: this.$t('page.threatip.label_enable'), width: 90, colKey: 'enable' },
-          { title: this.$t('page.threatip.last_count'), width: 100, colKey: 'last_count' },
+          { title: this.$t('page.threatip.last_count'), width: 150, colKey: 'last_count' },
           { title: this.$t('page.threatip.last_status'), width: 220, ellipsis: true, colKey: 'last_status' },
           { title: this.$t('page.threatip.last_sync_at'), width: 170, colKey: 'last_sync_at' },
           { align: 'left', width: 200, colKey: 'op', title: this.$t('common.op') },
@@ -240,6 +254,10 @@
     computed: {
       offsetTop() {
         return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
+      },
+      // 是否有任一渠道正在同步(后端全局串行，一个在跑其余点了也只会被跳过)
+      anySyncing() {
+        return this.data.some((row) => row.syncing);
       },
     },
     mounted() {
@@ -275,15 +293,17 @@
             if (resdata.code === 0) {
               this.data = resdata.data.list ?? [];
               this.pagination = { ...this.pagination, total: resdata.data.total };
-              // 收工条件：已经观察到过"同步中"、或连轮几次都没看到，就不用再轮了。
-              // (后端是异步起的 goroutine，第一次轮询时可能还没标上 syncing，所以留几次余量)
-              if (this.syncPollTimer) {
-                const anySyncing = this.data.some((row) => row.syncing);
-                if (anySyncing) {
-                  this.syncPollSawSyncing = true;
-                } else if (this.syncPollSawSyncing || this.syncPollDone >= 3) {
-                  this.stopSyncPolling();
+              if (this.anySyncing) {
+                // 定时任务触发的同步也要能跟进：进页面/翻页时发现有渠道在跑就自动开轮询，
+                // 否则按钮会一直灰着直到用户手动刷新
+                if (!this.syncPollTimer) {
+                  this.startSyncPolling();
                 }
+                this.syncPollSawSyncing = true;
+              } else if (this.syncPollTimer && (this.syncPollSawSyncing || this.syncPollDone >= 3)) {
+                // 收工：已经观察到过"同步中"、或连轮几次都没看到就不用再轮了
+                // (后端是异步起的 goroutine，第一次轮询时可能还没标上 syncing，所以留几次余量)
+                this.stopSyncPolling();
               }
             }
           })
