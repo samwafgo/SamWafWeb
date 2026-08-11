@@ -1,6 +1,6 @@
 <template>
   <div>
-    <t-alert theme="info" :message="$t('page.owasp.tuning.alert_message')" close />
+    <help-block :summary="$t('page.owasp.tuning.alert_message')" doc="guide/Owasp" />
     <t-alert theme="success" style="margin-top: 8px">
       <template #message>
         {{ $t('page.owasp.tuning.whitelist_tip') }}

@@ -23,11 +23,7 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.cc.samwaf_cc_protection')" close>
-        <template #operation>
-          <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-        </template>
-      </t-alert>
+      <help-block :summary="$t('page.cc.samwaf_cc_protection')" doc="guide/CC" />
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
@@ -650,9 +646,6 @@ export default Vue.extend({
       this.banIPListVisible = true
     },
     //跳转界面
-    handleJumpOnlineUrl() {
-      window.open(this.samwafglobalconfig.getOnlineUrl() + "/guide/CC.html");
-    },
     openRuleGenerator() {
       this.showRuleBuilderDialog = true;
     },

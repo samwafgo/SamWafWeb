@@ -35,6 +35,9 @@ Vue.use(BaiduMap, {
   ak: 'caXOspzWPw6SBPgPXtlgGng0QZXy444B'
 })
 Vue.component('t-page-header');
+// 页面顶部的功能说明区：说明短了原地折叠、长了自动进右侧抽屉，全站统一入口
+import HelpBlock from '@/components/help-block/index.vue';
+Vue.component('help-block', HelpBlock);
 
 Vue.prototype.$request = axiosInstance;
 

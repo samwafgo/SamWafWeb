@@ -1,6 +1,6 @@
 <template>
   <div>
-    <t-alert theme="warning" :message="$t('page.owasp.upgrade.alert_message')" close />
+    <help-block :summary="$t('page.owasp.upgrade.alert_message')" doc="guide/Owasp" />
     <t-descriptions :column="1" bordered>
       <t-descriptions-item :label="$t('page.owasp.upgrade.current_version')">
         {{ info.current_version || '-' }}

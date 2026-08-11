@@ -29,7 +29,7 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.access.audit.alert_message')" close></t-alert>
+      <help-block :summary="$t('page.access.audit.alert_message')" doc="guide/AccessAudit" />
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange"

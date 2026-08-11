@@ -1,10 +1,6 @@
 <template>
   <div>
-    <t-alert theme="info" :message="$t('page.attack_log.attack_log')" :close="true">
-      <template #operation>
-        <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-      </template>
-    </t-alert>
+    <help-block :summary="$t('page.attack_log.attack_log')" doc="guide/AttackLog" />
     <t-card class="list-card-container">
 
       <t-tabs v-model="attackSearchformData.rule">
@@ -381,9 +377,6 @@ export default Vue.extend({
       });
     },
     //Jump Url
-    handleJumpOnlineUrl(){
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/AttackLog.html");
-    },
     /**
      * table 排序
      */

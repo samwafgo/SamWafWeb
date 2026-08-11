@@ -14,7 +14,7 @@
         </div>
       </t-row>
 
-      <t-alert theme="info" :message="$t('page.data_retention.alert_message')" close />
+      <help-block :summary="$t('page.data_retention.alert_message')" doc="guide/DataRetention" />
 
       <div class="table-container">
         <t-table

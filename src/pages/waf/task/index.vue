@@ -17,11 +17,7 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.task.alert_message')" close>
-        <template #operation>
-          <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-        </template>
-      </t-alert>
+      <help-block :summary="$t('page.task.alert_message')" doc="guide/Task" />
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
                  :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
@@ -738,9 +734,6 @@ export default Vue.extend({
           console.log(e);
         })
         .finally(() => {});
-    },
-    handleJumpOnlineUrl(){
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/Task.html");
     },
     // 查看任务日志
     handleViewLog(e) {

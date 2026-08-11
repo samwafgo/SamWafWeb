@@ -53,11 +53,7 @@
         </t-form>
       </div>
 
-      <t-alert theme="info" :message="$t('page.rule.alert_message')" close>
-        <template #operation>
-          <span @click="handleJumpOnlineUrl">{{$t('page.rule.rule_online_document')}}</span>
-        </template>
-      </t-alert>
+      <help-block :summary="$t('page.rule.alert_message')" doc="guide/Rule" />
       <div class="table-container">
         <t-table
           :columns="columns"
@@ -545,9 +541,6 @@ export default Vue.extend({
       this.clearAllVisible = false;
     },
     //跳转界面
-    handleJumpOnlineUrl(){
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/Rule.html");
-    },
     // 修改规则状态
     changeRuleStatus(value, row) {
       // value 当前状态 true/1 启动, false/0 关闭，点击时应该切换为相反的状态

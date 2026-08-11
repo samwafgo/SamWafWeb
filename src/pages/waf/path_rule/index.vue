@@ -15,7 +15,7 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.path_rule.alert_message')" close />
+      <help-block :summary="$t('page.path_rule.alert_message')" />
       <div class="table-container">
         <t-table
           :columns="columns"

@@ -18,8 +18,16 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.threatip.alert_message')" close />
-      <t-alert theme="warning" :message="$t('page.threatip.op_help')" close />
+      <help-block
+        :summary="$t('page.threatip.alert_message')"
+        :items="helpItems"
+        :note="$t('page.threatip.help_note')"
+        :title="$t('page.threatip.help_title')"
+        doc="guide/ThreatIP"
+        :links="[{ label: $t('page.threatip.doc_feeds'), doc: 'guide/ThreatIP#常用订阅源' },
+                 { label: $t('page.threatip.doc_firewall'), doc: 'guide/FirewallIPBlock' }]"
+        storage-key="threatip"
+      />
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange"
@@ -258,6 +266,15 @@
       // 是否有任一渠道正在同步(后端全局串行，一个在跑其余点了也只会被跳过)
       anySyncing() {
         return this.data.some((row) => row.syncing);
+      },
+      // 四个操作各自做了什么，拆成条目比一整段文字好扫
+      helpItems() {
+        return [
+          { k: this.$t('page.threatip.enable_op'), v: this.$t('page.threatip.help_enable'), tone: 'brand' },
+          { k: this.$t('page.threatip.disable_op'), v: this.$t('page.threatip.help_disable') },
+          { k: this.$t('page.threatip.sync_op'), v: this.$t('page.threatip.help_sync'), tone: 'brand' },
+          { k: this.$t('page.threatip.delete_op'), v: this.$t('page.threatip.help_delete'), tone: 'danger' },
+        ];
       },
     },
     mounted() {

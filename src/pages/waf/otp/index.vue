@@ -9,11 +9,7 @@
 
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.otp.alert_message')" close>
-        <template #operation>
-          <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-        </template>
-      </t-alert>
+      <help-block :summary="$t('page.otp.alert_message')" doc="guide/Otp" />
       <div class="table-container">
         <t-form v-if="!isBind" :data="formData" ref="form" :rules="rules" @submit="onBindSubmit" :labelWidth="200">
           <t-form-item style="text-align: center">
@@ -298,9 +294,6 @@
         this.resetIdx();
       },
 
-      handleJumpOnlineUrl(){
-        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/Otp.html");
-      },
     },
   });
 </script>

@@ -23,15 +23,11 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.sslorder.alert_message')" close>
-        <template #operation>
-          <t-space>
-            <span @click="handleSslHttpCheck" class="highlight-link">{{ $t('page.sslorder.ssl_http_check_setting')
-            }}</span>
-            <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-          </t-space>
+      <help-block :summary="$t('page.sslorder.alert_message')" doc="guide/SSL">
+        <template #actions>
+          <span @click="handleSslHttpCheck" class="highlight-link">{{ $t('page.sslorder.ssl_http_check_setting') }}</span>
         </template>
-      </t-alert>
+      </help-block>
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
@@ -1481,9 +1477,6 @@ export default Vue.extend({
     onCancel() {
       this.confirmVisible = false;
       this.deleteIdx = -1;
-    },
-    handleJumpOnlineUrl() {
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/SSL.html");
     },
     onClickCloseBtn() {
       this.addFormVisible = false;

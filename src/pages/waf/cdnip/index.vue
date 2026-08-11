@@ -1,7 +1,7 @@
 <template>
   <div>
     <t-card class="list-card-container">
-      <t-alert theme="info" :message="$t('page.cdnip.alert_message')" close style="margin-bottom: 12px;" />
+      <help-block :summary="$t('page.cdnip.alert_message')" doc="guide/CDNIP" style="margin-bottom: 12px;" />
       <t-table :columns="columns" :data="data" rowKey="provider" verticalAlign="top" :hover="true" :loading="loading">
         <template #tier="{ row }">
           <t-tag v-if="row.tier === 'A'" theme="success" variant="light">{{ $t('page.cdnip.tier_public') }}</t-tag>

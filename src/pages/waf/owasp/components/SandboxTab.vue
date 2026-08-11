@@ -1,6 +1,6 @@
 <template>
   <div>
-    <t-alert theme="info" :message="$t('page.owasp.sandbox.alert_message')" close />
+    <help-block :summary="$t('page.owasp.sandbox.alert_message')" doc="guide/Owasp" />
     <t-row :gutter="16">
       <t-col :span="6">
         <t-form :data="form" :labelWidth="90" @submit="onSubmit">

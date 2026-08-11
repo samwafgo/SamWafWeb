@@ -416,10 +416,6 @@ export default Vue.extend({
         .finally(() => {
         });
     },
-    //跳转界面
-    handleJumpOnlineUrl() {
-      window.open(this.samwafglobalconfig.getOnlineUrl() + "/guide/CC.html");
-    },
   },
 });
 </script>

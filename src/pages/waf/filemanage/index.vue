@@ -18,8 +18,7 @@
         </div>
       </t-row>
       
-      <t-alert theme="info" :message="$t('page.filemanage.alert_message')" close>
-      </t-alert>
+      <help-block :summary="$t('page.filemanage.alert_message')" doc="guide/FileManage" />
       
       <div class="table-container">
         <t-table 

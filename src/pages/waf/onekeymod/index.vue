@@ -22,12 +22,7 @@
         </div>
       </t-row>
 
-      <t-alert theme="info" :message="$t('page.one_key_mod.modify_logs')" close>
-        <template #operation>
-
-          <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-        </template>
-      </t-alert>
+      <help-block :summary="$t('page.one_key_mod.modify_logs')" doc="guide/OneKeyMod" />
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
@@ -353,9 +348,6 @@ import {
           .finally(() => {});
       },
       //跳转界面
-      handleJumpOnlineUrl(){
-        window.open(this.samwafglobalconfig.getOnlineUrl()+"/guide/OneKeyMod.html");
-      },
       //一键修改
       handleOneKeyModify(){
         let that = this

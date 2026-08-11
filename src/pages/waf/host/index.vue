@@ -30,11 +30,7 @@
       </t-row>
 
       <div class="table-container">
-        <t-alert theme="info" :message="$t('page.host.core_features')" close>
-          <template #operation>
-            <span @click="handleJumpOnlineUrl">{{ $t('common.online_document') }}</span>
-          </template>
-        </t-alert>
+        <help-block :summary="$t('page.host.core_features')" doc="guide/Host" />
         <t-table :columns="columns" size="small" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign"
                  :hover="hover" :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
                  @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"  @sort-change="onSortChange"
@@ -1233,9 +1229,6 @@ export default Vue.extend({
       this.getList("")
     },
     // 跳转界面
-    handleJumpOnlineUrl() {
-      window.open(`${this.samwafglobalconfig.getOnlineUrl()  }/guide/Host.html`);
-    },
     // 更改teatarea
     updateTextareaEdit(event) {
       // this.formEditData = event.target.value;

@@ -19,12 +19,12 @@
           </t-form>
         </div>
       </t-row>
-      <t-alert theme="info" :message="$t('page.ipgroup.alert_message')" close>
+      <help-block :summary="$t('page.ipgroup.alert_message')" doc="guide/IPGroup">
         <!-- 手工维护之外还能定时批量导入，这里给个入口，否则用户不知道有这功能 -->
-        <template #operation>
+        <template #actions>
           <span class="link-text" @click="handleJumpBatchTask">{{ $t('page.ipgroup.goto_batch_task') }}</span>
         </template>
-      </t-alert>
+      </help-block>
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange"

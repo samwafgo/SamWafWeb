@@ -1,7 +1,7 @@
 <template>
   <div>
     <t-card class="list-card-container">
-      <t-alert theme="info" :message="$t('page.owasp.alert_message')" close />
+      <help-block :summary="$t('page.owasp.alert_message')" doc="guide/Owasp" />
       <t-tabs v-model="activeTab" theme="card">
         <t-tab-panel value="rules" :label="$t('page.owasp.tab_rules')">
           <rules-tab v-if="activeTab === 'rules'" :init-keyword="rulesInitKeyword" @ready="rulesInitKeyword = ''" @go-tuning="onGoTuning" />
