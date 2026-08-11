@@ -1,6 +1,8 @@
 <template>
   <div>
-    <help-block :summary="$t('page.visit_log.visit_log')" doc="guide/VisitLog" />
+    <help-block :summary="$t('page.visit_log.visit_log')" doc="guide/VisitLog">
+      <template #actions><ip-lookup ref="ipLookup" /></template>
+    </help-block>
 
     <!-- 日志配置区域 -->
     <t-card class="log-config-card" style="margin-bottom: 16px;">
@@ -228,10 +230,9 @@
             <span>{{ host_nickname_dic[row.host_code] || '-' }}</span>
           </template>
           <template #src_ip="{ row }">
-            <span>{{ row.src_ip }}</span>
-            <t-button theme="primary" shape="round" size="small" style="margin-left: 8px;" @click="handleAddipblock(row)">
-              {{ $t('page.visit_log.detail.add_to_deny_list') }}
-            </t-button>
+            <t-tooltip :content="$t('common.ip_lookup.click_tip')">
+              <a class="ipl-link" @click="openIpLookup(row.src_ip)">{{ row.src_ip }}</a>
+            </t-tooltip>
           </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickIPDetail(slotProps)" v-if="attack_ip == ''">{{
@@ -379,9 +380,6 @@ import { NowDate, ConvertStringToUnix, ConvertDateToString, ConvertUnixToDate } 
 import {
   allhost
 } from '@/apis/host';
-import {
-  wafIPBlockAddApi
-} from '@/apis/ipblock';
 import {
   get_detail_by_item_api,
   edit_system_config_api
@@ -922,6 +920,11 @@ export default Vue.extend({
     next(); // 继续后续的导航解析过程
   },
   methods: {
+    // 点日志里的 IP 直接开归属查询弹窗，省得用户复制粘贴
+    openIpLookup(ip) {
+      if (!ip) return;
+      this.$refs.ipLookup && this.$refs.ipLookup.open(ip);
+    },
     // 收集路由 query 中的显式筛选意图。
     // 用 hasOwnProperty 判定"存在"：?action= 得到 ''、?action 得到 null，
     // 这两种都属于"调用方明确要求把该字段设成空"，用 != null 判定会漏掉后者
@@ -1530,54 +1533,6 @@ export default Vue.extend({
       this.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
       this.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
     },
-    handleAddipblock(row) {
-      const ip = row.src_ip;
-      const host_code = row.host_code;
-
-      if (!host_code) {
-        this.$message.warning("当前网站不存在");
-        return
-      }
-
-      let that = this
-
-      const confirmDia = this.$dialog.confirm({
-        header: this.$t('page.visit_log.detail.add_to_deny_list_confirm_header'),
-        body: this.$t('page.visit_log.detail.add_to_deny_list_confirm_body'),
-        confirmBtn: this.$t('common.confirm'),
-        cancelBtn: this.$t('common.cancel'),
-        onConfirm: ({ e }) => {
-          //add deny IP
-          let formData = {
-            host_code: host_code,
-            ip: ip,
-            remarks: '手工增加',
-          };
-          wafIPBlockAddApi({
-            ...formData
-          })
-            .then((res) => {
-              let resdata = res
-              console.log(resdata)
-              if (resdata.code === 0) {
-                that.$message.success(resdata.msg);
-              } else {
-                that.$message.warning(resdata.msg);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            })
-            .finally(() => { });
-
-          confirmDia.destroy();
-        },
-        onClose: ({ e, trigger }) => {
-          console.log('关闭弹窗');
-          confirmDia.hide();
-        },
-      });
-    },
 
     // 获取过滤后的搜索数据
     getFilteredSearchData() {
@@ -1742,5 +1697,15 @@ export default Vue.extend({
 
 .t-button+.t-button {
   margin-left: @spacer;
+}
+
+.ipl-link {
+  color: var(--td-brand-color);
+  cursor: pointer;
+}
+
+.ipl-link:hover {
+  color: var(--td-brand-color-hover);
+  text-decoration: underline;
 }
 </style>

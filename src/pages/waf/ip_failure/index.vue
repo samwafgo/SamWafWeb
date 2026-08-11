@@ -6,9 +6,15 @@
           <div class="table-container">
             <div class="operation-container">
               <t-button theme="primary" @click="getList"> {{ $t('common.refresh') }} </t-button>
+              <ip-lookup ref="ipLookup" :style="{ marginLeft: '8px' }" />
             </div>
             <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
               :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange">
+              <template #ip="{ row }">
+                <t-tooltip :content="$t('common.ip_lookup.click_tip')">
+                  <a class="ipl-link" @click="openIpLookup(row.ip)">{{ row.ip }}</a>
+                </t-tooltip>
+              </template>
               <template #op="slotProps">
                 <a class="t-button-link" @click="handleClickDetail(slotProps)">{{ $t('common.details') }}</a>
                 <a class="t-button-link" @click="handleClickUnban(slotProps)" style="margin-left: 8px;">{{ $t('page.ip_failure.unban') }}</a>
@@ -120,7 +126,7 @@ export default Vue.extend({
         pageSize: 10
       },
       columns: [
-        { title: this.$t('page.ip_failure.ip'), colKey: 'ip', width: 150 },
+        { title: this.$t('page.ip_failure.ip'), colKey: 'ip', cell: 'ip', width: 150 },
         { title: this.$t('page.ip_failure.fail_count'), colKey: 'fail_count', width: 100 },
         { title: this.$t('page.ip_failure.trigger_minutes'), colKey: 'trigger_minutes', width: 120 },
         { title: this.$t('page.ip_failure.trigger_count'), colKey: 'trigger_count', width: 120 },
@@ -142,6 +148,11 @@ export default Vue.extend({
     this.getList();
   },
   methods: {
+    // 点日志里的 IP 直接开归属查询弹窗，省得用户复制粘贴
+    openIpLookup(ip) {
+      if (!ip) return;
+      this.$refs.ipLookup && this.$refs.ipLookup.open(ip);
+    },
     goToRulePage() {
       this.$router.push({ name: 'WafRule' });
     },
@@ -318,5 +329,15 @@ export default Vue.extend({
       }
     }
   }
+}
+
+.ipl-link {
+  color: var(--td-brand-color);
+  cursor: pointer;
+}
+
+.ipl-link:hover {
+  color: var(--td-brand-color-hover);
+  text-decoration: underline;
 }
 </style>

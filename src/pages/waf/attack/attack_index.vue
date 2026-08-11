@@ -1,9 +1,12 @@
 <template>
   <div>
-    <help-block :summary="$t('page.attack_log.attack_log')" doc="guide/AttackLog" />
+    <help-block :summary="$t('page.attack_log.attack_log')" doc="guide/AttackLog">
+      <template #actions><ip-lookup ref="ipLookup" /></template>
+    </help-block>
     <t-card class="list-card-container">
 
-      <t-tabs v-model="attackSearchformData.rule">
+      <!-- 切 tab 直接查，不用再点一次「查询」 -->
+      <t-tabs v-model="attackSearchformData.rule" @change="handleTabChange">
         <t-tab-panel v-for="(item, index) in attackTags" :key="index" :value="item.value" :label="item.label">
         </t-tab-panel>
       </t-tabs>
@@ -45,10 +48,10 @@
             <t-tag v-if="row.rule !== ''" shape="round" theme="primary" variant="outline">{{row.rule}}</t-tag>
           </template>
           <template #ip="{ row }">
-            <span>{{ row.ip }}</span>
-            <t-button theme="primary" shape="round" size="small" style="margin-left: 8px;" @click="handleAddipblock(row)">
-              {{ $t('page.visit_log.detail.add_to_deny_list') }}
-            </t-button>
+            <!-- 点 IP 直接开归属查询：排查时最想知道的就是「这个IP现在被什么拦着」 -->
+            <t-tooltip :content="$t('common.ip_lookup.click_tip')">
+              <a class="ipl-link" @click="openIpLookup(row.ip)">{{ row.ip }}</a>
+            </t-tooltip>
           </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickDetail(slotProps)">{{$t('common.details')}}</a>
@@ -117,9 +120,6 @@ import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
 import {attackIpListApi,allattacktaglist,deleteTagByNameApi} from '@/apis/waflog/attacklog';
 import WebLogList  from './index.vue'
-import {
-  wafIPBlockAddApi
-} from '@/apis/ipblock';
 export default Vue.extend({
   name: 'WebLogAttackListBase',
   components: {
@@ -252,6 +252,16 @@ export default Vue.extend({
     this.getList("");
   },
   methods: {
+    // 点日志里的 IP 直接开归属查询弹窗，省得用户复制粘贴
+    openIpLookup(ip) {
+      if (!ip) return;
+      this.$refs.ipLookup && this.$refs.ipLookup.open(ip);
+    },
+    // 切 tab 等于换了查询条件，回第一页再拉；否则停在上一次的页码上容易看到空列表
+    handleTabChange() {
+      this.pagination.current = 1;
+      this.getList('all');
+    },
     getIpTags(){
       allattacktaglist({
       }).then((res) => {
@@ -330,51 +340,6 @@ export default Vue.extend({
     },
     resetIdx() {
       this.deleteIdx = -1;
-    },
-    handleAddipblock(row) {
-      const ip = row.ip;
-
-      // 在攻击统计页面，我们需要让用户选择要添加到哪个网站
-      // 由于该页面没有host_code，我们简化处理，使用空字符串
-      // 实际上可能需要弹窗让用户选择网站
-      let that = this
-
-      const confirmDia = this.$dialog.confirm({
-        header: this.$t('page.visit_log.detail.add_to_deny_list_confirm_header'),
-        body: this.$t('page.visit_log.detail.add_to_deny_list_confirm_body'),
-        confirmBtn: this.$t('common.confirm'),
-        cancelBtn: this.$t('common.cancel'),
-        onConfirm: ({ e }) => {
-          //add deny IP
-          let formData = {
-            host_code: '', // 攻击统计页面可能需要全局黑名单或选择网站
-            ip: ip,
-            remarks: '手工增加',
-          };
-          wafIPBlockAddApi({
-            ...formData
-          })
-            .then((res) => {
-              let resdata = res
-              console.log(resdata)
-              if (resdata.code === 0) {
-                that.$message.success(resdata.msg);
-              } else {
-                that.$message.warning(resdata.msg);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            })
-            .finally(() => { });
-
-          confirmDia.destroy();
-        },
-        onClose: ({ e, trigger }) => {
-          console.log('关闭弹窗');
-          confirmDia.hide();
-        },
-      });
     },
     //Jump Url
     /**
@@ -575,5 +540,15 @@ export default Vue.extend({
 @import '@/style/variables';
 .t-button+.t-button {
   margin-left: @spacer;
+}
+
+.ipl-link {
+  color: var(--td-brand-color);
+  cursor: pointer;
+}
+
+.ipl-link:hover {
+  color: var(--td-brand-color-hover);
+  text-decoration: underline;
 }
 </style>

@@ -23,6 +23,9 @@
           :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
           @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
           :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
+          <template #role="{ row }">
+            <t-tag theme="primary" variant="light">{{ roleLabel(row.role) }}</t-tag>
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickResetPwd(slotProps)">{{$t('page.account.reset_password')}}</a>
             <a class="t-button-link" @click="handleClickResetOtp(slotProps)">{{$t('page.account.reset_otp')}}</a>
@@ -312,6 +315,11 @@
     },
 
     methods: {
+      // 列表里存的是 superAdmin 这类原始值，直接显示用户看不懂，转成配置里的中文名
+      roleLabel(v) {
+        const found = this.roleType.find((o) => o.value === v);
+        return found ? found.label : (v || '-');
+      },
       loadHostList(){
         /* let that = this;
         allhost().then((res) => {

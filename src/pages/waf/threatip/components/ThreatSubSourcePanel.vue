@@ -49,7 +49,15 @@
           :hover="true"
           :pagination="ipPagination"
           :loading="ipLoading"
-          @page-change="onIPPageChange" />
+          @page-change="onIPPageChange">
+          <template #ip="{ row }">
+            <t-tooltip :content="$t('common.ip_lookup.click_tip')">
+              <a class="ipl-link" @click="openIpLookup(row.ip)">{{ row.ip }}</a>
+            </t-tooltip>
+          </template>
+        </t-table>
+        <!-- 列表里是网段，点了按其中一个代表IP查，弹窗会说明查的是哪个 -->
+        <ip-lookup ref="ipLookup" hide-trigger />
       </div>
     </t-dialog>
   </div>
@@ -93,7 +101,7 @@
         ipData: [],
         ipPagination: { total: 0, current: 1, pageSize: 10 },
         ipColumns: [
-          { title: 'IP / CIDR', align: 'left', colKey: 'ip' },
+          { title: 'IP / CIDR', align: 'left', colKey: 'ip', cell: 'ip' },
         ],
       };
     },
@@ -101,6 +109,11 @@
       this.loadSummary();
     },
     methods: {
+    // 列表里点某条网段/IP，直接开归属查询；网段会由后端取代表IP并说明
+    openIpLookup(ip) {
+      if (!ip) return;
+      this.$refs.ipLookup && this.$refs.ipLookup.open(ip);
+    },
       landTargetLabel(v) {
         const found = this.landOptions.find((o) => o.value === v);
         return found ? found.label : v;
@@ -173,4 +186,14 @@
     font-size: 12px;
     color: var(--td-text-color-placeholder);
   }
+
+.ipl-link {
+  color: var(--td-brand-color);
+  cursor: pointer;
+}
+
+.ipl-link:hover {
+  color: var(--td-brand-color-hover);
+  text-decoration: underline;
+}
 </style>

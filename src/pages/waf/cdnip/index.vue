@@ -1,7 +1,9 @@
 <template>
   <div>
     <t-card class="list-card-container">
-      <help-block :summary="$t('page.cdnip.alert_message')" doc="guide/CDNIP" style="margin-bottom: 12px;" />
+      <help-block :summary="$t('page.cdnip.alert_message')" doc="guide/CDNIP" style="margin-bottom: 12px;">
+        <template #actions><ip-lookup ref="ipLookup" /></template>
+      </help-block>
       <t-table :columns="columns" :data="data" rowKey="provider" verticalAlign="top" :hover="true" :loading="loading">
         <template #tier="{ row }">
           <t-tag v-if="row.tier === 'A'" theme="success" variant="light">{{ $t('page.cdnip.tier_public') }}</t-tag>
@@ -109,7 +111,13 @@
           </t-form-item>
         </t-form>
         <t-table :columns="ipColumns" :data="ipData" rowKey="ip" verticalAlign="top" :hover="true"
-                 :pagination="ipPagination" :loading="ipLoading" @page-change="onIPPageChange" />
+                 :pagination="ipPagination" :loading="ipLoading" @page-change="onIPPageChange">
+          <template #ip="{ row }">
+            <t-tooltip :content="$t('common.ip_lookup.click_tip')">
+              <a class="ipl-link" @click="openIpLookup(row.ip)">{{ row.ip }}</a>
+            </t-tooltip>
+          </template>
+        </t-table>
       </div>
     </t-dialog>
   </div>
@@ -157,7 +165,7 @@
         ipLoading: false,
         ipData: [],
         ipPagination: { total: 0, current: 1, pageSize: 10 },
-        ipColumns: [{ title: 'IP / CIDR', align: 'left', colKey: 'ip' }],
+        ipColumns: [{ title: 'IP / CIDR', align: 'left', colKey: 'ip', cell: 'ip' }],
       };
     },
     computed: {
@@ -204,6 +212,11 @@
       this.loadList();
     },
     methods: {
+    // 列表里点某条网段/IP，直接开归属查询；网段会由后端取代表IP并说明
+    openIpLookup(ip) {
+      if (!ip) return;
+      this.$refs.ipLookup && this.$refs.ipLookup.open(ip);
+    },
       formatTs(ts) {
         if (!ts) return '-';
         return new Date(ts * 1000).toLocaleString();
@@ -384,4 +397,14 @@
   .t-button-link + .t-button-link {
     margin-left: 12px;
   }
+
+.ipl-link {
+  color: var(--td-brand-color);
+  cursor: pointer;
+}
+
+.ipl-link:hover {
+  color: var(--td-brand-color-hover);
+  text-decoration: underline;
+}
 </style>

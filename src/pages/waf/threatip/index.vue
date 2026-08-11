@@ -27,7 +27,9 @@
         :links="[{ label: $t('page.threatip.doc_feeds'), doc: 'guide/ThreatIP#常用订阅源' },
                  { label: $t('page.threatip.doc_firewall'), doc: 'guide/FirewallIPBlock' }]"
         storage-key="threatip"
-      />
+      >
+        <template #actions><ip-lookup /></template>
+      </help-block>
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange"
