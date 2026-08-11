@@ -40,6 +40,13 @@
           <t-form-item>
             <t-button theme="primary" @click="reloadIPs">{{ $t('common.search') }}</t-button>
           </t-form-item>
+          <!-- 默认列的是"实际进了防火墙的"，勾上才看被排除掉的那些。
+               没有这个开关的话，用户看到「已排除N条」却无处查证是哪几条、被谁排的 -->
+          <t-form-item>
+            <t-checkbox v-model="ipSearch.onlyExcluded" @change="reloadIPs">
+              {{ $t('page.threatip.only_excluded') }}
+            </t-checkbox>
+          </t-form-item>
         </t-form>
         <t-table
           :columns="ipColumns"
@@ -54,6 +61,15 @@
             <t-tooltip :content="$t('common.ip_lookup.click_tip')">
               <a class="ipl-link" @click="openIpLookup(row.ip)">{{ row.ip }}</a>
             </t-tooltip>
+          </template>
+          <template #excluded_by="{ row }">
+            <span v-if="!row.excluded_by">-</span>
+            <span v-else>
+              <code class="tie-code">{{ row.excluded_by }}</code>
+              <t-tag v-if="row.reason" theme="warning" variant="light" size="small" :style="{ marginLeft: '6px' }">
+                {{ row.reason }}
+              </t-tag>
+            </span>
           </template>
         </t-table>
         <!-- 列表里是网段，点了按其中一个代表IP查，弹窗会说明查的是哪个 -->
@@ -96,12 +112,13 @@
         ipDialogVisible: false,
         ipDialogTitle: '',
         ipChannelCode: '',
-        ipSearch: { keyword: '' },
+        ipSearch: { keyword: '', onlyExcluded: false },
         ipLoading: false,
         ipData: [],
         ipPagination: { total: 0, current: 1, pageSize: 10 },
         ipColumns: [
           { title: 'IP / CIDR', align: 'left', colKey: 'ip', cell: 'ip' },
+          { title: this.$t('page.threatip.excluded_by'), align: 'left', width: 280, colKey: 'excluded_by', cell: 'excluded_by' },
         ],
       };
     },
@@ -151,13 +168,14 @@
         wafThreatIPLandedIPsApi({
           code: this.ipChannelCode,
           keyword: this.ipSearch.keyword,
+          only_excluded: this.ipSearch.onlyExcluded ? 1 : 0,
           pageIndex: this.ipPagination.current,
           pageSize: this.ipPagination.pageSize,
         })
           .then((res) => {
             if (res.code === 0) {
-              const list = res.data.list ?? [];
-              this.ipData = list.map((ip) => ({ ip }));
+              // 后端已返回 {ip, excluded_by, reason} 对象，不需要再包一层
+              this.ipData = res.data.list ?? [];
               this.ipPagination = { ...this.ipPagination, total: res.data.total };
             }
           })

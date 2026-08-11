@@ -87,10 +87,42 @@
                   <span class="ipl-scope">{{ hit.scope }}</span>
                   <code v-if="hit.matched" class="ipl-matched">{{ hit.matched }}</code>
                   <span class="ipl-spacer"></span>
+                  <!-- 威胁情报的误报只能在本地排除：订阅源是全量快照，手工从防火墙删掉下次同步就回来。
+                       这里直接带上 hit.matched(实际命中的那条原文，可能是网段)去排除，
+                       用户不必自己判断该排单IP还是整段——排错了方向是最常见的"排了没生效" -->
+                  <a v-if="hit.source === 'threat_ip'" class="ipl-exclude-link" @click="openExclude(hit)">
+                    {{ $t('common.ip_lookup.exclude_btn') }}
+                  </a>
                   <span class="ipl-effect">{{ effectText(hit.effect) }}</span>
                 </div>
                 <div v-if="hit.detail" class="ipl-detail">{{ hit.detail }}</div>
               </div>
+            </div>
+
+            <!-- 排除表单：就地填，不跳页 -->
+            <div v-if="excludeForm" class="ipl-allow-form">
+              <div class="ipl-allow-title">{{ $t('common.ip_lookup.exclude_title') }}</div>
+              <t-alert theme="warning" size="small" :style="{ marginBottom: '12px' }">
+                <template #message>
+                  <div>{{ $t('common.ip_lookup.exclude_warn') }}</div>
+                  <div class="ipl-warn-list">{{ $t('common.ip_lookup.exclude_scope_hint', { entry: excludeForm.entry }) }}</div>
+                </template>
+              </t-alert>
+              <t-form :data="excludeForm" label-width="72px" colon>
+                <t-form-item :label="$t('common.ip_lookup.exclude_entry')">
+                  <t-input v-model="excludeForm.entry" :style="{ width: '100%' }" />
+                </t-form-item>
+                <t-form-item :label="$t('common.remarks')">
+                  <t-input v-model="excludeForm.remarks" :style="{ width: '100%' }" />
+                </t-form-item>
+                <t-form-item>
+                  <t-button variant="outline" size="small" @click="excludeForm = null">{{ $t('common.close') }}</t-button>
+                  <t-button theme="primary" size="small" :loading="excludeSaving" :style="{ marginLeft: '8px' }"
+                            @click="submitExclude">
+                    {{ $t('common.confirm') }}
+                  </t-button>
+                </t-form-item>
+              </t-form>
             </div>
 
             <!-- 加白/加黑都收在这儿，不再散在各个列表里 -->
@@ -187,6 +219,7 @@ import { wafIPLookupApi } from '@/apis/iplookup';
 import { wafIPWhiteAddApi } from '@/apis/ipwhite';
 import { wafIPBlockAddApi } from '@/apis/ipblock';
 import { allhost } from '@/apis/host';
+import { wafThreatIPExcludeAddApi } from '@/apis/threatip';
 
 // 全局站点在库里就是一条 host="全局网站"、port=0 的普通记录，code 是 uuid。
 // 全站其它页面(anticc / host / SpiderActive)也是按这个字面量认的，保持一致。
@@ -227,6 +260,9 @@ export default Vue.extend({
       actionMode: '',
       allowLoading: false,
       allowForm: { host_code: '', remarks: '', target_layer: 'waf' },
+      // null = 收起；对象 = 展开威胁情报误报排除表单
+      excludeForm: null,
+      excludeSaving: false,
     };
   },
   computed: {
@@ -306,6 +342,7 @@ export default Vue.extend({
     },
     onClosed() {
       this.loading = false;
+      this.excludeForm = null;
     },
     // 按来源分批并发查：名单类和缓存类几十毫秒就回来了，
     // 威胁情报/CDN 要编译大集合，慢的那批不该挡住快的先出结果
@@ -367,6 +404,39 @@ export default Vue.extend({
       if (effect === 'allow') return 'success';
       if (effect === 'block') return 'danger';
       return 'warning';
+    },
+    // 打开威胁情报误报排除表单。
+    // entry 默认取 hit.matched(实际命中的那条原文)而不是查询的那个 IP：
+    // 快照里如果是 1.2.3.0/24，只排 1.2.3.4 是不生效的——小的排不掉大的。
+    openExclude(hit) {
+      const date = new Date();
+      const day = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      this.excludeForm = {
+        entry: hit.matched || this.result.ip,
+        remarks: this.$t('common.ip_lookup.exclude_reason_tpl', {
+          date: day,
+          ip: this.result.ip,
+          scope: hit.scope || '-',
+        }),
+      };
+    },
+    submitExclude() {
+      const entry = (this.excludeForm.entry || '').trim();
+      if (!entry) return;
+      this.excludeSaving = true;
+      wafThreatIPExcludeAddApi({ entry, remarks: this.excludeForm.remarks || '' })
+        .then((res) => {
+          if (res.code === 0) {
+            this.$message.success(res.msg);
+            this.excludeForm = null;
+            this.doQuery(); // 重查一遍，让用户当场看到它已不再被威胁情报拦
+          } else {
+            this.$message.error(res.msg);
+          }
+        })
+        .finally(() => {
+          this.excludeSaving = false;
+        });
     },
     effectText(effect) {
       if (effect === 'allow') return this.$t('common.ip_lookup.effect_allow');
@@ -619,6 +689,12 @@ export default Vue.extend({
   border-radius: 2px;
   background: var(--td-bg-color-secondarycontainer);
   color: var(--td-text-color-secondary);
+}
+.ipl-exclude-link {
+  font-size: 12px;
+  margin-right: 10px;
+  color: var(--td-brand-color);
+  cursor: pointer;
 }
 
 .ipl-effect {
