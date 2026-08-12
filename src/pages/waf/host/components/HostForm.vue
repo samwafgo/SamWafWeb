@@ -333,7 +333,7 @@
                 <t-option value="cloudflare" label="Cloudflare (CF-Connecting-IP)" />
                 <t-option value="fastly" label="Fastly (Fastly-Client-IP)" />
                 <t-option value="cloudfront" label="AWS CloudFront" />
-                <t-option value="edgeone" label="腾讯云 EdgeOne (EO-Client-IP)" />
+                <t-option value="edgeone" label="腾讯云 EdgeOne (EO-Connecting-IP)" />
                 <t-option value="aliyun" label="阿里云 CDN (Ali-Cdn-Real-Ip)" />
                 <t-option value="akamai" label="Akamai (True-Client-IP)" />
               </t-select>
@@ -354,19 +354,33 @@
                 <div class="limit-mode-desc">{{ $t('page.host.cdn_trusted_ips_tips') }}</div>
               </div>
             </t-form-item>
-            <t-form-item v-if="formData.ip_mode === 'proxy' && formData.ip_source_mode === 'header'" :label="$t('page.host.ip_real_header')" name="ip_real_header">
-              <t-input :style="{ width: '320px' }" v-model="formData.ip_real_header" placeholder="X-Real-IP / CF-Connecting-IP"></t-input>
+            <!-- 真实IP头名：指定头模式必填；CDN预设模式选填(留空用厂商默认头，填了可覆盖，
+                 例如在 EdgeOne 控制台开了自定义「客户端IP头部」的场景) -->
+            <t-form-item v-if="showIpRealHeader" :label="$t('page.host.ip_real_header')" name="ip_real_header">
+              <div>
+                <t-input :style="{ width: '320px' }" v-model="formData.ip_real_header"
+                         :placeholder="cdnDefaultHeader || 'X-Real-IP / CF-Connecting-IP'"></t-input>
+                <div v-if="formData.ip_source_mode === 'cdn_preset'" class="limit-mode-desc">
+                  {{ $t('page.host.ip_real_header_cdn_desc', { header: cdnDefaultHeader || '-' }) }}
+                </div>
+              </div>
             </t-form-item>
             <t-form-item v-if="formData.ip_mode === 'proxy' && formData.ip_source_mode === 'xff_depth'" :label="$t('page.host.ip_trust_depth')" name="ip_trust_depth">
               <t-input-number :style="{ width: '150px' }" v-model="formData.ip_trust_depth" :min="1" theme="column" />
             </t-form-item>
-            <t-form-item v-if="formData.ip_mode === 'proxy' && formData.ip_source_mode === 'xff_depth'"
+            <!-- 可信代理网段：三种加固模式都用得上(header 校验来源、xff_depth 跳过可信 hop、
+                 cdn_preset 在厂商无法自动拉取回源段时手填兜底) -->
+            <t-form-item v-if="showIpTrustProxies"
                          :label="$t('page.host.ip_trust_proxies')" name="ip_trust_proxies">
-              <t-tooltip class="placement top center" :content="$t('page.host.ip_trust_proxies_tips')" placement="top"
-                         :overlay-style="{ width: '280px' }" show-arrow>
+              <div>
                 <t-textarea :style="{ width: '320px' }" v-model="formData.ip_trust_proxies"
                             placeholder="172.16.0.0/12,10.0.0.0/8"></t-textarea>
-              </t-tooltip>
+                <!-- cdn_preset 且中心库没拉到回源段时，这里就是唯一的可信来源，必须填 -->
+                <div v-if="cdnTrustProxiesRequired" style="color: var(--td-error-color);">
+                  {{ $t('page.host.ip_trust_proxies_required') }}
+                </div>
+                <div class="limit-mode-desc">{{ ipTrustProxiesDesc }}</div>
+              </div>
             </t-form-item>
             <t-form-item :label="$t('page.host.exclude_url_log')" name="exclude_url_log">
               <t-tooltip class="placement top center" :content="$t('page.host.exclude_url_log_tips')" placement="top"
@@ -801,6 +815,44 @@
           cdn_preset: 'page.host.ip_source_cdn_desc',
         };
         return this.$t(map[this.formData.ip_source_mode] || 'page.host.ip_source_compat_desc');
+      },
+      // 所选 CDN 厂商的默认真实IP头(与后端 wafenginecore/clientip/providers.go 保持一致)
+      cdnDefaultHeader() {
+        const map = {
+          cloudflare: 'CF-Connecting-IP',
+          fastly: 'Fastly-Client-IP',
+          cloudfront: 'CloudFront-Viewer-Address',
+          edgeone: 'EO-Connecting-IP',
+          aliyun: 'Ali-Cdn-Real-Ip',
+          akamai: 'True-Client-IP',
+        };
+        return map[this.formData.cdn_provider] || '';
+      },
+      // 真实IP头名输入框：指定头模式必填，CDN预设模式选填(覆盖厂商默认头)
+      showIpRealHeader() {
+        return this.formData.ip_mode === 'proxy' &&
+          ['header', 'cdn_preset'].indexOf(this.formData.ip_source_mode) >= 0;
+      },
+      // 可信代理网段输入框：三种加固模式都需要
+      showIpTrustProxies() {
+        return this.formData.ip_mode === 'proxy' &&
+          ['header', 'xff_depth', 'cdn_preset'].indexOf(this.formData.ip_source_mode) >= 0;
+      },
+      // cdn_preset 且中心库没拉到该厂商回源段时，可信代理网段是唯一可用的可信来源，
+      // 两个都空后端会拒绝保存(否则所有请求都只能取到 CDN 回源节点IP)，提前标红提示
+      cdnTrustProxiesRequired() {
+        return this.formData.ip_source_mode === 'cdn_preset' &&
+          this.cdnProviderInfo && !this.cdnProviderInfo.count &&
+          !(this.formData.ip_trust_proxies || '').trim();
+      },
+      // 可信代理网段：不同模式下作用不同，分别给对应说明
+      ipTrustProxiesDesc() {
+        const map = {
+          header: 'page.host.ip_trust_proxies_header_desc',
+          xff_depth: 'page.host.ip_trust_proxies_xff_desc',
+          cdn_preset: 'page.host.ip_trust_proxies_cdn_desc',
+        };
+        return this.$t(map[this.formData.ip_source_mode] || 'page.host.ip_trust_proxies_tips');
       },
       // 判断是否需要显示HTTPS重定向提示
       shouldShowHttpsRedirectTip() {
