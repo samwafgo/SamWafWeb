@@ -317,6 +317,7 @@ export default {
       memory_usage: "Memory Usage",
       network_recv_rate: "Network Recv Rate",
       network_sent_rate: "Network Send Rate",
+      network_rate: "Network Rate",
       system_resource_trend: "System Resource Trend",
       network_traffic_trend: "Network Traffic Trend",
       qps_trend: "QPS Trend",

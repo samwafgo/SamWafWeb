@@ -317,6 +317,7 @@ export default {
       memory_usage: "内存使用率",
       network_recv_rate: "网络接收速率",
       network_sent_rate: "网络发送速率",
+      network_rate: "网络速率",
       system_resource_trend: "系统资源趋势",
       qps_trend: "QPS趋势",
       queue_trend: "队列大小趋势",
