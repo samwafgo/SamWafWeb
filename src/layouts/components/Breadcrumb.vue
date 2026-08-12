@@ -40,7 +40,7 @@ export default Vue.extend({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .tdesign-breadcrumb {
   margin-bottom: 0;

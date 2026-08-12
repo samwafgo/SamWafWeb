@@ -605,19 +605,40 @@
     }
 
     .t-button {
-      margin: 0 8px;
+      margin: 0 4px;
 
       &.header-user-btn {
-        margin: 0;
+        margin: 0 0 0 12px;
       }
     }
 
+    // 方形图标按钮：统一 36px 圆角方块 + 精致 hover
+    .t-button--shape-square {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    }
+
     .t-icon {
-      font-size: 20px;
+      font-size: 18px;
 
       &.general {
         margin-right: 16px;
       }
+    }
+  }
+
+  // 用户入口：胶囊
+  .header-user-btn {
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 20px;
+    border: 1px solid var(--td-component-stroke);
+
+    .header-user-avatar {
+      font-size: 20px;
+      color: var(--td-brand-color);
     }
   }
 
