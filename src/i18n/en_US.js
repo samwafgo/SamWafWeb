@@ -277,6 +277,7 @@ export default {
       all_visit_count: "Total Visits Today",
       not_normal_visit_count: "Abnormal IPs Today (count)",
       qps: "Current QPS",
+      compare: "vs Yesterday",
     },
     cycle_title: "Comparison of Attacks and Normal Access Over Time",
     cycle_subtitle: "(times)",
@@ -284,6 +285,11 @@ export default {
     cycle_attack_count: "Attack Count This Period",
     cycle_percent_title: "Proportion of Normal to Attack",
     cycle_percent_subtitle: "In the Period",
+    cycle_normal_ratio: "Normal Access Ratio",
+    empty_data: "No data yet",
+    announcement_title: "System Announcements",
+    announcement_detail: "View Details",
+    announcement_new: "NEW",
     ip_rank: {
       normal_title: "IP Normal Rank",
       attack_title: "IP Attack Rank",
@@ -294,6 +300,7 @@ export default {
       ip_belong: "IP Belong",
       day: "Today",
       week: "Week",
+      lookup: "View IP access details",
     },
     stats: {
       current_qps: "Current QPS",

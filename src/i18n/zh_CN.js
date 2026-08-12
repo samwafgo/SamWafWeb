@@ -277,6 +277,7 @@ export default {
       all_visit_count: "今天总访问量",
       not_normal_visit_count: "今天异常IP（个）",
       qps: "当前QPS",
+      compare: "较昨日",
     },
     cycle_title: "周期攻击与正常对比情况",
     cycle_subtitle: "(次)",
@@ -284,6 +285,11 @@ export default {
     cycle_attack_count: "本周期攻击数",
     cycle_percent_title: "正常攻击占比",
     cycle_percent_subtitle: "周期内",
+    cycle_normal_ratio: "正常访问占比",
+    empty_data: "暂无数据",
+    announcement_title: "系统公告",
+    announcement_detail: "查看详情",
+    announcement_new: "NEW",
     ip_rank: {
       normal_title: "IP正常访问排名",
       attack_title: "IP攻击访问排名",
@@ -294,6 +300,7 @@ export default {
       ip_belong: "归属地",
       day: "今日",
       week: "本周",
+      lookup: "查看该IP访问详情",
     },
     stats: {
       current_qps: "当前QPS",
