@@ -187,14 +187,6 @@ export default {
     box-shadow 0.24s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &:hover,
-  &:focus-visible {
-    transform: translateY(-4px);
-    border-color: var(--td-brand-color-3);
-    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.16);
-    outline: none;
-  }
-
   // 卡片角落装饰光斑
   &::after {
     content: '';
@@ -254,10 +246,6 @@ export default {
     }
   }
 
-  &:hover .stat-card__chip {
-    transform: scale(1.06);
-  }
-
   &__trend {
     display: inline-flex;
     align-items: center;
@@ -295,11 +283,6 @@ export default {
     transition:
       transform 0.24s cubic-bezier(0.4, 0, 0.2, 1),
       color 0.24s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  &:hover .stat-card__arrow {
-    transform: translateX(2px);
-    color: var(--td-brand-color);
   }
 
   // 首个指标卡片使用品牌色渐变背景
