@@ -211,23 +211,33 @@ export default Vue.extend({
   computed: {
     ...mapGetters('stats', ['getCurrentSystemMonitor']),
     systemInfo() {
-      return this.getCurrentSystemMonitor || {
-        cpu: {
-          model_name: '',
-          cores: 0,
-          usage_percent: 0,
-          physical_cnt: 0,
-          logical_cnt: 0
-        },
-        memory: {
-          total: '',
-          available: '',
-          used: '',
-          usage_percent: 0,
-          jvm_used: '',
-          jvm_percent: 0
-        },
-        disk: []
+      const data = this.getCurrentSystemMonitor;
+      // 后端个别字段可能为 null/缺失：统一归一化，避免 TTable 对 null data 展开报错
+      if (!data) {
+        return {
+          cpu: {
+            model_name: '',
+            cores: 0,
+            usage_percent: 0,
+            physical_cnt: 0,
+            logical_cnt: 0
+          },
+          memory: {
+            total: '',
+            available: '',
+            used: '',
+            usage_percent: 0,
+            jvm_used: '',
+            jvm_percent: 0
+          },
+          disk: []
+        };
+      }
+      return {
+        ...data,
+        cpu: data.cpu || { model_name: '', cores: 0, usage_percent: 0, physical_cnt: 0, logical_cnt: 0 },
+        memory: data.memory || { total: '', available: '', used: '', usage_percent: 0, jvm_used: '', jvm_percent: 0 },
+        disk: Array.isArray(data.disk) ? data.disk : []
       };
     }
   },
