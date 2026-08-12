@@ -8,26 +8,41 @@
             <t-radio-button value="week">{{ $t('dashboard.ip_rank.week') }}</t-radio-button>
           </t-radio-group>
         </template>
-        <t-table :data="attackNowList" :columns="attackColumns" rowKey="IP">
+        <t-table
+          :data="attackNowList"
+          :columns="attackColumns"
+          rowKey="IP"
+          :stripe="true"
+          :hover="true"
+          :loading="loading"
+          :empty="$t('dashboard.empty_data')"
+        >
           <template #index="{ rowIndex }">
-            <span :class="getRankClass(rowIndex)">
-              {{ rowIndex + 1 }}
-            </span>
+            <span :class="getRankClass(rowIndex)">{{ rowIndex + 1 }}</span>
           </template>
           <template #iptags="{ row }">
-            <t-tag  v-for="(item, index) in row.ip_tags" :theme="item.ip_tag === '正常' ? 'success' : 'danger'" variant="light" style="margin: 3px">{{ item.ip_tag }}</t-tag>
+            <div class="rank-tags">
+              <t-tag
+                v-for="(item, index) in row.ip_tags"
+                :key="index"
+                :theme="item.ip_tag === '正常' ? 'success' : 'danger'"
+                variant="light"
+              >{{ item.ip_tag }}</t-tag>
+            </div>
           </template>
           <template #operation="{ row }">
-            <t-button v-if="row.ip" size="small" variant="text" @click="handleIpClick(row.ip)">
-              🔍
+            <t-button
+              v-if="row.ip"
+              size="small"
+              variant="text"
+              shape="square"
+              class="rank-search-btn"
+              :aria-label="$t('dashboard.ip_rank.lookup')"
+              @click="handleIpClick(row.ip)"
+            >
+              <search-icon />
             </t-button>
           </template>
-         <!-- <span slot="growUp" slot-scope="{ row }">
-            <trend :type="row.growUp > 0 ? 'up' : 'down'" :describe="Math.abs(row.growUp)" />
-          </span> -->
-          <!-- <template #operation="slotProps">
-            <a class="link" @click="rehandleClickOp(slotProps)">详情</a>
-          </template> -->
         </t-table>
       </t-card>
     </t-col>
@@ -39,33 +54,48 @@
             <t-radio-button value="week">{{ $t('dashboard.ip_rank.week') }}</t-radio-button>
           </t-radio-group>
         </template>
-        <t-table :data="normalNowList" :columns="normalColumns" rowKey="productName">
+        <t-table
+          :data="normalNowList"
+          :columns="normalColumns"
+          rowKey="productName"
+          :stripe="true"
+          :hover="true"
+          :loading="loading"
+          :empty="$t('dashboard.empty_data')"
+        >
           <template #index="{ rowIndex }">
-            <span :class="getRankClass(rowIndex)">
-              {{ rowIndex + 1 }}
-            </span>
+            <span :class="getRankClass(rowIndex)">{{ rowIndex + 1 }}</span>
           </template>
           <template #iptags="{ row }">
-            <t-tag  v-for="(item, index) in row.ip_tags" :theme="item.ip_tag === '正常' ? 'success' : 'danger'" variant="light" style="margin: 3px">{{ item.ip_tag }}</t-tag>
+            <div class="rank-tags">
+              <t-tag
+                v-for="(item, index) in row.ip_tags"
+                :key="index"
+                :theme="item.ip_tag === '正常' ? 'success' : 'danger'"
+                variant="light"
+              >{{ item.ip_tag }}</t-tag>
+            </div>
           </template>
-           <template #operation="{ row }">
-            <t-button v-if="row.ip" size="small" variant="text" @click="handleIpClick(row.ip)">
-              🔍
+          <template #operation="{ row }">
+            <t-button
+              v-if="row.ip"
+              size="small"
+              variant="text"
+              shape="square"
+              class="rank-search-btn"
+              :aria-label="$t('dashboard.ip_rank.lookup')"
+              @click="handleIpClick(row.ip)"
+            >
+              <search-icon />
             </t-button>
           </template>
-        <!--  <span slot="growUp" slot-scope="{ row }">
-            <trend :type="row.growUp > 0 ? 'up' : 'down'" :describe="Math.abs(row.growUp)" />
-          </span>
-          <template #operation="slotProps">
-            <a class="link" @click="rehandleClickOp(slotProps)">详情</a>
-          </template> -->
         </t-table>
       </t-card>
     </t-col>
   </t-row>
 </template>
 <script lang="ts">
-import Trend from '@/components/trend/index.vue';
+import { SearchIcon } from 'tdesign-icons-vue';
 import { LAST_7_DAYS,NowDate } from '@/utils/date';
 import {
   wafstatsumdaytopiprangeapi
@@ -74,10 +104,11 @@ import {
 export default {
   name: 'RankList',
   components: {
-    Trend,
+    SearchIcon,
   },
   data() {
     return {
+      loading: false,
       attackColumns: [
         {
           align: 'center',
@@ -183,6 +214,7 @@ export default {
 
     },
     loadTopIp(){
+        this.loading = true
         wafstatsumdaytopiprangeapi({'start_day':this.rangeStartDay,'end_day':this.rangeEndDay})
           .then((res) => {
               let resdata = res
@@ -196,7 +228,7 @@ export default {
             ).catch((e: Error) => {
             console.log(e);
           })
-          .finally(() => {})
+          .finally(() => { this.loading = false })
     },
     fillEmptyRows(list) {
       const targetLength = 10;
@@ -209,11 +241,8 @@ export default {
 
       return list;
     },
-    rehandleClickOp(val) {
-      console.log(val);
-    },
     getRankClass(index) {
-      return ['dashboard-rank__cell', { 'dashboard-rank__cell--top': index < 3 }];
+      return ['dashboard-rank__cell', index < 3 ? `dashboard-rank__cell--${index + 1}` : ''];
     },
     handelTimeChange(val){
       console.log("handelTimeChange",val)
@@ -248,12 +277,32 @@ export default {
   padding: 8px;
 
   /deep/ .t-card__header {
-    padding-bottom: 24px;
+    padding-bottom: 20px;
   }
 
   /deep/ .t-card__title {
-    font-size: 20px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /deep/ .t-table__header th {
+    background: var(--td-bg-color-component);
+    color: var(--td-text-color-secondary);
+    font-weight: 600;
+  }
+}
+
+.rank-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rank-search-btn {
+  color: var(--td-text-color-placeholder);
+
+  &:hover {
+    color: var(--td-brand-color);
   }
 }
 
@@ -261,16 +310,32 @@ export default {
   display: inline-flex;
   width: 24px;
   height: 24px;
-  border-radius: 50%;
-  color: white;
-  font-size: 14px;
-  background-color: var(--td-gray-color-5);
+  border-radius: 8px;
   align-items: center;
   justify-content: center;
+  font-size: 13px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--td-bg-color-component);
+  color: var(--td-text-color-secondary);
 
-  &--top {
-    background: var(--td-brand-color);
+  // 前三名奖牌色
+  &--1 {
+    background: linear-gradient(135deg, #f7c94f, #e3a62d);
+    color: #fff;
+    box-shadow: 0 2px 6px -2px rgba(227, 166, 45, 0.5);
+  }
+
+  &--2 {
+    background: linear-gradient(135deg, #d3dbe6, #94a3b8);
+    color: #fff;
+    box-shadow: 0 2px 6px -2px rgba(148, 163, 184, 0.5);
+  }
+
+  &--3 {
+    background: linear-gradient(135deg, #e9a16b, #c67a3f);
+    color: #fff;
+    box-shadow: 0 2px 6px -2px rgba(198, 122, 63, 0.5);
   }
 }
 </style>
