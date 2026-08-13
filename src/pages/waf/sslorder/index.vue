@@ -615,7 +615,7 @@ export default Vue.extend({
       sslHttpCheckFormData: {
         item: 'sslhttp_check',
         value: '1',
-        remarks: '证书文件验证方式是否要严控后端.well-known响应代码'
+        remarks: '证书文件验证：本地挑战文件始终优先；本项仅控制本地无挑战文件且后端返回非404/301/302时是否写告警'
       },
       sslHttpCheckRules: {
         item: [{ required: true, message: this.$t('page.systemconfig.label_configuration_item'), type: 'error' }],
@@ -1100,7 +1100,7 @@ export default Vue.extend({
           this.sslHttpCheckFormData = {
             item: 'sslhttp_check',
             value: '1',
-            remarks: '证书文件验证方式是否要严控后端.well-known响应代码'
+            remarks: '证书文件验证：本地挑战文件始终优先；本项仅控制本地无挑战文件且后端返回非404/301/302时是否写告警'
           };
         }
         this.sslHttpCheckDialogVisible = true;
