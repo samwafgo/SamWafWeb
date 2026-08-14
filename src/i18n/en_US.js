@@ -2583,6 +2583,21 @@ export default {
       response_code: "Response Code",
       response_header: "Response Header Information",
       response_content: "Response Content",
+      content_priority: "Content Priority",
+      content_priority_option: {
+        samwaf: "SamWaf Template First",
+        backend: "Backend Response First",
+      },
+      content_priority_desc: {
+        samwaf: "SamWaf Template First (default): whenever this rule matches, the custom template below always replaces the content returned by the backend.",
+        backend: "Backend Response First: if the backend already returned a body (for example an API JSON error payload), it is passed through as-is, keeping the backend body, status code and Content-Type. The custom template is used only when the backend returns no body.",
+        note: "Note: this option only affects status codes actually returned by the backend (such as a 403/404/500 from your own application). Blocks made by the WAF itself (never reaching the backend, e.g. CC attacks or rule hits) always use the custom template.",
+      },
+      editor_mode: {
+        code: "HTML Code",
+        preview: "Preview",
+      },
+      preview_demo_block_info: "Preview sample: request blocked by a security rule",
       attack_type_option: {
         default: "General (All Types)",
         cc_attack: "CC Attack",

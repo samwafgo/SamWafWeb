@@ -2587,6 +2587,21 @@ export default {
       response_code: "响应代码",
       response_header: "响应Header头信息",
       response_content: "响应内容",
+      content_priority: "内容优先级",
+      content_priority_option: {
+        samwaf: "优先使用SamWaf模版",
+        backend: "优先后端响应",
+      },
+      content_priority_desc: {
+        samwaf: "优先使用SamWaf模版（默认）：只要命中这条配置，一律用下面的自定义模版覆盖后端返回的内容。",
+        backend: "优先后端响应：后端已经返回了内容（例如接口的 JSON 错误详情）时原样透传，保留后端的响应体、状态码和 Content-Type；只有后端没有返回响应体时才使用自定义模版。",
+        note: "说明：该选项只影响“后端真实返回的状态码”（如后端自己回的 403/404/500）。WAF 自身的拦截（未到达后端，如CC攻击、规则拦截）始终使用自定义模版。",
+      },
+      editor_mode: {
+        code: "HTML代码",
+        preview: "样式预览",
+      },
+      preview_demo_block_info: "预览示例：命中安全规则，请求已被阻止",
       attack_type_option: {
         default: "通用(所有类型)",
         cc_attack: "CC攻击",
