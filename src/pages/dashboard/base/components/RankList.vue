@@ -23,11 +23,17 @@
           <template #iptags="{ row }">
             <div class="rank-tags">
               <t-tag
-                v-for="(item, index) in row.ip_tags"
+                v-for="(item, index) in visibleTags(row)"
                 :key="index"
                 :theme="item.ip_tag === '正常' ? 'success' : 'danger'"
                 variant="light"
               >{{ item.ip_tag }}</t-tag>
+              <t-tag
+                v-if="hiddenTagsCount(row) > 0"
+                theme="default"
+                variant="outline"
+                :title="hiddenTagsText(row)"
+              >+{{ hiddenTagsCount(row) }}</t-tag>
             </div>
           </template>
           <template #operation="{ row }">
@@ -69,11 +75,17 @@
           <template #iptags="{ row }">
             <div class="rank-tags">
               <t-tag
-                v-for="(item, index) in row.ip_tags"
+                v-for="(item, index) in visibleTags(row)"
                 :key="index"
                 :theme="item.ip_tag === '正常' ? 'success' : 'danger'"
                 variant="light"
               >{{ item.ip_tag }}</t-tag>
+              <t-tag
+                v-if="hiddenTagsCount(row) > 0"
+                theme="default"
+                variant="outline"
+                :title="hiddenTagsText(row)"
+              >+{{ hiddenTagsCount(row) }}</t-tag>
             </div>
           </template>
           <template #operation="{ row }">
@@ -240,6 +252,16 @@ export default {
       }
 
       return list;
+    },
+    // 标签过多时只展示前几个，避免把表格行撑得太高
+    visibleTags(row) {
+      return (row.ip_tags || []).slice(0, 3);
+    },
+    hiddenTagsCount(row) {
+      return Math.max(0, (row.ip_tags || []).length - 3);
+    },
+    hiddenTagsText(row) {
+      return (row.ip_tags || []).slice(3).map((item) => item.ip_tag).join('、');
     },
     getRankClass(index) {
       return ['dashboard-rank__cell', index < 3 ? `dashboard-rank__cell--${index + 1}` : ''];
