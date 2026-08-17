@@ -7,6 +7,8 @@
             <t-radio-button value="day">{{ $t('dashboard.ip_rank.day') }}</t-radio-button>
             <t-radio-button value="week">{{ $t('dashboard.ip_rank.week') }}</t-radio-button>
           </t-radio-group>
+          <!-- 只借它的弹窗，触发按钮不显示；两张榜共用这一个实例 -->
+          <ip-lookup ref="ipLookup" hide-trigger />
         </template>
         <t-table
           :data="attackNowList"
@@ -20,21 +22,13 @@
           <template #index="{ rowIndex }">
             <span :class="getRankClass(rowIndex)">{{ rowIndex + 1 }}</span>
           </template>
+          <template #ip="{ row }">
+            <t-tooltip v-if="row.ip" :content="$t('common.ip_lookup.click_tip')">
+              <a class="ipl-link" @click="openIpLookup(row.ip)">{{ row.ip }}</a>
+            </t-tooltip>
+          </template>
           <template #iptags="{ row }">
-            <div class="rank-tags">
-              <t-tag
-                v-for="(item, index) in visibleTags(row)"
-                :key="index"
-                :theme="item.ip_tag === '正常' ? 'success' : 'danger'"
-                variant="light"
-              >{{ item.ip_tag }}</t-tag>
-              <t-tag
-                v-if="hiddenTagsCount(row) > 0"
-                theme="default"
-                variant="outline"
-                :title="hiddenTagsText(row)"
-              >+{{ hiddenTagsCount(row) }}</t-tag>
-            </div>
+            <ip-tag-cell :ip="row.ip" :tags="row.ip_tags" @view-log="handleIpClick" />
           </template>
           <template #operation="{ row }">
             <t-button
@@ -72,21 +66,13 @@
           <template #index="{ rowIndex }">
             <span :class="getRankClass(rowIndex)">{{ rowIndex + 1 }}</span>
           </template>
+          <template #ip="{ row }">
+            <t-tooltip v-if="row.ip" :content="$t('common.ip_lookup.click_tip')">
+              <a class="ipl-link" @click="openIpLookup(row.ip)">{{ row.ip }}</a>
+            </t-tooltip>
+          </template>
           <template #iptags="{ row }">
-            <div class="rank-tags">
-              <t-tag
-                v-for="(item, index) in visibleTags(row)"
-                :key="index"
-                :theme="item.ip_tag === '正常' ? 'success' : 'danger'"
-                variant="light"
-              >{{ item.ip_tag }}</t-tag>
-              <t-tag
-                v-if="hiddenTagsCount(row) > 0"
-                theme="default"
-                variant="outline"
-                :title="hiddenTagsText(row)"
-              >+{{ hiddenTagsCount(row) }}</t-tag>
-            </div>
+            <ip-tag-cell :ip="row.ip" :tags="row.ip_tags" @view-log="handleIpClick" />
           </template>
           <template #operation="{ row }">
             <t-button
@@ -112,11 +98,13 @@ import { LAST_7_DAYS,NowDate } from '@/utils/date';
 import {
   wafstatsumdaytopiprangeapi
 } from '@/apis/stats';
+import IpTagCell from './IpTagCell.vue';
 
 export default {
   name: 'RankList',
   components: {
     SearchIcon,
+    IpTagCell,
   },
   data() {
     return {
@@ -138,7 +126,6 @@ export default {
         },
         {
           align: 'left',
-          ellipsis: true,
           colKey: 'iptags',
           title: this.$t('dashboard.ip_rank.tag'),
           minWidth: 200,
@@ -179,7 +166,6 @@ export default {
         },
         {
           align: 'left',
-          ellipsis: true,
           colKey: 'iptags',
           title:this.$t('dashboard.ip_rank.tag'),
           minWidth: 200,
@@ -253,15 +239,10 @@ export default {
 
       return list;
     },
-    // 标签过多时只展示前几个，避免把表格行撑得太高
-    visibleTags(row) {
-      return (row.ip_tags || []).slice(0, 3);
-    },
-    hiddenTagsCount(row) {
-      return Math.max(0, (row.ip_tags || []).length - 3);
-    },
-    hiddenTagsText(row) {
-      return (row.ip_tags || []).slice(3).map((item) => item.ip_tag).join('、');
+    // 和访问日志页一致：点 IP 直接查它在哪些黑白名单/封禁记录/威胁情报里
+    openIpLookup(ip) {
+      if (!ip) return;
+      this.$refs.ipLookup && this.$refs.ipLookup.open(ip);
     },
     getRankClass(index) {
       return ['dashboard-rank__cell', index < 3 ? `dashboard-rank__cell--${index + 1}` : ''];
@@ -314,10 +295,14 @@ export default {
   }
 }
 
-.rank-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.ipl-link {
+  color: var(--td-brand-color);
+  cursor: pointer;
+}
+
+.ipl-link:hover {
+  color: var(--td-brand-color-hover);
+  text-decoration: underline;
 }
 
 .rank-search-btn {
