@@ -20,30 +20,43 @@
 
   <div v-else class="header-menu-search-left">
     <t-button
-      :class="{ 'search-icon-hide': isSearchFocus }"
       theme="default"
       shape="square"
       variant="text"
-      @click="changeSearchFocus(true)"
+      class="search-trigger-btn"
+      :title="$t('common.search_page')"
+      @click="searchVisible = true"
     >
       <search-icon />
     </t-button>
-    <t-select
-      v-model="searchData"
-      :class="['header-search', { 'width-zero': !isSearchFocus }]"
-      filterable
-      clearable
-      :filter="filterSearch"
-      :options="searchOptions"
-      placeholder="搜索页面"
-      :autofocus="isSearchFocus"
-      @blur="changeSearchFocus(false)"
-      @change="handleNavigate"
+
+    <!-- 页面搜索：按钮 + 模态框 -->
+    <t-dialog
+      :visible.sync="searchVisible"
+      :header="$t('common.search_page')"
+      :footer="false"
+      width="560px"
+      destroy-on-close
+      @closed="onDialogClosed"
     >
-      <template #prefix-icon>
-        <search-icon size="16" />
-      </template>
-    </t-select>
+      <div class="search-dialog-body">
+        <t-select
+          v-model="searchData"
+          filterable
+          clearable
+          autofocus
+          :filter="filterSearch"
+          :options="searchOptions"
+          :placeholder="$t('common.search_page_placeholder')"
+          @change="handleNavigate"
+        >
+          <template #prefix-icon>
+            <search-icon size="16" />
+          </template>
+        </t-select>
+        <p class="search-dialog-tip">{{ $t('common.search_page_tip') }}</p>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -68,6 +81,7 @@ export default Vue.extend({
   data() {
     return {
       isSearchFocus: false,
+      searchVisible: false,
       searchData: null as string | null,
     };
   },
@@ -113,8 +127,12 @@ export default Vue.extend({
       this.$router.push(path).catch(() => {});
       this.$nextTick(() => {
         this.searchData = null;
-        this.isSearchFocus = false;
+        this.searchVisible = false;
       });
+    },
+    // 关闭搜索模态框时重置输入
+    onDialogClosed() {
+      this.searchData = null;
     },
   },
 });
@@ -153,35 +171,20 @@ export default Vue.extend({
   }
 }
 
-.header-search {
-  width: 200px;
-  transition: width @anim-duration-base @anim-time-fn-easing;
-
-  /deep/ .t-select__wrap .t-input {
-    border: 0;
-    padding-left: 40px;
-
-    &:focus {
-      box-shadow: none;
-    }
-  }
-
-  &.width-zero {
-    width: 0;
-    opacity: 0;
-  }
-}
-
-.t-button {
-  transition: opacity @anim-duration-base @anim-time-fn-easing;
-}
-
-.search-icon-hide {
-  opacity: 0;
-}
-
 .header-menu-search-left {
   display: flex;
   align-items: center;
+}
+
+/* 搜索模态框 */
+.search-dialog-body {
+  padding-top: 8px;
+}
+
+.search-dialog-tip {
+  margin: 12px 2px 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--td-text-color-placeholder);
 }
 </style>

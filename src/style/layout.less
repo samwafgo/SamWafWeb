@@ -30,9 +30,10 @@
 .t-default-menu.t-menu--dark {
   background: var(--td-gray-color-13);
 }
-.t-default-menu:not(.t-menu--dark) .t-menu__item.t-is-active:not(.t-is-opened) {
+.t-default-menu .t-menu__item.t-is-active:not(.t-is-opened) {
   background-color: var(--td-brand-color-1);
   color: var(--td-brand-color);
+  position: relative;
   .t-icon {
     color: var(--td-brand-color);
   }
@@ -219,4 +220,77 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* =====================================================
+ * 企业级外框架（顶栏 / 侧栏）
+ * ===================================================== */
+
+/* ---------- 顶栏 ---------- */
+.@{starter-prefix}-header-layout {
+  .t-head-menu__inner {
+    border-bottom: 1px solid var(--td-component-stroke);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  }
+}
+
+/* ---------- 侧栏菜单 ---------- */
+.t-default-menu {
+  border-right: 1px solid var(--td-component-stroke);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--td-scrollbar-color);
+  }
+
+  // Logo 区：与顶栏同高 + 底部细分隔线
+  .t-menu__logo {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--td-component-stroke);
+  }
+
+  // 分组标题
+  .t-menu-group__title {
+    padding: 14px 16px 6px;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--td-text-color-placeholder);
+    letter-spacing: 0.4px;
+  }
+
+  // 展开态菜单项：圆角 + 呼吸间距 + 精致 hover
+  &:not(.t-is-collapsed) .t-menu__item {
+    margin: 2px 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    .t-icon {
+      transition: color 0.2s ease;
+    }
+
+    &:not(.t-is-active):not(.t-is-opened):hover {
+      background-color: var(--td-bg-color-component-hover);
+    }
+  }
+
+  // 折叠态：图标项也带圆角与 hover
+  &.t-is-collapsed .t-menu__item {
+    border-radius: 8px;
+
+    &:not(.t-is-active):hover {
+      background-color: var(--td-bg-color-component-hover);
+    }
+  }
+
+  // 暗色菜单 hover
+  &.t-menu--dark .t-menu__item:not(.t-is-active):not(.t-is-opened):hover {
+    background-color: var(--td-gray-color-12);
+  }
 }

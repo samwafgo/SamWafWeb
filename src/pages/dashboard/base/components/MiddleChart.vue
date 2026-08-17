@@ -13,20 +13,32 @@
             />
           </div>
         </template>
-        <div
-          id="monitorContainer"
-          ref="monitorContainer"
-          :style="{ width: '100%', height: `${resizeTime * 326}px` }"
-        ></div>
+        <div class="chart-wrap">
+          <div v-if="isLineEmpty" class="chart-empty">
+            <chart-line-icon class="chart-empty__icon" />
+            <span>{{ $t('dashboard.empty_data') }}</span>
+          </div>
+          <div
+            id="monitorContainer"
+            ref="monitorContainer"
+            :style="{ width: '100%', height: `${resizeTime * 326}px` }"
+          ></div>
+        </div>
       </t-card>
     </t-col>
     <t-col :xs="12" :xl="3">
       <t-card :title="$t('dashboard.cycle_percent_title')"  :subtitle="$t('dashboard.cycle_percent_subtitle')" class="dashboard-chart-card">
-        <div
-          id="countContainer"
-          ref="countContainer"
-          :style="{ width: `${resizeTime * 326}px`, height: `${resizeTime * 300}px`, margin: '0 auto' }"
-        ></div>
+        <div class="chart-wrap">
+          <div v-if="isPieEmpty" class="chart-empty">
+            <chart-pie-icon class="chart-empty__icon" />
+            <span>{{ $t('dashboard.empty_data') }}</span>
+          </div>
+          <div
+            id="countContainer"
+            ref="countContainer"
+            :style="{ width: `${resizeTime * 326}px`, height: `${resizeTime * 300}px`, margin: '0 auto' }"
+          ></div>
+        </div>
       </t-card>
     </t-col>
   </t-row>
@@ -36,6 +48,7 @@ import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/compon
 import { PieChart, LineChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
 import * as echarts from 'echarts/core';
+import { ChartLineIcon, ChartPieIcon } from 'tdesign-icons-vue';
 import { mapState } from 'vuex';
 
 import { LAST_7_DAYS } from '@/utils/date';
@@ -62,6 +75,8 @@ export default {
       rangeSumAttackCount:0,//攻击数据汇总数量
       rangeSumNormalCount:0,//正常数据汇总数量
       isInitialed:false,//是否已经初始化
+      isLineEmpty:false,//折线图是否无数据
+      isPieEmpty:false,//环形图是否无数据
     };
   },
   computed: {
@@ -118,6 +133,9 @@ export default {
                 this.rangeNormalArray.push(item)
                 this.rangeSumNormalCount +=item
             }
+            // 空数据时展示空态
+            this.isLineEmpty = this.rangeDateTimeArray.length === 0
+            this.isPieEmpty = (this.rangeSumAttackCount + this.rangeSumNormalCount) === 0
             if(this.isInitialed == false){
                 this.renderCharts();
                 this.isInitialed = true
@@ -221,8 +239,34 @@ export default {
   }
 
   /deep/ .t-card__title {
-    font-size: 20px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /deep/ .t-card__subtitle {
+    margin-left: 8px;
+  }
+}
+
+.chart-wrap {
+  position: relative;
+}
+
+.chart-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 1;
+  color: var(--td-text-color-placeholder);
+  font-size: 14px;
+
+  &__icon {
+    font-size: 28px;
+    opacity: 0.6;
   }
 }
 </style>
