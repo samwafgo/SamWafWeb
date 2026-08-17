@@ -1425,6 +1425,12 @@ export default {
         disable: "关闭（兼容原生WebSocket）",
         tips: "默认对该站点启用HTTP/2。当有安卓等原生WebSocket客户端(如uni.connectSocket)连接本站握手失败时，选择“关闭”让该站点只走HTTP/1.1即可修复；不影响其他站点。若已开启HTTP/3，关闭后该站点也不再广告h3。仅作用于HTTPS站点，改完对新连接立即生效。"
       },
+      response_buffering: {
+        label: "响应缓冲",
+        enable: "开启（默认）",
+        disable: "关闭",
+        tips: "类似 nginx 的 proxy_buffering。默认开启：反代先缓冲再回传。关闭后边收边推到客户端，适合 SSE/流式接口/大文件下载；关闭期间依赖读体的能力（敏感词、响应压缩、防篡改、响应缓存等）对本站不生效。"
+      },
       is_enable_http_auth_base: "网站密码访问",
       is_enable_http_auth_base_tips: "开启后该网站都是使用密码进行访问，并请添加帐号和密码",
       http_auth_base_type: "认证方式",
