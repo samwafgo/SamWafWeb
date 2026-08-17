@@ -1442,6 +1442,12 @@ export default {
         disable: "Disabled (native WebSocket compatible)",
         tips: "HTTP/2 is enabled for this site by default. If a native WebSocket client (e.g. Android uni.connectSocket) fails to handshake against this site, choose \"Disabled\" to force it to HTTP/1.1 only — this fixes it without affecting other sites. When HTTP/3 is enabled, disabling here also stops advertising h3 for this site. Applies to HTTPS sites only; takes effect on new connections immediately."
       },
+      response_buffering: {
+        label: "Response Buffering",
+        enable: "Enabled (default)",
+        disable: "Disabled",
+        tips: "Similar to nginx proxy_buffering. Enabled by default: the reverse proxy buffers the response before sending. When disabled, it flushes to the client immediately (good for SSE/streaming/large downloads). Body-dependent features (sensitive words, response compression, tamper protection, response cache, etc.) are skipped while disabled."
+      },
       is_enable_http_auth_base: "Web Password Visit",
       is_enable_http_auth_base_tips: "After enabled, the website will require a password for access. Please add a username and password.",
       http_auth_base_type: "Authentication Type",

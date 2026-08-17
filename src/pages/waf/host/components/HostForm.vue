@@ -408,6 +408,16 @@
                 </t-input-number>
               </t-tooltip>
             </t-form-item>
+            <t-form-item :label="$t('page.host.response_buffering.label')" name="is_enable_response_buffering">
+              <t-tooltip class="placement top center"
+                         :content="$t('page.host.response_buffering.tips')" placement="top"
+                         :overlay-style="{ width: '260px' }" show-arrow>
+                <t-radio-group v-model="formData.is_enable_response_buffering">
+                  <t-radio value="1">{{ $t('page.host.response_buffering.enable') }}</t-radio>
+                  <t-radio value="0">{{ $t('page.host.response_buffering.disable') }}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+            </t-form-item>
             <t-form-item :label="$t('page.host.default_encoding')" name="default_encoding">
               <t-select v-model="formData.default_encoding" :style="{ width: '150px' }">
                 <t-option value="auto">{{$t('page.host.default_encoding_auto')}}</t-option>
@@ -925,6 +935,7 @@
           this.formData.is_enable_http_auth_base = this.formData.is_enable_http_auth_base != null ? this.formData.is_enable_http_auth_base.toString() : "0"
           this.formData.http_auth_base_type = this.formData.http_auth_base_type != null ? this.formData.http_auth_base_type : "authorization"
           this.formData.response_time_out = this.formData.response_time_out != null ? this.formData.response_time_out.toString() : "60"
+          this.formData.is_enable_response_buffering = this.formData.is_enable_response_buffering != null ? this.formData.is_enable_response_buffering.toString() : "1"
           this.formData.insecure_skip_verify = this.formData.insecure_skip_verify != null ? this.formData.insecure_skip_verify.toString() : "0"
           this.formData.log_only_mode = this.formData.log_only_mode != null ? this.formData.log_only_mode.toString() : "0"
           // 保证存在且为合法值，并用 $set 确保 Vue2 对新增字段的响应式
@@ -1622,6 +1633,7 @@
             postdata['is_trans_back_domain'] = Number(postdata['is_trans_back_domain']);
             postdata['is_enable_http_auth_base'] = Number(postdata['is_enable_http_auth_base']);
             postdata['response_time_out'] = Number(postdata['response_time_out']);
+            postdata['is_enable_response_buffering'] = Number(postdata['is_enable_response_buffering']);
             postdata['insecure_skip_verify'] = Number(postdata['insecure_skip_verify']);
             postdata['log_only_mode'] = Number(postdata['log_only_mode']);
             

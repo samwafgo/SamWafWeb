@@ -30,6 +30,7 @@ export const INITIAL_DATA = {
   http_auth_base_type: "authorization",//认证类型 authorization(默认Basic Auth) custom(自定义页面)
   http_auth_path_prefix: "",//HTTP认证路径前缀，空值时使用默认路径或后端自动生成
   response_time_out: "60",//响应超时时间单位秒
+  is_enable_response_buffering: "1",//响应缓冲 1开启(默认) 0关闭(类似 nginx proxy_buffering off)
   insecure_skip_verify: "0",//是否跳过后端https证书有效性验证
   anti_leech_json: '{"is_enable_anti_leech":0,"file_types":"gif|jpg|jpeg|png|bmp|swf","valid_referers":"none;server_names","action":"block","redirect_url":""}', // 新增防盗链配置
   cache_json: '{"is_enable_cache":0,"cache_location":"memory","cache_dir":"./data/cache","max_file_size_mb":0,"max_memory_size_mb":0}', // 新增缓存配置
