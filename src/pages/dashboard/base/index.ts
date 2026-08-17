@@ -1,7 +1,27 @@
 import dayjs from 'dayjs';
+import * as echarts from 'echarts/core';
 import { getChartListColor } from '@/utils/color';
 import { getRandomArray } from '@/utils/charts';
+
 console.log(window.vm.$i18n)
+
+/** 千分位格式化数字 */
+function formatChartNumber(value: number | string): string {
+  const num = Number(value);
+  if (Number.isNaN(num)) return String(value ?? '');
+  return num.toLocaleString('en-US');
+}
+
+/** hex 转 rgba（解析失败时原样返回） */
+function hexToRgba(hex: string, alpha: number): string {
+  const m = (hex || '').replace('#', '');
+  const full = m.length === 3 ? m.split('').map((c) => c + c).join('') : m;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return hex;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 /** 首页 dashboard 折线图 */
 export function constructInitDashboardDataset(type: string) {
   const dateArray: Array<string> = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
@@ -189,99 +209,113 @@ export function getLineChartDataSet({
   outchartarr = [],
   placeholderColor,
   borderColor,
-}: { dateTime?: Array<string>,inchartarr?: Array<string>,outchartarr?: Array<string> } & Record<string, string>) {
+  containerColor,
+}: { dateTime?: Array<string>; inchartarr?: Array<string>; outchartarr?: Array<string> } & Record<string, string>) {
+  const isDark = containerColor === '#242424';
+  const colorList = getChartListColor();
+  const attackColor = colorList[0] || '#e34d59';
+  const normalColor = colorList[1] || '#00a870';
+  const attackName = window.vm.$i18n.t('dashboard.cycle_attack_count');
+  const normalName = window.vm.$i18n.t('dashboard.cycle_normal_count');
+  const tooltipBg = isDark ? 'rgba(36, 36, 36, 0.96)' : 'rgba(255, 255, 255, 0.96)';
+  const tooltipBorder = isDark ? '#5e5e5e' : '#e7e7e7';
+  const tooltipText = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)';
 
-  const divideNum = 10;
-  const timeArray = [];
-  const inArray = [];
-  const outArray = [];
+  const areaGradient = (color: string) =>
+    new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+      { offset: 0, color: hexToRgba(color, 0.26) },
+      { offset: 1, color: hexToRgba(color, 0.02) },
+    ]);
 
-
-  const dataSet = {
-    color: getChartListColor(),
+  return {
+    color: colorList,
     tooltip: {
-      trigger: 'item',
+      trigger: 'axis',
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
+      borderWidth: 1,
+      padding: [8, 12],
+      extraCssText: 'box-shadow: 0 6px 20px rgba(0,0,0,0.08); border-radius: 8px;',
+      textStyle: { color: tooltipText, fontSize: 12 },
+      axisPointer: {
+        type: 'line',
+        lineStyle: { color: borderColor, type: 'dashed' },
+      },
+      formatter: (params: Array<any>) => {
+        if (!Array.isArray(params) || !params.length) return '';
+        let html = `<div style="font-weight:600;margin-bottom:4px;">${params[0].axisValue || ''}</div>`;
+        params.forEach((p) => {
+          html += `<div style="display:flex;align-items:center;gap:8px;line-height:1.9;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};flex:none;"></span><span>${p.seriesName}</span><span style="margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;">${formatChartNumber(
+            p.value,
+          )}</span></div>`;
+        });
+        return html;
+      },
     },
     grid: {
-      left: '0',
-      right: '40px',
-      top: '5px',
-      bottom: '36px',
+      left: '8',
+      right: '20',
+      top: '38',
+      bottom: '38',
       containLabel: true,
     },
     legend: {
       left: 'center',
       bottom: '0',
-      orient: 'horizontal', // legend 横向布局。
-      data: [window.vm.$i18n.t('dashboard.cycle_attack_count'), window.vm.$i18n.t('dashboard.cycle_normal_count')],
-      textStyle: {
-        fontSize: 12,
-        color: placeholderColor,
-      },
+      orient: 'horizontal',
+      icon: 'roundRect',
+      itemWidth: 14,
+      itemHeight: 5,
+      itemGap: 32,
+      data: [attackName, normalName],
+      textStyle: { fontSize: 12, color: placeholderColor },
     },
     xAxis: {
       type: 'category',
       data: dateTime,
       boundaryGap: false,
-      axisLabel: {
-        color: placeholderColor,
-      },
-      axisLine: {
-        lineStyle: {
-          width: 1,
-        },
-      },
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: borderColor, width: 1 } },
+      axisLabel: { color: placeholderColor, fontSize: 12 },
     },
     yAxis: {
       type: 'value',
       axisLabel: {
         color: placeholderColor,
+        fontSize: 12,
+        formatter: (value: number) => formatChartNumber(value),
       },
-      splitLine: {
-        lineStyle: {
-          color: borderColor,
-        },
-      },
+      splitLine: { lineStyle: { color: borderColor, type: 'dashed' } },
     },
     series: [
       {
-        name: window.vm.$i18n.t('dashboard.cycle_attack_count'),
+        name: attackName,
         data: inchartarr,
         type: 'line',
-        smooth: false,
-        showSymbol: true,
+        smooth: true,
+        showSymbol: false,
         symbol: 'circle',
-        symbolSize: 8,
-        itemStyle: {
-          normal: {
-            borderColor,
-            borderWidth: 1,
-          },
-        },
-        areaStyle: {
-          normal: {
-            opacity: 0.1,
-          },
-        },
+        symbolSize: 6,
+        lineStyle: { width: 2.5, color: attackColor },
+        itemStyle: { color: attackColor, borderColor: containerColor, borderWidth: 2 },
+        emphasis: { focus: 'series', scale: true },
+        areaStyle: { color: areaGradient(attackColor) },
       },
       {
-        name: window.vm.$i18n.t('dashboard.cycle_normal_count'),
+        name: normalName,
         data: outchartarr,
         type: 'line',
-        smooth: false,
-        showSymbol: true,
+        smooth: true,
+        showSymbol: false,
         symbol: 'circle',
-        symbolSize: 8,
-        itemStyle: {
-          normal: {
-            borderColor,
-            borderWidth: 1,
-          },
-        },
+        symbolSize: 6,
+        lineStyle: { width: 2.5, color: normalColor },
+        itemStyle: { color: normalColor, borderColor: containerColor, borderWidth: 2 },
+        emphasis: { focus: 'series', scale: true },
+        areaStyle: { color: areaGradient(normalColor) },
       },
     ],
   };
-  return dataSet;
 }
 
 /**
@@ -302,83 +336,81 @@ export function getSelftItemList(productName: string, divideNum: number): string
 
 
 export function getPieChartDataSet({
-  radius = 42,
-  attackCount =0,
+  attackCount = 0,
   normalCount = 0,
   textColor,
   placeholderColor,
   containerColor,
-}: { radius: number ,attackCount: number,normalCount: number} & Record<string, string>) {
+}: { attackCount: number; normalCount: number } & Record<string, string>) {
+  const isDark = containerColor === '#242424';
+  const colorList = getChartListColor();
+  const attackColor = colorList[0] || '#e34d59';
+  const normalColor = colorList[1] || '#00a870';
+  const attackName = window.vm.$i18n.t('dashboard.cycle_attack_count');
+  const normalName = window.vm.$i18n.t('dashboard.cycle_normal_count');
+  const centerLabel = window.vm.$i18n.t('dashboard.cycle_normal_ratio');
+  const total = Number(attackCount) + Number(normalCount);
+  const normalPercent = total > 0 ? (Number(normalCount) / total) * 100 : 0;
+  const tooltipBg = isDark ? 'rgba(36, 36, 36, 0.96)' : 'rgba(255, 255, 255, 0.96)';
+  const tooltipBorder = isDark ? '#5e5e5e' : '#e7e7e7';
+  const tooltipText = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)';
+
   return {
-    color: getChartListColor(),
+    color: [normalColor, attackColor],
     tooltip: {
-      show: false,
-      trigger: 'axis',
-      position: null,
-    },
-    grid: {
-      top: '0',
-      right: '0',
+      trigger: 'item',
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
+      borderWidth: 1,
+      padding: [8, 12],
+      extraCssText: 'box-shadow: 0 6px 20px rgba(0,0,0,0.08); border-radius: 8px;',
+      textStyle: { color: tooltipText, fontSize: 12 },
+      formatter: (p: any) => `${p.marker} ${p.name}<br/>${formatChartNumber(p.value)} 次 · ${p.percent}%`,
     },
     legend: {
       selectedMode: false,
-      itemWidth: 12,
-      itemHeight: 4,
-      textStyle: {
-        fontSize: 12,
-        color: placeholderColor,
-      },
+      itemWidth: 14,
+      itemHeight: 5,
+      icon: 'roundRect',
+      textStyle: { fontSize: 12, color: placeholderColor },
       left: 'center',
       bottom: '0',
-      orient: 'horizontal', // legend 横向布局。
+      orient: 'horizontal',
+      formatter: (name: string) => {
+        const value = name === attackName ? Number(attackCount) : Number(normalCount);
+        return `${name}  ${formatChartNumber(value)}`;
+      },
     },
     series: [
       {
-        name: '销售渠道',
+        name: '占比',
         type: 'pie',
-        radius: ['48%', '60%'],
+        radius: ['58%', '74%'],
+        center: ['50%', '46%'],
         avoidLabelOverlap: true,
-        selectedMode: true,
         hoverAnimation: true,
-        silent: true,
         itemStyle: {
           borderColor: containerColor,
-          borderWidth: 1,
+          borderWidth: 3,
+          borderRadius: 6,
         },
         label: {
           show: true,
           position: 'center',
-          formatter: ['{value|{d}%}', '{name|{b}}'].join('\n'),
+          formatter: [`{value|${normalPercent.toFixed(1)}%}`, `{name|${centerLabel}}`].join('\n'),
           rich: {
             value: {
               color: textColor,
-              fontSize: 28,
-              fontWeight: 'normal',
-              lineHeight: 46,
+              fontSize: 30,
+              fontWeight: 600,
+              lineHeight: 40,
+              fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
             },
             name: {
-              color: '#909399',
+              color: placeholderColor,
               fontSize: 12,
-              lineHeight: 14,
-            },
-          },
-        },
-        emphasis: {
-          label: {
-            show: true,
-            formatter: ['{value|{d}%}', '{name|{b}}'].join('\n'),
-            rich: {
-              value: {
-                color: textColor,
-                fontSize: 28,
-                fontWeight: 'normal',
-                lineHeight: 46,
-              },
-              name: {
-                color: '#909399',
-                fontSize: 14,
-                lineHeight: 14,
-              },
+              lineHeight: 16,
+              padding: [4, 0, 0, 0],
             },
           },
         },
@@ -387,11 +419,15 @@ export function getPieChartDataSet({
         },
         data: [
           {
-            value: attackCount,
-            name: window.vm.$i18n.t('dashboard.cycle_attack_count'),
+            value: normalCount,
+            name: normalName,
+            itemStyle: { color: normalColor },
           },
-          { value: normalCount,
-           name: window.vm.$i18n.t('dashboard.cycle_normal_count') },
+          {
+            value: attackCount,
+            name: attackName,
+            itemStyle: { color: attackColor },
+          },
         ],
       },
     ],

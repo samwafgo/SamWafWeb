@@ -122,45 +122,39 @@
     </template>
 
     <!-- 触发器 - 直观显示系统状态 -->
-    <div class="system-monitor-trigger" @click="isMonitorVisible = true">
+    <div
+      class="system-monitor-trigger"
+      @click="isMonitorVisible = true"
+      :title="$t('topNav.system_monitor')"
+    >
       <!-- 系统整体状态灯（绿/黄/橙/红，悬浮查看含义） -->
-      <div class="status-indicator" :class="getOverallStatusClass()" :title="$t('topNav.overall_status')"></div>
+      <span class="status-indicator" :class="getOverallStatusClass()" :title="$t('topNav.overall_status')"></span>
       <div class="monitor-display">
         <div class="monitor-item-inline">
           <span class="label">CPU</span>
-          <span class="value" :style="{ color: getUsageColor(getCpuUsageLocal()) }">
-            {{ getCpuUsageLocal() }}%
-          </span>
+          <span class="value" :style="{ color: getUsageColor(getCpuUsageLocal()) }">{{ getCpuUsageLocal() }}%</span>
         </div>
+        <span class="monitor-divider"></span>
         <div class="monitor-item-inline">
           <span class="label">{{ $t('topNav.memory') }}</span>
-          <span class="value" :style="{ color: getUsageColor(getMemoryUsageLocal()) }">
-            {{ getMemoryUsageLocal() }}%
-          </span>
+          <span class="value" :style="{ color: getUsageColor(getMemoryUsageLocal()) }">{{ getMemoryUsageLocal() }}%</span>
         </div>
-        <div class="monitor-item-inline" v-if="getAverageDiskUsageLocal() > 0">
-  <span class="label">{{ $t('topNav.disk') }}</span>
-  <span class="value" :style="{ color: getUsageColor(getAverageDiskUsageLocal()) }">
-    {{ getAverageDiskUsageLocal() }}%
-  </span>
-</div>
-        <!-- 数据库 / 缓存（仅显示类型，详情见悬浮面板） -->
-        <div class="monitor-item-inline">
-          <span class="label">{{ $t('topNav.runtime_db') }}</span>
-          <span class="value env-text">{{ dbLabel }}</span>
-        </div>
-        <div class="monitor-item-inline">
-          <span class="label">{{ $t('topNav.runtime_cache') }}</span>
-          <span class="value env-text">{{ cacheLabel }}</span>
-        </div>
+        <template v-if="getAverageDiskUsageLocal() > 0">
+          <span class="monitor-divider"></span>
+          <div class="monitor-item-inline">
+            <span class="label">{{ $t('topNav.disk') }}</span>
+            <span class="value" :style="{ color: getUsageColor(getAverageDiskUsageLocal()) }">{{ getAverageDiskUsageLocal() }}%</span>
+          </div>
+        </template>
       </div>
+      <chevron-down-icon class="monitor-caret" />
     </div>
   </t-popup>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
-import { RefreshIcon, DashboardIcon } from 'tdesign-icons-vue';
+import { RefreshIcon, ChevronDownIcon } from 'tdesign-icons-vue';
 import { getSystemMonitorApi } from '@/apis/monitor';
 import { mapGetters, mapMutations } from 'vuex';
 
@@ -177,7 +171,7 @@ export default Vue.extend({
   name: 'SystemMonitor',
   components: {
     RefreshIcon,
-    DashboardIcon,
+    ChevronDownIcon,
   },
   data() {
     return {
@@ -208,17 +202,6 @@ export default Vue.extend({
     },
     runtimeCache() {
       return this.$store.state.sysparams?.cache || { type: '' };
-    },
-    dbLabel() {
-      const d = this.runtimeDb;
-      if (!d.driver) return '-';
-      return DB_DRIVER_LABELS[d.driver] || d.driver;
-    },
-    cacheLabel() {
-      const c = this.runtimeCache;
-      if (c.type === 'redis') return 'Redis';
-      if (!c.type) return '-';
-      return 'Memory';
     },
     dbDetail() {
       const d = this.runtimeDb;
@@ -485,14 +468,6 @@ export default Vue.extend({
   }
 }
 
-/* 触发器内联的数据库/缓存文本（非百分比，取消等宽右对齐与最小宽度） */
-.monitor-item-inline .value.env-text {
-  font-family: inherit;
-  min-width: 0;
-  text-align: left;
-  color: var(--td-text-color-primary);
-}
-
 /* 监控项样式 */
 .monitor-item {
   display: flex;
@@ -540,35 +515,45 @@ export default Vue.extend({
   }
 }
 
-/* 触发器样式 */
+/* 触发器样式：企业级状态胶囊 */
 .system-monitor-trigger {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 4px;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 20px;
   background: var(--td-bg-color-container);
-  border: 1px solid var(--td-border-level-1-color);
+  border: 1px solid var(--td-component-stroke);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 180px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  min-width: 0;
 
   &:hover {
-    background: var(--td-bg-color-container-hover);
-    border-color: var(--td-border-level-2-color);
+    border-color: var(--td-brand-color-3);
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
   }
 }
 
 .monitor-display {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex: 1;
+}
+
+.monitor-divider {
+  width: 1px;
+  height: 14px;
+  flex-shrink: 0;
+  background: var(--td-component-stroke);
 }
 
 .monitor-item-inline {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 4px;
 
   .label {
@@ -578,45 +563,99 @@ export default Vue.extend({
   }
 
   .value {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    min-width: 28px;
+    font-variant-numeric: tabular-nums;
+    min-width: 34px;
     text-align: right;
   }
 }
 
+.monitor-caret {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--td-text-color-placeholder);
+}
+
+/* 状态灯：发光圆点，严重状态呼吸告警 */
 .status-indicator {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    opacity: 0;
+  }
+
   &.overall-normal {
     background: #00a870;
+    box-shadow: 0 0 0 3px rgba(0, 168, 112, 0.14);
   }
 
   &.overall-caution {
     background: #f2bd27;
+    box-shadow: 0 0 0 3px rgba(242, 189, 39, 0.16);
   }
 
   &.overall-warning {
     background: #ed7b2f;
+    box-shadow: 0 0 0 3px rgba(237, 123, 47, 0.16);
   }
 
   &.overall-critical {
     background: #e34d59;
+    box-shadow: 0 0 0 3px rgba(227, 77, 89, 0.18);
+
+    &::after {
+      opacity: 0.6;
+      animation: status-pulse 1.6s ease-out infinite;
+    }
+  }
+}
+
+@keyframes status-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  70% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-indicator.overall-critical::after {
+    animation: none;
   }
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .system-monitor-trigger {
-    min-width: 120px;
+    padding: 0 8px;
+    min-width: 0;
+  }
+
+  .monitor-caret {
+    display: none;
   }
 
   .monitor-display {
-    gap: 8px;
+    gap: 6px;
   }
 
   .monitor-item-inline .label {
@@ -625,7 +664,7 @@ export default Vue.extend({
 
   .monitor-item-inline .value {
     font-size: 11px;
-    min-width: 24px;
+    min-width: 26px;
   }
 
   .system-monitor-panel {

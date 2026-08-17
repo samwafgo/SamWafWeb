@@ -86,12 +86,10 @@
       <menu-content v-show="layout !== 'side'" class="header-menu" :navData="menu" />
       <template #operations>
         <div class="operations-container">
-          <!-- 搜索框 -->
-          <search layout="top" />
-
           <!-- 系统监控 -->
           <system-monitor @open-wechat="wechat_visible = true" />
-
+          <!-- 搜索框 -->
+          <search layout="top" />
           <!-- 全局通知 -->
           <notice />
           <!-- 版本说明 -->
@@ -108,7 +106,6 @@
               </span>
             </t-button>
           </t-tooltip>
-
           <t-tooltip placement="bottom" :content="$t('topNav.wechat')">
             <t-button theme="default" shape="square" variant="text" @click="openWechat">
               <LogoWechatStrokeIcon />
@@ -124,14 +121,30 @@
               <help-circle-icon />
             </t-button>
           </t-tooltip>
-          <t-select v-model="langValue"
-                    placeholder="SelectLanguage"
-                    @change="changeLangEvent"  style="width: 150px; display: inline-block" title="Select Language">
-            <t-option  v-for="(item, index) in langOptions"
-                       :key="index"
-                       :label="item.label"
-                       :value="item.value"/>
-          </t-select>
+          <t-dropdown :min-column-width="120" trigger="click">
+            <template #dropdown>
+              <t-dropdown-menu>
+                <t-dropdown-item
+                  v-for="item in langOptions"
+                  :key="item.value"
+                  :value="item.value"
+                  :active="item.value === langValue"
+                  @click="changeLangEvent(item.value)"
+                >
+                  {{ item.label }}
+                </t-dropdown-item>
+              </t-dropdown-menu>
+            </template>
+            <t-button
+              theme="default"
+              shape="square"
+              variant="text"
+              class="lang-btn"
+              :title="$t('common.language')"
+            >
+              <translate-icon />
+            </t-button>
+          </t-dropdown>
           <t-button theme="warning" @click="changeServer" v-if="hasClientServer">
             <template #icon><add-icon /></template>
             {{ $t('topNav.current_server')}} {{ current_server.client_server_name }}
@@ -201,7 +214,8 @@
     AddIcon,
     LogoWechatStrokeIcon,
     RollbackIcon,
-    LockOnIcon
+    LockOnIcon,
+    TranslateIcon
   } from 'tdesign-icons-vue';
   import {
     prefix
@@ -241,7 +255,8 @@
       AddIcon,
       LogoWechatStrokeIcon,
       RollbackIcon,
-      LockOnIcon
+      LockOnIcon,
+      TranslateIcon
     },
     props: {
       theme: String,
@@ -354,20 +369,12 @@
     methods: {
       // 切换语言
       changeLangEvent(value, context) {
-        switch (value) {
-          case "zh_CN":
-            this.langValue = value;
-            this.$i18n.locale = this.langValue;
-            localStorage.setItem("lang",this.langValue)
-            break;
-          case "en_US":
-            this.langValue = value;
-            this.$i18n.locale = this.langValue;
-            localStorage.setItem("lang",this.langValue)
-            break;
-          default:
-            break;
-        }
+        // 兼容 t-dropdown-item 的载荷：可能是字符串，也可能是 option 对象（{ value }）
+        const lang = typeof value === 'string' ? value : (value && value.value) || '';
+        if (lang !== 'zh_CN' && lang !== 'en_US') return;
+        this.langValue = lang;
+        this.$i18n.locale = lang;
+        localStorage.setItem('lang', lang);
         location.reload(); // 刷新页面
       },
       //init
@@ -605,19 +612,40 @@
     }
 
     .t-button {
-      margin: 0 8px;
+      margin: 0 4px;
 
       &.header-user-btn {
-        margin: 0;
+        margin: 0 0 0 12px;
       }
     }
 
+    // 方形图标按钮：统一 36px 圆角方块 + 精致 hover
+    .t-button--shape-square {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    }
+
     .t-icon {
-      font-size: 20px;
+      font-size: 18px;
 
       &.general {
         margin-right: 16px;
       }
+    }
+  }
+
+  // 用户入口：胶囊
+  .header-user-btn {
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 20px;
+    border: 1px solid var(--td-component-stroke);
+
+    .header-user-avatar {
+      font-size: 20px;
+      color: var(--td-brand-color);
     }
   }
 

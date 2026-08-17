@@ -1,209 +1,159 @@
 <template>
-  <t-row :gutter="[16, 16]">
-    <t-col :xs="6" :xl="3" v-for="(item, index) in panelList" :key="item.title">
-      <t-card
-        :title="item.title"
-        :style="{ height: '168px' }"
-        :class="{ 'dashboard-item': true, 'dashboard-item--main-color': index == 0 }"
-        @click.native="jumpLog(index)"
-      >
-        <div class="dashboard-item-top">
-          <span :style="{ fontSize: `${resizeTime * 36}px` }">{{ item.number }}</span>
-        </div>
-        <div class="dashboard-item-left">
-          <div
-            v-if="index === 0"
-            id="moneyContainer"
-            class="dashboard-chart-container"
-            :style="{ width: `${resizeTime * 120}px`, height: `${resizeTime * 66}px` }"
-          ></div>
-          <div
-            v-else-if="index === 1"
-            id="refundContainer"
-            class="dashboard-chart-container"
-            :style="{ width: `${resizeTime * 120}px`, height: `${resizeTime * 42}px` }"
-          ></div>
-          <span v-else-if="index === 2" :style="{ marginTop: `-24px` }">
-            <usergroup-icon />
-          </span>
-          <span v-else :style="{ marginTop: '-24px' }">
-            <file-icon />
-          </span>
-        </div>
-        <template #footer>
-          <div class="dashboard-item-bottom">
-            <div class="dashboard-item-block">
-              较昨天
-              <trend
-                class="dashboard-item-trend"
-                :type="item.upTrend ? 'up' : 'down'"
-                :is-reverse-color="index === 0"
-                :describe="item.upTrend || item.downTrend"
-              />
-            </div>
-            <chevron-right-icon />
+  <div class="top-panel">
+    <t-row :gutter="[16, 16]">
+      <t-col :xs="6" :xl="3" v-for="(item, index) in panelList" :key="item.title">
+        <div
+          class="stat-card"
+          :class="{ 'stat-card--primary': index === 0 }"
+          role="button"
+          tabindex="0"
+          @click="jumpLog(index)"
+          @keyup.enter="jumpLog(index)"
+        >
+          <div class="stat-card__head">
+            <span class="stat-card__chip" :class="`stat-card__chip--${item.theme}`">
+              <component :is="item.icon" class="stat-card__chip-icon" />
+            </span>
+            <span class="stat-card__trend">
+              <span class="stat-card__trend-label">{{ $t('dashboard.counter.compare') }}</span>
+              <trend type="up" describe="0%" :is-reverse-color="index === 0" />
+            </span>
           </div>
-        </template>
-      </t-card>
-    </t-col>
-  </t-row>
+          <div class="stat-card__body">
+            <span class="stat-card__number">{{ formatNumber(item.displayNumber) }}</span>
+          </div>
+          <div class="stat-card__foot">
+            <span class="stat-card__title">{{ item.title }}</span>
+            <chevron-right-icon class="stat-card__arrow" />
+          </div>
+        </div>
+      </t-col>
+    </t-row>
+  </div>
 </template>
 <script lang="ts">
-import { LineChart, BarChart } from 'echarts/charts';
-import * as echarts from 'echarts/core';
-import { CanvasRenderer } from 'echarts/renderers';
-import { UsergroupIcon, FileIcon, ChevronRightIcon } from 'tdesign-icons-vue';
+import {
+  ShieldErrorIcon,
+  ViewListIcon,
+  RadarIcon,
+  ThunderIcon,
+  ChevronRightIcon,
+} from 'tdesign-icons-vue';
 import { mapState } from 'vuex';
 
 import Trend from '@/components/trend/index.vue';
-
-import { constructInitDashboardDataset } from '../index';
-import { changeChartsTheme } from '@/utils/color';
-//import { PANE_LIST } from '@/service/service-base';
-  import {
-    wafstatsumdayapi
-  } from '@/apis/stats';
-echarts.use([LineChart, BarChart, CanvasRenderer]);
+import { wafstatsumdayapi } from '@/apis/stats';
 
 export default {
   name: 'TopPanel',
   components: {
     Trend,
-    UsergroupIcon,
-    FileIcon,
+    ShieldErrorIcon,
+    ViewListIcon,
+    RadarIcon,
+    ThunderIcon,
     ChevronRightIcon,
   },
   data() {
     return {
-      resizeTime: 1,
       panelList: [],
+      animFrames: [] as number[],
     };
   },
   computed: {
     ...mapState('setting', ['brandTheme', 'mode']),
   },
-  watch: {
-    brandTheme() {
-      changeChartsTheme([this.refundChart]);
-    },
-    mode() {
-      [this.moneyCharts, this.refundChart].forEach((item) => {
-        item.dispose();
-      });
-      this.renderCharts();
-    },
-  },
   created() {
-
-    this.getWafStat()
+    this.getWafStat();
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.updateContainer();
-    });
-
-    window.addEventListener('resize', this.updateContainer, false);
-    this.renderCharts();
+  beforeDestroy() {
+    this.animFrames.forEach((id: number) => cancelAnimationFrame(id));
   },
-
   methods: {
-    jumpLog(title){
-      console.log(title)
+    jumpLog(index) {
       // 三张卡片都必须带上显式 query：空 query 与"从菜单点进去"无法区分，
       // 会导致访问日志页沿用上次缓存的筛选条件（issue #893 问题2）
-      switch (title){
-        case 0: //今日攻击数量
-          this.$router.push({
-        		path: '/waf/wafvisitlog',
-        		query: {
-        			action: "阻止",
-        			src_ip: ""
-        		}
-        	}).catch((err) => { if (!err || err.name !== 'NavigationDuplicated') console.warn(err); });
-          break;
-        case 1: //今天总访问量
-        this.$router.push({
-        	path: '/waf/wafvisitlog',
-        	query: {
-        		action: "",
-        		src_ip: ""
-        	}
-        }).catch((err) => { if (!err || err.name !== 'NavigationDuplicated') console.warn(err); });break;
-        case 2: //今天异常IP（个）
-        this.$router.push({
-        	path: '/waf/wafvisitlog',
-        	query: {
-        		action: "禁止",
-        		src_ip: ""
-        	}
-        }).catch((err) => { if (!err || err.name !== 'NavigationDuplicated') console.warn(err); });
-        break;
-        default:
-          break;
-      }
-
-
+      const queryMap: Record<number, { action: string; src_ip: string }> = {
+        0: { action: '阻止', src_ip: '' }, // 今日攻击数量
+        1: { action: '', src_ip: '' }, // 今天总访问量
+        2: { action: '禁止', src_ip: '' }, // 今天异常IP（个）
+      };
+      const query = queryMap[index];
+      if (!query) return;
+      this.$router
+        .push({
+          path: '/waf/wafvisitlog',
+          query,
+        })
+        .catch((err) => {
+          if (!err || err.name !== 'NavigationDuplicated') console.warn(err);
+        });
     },
     getWafStat() {
-      let that = this
       wafstatsumdayapi()
         .then((res) => {
-          let resdata = res
-          console.log(resdata)
-          if (resdata.code === 0) {
-
-            //const { list = [] } = resdata.data.list;
-
-            that.wafstat_data = resdata.data;
-            that.panelList.push({
-              title:  this.$t('dashboard.counter.today_of_attack_count') ,
-              number: that.wafstat_data.AttackCountOfToday,
-              upTrend: '0%',
-              leftType: 'echarts-line',
-            })
-            that.panelList.push({
-              title: this.$t('dashboard.counter.all_visit_count') ,
-              number: that.wafstat_data.VisitCountOfToday,
-              upTrend: '0%',
-              leftType: 'echarts-line',
-            })
-            that.panelList.push({
-              title:this.$t('dashboard.counter.not_normal_visit_count'),
-              number: that.wafstat_data.IllegalIpCountOfToday,
-              upTrend: '0%',
-              leftType: 'echarts-line',
-            })
-           /* that.panelList.push({
-              title: '今天正常IP（个）',
-              number: that.wafstat_data.NormalIpCountOfToday,
-              upTrend: '0%',
-              leftType: 'echarts-line',
-            })*/
-            that.panelList.push({
-              title: this.$t('dashboard.counter.qps'),
-              number: that.wafstat_data.CurrentQps,
-              upTrend: '0%',
-              leftType: 'echarts-line',
-            })
+          if (res.code === 0) {
+            const d = res.data;
+            const panels = [
+              {
+                title: this.$t('dashboard.counter.today_of_attack_count'),
+                number: d.AttackCountOfToday,
+                theme: 'danger',
+                icon: 'ShieldErrorIcon',
+              },
+              {
+                title: this.$t('dashboard.counter.all_visit_count'),
+                number: d.VisitCountOfToday,
+                theme: 'primary',
+                icon: 'ViewListIcon',
+              },
+              {
+                title: this.$t('dashboard.counter.not_normal_visit_count'),
+                number: d.IllegalIpCountOfToday,
+                theme: 'warning',
+                icon: 'RadarIcon',
+              },
+              {
+                title: this.$t('dashboard.counter.qps'),
+                number: d.CurrentQps,
+                theme: 'success',
+                icon: 'ThunderIcon',
+              },
+            ];
+            this.panelList = panels.map((p) => ({ ...p, displayNumber: 0 }));
+            this.$nextTick(() => this.animateAll());
           }
         })
         .catch((e: Error) => {
           console.log(e);
         })
-        .finally(() => {});
+        .finally(() => undefined);
     },
-    updateContainer() {
-      if (document.documentElement.clientWidth >= 1400 && document.documentElement.clientWidth < 1920) {
-        this.resizeTime = (document.documentElement.clientWidth / 2080).toFixed(2);
-      } else if (document.documentElement.clientWidth < 1080) {
-        this.resizeTime = (document.documentElement.clientWidth / 1080).toFixed(2);
-      } else {
-        this.resizeTime = 1;
-      }
+    animateAll() {
+      this.panelList.forEach((item, index) => this.animateNumber(item, index * 90));
     },
-
-    renderCharts() {
-      const { chartColors } = this.$store.state.setting;
+    animateNumber(item, delay) {
+      const end = Number(item.number) || 0;
+      const duration = 900;
+      let startTime: number | null = null;
+      const tick = (now: number) => {
+        if (startTime === null) startTime = now;
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - (1 - progress) ** 3;
+        item.displayNumber = Math.round(end * eased);
+        if (progress < 1) {
+          this.animFrames.push(requestAnimationFrame(tick));
+        } else {
+          item.displayNumber = end;
+        }
+      };
+      setTimeout(() => {
+        this.animFrames.push(requestAnimationFrame(tick));
+      }, delay);
+    },
+    formatNumber(val) {
+      if (val === null || val === undefined || Number.isNaN(Number(val))) return '0';
+      return Number(val).toLocaleString('en-US');
     },
   },
 };
@@ -212,105 +162,153 @@ export default {
 <style lang="less" scoped>
 @import '@/style/variables.less';
 
-.dashboard-item {
-  padding: 8px;
+.top-panel {
+  /deep/ .t-row {
+    row-gap: 16px;
+  }
+}
 
-  /deep/ .t-card__footer {
-    padding-top: 0;
+.stat-card {
+  position: relative;
+  height: 168px;
+  padding: 20px 20px 14px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border-radius: var(--td-radius-large);
+  background: var(--td-bg-color-container);
+  border: 1px solid var(--td-component-stroke);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition:
+    transform 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // 卡片角落装饰光斑
+  &::after {
+    content: '';
+    position: absolute;
+    right: -48px;
+    bottom: -48px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--td-brand-color-1) 0%, transparent 72%);
+    opacity: 0;
+    transition: opacity 0.24s;
+    pointer-events: none;
   }
 
-  /deep/ .t-card__title {
-    font-size: 14px;
-    font-weight: 500;
+  &:hover::after {
+    opacity: 1;
   }
 
-  /deep/ .t-card__body {
+  &__head {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    flex: 1;
-    position: relative;
-  }
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  &-top {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-
-    > span {
-      display: inline-block;
-      color: var(--td-text-color-primary);
-      font-size: 36px;
-      line-height: 44px;
-    }
-  }
-
-  &-bottom {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
     align-items: center;
-
-    > .t-icon {
-      cursor: pointer;
-    }
+    justify-content: space-between;
   }
 
-  &-block {
-    display: flex;
+  &__chip {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: 22px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &--danger {
+      background: var(--td-error-color-1);
+      color: var(--td-error-color);
+    }
+
+    &--primary {
+      background: var(--td-brand-color-1);
+      color: var(--td-brand-color);
+    }
+
+    &--warning {
+      background: var(--td-warning-color-1);
+      color: var(--td-warning-color);
+    }
+
+    &--success {
+      background: var(--td-success-color-1);
+      color: var(--td-success-color);
+    }
+
+    .stat-card__chip-icon {
+      font-size: 22px;
+    }
+  }
+
+  &__trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__trend-label {
+    font-size: 12px;
     color: var(--td-text-color-placeholder);
   }
 
-  &-trend {
-    margin-left: 8px;
-  }
-
-  &-left {
-    position: absolute;
-    top: 0;
-    right: 32px;
-
-    > span {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 56px;
-      height: 56px;
-      background: var(--td-brand-color-1);
-      border-radius: 50%;
-
-      .t-icon {
-        font-size: 24px;
-        color: var(--td-brand-color);
-      }
-    }
-  }
-
-  // 针对第一个卡片需要反色处理
-  &--main-color {
-    background: var(--td-brand-color);
+  &__number {
+    display: inline-block;
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 600;
+    font-family: var(--td-font-family-medium);
     color: var(--td-text-color-primary);
+    font-variant-numeric: tabular-nums;
+  }
 
-    /deep/ .t-card__title,
-    .dashboard-item-top span,
-    .dashboard-item-bottom {
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    font-size: 14px;
+    color: var(--td-text-color-secondary);
+  }
+
+  &__arrow {
+    color: var(--td-text-color-placeholder);
+    transition:
+      transform 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  // 首个指标卡片使用品牌色渐变背景
+  &--primary {
+    background: linear-gradient(135deg, var(--td-brand-color) 0%, var(--td-brand-color-7) 100%);
+    border: none;
+    box-shadow: 0 8px 20px -8px var(--td-brand-color-4);
+
+    &::after {
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 72%);
+    }
+
+    .stat-card__trend-label,
+    .stat-card__number,
+    .stat-card__title {
       color: var(--td-text-color-anti);
     }
 
-    .dashboard-item-block {
-      color: var(--td-text-color-anti);
-      opacity: 0.6;
+    .stat-card__arrow {
+      color: rgba(255, 255, 255, 0.75);
     }
 
-    .dashboard-item-bottom {
-      color: var(--td-text-color-anti);
+    .stat-card__chip {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
     }
   }
 }
