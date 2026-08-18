@@ -172,6 +172,7 @@
         :value="formEditData"
         :select-can-filter="selectCanFilter"
         :is-edit="true"
+        :init-tab="editInitTab"
         @close="onClickCloseEditBtn"
         @submit="onSubmitEdit"
         @tab-placement-change="onHostTabPlacementChange"
@@ -431,6 +432,7 @@ export default Vue.extend({
       fileHeader: {},
       addFormVisible: false,
       editFormVisible: false,
+      editInitTab: 1, //编辑弹窗打开时定位的Tab(从访问日志"IP提取有问题?"跳来时定位到"其他配置")
       guardVisible: false,
       confirmVisible: false,
       sslAutoApplyVisible: false,
@@ -739,6 +741,14 @@ export default Vue.extend({
         this.addFormVisible = true
       }
     }
+    // 从访问日志「IP提取有问题?」跳过来：直接打开该站点编辑弹窗，并定位到「其他配置」
+    if (this.$route.query && this.$route.query.editcode) {
+      const editCode = String(this.$route.query.editcode);
+      this.editInitTab = this.$route.query.tab === 'ipsource' ? 4 : 1;
+      this.formEditData = { code: '' };
+      this.editFormVisible = true;
+      this.getDetail(editCode);
+    }
   },
 
   methods: {
@@ -923,6 +933,7 @@ export default Vue.extend({
         });
     },
     handleClickEdit(e) {
+      this.editInitTab = 1;
       console.log(e)
       const {
         code, global_host

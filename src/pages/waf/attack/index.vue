@@ -300,6 +300,25 @@
     <!-- IP提取问题对话框 -->
     <t-dialog :header="$t('page.visit_log.detail.ip_extract_issue')" :visible.sync="ipExtractDialogVisible" :width="800" :footer="false">
       <div slot="body">
+        <!-- 这里改的是全局配置，站点里的「真实IP来源」会覆盖它；不写清楚用户会以为改了全局所有站点都变 -->
+        <t-alert theme="warning" style="margin-bottom: 16px;">
+          <div>
+            <b>{{ $t('page.visit_log.detail.ip_extract_scope_title') }}</b>
+            <div style="margin-top: 4px;">{{ $t('page.visit_log.detail.ip_extract_scope_desc') }}</div>
+            <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <t-select v-model="ipExtractHostCode" clearable filterable :style="{ width: '220px' }"
+                        :placeholder="$t('page.visit_log.detail.ip_extract_select_host')">
+                <t-option v-for="item in realHostOptions" :value="item.value" :label="item.label" :key="item.value">{{ item.label }}</t-option>
+              </t-select>
+              <t-button size="small" :disabled="!ipExtractHostCode" @click="gotoHostIpSource">
+                {{ $t('page.visit_log.detail.ip_extract_goto_host') }}
+              </t-button>
+              <t-button size="small" variant="outline" :disabled="!ipExtractHostCode" @click="openHostProbe">
+                {{ $t('page.visit_log.detail.ip_extract_view_headers') }}
+              </t-button>
+            </div>
+          </div>
+        </t-alert>
         <p>{{ $t('page.visit_log.detail.ip_extract_issue_desc') }}</p>
         
         <!-- 视频教程链接 -->
@@ -365,6 +384,9 @@
         </t-form>
       </div>
     </t-dialog>
+    <!-- 某个站点单独看真实到达的请求头(与站点编辑页共用同一组件) -->
+    <ip-source-probe-dialog :visible.sync="hostProbeVisible" :host-code="ipExtractHostCode"
+                            :host-name="host_dic[ipExtractHostCode] || ''" />
   </div>
 </template>
 <script lang="ts">
@@ -372,6 +394,7 @@ import Vue from 'vue';
 import { SearchIcon } from 'tdesign-icons-vue';
 import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
+import IpSourceProbeDialog from '@/pages/waf/host/components/IpSourceProbeDialog.vue';
 import { allsharedblist, exportlog } from '@/apis/waflog/attacklog';
 import { aiMarkLabelApi, aiUnmarkLabelApi, aiLabelByUuidsApi } from '@/apis/ai';
 import VisitDetailPage from './detail/index.vue'
@@ -431,6 +454,7 @@ const GROUP_COLUMNS = [
 export default Vue.extend({
   name: 'WebLogList',
   components: {
+    IpSourceProbeDialog,
     SearchIcon,
     Trend,
     VisitDetailPage
@@ -728,6 +752,11 @@ export default Vue.extend({
       },
       //主机字典
       host_dic: {},
+      ipExtractHostCode: "", //IP提取弹窗里选中的站点(用于直达站点配置/查看该站点真实请求头)
+      hostProbeVisible: false,
+      //「IP提取有问题?」里选站点用的列表：只含真实站点("全局网站"不是站点，没有自己的真实IP来源配置)。
+      //必须整体赋值成数组，不能在模板里现算 host_dic —— Vue2 对新增 key 不响应，会渲染成空
+      realHostOptions: [],
       //主机昵称字典 host_code -> 纯昵称
       host_nickname_dic: {},
       //日志存档字典
@@ -1219,11 +1248,16 @@ export default Vue.extend({
               let host_options = resdata.data;
               //昵称字典整体替换赋值，保证表格列能重新渲染(Vue2 对新增 key 不响应)
               const nicknameDic = {};
+              const realHosts = [];
               for (let i = 0; i < host_options.length; i++) {
                 this.host_dic[host_options[i].value] = host_options[i].label;
                 nicknameDic[host_options[i].value] = host_options[i].nickname || '';
+                if (host_options[i].global_host !== 1) {
+                  realHosts.push({ value: host_options[i].value, label: host_options[i].label });
+                }
               }
               this.host_nickname_dic = nicknameDic;
+              this.realHostOptions = realHosts;
             }
             resolve(); // 调用 resolve 表示加载完成
           })
@@ -1661,6 +1695,17 @@ export default Vue.extend({
       });
     },
 
+    // 跳到该站点的「真实IP来源」配置(网站防护列表页会自动打开编辑弹窗的"其他配置")
+    gotoHostIpSource() {
+      if (!this.ipExtractHostCode) return;
+      this.ipExtractDialogVisible = false;
+      this.$router.push({ name: 'WafHost', query: { editcode: this.ipExtractHostCode, tab: 'ipsource' } });
+    },
+    // 就地查看该站点最近真实到达的请求头
+    openHostProbe() {
+      if (!this.ipExtractHostCode) return;
+      this.hostProbeVisible = true;
+    },
     // 快捷选择IP头信息
     selectIPHeader(headerValue) {
       this.ipExtractFormData.value = headerValue;

@@ -95,3 +95,21 @@ export function batchCopyConfig(data) {
     data: data
   })
 }
+
+//查看最近到达的真实请求头(排查"真实IP来源"配置)
+export function getIpSourceProbe(params) {
+  return request({
+    url: 'wafhost/host/ipsource/probe',
+    method: 'get',
+    params: params
+  })
+}
+
+//清空真实IP来源诊断采样
+export function clearIpSourceProbe(params) {
+  return request({
+    url: 'wafhost/host/ipsource/probe/clear',
+    method: 'get',
+    params: params
+  })
+}
