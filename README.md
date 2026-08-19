@@ -20,7 +20,7 @@ npm run build
 ## 图标资源（离线部署必读）
 
 `<t-icon name="xxx">` 默认会去腾讯 CDN（`tdesign.gtimg.com`）拉 SVG sprite，内网/离线环境拉不到就整片图标空白。
-本项目已把 sprite 落到 `public/tdesign-icons/<版本>/`，构建时由 `build/vite-plugin-tdesign-local-icons.mjs`
+本项目已把 sprite 落到 `public/assets/tdesign-icons/<版本>/`（**必须放 assets/ 下面**：SamWaf 后端只把 `dist/assets` 挂成静态目录，其余路径会被 SPA 兜底返回 index.html），构建时由 `build/vite-plugin-tdesign-local-icons.mjs`
 把包里写死的 CDN 常量替换成本地路径，产物不再依赖外网。
 
 **升级 `tdesign-vue` / `tdesign-icons-vue` 之后要重新同步一次**（CDN 地址里的版本号写死在包源码里，升级就会变）：
