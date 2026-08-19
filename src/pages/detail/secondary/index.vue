@@ -34,7 +34,7 @@
             </t-list-item>
           </t-list>
           <div v-else class="secondary-msg-list__empty-list">
-            <img src="https://tdesign.gtimg.com/pro-template/personal/nothing.png" alt="空" />
+            <empty-nothing-icon class="empty-icon" />
             <p>暂无通知</p>
           </div>
         </t-tab-panel>
@@ -54,6 +54,7 @@ import { QueueIcon, DeleteIcon, ChatIcon } from 'tdesign-icons-vue';
 import { prefix } from '@/config/global';
 import { NOTIFICATION_TYPES } from '@/constants';
 import { msgDataItem } from '@/store/modules/notification';
+import EmptyNothingIcon from '@/assets/assets-empty-nothing.svg';
 
 const TAB_LIST = [
   {
@@ -76,6 +77,7 @@ export default {
     QueueIcon,
     DeleteIcon,
     ChatIcon,
+    EmptyNothingIcon,
   },
   data() {
     return {

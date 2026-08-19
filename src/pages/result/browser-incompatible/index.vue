@@ -6,11 +6,11 @@
         <div>TDesign Starter 推荐以下主流浏览器</div>
         <div class="recommend-browser">
           <div>
-            <thumbnail class="browser-icon" url="https://tdesign.gtimg.com/starter/result-page/chorme.png" />
+            <thumbnail class="browser-icon" :url="chromeIcon" />
             <div>Chrome</div>
           </div>
           <div>
-            <thumbnail class="browser-icon" url="https://tdesign.gtimg.com/starter/result-page/qq-browser.png" />
+            <thumbnail class="browser-icon" :url="qqBrowserIcon" />
             <div>QQ Browser</div>
           </div>
         </div>
@@ -22,10 +22,18 @@
 <script>
 import Result from '@/components/result/index.vue';
 import Thumbnail from '@/components/thumbnail/index.vue';
+import ChromeIcon from '@/assets/assets-browser-chrome.png';
+import QQBrowserIcon from '@/assets/assets-browser-qq.png';
 
 export default {
   name: 'ResultBrowserIncompatible',
   components: { Result, Thumbnail },
+  data() {
+    return {
+      chromeIcon: ChromeIcon,
+      qqBrowserIcon: QQBrowserIcon,
+    };
+  },
 };
 </script>
 

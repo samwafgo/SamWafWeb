@@ -147,6 +147,9 @@ import STYLE_CONFIG from '@/config/style';
 import { insertThemeStylesheet, generateColorMap } from '@/config/color';
 
 import Thumbnail from '@/components/thumbnail/index.vue';
+import LayoutSideThumbnail from '@/assets/assets-setting-layout-side.png';
+import LayoutTopThumbnail from '@/assets/assets-setting-layout-top.png';
+import LayoutMixThumbnail from '@/assets/assets-setting-layout-mix.png';
 import ColorContainer from '@/components/color/index.vue';
 
 import SettingDarkIcon from '@/assets/assets-setting-dark.svg';
@@ -159,6 +162,12 @@ import {
 
 const SETTING_STORAGE_KEY = 'samwaf_page_setting';
 const LAYOUT_OPTION = ['side', 'top', 'mix'];
+
+const LAYOUT_THUMBNAIL_MAP = {
+  side: LayoutSideThumbnail,
+  top: LayoutTopThumbnail,
+  mix: LayoutMixThumbnail,
+};
 const COLOR_OPTIONS = ['default', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple', 'dynamic'];
 const MODE_OPTIONS = [
   { type: 'light', text: i18n.t('page.right_setting.theme_mode_color_light') },
@@ -270,7 +279,7 @@ export default {
       return SettingAutoIcon;
     },
     getThumbnailUrl(name: string) {
-      return `https://tdesign.gtimg.com/starter/setting/${name}.png`;
+      return LAYOUT_THUMBNAIL_MAP[name] || LayoutSideThumbnail;
     },
     handleClick(): void {
       this.$store.commit('setting/toggleSettingPanel', true);

@@ -28,7 +28,7 @@
         </t-list>
 
         <div v-else class="empty-list">
-          <img src="https://tdesign.gtimg.com/pro-template/personal/nothing.png" alt="空" />
+          <empty-nothing-icon class="empty-icon" />
           <p>{{ $t('page.notice.empty') }}</p>
         </div>
         <div class="header-msg-bottom">
@@ -56,12 +56,14 @@ import Vue from 'vue';
 import { mapState, mapGetters } from 'vuex';
 import { MailIcon,NotificationIcon } from 'tdesign-icons-vue';
 
+import EmptyNothingIcon from '@/assets/assets-empty-nothing.svg';
 import { NotificationItem } from '@/interface';
 
 export default Vue.extend({
   components: {
     MailIcon,
-    NotificationIcon
+    NotificationIcon,
+    EmptyNothingIcon
   },
   data() {
     return {
@@ -118,8 +120,9 @@ export default Vue.extend({
     font-size: 14px;
     color: var(--td-text-color-secondary);
 
-    img {
+    .empty-icon {
       width: 63px;
+      height: 63px;
     }
 
     p {

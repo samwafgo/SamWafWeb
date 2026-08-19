@@ -3,6 +3,7 @@ import { viteMockServe } from 'vite-plugin-mock';
 import { createVuePlugin } from 'vite-plugin-vue2';
 import { createSvgPlugin } from 'vite-plugin-vue2-svg';
 import requireTransform from 'vite-plugin-require-transform';
+import tdesignLocalIcons from './build/vite-plugin-tdesign-local-icons.mjs';
 
 import path from 'path';
 
@@ -29,6 +30,8 @@ export default ({ mode }) => {
     },
 
     plugins: [
+      // 把 tdesign 图标 CDN 换成本地资源，保证内网/离线部署图标不空白
+      tdesignLocalIcons({ root: __dirname }),
       createVuePlugin({
         jsx: true,
       }),
