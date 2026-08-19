@@ -4,12 +4,26 @@
   <div :class="layoutCls">
     <t-dialog width="600px" :visible.sync="update_visible" :header="$t('topNav.update.has_new_version')">
       <template #confirmBtn>
-        <t-button :theme="update_new_ver && update_new_ver.toLowerCase().includes('beta') ? 'danger' : 'warning'" @click="handleConfirmUpdate">
+        <!-- 容器环境：应用内升级会在容器重建后回退，这里不给"确认更新"，只给文档入口 -->
+        <t-link v-if="!self_update_allowed" theme="primary" underline
+                href="https://doc.samwaf.com/quickstart/Update.html" target="_blank">
+          {{$t('topNav.update.container_doc_link')}}
+        </t-link>
+        <t-button v-else :theme="update_new_ver && update_new_ver.toLowerCase().includes('beta') ? 'danger' : 'warning'" @click="handleConfirmUpdate">
           {{$t('topNav.update.confirm_update')}}
         </t-button>
       </template>
 
-      <t-alert theme="warning">
+      <t-alert v-if="!self_update_allowed" theme="error" :title="$t('topNav.update.container_blocked_title')">
+        <template #message>
+          <div>{{ $t('topNav.update.container_blocked_tips', { container: container_type || 'container' }) }}</div>
+          <div style="margin-top:8px"><strong>{{ $t('topNav.update.container_howto_label') }}</strong></div>
+          <pre style="margin:4px 0;padding:8px;background:rgba(0,0,0,.05);border-radius:4px;white-space:pre-wrap">docker compose pull
+docker compose up -d</pre>
+          <div>{{ $t('topNav.update.container_howto_tips') }}</div>
+        </template>
+      </t-alert>
+      <t-alert v-else theme="warning">
           <template #message>
             {{$t('topNav.update.update_danger_tips')}}
           </template>
@@ -298,6 +312,11 @@
         update_visible:false,
         update_new_ver:"",
         update_desc:"",
+        /**运行环境：容器类型(空=非容器)与是否允许应用内升级。
+         * 容器里升级只对当前容器有效，容器重建就回退到镜像版本，而数据库回不去，
+         * 所以容器环境下后端会直接拒绝升级，前端这里换成镜像更新指引。**/
+        container_type:"",
+        self_update_allowed:true,
         current_account:"not login",
         /**微信二维码对话框**/
         wechat_visible: false, 
@@ -460,6 +479,9 @@
               that.hasNewVersion = true
               that.update_new_ver = resdata.data.version_new
               that.update_desc = resdata.data.version_desc
+              that.container_type = resdata.data.container || ""
+              // 老后端没有这个字段时按"允许"处理，避免升级入口被误屏蔽
+              that.self_update_allowed = resdata.data.self_update_allowed !== false
               if(method =="manual"){
                 that.update_visible = true
               }else{
@@ -563,6 +585,11 @@
       handleDoUpdate(){
           //处理升级
           let that = this;
+          // 容器环境后端会直接拒绝，这里先拦一道，避免无谓请求和误导性的 loading
+          if (!that.self_update_allowed) {
+            that.$message.warning(that.$t('topNav.update.container_blocked_title'));
+            return;
+          }
           that.isUpdateloading = true;
           // 检查是否为beta版本，如果是则添加渠道参数
           const params = that.update_new_ver && that.update_new_ver.toLowerCase().includes('beta')
