@@ -15,8 +15,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-/** 本地资源存放目录（相对 public/），也是构建产物里的目录名 */
-export const ICON_DIR = 'tdesign-icons';
+/** 本地资源存放目录（相对 public/），也是构建产物里的目录名。
+ *  必须放在 assets/ 下面：SamWaf 后端只把 dist/assets 挂成静态目录
+ *  （wafmangeweb/static/static.go 里 folders = ["assets"]），
+ *  其余路径一律走 noRoute 兜底返回 index.html，放外面会拿到一坨 HTML 直接语法报错。 */
+export const ICON_DIR = 'assets/tdesign-icons';
 
 /** 包源码里的 CDN 常量形如 https://tdesign.gtimg.com/icon/0.4.0/fonts/index.js */
 export const CDN_ICON_RE = /https:\/\/tdesign\.gtimg\.com\/icon\/([0-9.]+)\/fonts\/index\.(js|css)/g;
