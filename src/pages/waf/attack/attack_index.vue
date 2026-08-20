@@ -325,6 +325,8 @@ export default Vue.extend({
       trans_to_parent_ip:"",//传递给
       deleteLogMode: 'tag_only',//删除模式
       batchDeleteVisible: false,
+      // 批量删除用的是「含被排除标签」的完整清单，否则被排除的标签没入口清理历史数据
+      batchTagOptions: [],
       batchDeleteTags: [],
       batchDeleteMode: 'tag_only',
       batchDeleteLoading: false,
@@ -336,7 +338,7 @@ export default Vue.extend({
       return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
     },
     attackTagsForBatch() {
-      return this.attackTags.filter((t: any) => t.value !== '');
+      return this.batchTagOptions.filter((t: any) => t.value !== '');
     },
     // 归一化标签：优先用后端新增的 count 字段，老后端没有则从 label 的「(数字)」反解
     tagList() {
@@ -763,6 +765,10 @@ export default Vue.extend({
       this.batchDeleteTags = [];
     },
     handleBatchDeleteTag() {
+      // 每次打开都重新拉一次完整标签（含被排除的），保证清理入口不丢
+      allattacktaglist({ with_benign: 1 }).then((res) => {
+        this.batchTagOptions = Array.isArray(res.data) ? res.data : [];
+      });
       this.batchDeleteTags = [];
       this.batchDeleteMode = 'tag_only';
       this.batchDeleteProgress = 0;
