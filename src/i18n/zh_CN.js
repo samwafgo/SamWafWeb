@@ -118,6 +118,7 @@ export default {
       software_version: "软件版本",
       release_official: "正式版",
       release_debug: "调试版",
+      release_beta: "测试版",
       os: "操作系统",
       system_type: "系统类型",
       arch: "系统架构",

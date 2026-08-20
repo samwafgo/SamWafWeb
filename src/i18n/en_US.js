@@ -118,6 +118,7 @@ export default {
       software_version: "Software Version",
       release_official: "Release",
       release_debug: "Debug",
+      release_beta: "Beta",
       os: "Operating System",
       system_type: "System Type",
       arch: "Architecture",
