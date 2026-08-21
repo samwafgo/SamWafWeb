@@ -30,6 +30,8 @@ export default Vue.extend({
     type: String,
     describe: [String, Number],
     isReverseColor: Boolean,
+    // 涨跌本身没有好坏之分的指标（如总访问量）用中性色，避免"上涨=红色告警"的误读
+    isNeutralColor: Boolean,
   },
   computed: {
     containerCls() {
@@ -37,8 +39,9 @@ export default Vue.extend({
         'trend-container',
         {
           'trend-container__reverse': this.isReverseColor,
-          'trend-container__up': !this.isReverseColor && this.type === 'up',
-          'trend-container__down': !this.isReverseColor && this.type === 'down',
+          'trend-container__neutral': !this.isReverseColor && this.isNeutralColor,
+          'trend-container__up': !this.isReverseColor && !this.isNeutralColor && this.type === 'up',
+          'trend-container__down': !this.isReverseColor && !this.isNeutralColor && this.type === 'down',
         },
       ];
     },
@@ -76,6 +79,18 @@ export default Vue.extend({
 
       .trend-icon-container {
         background: var(--td-success-color-2);
+        margin-right: 8px;
+      }
+    }
+
+    &__neutral {
+      color: var(--td-text-color-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      .trend-icon-container {
+        background: var(--td-bg-color-component);
         margin-right: 8px;
       }
     }
