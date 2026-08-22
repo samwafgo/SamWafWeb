@@ -359,6 +359,12 @@ export default [
         meta: { title: 'menu.system.system_config_title' },
       },
       {
+        path: 'UpgradeNotice',
+        name: 'UpgradeNotice',
+        component: () => import('@/pages/waf/upgradenotice/index.vue'),
+        meta: { title: 'menu.system.upgrade_notice_title' },
+      },
+      {
         path: 'PrivateInfo',
         name: 'PrivateInfo',
         component: () => import('@/pages/waf/private_info/index.vue'),

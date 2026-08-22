@@ -1,5 +1,29 @@
 <template>
   <div class="dashboard-page">
+    <!-- 降级运行：旧程序 + 新库（容器重建后回退），过去只在日志里，现在摆到台面上 -->
+    <t-alert
+      v-if="upgradeSummary.downgrade"
+      theme="error"
+      class="row-container"
+      :message="upgradeSummary.downgrade_msg"
+      :close="true"
+      @close="handleDowngradeAck"
+    />
+
+    <!-- 升级须知提示条：处理完自动消失；收起只对本次升级生效，下次升级会重新出现 -->
+    <t-alert
+      v-if="showUpgradeTip"
+      theme="info"
+      class="row-container"
+      :close="true"
+      @close="handleUpgradeTipClose"
+    >
+      <template #message>{{ upgradeTipMessage }}</template>
+      <template #operation>
+        <span class="tips-link" @click="handleUpgradeNoticeOperation">{{ $t('dashboard.upgrade_notice_link') }}</span>
+      </template>
+    </t-alert>
+
     <t-swiper
       v-if="tipsVisable"
       class="tips-container"
@@ -54,6 +78,29 @@
     <middle-chart class="row-container" />
     <!-- 列表排名 -->
     <rank-list class="row-container" />
+
+    <!-- 重要升级须知：一辈子只弹一次，关掉即回写 popup_shown -->
+    <t-dialog
+      :visible.sync="upgradePopupVisible"
+      :header="$t('dashboard.upgrade_notice_popup_title', { to: upgradeSummary.to_version || upgradeSummary.current_version })"
+      :cancelBtn="$t('dashboard.upgrade_notice_popup_all', { count: upgradeSummary.pending_count })"
+      :confirmBtn="$t('dashboard.upgrade_notice_popup_ok')"
+      width="680px"
+      @cancel="handleUpgradePopupAll"
+      @confirm="handleUpgradePopupClose"
+      @close="handleUpgradePopupClose"
+    >
+      <p class="upgrade-popup__desc">
+        {{ $t('dashboard.upgrade_notice_popup_desc', { count: upgradeSummary.high_pending_count }) }}
+      </p>
+      <div v-for="item in upgradeSummary.popup_items" :key="item.notice_id" class="upgrade-popup__item">
+        <div class="upgrade-popup__title">
+          <t-tag theme="danger" variant="light" size="small">{{ $t('page.upgrade_notice.level_high') }}</t-tag>
+          <span>{{ item.title }}</span>
+        </div>
+        <div class="upgrade-popup__detail">{{ item.detail }}</div>
+      </div>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -110,16 +157,46 @@ export default {
       // 系统公告数据
       announcements: [
 
-      ]
+      ],
+      // 升级须知
+      upgradeSummary: {
+        current_version: '',
+        from_version: '',
+        to_version: '',
+        pending_count: 0,
+        high_pending_count: 0,
+        total_count: 0,
+        need_popup: false,
+        popup_items: [],
+        downgrade: false,
+        downgrade_msg: '',
+      },
+      upgradeTipClosed: false,
+      upgradePopupVisible: false
     }
   },
   computed: {
     visibleTips() {
       return this.tips.filter((item) => item.visable);
     },
+    showUpgradeTip() {
+      return this.upgradeSummary.pending_count > 0 && !this.upgradeTipClosed;
+    },
+    upgradeTipMessage() {
+      const params = {
+        from: this.upgradeSummary.from_version,
+        to: this.upgradeSummary.to_version || this.upgradeSummary.current_version,
+        count: this.upgradeSummary.pending_count,
+      };
+      // 没有历史版本记录时（老库首次升上来/全新安装）不谈"从哪升上来"，免得显示成空版本号
+      return this.upgradeSummary.from_version
+        ? this.$t('dashboard.upgrade_notice_tip', params)
+        : this.$t('dashboard.upgrade_notice_tip_unknown', params);
+    },
   },
   mounted() {
     this.loadSysInfo()
+    this.loadUpgradeSummary()
     //异步加载公告
     Promise.resolve().then(() => {
       this.loadAnnouncements()
@@ -188,6 +265,53 @@ export default {
           this.announcements = json.announcements
         }
        })
+    },
+    // 升级须知汇总：提示条 + 重要须知弹窗
+    loadUpgradeSummary() {
+      this.$request
+        .get('/upgradenotice/summary', { params: { lang: localStorage.getItem('lang') || 'zh_CN' } })
+        .then((res) => {
+          if (res.code !== 0 || !res.data) {
+            return
+          }
+          this.upgradeSummary = res.data
+          // 收起状态按"这次升到哪个版本"记，下次再升级时提示条会重新出现
+          this.upgradeTipClosed =
+            localStorage.getItem('upgrade_notice_tip_closed') === (res.data.to_version || res.data.current_version)
+          this.upgradePopupVisible = !!res.data.need_popup && (res.data.popup_items || []).length > 0
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+    },
+    // 确认降级告警：记下当前这个"历史最高版本"，此后不再提示；
+    // 若之后最高版本又变高（又升级又回退了一次），告警会重新出现
+    handleDowngradeAck() {
+      this.upgradeSummary.downgrade = false
+      this.$request.post('/upgradenotice/downgradeack', {}).catch((e) => {
+        console.log(e)
+      })
+    },
+    handleUpgradeTipClose() {
+      this.upgradeTipClosed = true
+      localStorage.setItem(
+        'upgrade_notice_tip_closed',
+        this.upgradeSummary.to_version || this.upgradeSummary.current_version,
+      )
+    },
+    handleUpgradeNoticeOperation() {
+      this.$router.push('/sys/UpgradeNotice')
+    },
+    // 弹窗只弹一次：关掉就回写，不管用户有没有真的去处理
+    handleUpgradePopupClose() {
+      this.upgradePopupVisible = false
+      this.$request.post('/upgradenotice/popupshown', {}).catch((e) => {
+        console.log(e)
+      })
+    },
+    handleUpgradePopupAll() {
+      this.handleUpgradePopupClose()
+      this.handleUpgradeNoticeOperation()
     },
     // 点击公告链接
     handleAnnouncementLink(item) {
@@ -336,5 +460,30 @@ export default {
   margin-left: 12px;
   font-size: 14px;
   flex: none;
+}
+
+.upgrade-popup__desc {
+  color: var(--td-text-color-secondary);
+  margin: 4px 0 14px;
+}
+
+.upgrade-popup__item {
+  border: 1px solid var(--td-component-border);
+  border-radius: var(--td-radius-default);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.upgrade-popup__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.upgrade-popup__detail {
+  color: var(--td-text-color-secondary);
+  line-height: 1.7;
 }
 </style>
