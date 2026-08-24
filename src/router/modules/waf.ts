@@ -440,22 +440,6 @@ export default [
   },
 
   {
-    path: '/center',
-    name: 'center',
-    component: Layout,
-    redirect: '/center',
-    meta: { title: 'menu.pc.parent_title', icon: ServerIcon },
-    children: [
-      {
-        path: 'CenterManager',
-        name: 'CenterManager',
-        component: () => import('@/pages/waf/center/index.vue'),
-        meta: { title: 'menu.pc.pc_list_title' },
-      }
-    ],
-  },
-
-  {
     path: '/oplatform',
     name: 'oplatform',
     component: Layout,

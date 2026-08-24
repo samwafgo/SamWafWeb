@@ -253,7 +253,6 @@ export default {
     contract: "联系SamWaf",
     wechat: "SamWaf微信公众账号",
     help_document: "帮助文档",
-    current_server: "当前 服务器",
     system_config: "系统设置",
     runtime_env: "运行环境",
     runtime_db: "数据库",
@@ -460,10 +459,6 @@ export default {
       channel_title: "通知渠道",
       subscription_title: "通知订阅",
       log_title: "通知日志",
-    },
-    pc: {
-      parent_title: "设备管理",
-      pc_list_title: "设备列表",
     },
     oplatform: {
       parent_title: "开放平台",

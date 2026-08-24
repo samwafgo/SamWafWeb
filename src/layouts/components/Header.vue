@@ -159,10 +159,6 @@ docker compose up -d</pre>
               <translate-icon />
             </t-button>
           </t-dropdown>
-          <t-button theme="warning" @click="changeServer" v-if="hasClientServer">
-            <template #icon><add-icon /></template>
-            {{ $t('topNav.current_server')}} {{ current_server.client_server_name }}
-          </t-button>
           <t-dropdown :min-column-width="125" trigger="click">
             <template #dropdown>
               <t-dropdown-menu>
@@ -225,7 +221,6 @@ docker compose up -d</pre>
     MailIcon,
     NotificationErrorIcon,
     ArrowUpDownCircleIcon,
-    AddIcon,
     LogoWechatStrokeIcon,
     RollbackIcon,
     LockOnIcon,
@@ -266,7 +261,6 @@ docker compose up -d</pre>
       MailIcon,
       NotificationErrorIcon,
       ArrowUpDownCircleIcon,
-      AddIcon,
       LogoWechatStrokeIcon,
       RollbackIcon,
       LockOnIcon,
@@ -320,9 +314,6 @@ docker compose up -d</pre>
         current_account:"not login",
         /**微信二维码对话框**/
         wechat_visible: false, 
-        /**控制中心相关**/
-        hasClientServer:false,
-        current_server:"",
         /**版本回退**/
         rollback_visible: false,
         rollback_loading: false,
@@ -400,20 +391,9 @@ docker compose up -d</pre>
       init(){
         //帐号初始化
         this.current_account = localStorage.getItem("current_account")
-        //管控初始化
-        if(localStorage.getItem("current_server")){
-          this.hasClientServer = true
-          this.current_server = JSON.parse(localStorage.getItem("current_server"))
-        }else{
-          this.hasClientServer = false
-        }
         //多语言
         this.langValue = localStorage.getItem("lang") || "zh_CN"
 
-      },
-      //切换服务器
-      changeServer(){
-        this.$router.push('/center/CenterManager');
       },
       toggleSettingPanel() {
         this.$store.commit('setting/toggleSettingPanel', true);

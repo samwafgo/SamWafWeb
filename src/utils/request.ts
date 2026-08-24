@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import proxy from '../config/host';
 import router from '../router/index';
 import store from '@/store';
-import { AesDecrypt, AesEncrypt, isObject, isInList } from './usuallytool'
+import { AesDecrypt, AesEncrypt, isObject } from './usuallytool'
 import { clearLocalStorageExceptPreserved,saveCurrentUrl } from '@/constants';
 import { getRequestTimeout, DEFAULT_REQUEST_TIMEOUT } from '@/config/requestTimeout';
 import { NotifyPlugin, DialogPlugin, MessagePlugin } from 'tdesign-vue';
@@ -66,7 +66,6 @@ const env = import.meta.env.MODE || 'development';
 
 const API_HOST = env === 'mock' ? '/' : proxy[env].API; // 如果是mock模式 就不配置host 会走本地Mock拦截
 
-const noVisitClientList = ["/center/list", "logout", "public/login"];
 const CODE = {
   LOGIN_TIMEOUT: 1000,
   REQUEST_SUCCESS: 0,
@@ -114,16 +113,6 @@ instance.interceptors.request.use(
       config.headers['X-Token'] = token
       //config.headers.Authorization =  + token
     }
-    //如果有远控机器
-    let remoteBean = localStorage.getItem("current_server") ? localStorage.getItem("current_server") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
-
-    if (remoteBean && !isInList(config.url, noVisitClientList)) {
-      console.log(config)
-      remoteBean = JSON.parse(localStorage.getItem("current_server"))
-      // 让每个请求携带token-- ['X-Token']为自定义key 请根据实际情况自行修改
-      config.headers['Remote-Waf-User-Id'] = remoteBean.client_tenant_id + "@" + remoteBean.client_user_code
-      //config.headers.Authorization =  + token
-    }
     /*if(config.headers['Content-Type'] !=undefined && config.headers['Content-Type']=="application/json" ){
       data = JSON.stringify(config.data)
 
@@ -158,33 +147,24 @@ instance.interceptors.response.use(
         //console.log("再加密后",AesEncrypt(tmpSrcContent))
         return data;
       } else {
-        //如果有远控机器
-        let remoteBean = localStorage.getItem("current_server") ? localStorage.getItem("current_server") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
-
-        if (!remoteBean && data.code === CODE.AUTH_FAILURE) {
+        if (data.code === CODE.AUTH_FAILURE) {
           // 保存当前访问的URL
           saveCurrentUrl();
           clearLocalStorageExceptPreserved();
 
           console.log("鉴权失败")
           router.replace({ path: '/login' })
-        } else if (!remoteBean && data.code === CODE.NEED_BIND_2FA) {
+        } else if (data.code === CODE.NEED_BIND_2FA) {
 
           console.log("需要2Fa强制绑定")
           router.replace({ path: '/account/OTP' })
         }
-        else if (!remoteBean && data.code === CODE.NEED_CHANGE_PWD) {
+        else if (data.code === CODE.NEED_CHANGE_PWD) {
           // 服务端强制改密门：令牌未改密即访问其他接口时触发，引导回登录重新进入强制改密流程
           saveCurrentUrl();
           clearLocalStorageExceptPreserved();
           console.log("需要强制修改初始/重置密码")
           router.replace({ path: '/login' })
-        }
-        else if (remoteBean && data.code === CODE.AUTH_FAILURE) {
-          remoteBean = JSON.parse(localStorage.getItem("current_server"))
-          data.code = -1
-          data.msg = remoteBean.client_server_name + " 远端鉴权失败"
-          console.log("远端鉴权失败")
         }
       }
       return data;

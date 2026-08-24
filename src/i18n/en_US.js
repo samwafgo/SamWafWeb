@@ -253,7 +253,6 @@ export default {
     wechat: "SamWaf Wechat Account",
     contract: "Contact SamWaf",
     help_document: "Help Document",
-    current_server: "Current Server",
     system_config: "System Configuration",
     runtime_env: "Runtime",
     runtime_db: "Database",
@@ -460,10 +459,6 @@ export default {
       channel_title: "Channels",
       subscription_title: "Subscriptions",
       log_title: "Logs",
-    },
-    pc: {
-      parent_title: "Device",
-      pc_list_title: "Device List",
     },
     oplatform: {
       parent_title: "Open Platform",
