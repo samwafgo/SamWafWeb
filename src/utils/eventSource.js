@@ -1,12 +1,15 @@
 // eventSource.js
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { v4 as uuidv4 } from 'uuid';
-import {AesDecrypt, AesEncrypt} from './usuallytool'
+import {ensureSecSession, currentKeyId, encryptOutgoing, decryptIncoming} from './seccrypto'
 import proxy from "@/config/host";
 const env = import.meta.env.MODE || 'development';
-export function fetchChatStream({    history, q, scene, ctrl, onSuccess, onError,onComplete }) {
+export async function fetchChatStream({    history, q, scene, ctrl, onSuccess, onError,onComplete }) {
   console.log('fetchChatStream history',  history)
   const API_HOST = env === 'mock' ? '/' : proxy[env].API
+  // 这条流不走 axios，会话密钥得自己确保就绪；握手失败则回落 legacy 通道
+  await ensureSecSession()
+  const keyId = currentKeyId()
 
 
   const requestData = {
@@ -17,7 +20,7 @@ export function fetchChatStream({    history, q, scene, ctrl, onSuccess, onError
     scene: scene || 'general',
   };
   let encryptedData = JSON.stringify(requestData);
-  encryptedData = AesEncrypt(encryptedData);
+  encryptedData = encryptOutgoing(encryptedData);
 
   // url
   fetchEventSource(API_HOST+"/gpt/chat", {
@@ -30,6 +33,8 @@ export function fetchChatStream({    history, q, scene, ctrl, onSuccess, onError
       // 这条请求不走 axios，防重放头得自己加，否则被 ReplayProtect 直接拦掉
       "X-Request-Time": Math.floor(Date.now() / 1000).toString(),
       "X-Request-Id": uuidv4(),
+      // 声明会话密钥，后端据此加密流里的每一条 content
+      ...(keyId ? { "X-Sec-Ver": "2", "X-Key-Id": keyId } : {}),
     },
     body: encryptedData,
     signal: ctrl.signal,
@@ -68,7 +73,7 @@ export function fetchChatStream({    history, q, scene, ctrl, onSuccess, onError
       try {
         const res = JSON.parse(msg.data);
         if(typeof res.content == 'string'){
-          res.content = AesDecrypt(res.content);
+          res.content = decryptIncoming(res.content);
         }
         // [DONE] 是结束标记，不要当成正文塞进气泡
         if (res.content === '[DONE]') {

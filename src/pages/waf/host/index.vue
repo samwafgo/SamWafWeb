@@ -361,7 +361,8 @@
   </div>
 </template>
 <script lang="ts">
-import {AesDecrypt, getBaseUrl} from '@/utils/usuallytool';
+import {getBaseUrl} from '@/utils/usuallytool';
+import {decryptIncoming} from '@/utils/seccrypto';
 import Vue from 'vue';
 import {FileSafetyIcon, LinkIcon, SearchIcon} from 'tdesign-icons-vue';
 import {prefix} from '@/config/global';
@@ -1229,7 +1230,7 @@ export default Vue.extend({
     },
     onSuccess(e) {
 
-      const data = JSON.parse(AesDecrypt(e.response.data))
+      const data = JSON.parse(decryptIncoming(e.response.data))
       console.log('host upload', data)
       let lastMsg = `成功数量 :${  data.SuccessInt}`;
       if (data.FailInt > 0) {

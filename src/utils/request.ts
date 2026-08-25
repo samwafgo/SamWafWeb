@@ -4,6 +4,7 @@ import proxy from '../config/host';
 import router from '../router/index';
 import store from '@/store';
 import { AesDecrypt, AesEncrypt, isObject } from './usuallytool'
+import { ensureSecSession, currentKeyId, secEncrypt, secDecrypt, isSecPayload, resetSecSession } from './seccrypto'
 import { clearLocalStorageExceptPreserved,saveCurrentUrl } from '@/constants';
 import { getRequestTimeout, DEFAULT_REQUEST_TIMEOUT } from '@/config/requestTimeout';
 import { NotifyPlugin, DialogPlugin, MessagePlugin } from 'tdesign-vue';
@@ -72,7 +73,8 @@ const CODE = {
   REQUEST_FOBID: 1001,
   AUTH_FAILURE: -999,
   NEED_BIND_2FA: -3,
-  NEED_CHANGE_PWD: -4
+  NEED_CHANGE_PWD: -4,
+  NEED_REHANDSHAKE: -5
 };
 
 const instance = axios.create({
@@ -85,12 +87,11 @@ const instance = axios.create({
     function (data, headers) {
       // 这里没有对 Form-Data 格式的报文处理
       if (isObject(data)) {
-        // 一、请求参数加密
-        //if (process.env.VUE_APP_RUNTIME === 'prod') {
+        // 一、请求参数加密：有会话密钥走 v2(swt2)，否则回落 legacy。
+        // 握手已在请求拦截器里完成，这里是同步的（tweetnacl 无异步接口）。
         data = JSON.stringify(data)
-        //headers["keyCipher"] = rsaEncrypt(aesKey) // 传输 aes key 密文
-        data = AesEncrypt(data) // 加密请求参数
-        // }
+        const sec = secEncrypt(data)
+        data = sec !== null ? sec : AesEncrypt(data)
         return data
       }
       return data
@@ -105,7 +106,18 @@ instance.interceptors.retry = 3;
 
 
 instance.interceptors.request.use(
-  (config: any) => {
+  async (config: any) => {
+    // 先确保本标签页有可用的会话密钥；握手失败(旧后端没有该接口等)就回落 legacy 通道。
+    // 放在拦截器里 await，后面的 transformRequest 才能同步拿到密钥。
+    await ensureSecSession()
+    const keyId = currentKeyId()
+    if (keyId) {
+      config.headers['X-Sec-Ver'] = '2'
+      config.headers['X-Key-Id'] = keyId
+    }
+    // 留一份未加密的报文：会话密钥失效需要重发时，得用新密钥重新加密，
+    // 而 config.data 此刻之后就会被 transformRequest 换成密文字符串。
+    if (config.__rawData === undefined) config.__rawData = config.data
 
     let token: string = localStorage.getItem("access_token") ? localStorage.getItem("access_token") : "" //此处换成自己获取回来的token，通常存在在cookie或者store里面
     if (token) {
@@ -139,14 +151,31 @@ instance.interceptors.response.use(
     if (response.status === 200) {
       const { data } = response;
       if (data.code === CODE.REQUEST_SUCCESS) {
-        console.log("解密前", data)
-        let tmpSrcContent = AesDecrypt(data.data)
+        // v2 报文优先；服务端会话失效时会回落 legacy，这里同样兜底解一次
+        let tmpSrcContent = secDecrypt(data.data)
+        if (tmpSrcContent === null) {
+          if (isSecPayload(data.data)) {
+            // 是 v2 报文但本地解不开(keyid 对不上)：丢掉密钥下次重新握手
+            resetSecSession()
+            return data;
+          }
+          tmpSrcContent = AesDecrypt(data.data)
+        }
         data.data = JSON.parse(tmpSrcContent)
-        console.log("解密后", data)
-
-        //console.log("再加密后",AesEncrypt(tmpSrcContent))
         return data;
       } else {
+        if (data.code === CODE.NEED_REHANDSHAKE) {
+          // 服务端没有本次会话密钥(多为重启或过期)：重新握手后重发这一条请求。
+          // 只重试一次——握手完还是 -5 说明是服务端侧的问题，再重发只会转圈。
+          const cfg: any = response.config || {}
+          if (!cfg.__secRetried) {
+            cfg.__secRetried = true
+            cfg.data = cfg.__rawData
+            resetSecSession()
+            return ensureSecSession().then(() => instance.request(cfg))
+          }
+          console.log("会话密钥重新握手后仍不可用")
+        }
         if (data.code === CODE.AUTH_FAILURE) {
           // 保存当前访问的URL
           saveCurrentUrl();

@@ -22,7 +22,7 @@ import Vue from 'vue';
 import config from '@/config/style';
 import websocket from "@/utils/websocket.js";
 import { DialogPlugin } from 'tdesign-vue';
-import  {AesDecrypt} from './utils/usuallytool'
+import  {ensureSecSession, currentKeyId, decryptIncoming} from './utils/seccrypto'
 import { v4 as uuidv4 } from 'uuid'
 import { clearLocalStorageExceptPreserved, saveCurrentUrl } from '@/constants';
 const env = import.meta.env.MODE || 'development';
@@ -112,8 +112,12 @@ export default Vue.extend({
         if (path) window.location.href = path + '?back=' + encodeURIComponent(window.location.href);
         this.showEmergencyDialog = false;
       },
-      initWebSocket() {
+      async initWebSocket() {
         console.log("log",window.location.host)
+        // WebSocket 建连不能带自定义头，会话密钥只能走查询参数；
+        // 握手失败(旧后端/网络异常)时 keyid 为空，后端推送回落 legacy 通道。
+        await ensureSecSession()
+        const keyid = currentKeyId()
         if(!this.ws) {
         	// url
           const isHttps = window.location.protocol === 'https:';
@@ -122,6 +126,7 @@ export default Vue.extend({
           let url = env=="development"
               ? `ws://127.0.0.1:26666${secPath}/api/v1/ws`
               : `${isHttps ? 'wss' : 'ws'}://${window.location.host}${secPath}/api/v1/ws`;
+          if (keyid) url += `?keyid=${encodeURIComponent(keyid)}`;
           // 代次：本次连接的身份标记。旧连接的事件迟到时靠它识别并丢弃，
           // 否则「已废弃连接的 close 事件」会把 this.ws（此时已指向新的活连接）置空并再排一次重连，
           // 于是又漏出一条连接——线上就是这样一路裂变出十几条并存连接，
@@ -194,7 +199,7 @@ export default Vue.extend({
           let msgDataEnstr =wsData.msg_data
 
           //console.log('msgDataEnstr',msgDataEnstr)
-          let tmpSrcContent = AesDecrypt(msgDataEnstr)
+          let tmpSrcContent = decryptIncoming(msgDataEnstr)
          // console.log('tmpSrcContent',tmpSrcContent)
           let msgData = JSON.parse(tmpSrcContent)
           //console.log('msgData',msgData)
