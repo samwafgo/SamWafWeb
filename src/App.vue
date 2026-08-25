@@ -46,6 +46,7 @@ export default Vue.extend({
   data() {
     return {
       ws: null,
+      wsConnecting: false,
       disConnectTimer: null,
       reconnectDelay: WS_RECONNECT_BASE_DELAY,
       wsOpenedAt: 0,
@@ -114,9 +115,17 @@ export default Vue.extend({
       },
       async initWebSocket() {
         console.log("log",window.location.host)
-        // WebSocket 建连不能带自定义头，会话密钥只能走查询参数；
-        // 握手失败(旧后端/网络异常)时 keyid 为空，后端推送回落 legacy 通道。
-        await ensureSecSession()
+        // 已有连接就别再建：这个判断必须在 await 之前，否则两次调用（created 与一次重连）
+        // 会双双穿过判断各建一条，重蹈「一条广播被同一页面收 N 次」的覆辙
+        if(this.ws || this.wsConnecting) return;
+        this.wsConnecting = true;
+        try {
+          // WebSocket 建连不能带自定义头，会话密钥只能走查询参数；
+          // 握手失败(旧后端/网络异常)时 keyid 为空，后端推送回落 legacy 通道。
+          await ensureSecSession()
+        } finally {
+          this.wsConnecting = false;
+        }
         const keyid = currentKeyId()
         if(!this.ws) {
         	// url
