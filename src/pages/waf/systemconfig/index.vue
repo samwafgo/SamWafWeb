@@ -67,7 +67,16 @@
                 </div>
               </div>
               <div v-if="row.remarks" class="config-item-key" :title="row.item">{{ row.item }}</div>
-              <div class="config-item-value">{{ row.value }}</div>
+              <!-- 密钥类配置后端不回显原文，只按 has_value 显示是否已配置 -->
+              <div v-if="row.is_sensitive" class="config-item-value">
+                <t-tag v-if="row.has_value" theme="success" variant="light" size="small">
+                  {{ $t('page.systemconfig.secret_configured') }}
+                </t-tag>
+                <t-tag v-else theme="default" variant="light" size="small">
+                  {{ $t('page.systemconfig.secret_empty') }}
+                </t-tag>
+              </div>
+              <div v-else class="config-item-value">{{ row.value }}</div>
             </div>
           </div>
         </div>
@@ -85,7 +94,33 @@
             <t-input :style="{ width: '480px' }" v-model="formEditData.item" readonly></t-input>
           </t-form-item>
           <t-form-item :label="$t('page.systemconfig.label_configuration_value')" name="value">
+            <!-- 密钥类：不回显原文，密码框输入新值；留空=保持原值；清空需显式点按钮 -->
+            <div v-if="formEditData.is_sensitive" :style="{ width: '480px' }">
+              <t-input
+                v-model="formEditData.value"
+                type="password"
+                autocomplete="new-password"
+                :disabled="secretCleared"
+                :placeholder="
+                  secretCleared
+                    ? $t('page.systemconfig.secret_will_clear')
+                    : formEditData.has_value
+                    ? $t('page.systemconfig.secret_set_placeholder')
+                    : $t('page.systemconfig.secret_empty_placeholder')
+                "
+              ></t-input>
+              <div class="config-secret-ops">
+                <span class="config-secret-tip">{{ $t('page.systemconfig.secret_tip') }}</span>
+                <a v-if="formEditData.has_value && !secretCleared" class="t-button-link" @click="onClickClearSecret">
+                  {{ $t('page.systemconfig.secret_clear') }}
+                </a>
+                <a v-if="secretCleared" class="t-button-link" @click="onClickCancelClearSecret">
+                  {{ $t('page.systemconfig.secret_cancel_clear') }}
+                </a>
+              </div>
+            </div>
             <t-textarea
+              v-else
               :style="{ width: '480px' }"
               :autosize="{ minRows: 1, maxRows: 12 }"
               v-model="formEditData.value"
@@ -114,6 +149,10 @@ import {
   edit_system_config_api,
 } from '@/apis/systemconfig';
 
+// 与后端 waf_service.ConfigClearSentinel 约定：密钥类配置留空=保持原值，
+// 需要清空必须显式提交这个哨兵值。
+const SECRET_CLEAR_SENTINEL = '__SAMWAF_CLEAR__';
+
 const INITIAL_DATA = {
   item_class: 'system',
   item: '',
@@ -121,6 +160,8 @@ const INITIAL_DATA = {
   item_type: 'string',
   options: '',
   remarks: '',
+  is_sensitive: false,
+  has_value: false,
 };
 
 export default Vue.extend({
@@ -132,6 +173,7 @@ export default Vue.extend({
     return {
       editFormVisible: false,
       formEditData: { ...INITIAL_DATA },
+      secretCleared: false, // 密钥类配置：本次编辑是否点了"清空"
       rules: {},
       prefix,
       dataLoading: false,
@@ -221,12 +263,25 @@ export default Vue.extend({
         });
     },
     handleClickEditRow(row) {
+      this.secretCleared = false;
       this.editFormVisible = true;
       this.getDetail(row.id);
+    },
+    onClickClearSecret(): void {
+      this.secretCleared = true;
+      this.formEditData.value = '';
+    },
+    onClickCancelClearSecret(): void {
+      this.secretCleared = false;
+      this.formEditData.value = '';
     },
     onSubmitEdit({ firstError }): void {
       if (!firstError) {
         const postdata = { ...this.formEditData };
+        // 密钥类三态：点了"清空"发哨兵值；留空=后端保持原值；填了新值=更新
+        if (postdata.is_sensitive && this.secretCleared) {
+          postdata.value = SECRET_CLEAR_SENTINEL;
+        }
         edit_system_config_api({ ...postdata })
           .then((res) => {
             const resdata = res;
@@ -247,6 +302,7 @@ export default Vue.extend({
     },
     onClickCloseEditBtn(): void {
       this.editFormVisible = false;
+      this.secretCleared = false;
       this.formEditData = { ...INITIAL_DATA };
     },
     getDetail(id) {
@@ -256,6 +312,11 @@ export default Vue.extend({
           if (resdata.code === 0) {
             this.detail_data = resdata.data;
             this.formEditData = { ...this.detail_data };
+            // 密钥类：后端返回的 value 已是空串，这里再显式清一次，
+            // 确保输入框永远从空开始（避免任何残留被当成新值提交）
+            if (this.formEditData.is_sensitive) {
+              this.formEditData.value = '';
+            }
           }
         })
         .catch((e: Error) => {
@@ -392,5 +453,20 @@ export default Vue.extend({
     max-height: 200px;
     overflow: auto;
   }
+</style>
 
+<style lang="less">
+.config-secret-ops {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.config-secret-tip {
+  flex: 1;
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+  line-height: 1.5;
+}
 </style>

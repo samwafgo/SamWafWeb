@@ -21,11 +21,26 @@
             v-model="gptConfig.gpt_token"
             type="password"
             autocomplete="new-password"
-            :placeholder="gptConfig.has_token ? $t('page.gpt.config.token_set_placeholder') : $t('page.gpt.config.token_empty_placeholder')"
+            :disabled="tokenCleared"
+            :placeholder="
+              tokenCleared
+                ? $t('page.gpt.config.token_will_clear')
+                : gptConfig.has_token
+                ? $t('page.gpt.config.token_set_placeholder')
+                : $t('page.gpt.config.token_empty_placeholder')
+            "
           />
         </t-form-item>
       </t-form>
-      <div class="gpt-token-tip">{{ $t('page.gpt.config.token_tip') }}</div>
+      <div class="gpt-token-tip">
+        <span>{{ $t('page.gpt.config.token_tip') }}</span>
+        <a v-if="gptConfig.has_token && !tokenCleared" class="t-button-link gpt-token-clear" @click="onClickClearToken">
+          {{ $t('page.gpt.config.token_clear') }}
+        </a>
+        <a v-if="tokenCleared" class="t-button-link gpt-token-clear" @click="onClickCancelClearToken">
+          {{ $t('page.gpt.config.token_cancel_clear') }}
+        </a>
+      </div>
 
       <div class="gpt-preset-title">{{ $t('page.gpt.config.preset_title') }}</div>
       <div class="gpt-preset-list">
@@ -64,6 +79,10 @@
 import { wafGptConfigGetApi, wafGptConfigSaveApi } from '@/apis/gpt';
 import { GPT_PROVIDERS } from '@/utils/gptProviders';
 
+// 与后端 waf_service.ConfigClearSentinel 约定：密钥留空=保留原值，
+// 要真正清空必须提交这个哨兵值。
+const TOKEN_CLEAR_SENTINEL = '__SAMWAF_CLEAR__';
+
 export default {
   name: 'GptConfigDialog',
   props: {
@@ -77,6 +96,7 @@ export default {
       loading: false,
       saving: false,
       gptConfig: { gpt_url: '', gpt_model: '', gpt_token: '', has_token: false },
+      tokenCleared: false, // 本次编辑是否点了「清空密钥」
       gptProviders: GPT_PROVIDERS,
     };
   },
@@ -97,6 +117,7 @@ export default {
     async loadGptConfig() {
       this.loading = true;
       this.gptConfig.gpt_token = '';
+      this.tokenCleared = false;
       try {
         const res = await wafGptConfigGetApi();
         if (res.code === 0 && res.data) {
@@ -120,7 +141,16 @@ export default {
       this.gptConfig.gpt_url = p.url;
       this.gptConfig.gpt_model = model || (p.models && p.models[0]) || '';
     },
-    // 保存 GPT 参数（token 留空表示保留原密钥）
+    // 清空密钥：留空只表示“保留原值”，真要清空得显式提交哨兵值
+    onClickClearToken() {
+      this.tokenCleared = true;
+      this.gptConfig.gpt_token = '';
+    },
+    onClickCancelClearToken() {
+      this.tokenCleared = false;
+      this.gptConfig.gpt_token = '';
+    },
+    // 保存 GPT 参数（token 留空=保留原密钥，点过清空=提交哨兵真正清掉）
     async saveGptConfig() {
       if (!this.gptConfig.gpt_url || !this.gptConfig.gpt_model) {
         this.$message.warning(this.$t('page.gpt.config.url_model_required'));
@@ -128,16 +158,20 @@ export default {
       }
       this.saving = true;
       try {
+        const typedToken = (this.gptConfig.gpt_token || '').trim();
         const res = await wafGptConfigSaveApi({
           gpt_url: this.gptConfig.gpt_url.trim(),
           gpt_model: this.gptConfig.gpt_model.trim(),
-          gpt_token: (this.gptConfig.gpt_token || '').trim(),
+          gpt_token: this.tokenCleared ? TOKEN_CLEAR_SENTINEL : typedToken,
         });
         if (res.code === 0) {
           this.$message.success(this.$t('page.gpt.config.save_ok'));
-          if ((this.gptConfig.gpt_token || '').trim()) {
+          if (this.tokenCleared) {
+            this.gptConfig.has_token = false;
+          } else if (typedToken) {
             this.gptConfig.has_token = true;
           }
+          this.tokenCleared = false;
           this.gptConfig.gpt_token = '';
           this.$emit('update:visible', false);
           // 通知调用方刷新"是否已配置"状态
@@ -161,6 +195,12 @@ export default {
   color: var(--td-text-color-placeholder, #999);
   font-size: 12px;
   margin: 4px 0 12px 110px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gpt-token-clear {
+  flex-shrink: 0;
 }
 .gpt-preset-title {
   font-weight: 500;
