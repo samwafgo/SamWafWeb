@@ -1,6 +1,20 @@
 <template>
   <div>
     <t-card class="list-card-container">
+      <!-- 开放平台总开关。默认是关的，而"调不通"的头号原因就是这个开关没开——
+           以前它藏在「参数配置」里，用户在这页建完 Key 直接去调，然后来问为什么 401。
+           放在整页最上面靠右，进页面第一眼就能看到当前是开还是关 -->
+      <div class="op-master">
+        <t-tooltip :content="openPlatformEnabled ? $t('page.oplatform.master_on_tips') : $t('page.oplatform.master_off_tips')">
+          <div class="op-master__box">
+            <t-switch v-model="openPlatformEnabled" :loading="masterLoading" @change="handleToggleMaster" />
+            <span class="op-master__t">{{ $t('page.oplatform.master_switch') }}</span>
+            <t-tag v-if="openPlatformEnabled" theme="success" variant="light">{{ $t('page.oplatform.master_on') }}</t-tag>
+            <t-tag v-else theme="warning" variant="light">{{ $t('page.oplatform.master_off') }}</t-tag>
+          </div>
+        </t-tooltip>
+      </div>
+
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAdd">{{ $t('page.oplatform.new_key') }}</t-button>
@@ -18,6 +32,15 @@
           </t-form>
         </div>
       </t-row>
+
+      <help-block
+        :summary="$t('page.oplatform.help_summary')"
+        :items="helpItems"
+        :note="$t('page.oplatform.help_note')"
+        :title="$t('page.oplatform.help_title')"
+        doc="https://doc.samwaf.com/api/"
+        storage-key="oplatform-key"
+      />
 
       <div class="table-container">
         <t-table
@@ -166,13 +189,20 @@ import {
   oplatform_key_reset_secret_api,
   oplatform_key_detail_api
 } from '@/apis/oplatform'
+import { get_detail_by_item_api, edit_system_config_by_item_api } from '@/apis/systemconfig'
 import { MessagePlugin } from 'tdesign-vue'
+
+// 开放平台总开关在「参数配置」里的键名。它是个普通的系统配置项，
+// 后端 editByItem 改完会立刻 TaskLoadSetting，不需要重启。
+const MASTER_ITEM = 'open_platform_enabled'
 
 export default {
   name: 'OPlatformKey',
   data() {
     return {
       dataLoading: false,
+      openPlatformEnabled: false,
+      masterLoading: false,
       data: [],
       pagination: {
         current: 1,
@@ -221,10 +251,56 @@ export default {
       }
     }
   },
+  computed: {
+    // 说明条目挑的是实际会被问到的：开关没开、请求头怎么带、为什么返回不是密文、
+    // 哪些接口用 Key 调不了。不是把 API 文档抄一遍。
+    helpItems() {
+      return [
+        { k: this.$t('page.oplatform.help_k_switch'), v: this.$t('page.oplatform.help_v_switch'), tone: 'brand' },
+        { k: this.$t('page.oplatform.help_k_header'), v: this.$t('page.oplatform.help_v_header'), tone: 'brand' },
+        { k: this.$t('page.oplatform.help_k_limit'), v: this.$t('page.oplatform.help_v_limit') },
+        { k: this.$t('page.oplatform.help_k_plain'), v: this.$t('page.oplatform.help_v_plain') },
+        { k: this.$t('page.oplatform.help_k_forbid'), v: this.$t('page.oplatform.help_v_forbid'), tone: 'danger' },
+      ]
+    }
+  },
   mounted() {
     this.getList()
+    this.fetchMasterSwitch()
   },
   methods: {
+    fetchMasterSwitch() {
+      get_detail_by_item_api({ item: MASTER_ITEM })
+        .then((res) => {
+          if (res.code === 0) {
+            this.openPlatformEnabled = String(res.data && res.data.value) === '1'
+          }
+        })
+        .catch((error) => {
+          // 取不到不影响建 Key，静默即可；开关维持关闭的保守显示
+          console.error('获取开放平台开关失败:', error)
+        })
+    },
+    handleToggleMaster(value) {
+      this.masterLoading = true
+      edit_system_config_by_item_api({ item: MASTER_ITEM, value: value ? '1' : '0' })
+        .then((res) => {
+          if (res.code === 0) {
+            MessagePlugin.success(this.$t('common.tips.save_success'))
+          } else {
+            MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'))
+            this.openPlatformEnabled = !value
+          }
+        })
+        .catch((error) => {
+          console.error('更新开放平台开关失败:', error)
+          MessagePlugin.error(this.$t('common.tips.save_failed'))
+          this.openPlatformEnabled = !value
+        })
+        .finally(() => {
+          this.masterLoading = false
+        })
+    },
     getList() {
       this.dataLoading = true
       oplatform_key_list_api({
@@ -354,6 +430,23 @@ export default {
 <style scoped>
 .list-card-container {
   padding: 16px;
+}
+.op-master {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.op-master__box {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border: 1px solid var(--td-component-stroke, #e7e7e7);
+  border-radius: var(--td-radius-medium, 3px);
+  background: var(--td-bg-color-container-hover, #fafafa);
+}
+.op-master__t {
+  font-weight: 500;
 }
 .left-operation-container {
   display: flex;

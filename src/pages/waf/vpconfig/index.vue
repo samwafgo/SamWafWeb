@@ -1,12 +1,62 @@
 <template>
-    <div>
-      <t-card class="list-card-container">
+    <div class="vpconfig-page">
+      <!-- 顶栏：页面标题 + 常驻「重启管理端」。
+           这页有八节，任何一节改完都可能要重启；按钮跟着某张卡走的话，
+           用户滚到别处就找不着了，所以提到页面级、固定在右上角 -->
+      <div class="vpconfig-bar" :style="{ top: stickyTop + 'px' }">
+        <div class="vpconfig-bar__title">{{ $t('page.vpconfig.title') }}</div>
+        <t-tag v-if="activeSectionLabel" theme="primary" variant="light">
+          {{ $t('page.vpconfig.nav_current') }}{{ activeSectionLabel }}
+        </t-tag>
+        <div class="vpconfig-bar__gap"></div>
+        <span v-if="restartPending" class="vpconfig-bar__hint">● {{ $t('page.vpconfig.restart_pending_short') }}</span>
+        <t-button :theme="restartPending ? 'warning' : 'default'" @click="showRestartDialog">
+          {{ $t('page.vpconfig.restart_manager') }}
+        </t-button>
+      </div>
+
+      <!-- 整页说明：条目大多是"操作完为什么没生效""浏览器为什么报不安全"这类跨小节的问题，
+           挂在某一张卡里反而找不着；固定走右侧抽屉，顶部只占一行 -->
+      <help-block
+        class="vpconfig-help"
+        mode="drawer"
+        :summary="$t('page.vpconfig.page_help_summary')"
+        :items="accessHelpItems"
+        :note="$t('page.vpconfig.access_help_note')"
+        :title="$t('page.vpconfig.page_help_title')"
+        doc="guide/VpConfig"
+        :links="[{ label: $t('page.vpconfig.access_doc_localca'), doc: 'guide/VpConfig#_3-2-本地证书-没有域名时用' },
+                 { label: $t('page.vpconfig.access_doc_import'), doc: 'guide/VpConfig#导入根证书' },
+                 { label: $t('page.vpconfig.access_doc_faq'), doc: 'faq/#_3-4-证书配错-开了-仅允许https-打不开管理端怎么办' }]"
+        storage-key="vpconfig-page"
+      />
+
+      <div class="vpconfig-body">
+        <!-- 左侧只做定位，不切换内容：右侧始终是完整的一页。
+             这几节配置彼此相关（改访问方式常要顺带看证书、改可信代理常要看白名单），
+             做成路由式分页会失去全貌，所以用锚点 -->
+        <div class="vpconfig-nav" :style="{ top: anchorOffset + 'px' }">
+          <div class="vpconfig-nav__title">{{ $t('page.vpconfig.nav_title') }}</div>
+          <a
+            v-for="s in visibleSections"
+            :key="s.id"
+            class="vpconfig-nav__item"
+            :class="{ 'is-active': activeSection === s.id, 'is-dirty': s.dirty }"
+            @click="jumpTo(s.id)"
+          >
+            <i class="vpconfig-nav__dot"></i>
+            <span class="vpconfig-nav__text">{{ s.label }}</span>
+          </a>
+        </div>
+
+        <div class="vpconfig-content">
+      <t-card id="vp-sec-ip" class="list-card-container" :style="sectionStyle">
         <template #header>
           <t-row justify="space-between">
             <div class="card-header-title">
               <t-space>
-                <div>{{ $t('page.vpconfig.title') }}</div>
-                <t-tooltip :content="$t('page.vpconfig.description')">
+                <div>{{ $t('page.vpconfig.ip_whitelist') }}</div>
+                <t-tooltip :content="$t('page.vpconfig.ip_whitelist_tips')">
                   <t-icon name="help-circle" />
                 </t-tooltip>
               </t-space>
@@ -17,7 +67,7 @@
             </t-space>
           </t-row>
         </template>
-  
+
         <t-loading :loading="dataLoading">
           <t-form ref="form" :data="formData" :rules="rules" :label-width="180">
             <t-form-item :label="$t('page.vpconfig.ip_whitelist')" name="ip_whitelist">
@@ -33,7 +83,7 @@
       </t-card>
 
       <!-- 管理端可信代理网段卡片 -->
-      <t-card class="list-card-container">
+      <t-card id="vp-sec-proxy" class="list-card-container" :style="sectionStyle">
         <template #header>
           <t-row justify="space-between">
             <div class="card-header-title">
@@ -120,7 +170,7 @@
       </t-card>
 
       <!-- CORS 跨域白名单卡片 -->
-      <t-card class="list-card-container">
+      <t-card id="vp-sec-cors" class="list-card-container" :style="sectionStyle">
         <template #header>
           <t-row justify="space-between">
             <div class="card-header-title">
@@ -153,7 +203,7 @@
       </t-card>
 
       <!-- 域名白名单卡片 -->
-      <t-card class="list-card-container">
+      <t-card id="vp-sec-domain" class="list-card-container" :style="sectionStyle">
         <template #header>
           <t-row justify="space-between">
             <div class="card-header-title">
@@ -186,285 +236,328 @@
       </t-card>
 
       <!-- ===== 访问方式：讲端口与协议，与证书本身分开 ===== -->
-      <t-card class="list-card-container">
+      <!-- ===== 管理端访问与证书：同一件事的两半，合成一节 =====
+           访问方式决定"要不要 HTTPS"，证书决定"HTTPS 起不起得来"。原先拆成两张卡，
+           证书那张还挂着 v-if(ssl_enable)——没开 SSL 就不显示，第一次配置的人从头到尾
+           看不到"还得配证书"这一步；而且"清除本地证书"要求先切回仅HTTP，一切回去
+           整个证书区就消失了，那颗按钮永远够不着。合并后编号成两步，缺哪步一眼可见。 -->
+      <t-card id="vp-sec-access" class="list-card-container" :style="sectionStyle">
         <template #header>
-          <t-row justify="space-between">
+          <t-row justify="space-between" align="middle">
             <div class="card-header-title">
-              <t-space>
-                <div>{{ $t('page.vpconfig.access_title') }}</div>
+              <t-space align="center">
+                <div>{{ $t('page.vpconfig.access_cert_title') }}</div>
                 <t-tooltip :content="$t('page.vpconfig.access_description')">
                   <t-icon name="help-circle" />
                 </t-tooltip>
+                <t-tag>{{ $t('page.vpconfig.access_current_is') }}{{ accessModeLabel(savedAccessMode) }}</t-tag>
               </t-space>
             </div>
+            <!-- 改动先攒着，点这里才写进 conf/config.yml。
+                 原先是拨一下开关立刻发请求——用户还在犹豫，配置文件已经改了 -->
+            <t-space align="center">
+              <span v-if="accessDirty" class="access-dirty">● {{ $t('page.vpconfig.access_unsaved') }}</span>
+              <t-button theme="primary" :disabled="!accessDirty || sslLoading" @click="handleSaveAccessMode">
+                {{ $t('page.vpconfig.access_save') }}
+              </t-button>
+            </t-space>
           </t-row>
         </template>
 
         <t-loading :loading="sslLoading">
-          <t-form :label-width="180">
-            <!-- 本次访问：常驻不可关闭。顶部横幅可按会话收起，这条不行——
-                 收起横幅不该等于信息消失，这里是它唯一"不消失"的落点。回环访问同样显示。 -->
-            <t-form-item :label="$t('page.vpconfig.transport_status')">
-              <t-space direction="vertical" style="width: 100%">
-                <div>
-                  <t-tag v-if="transportSecure" theme="success">{{ $t('page.vpconfig.transport_status_https') }}</t-tag>
-                  <t-tag v-else-if="transportLoopback" theme="primary">{{ $t('page.vpconfig.transport_status_loopback') }}</t-tag>
-                  <t-tag v-else theme="warning">{{ $t('page.vpconfig.transport_status_http') }}</t-tag>
+          <!-- 本次访问：常驻不可关闭。顶部横幅可按会话收起，这条不行——
+               收起横幅不该等于信息消失，这里是它唯一"不消失"的落点。回环访问同样显示。 -->
+          <t-alert :theme="transportUpstreamTls ? 'warning' : 'info'" class="access-now">
+            <template #title>
+              {{ $t('page.vpconfig.transport_status') }}:
+              <template v-if="transportSecure">{{ $t('page.vpconfig.transport_status_https') }}</template>
+              <template v-else-if="transportUpstreamTls">{{ $t('page.vpconfig.transport_status_upstream') }}</template>
+              <template v-else-if="transportLoopback">{{ $t('page.vpconfig.transport_status_loopback') }}</template>
+              <template v-else>{{ $t('page.vpconfig.transport_status_http') }}</template>
+            </template>
+            <template #message>{{ transportStatusTips }}</template>
+          </t-alert>
+
+          <!-- 第 1 步：访问方式。ssl_enable 与 force_https 两个 bool 的四种组合里有一种
+               无意义（force 开着而 enable 关着，后端只会警告并忽略），三选一把它从界面上
+               消掉，也让每一项能把后果直接写在旁边 -->
+          <div class="step">
+            <div class="step__t"><span class="step__n">1</span>{{ $t('page.vpconfig.access_step1') }}</div>
+            <div class="step__d">{{ $t('page.vpconfig.access_step1_desc') }}</div>
+            <div class="step__c">
+              <div class="acc-opts">
+                <div
+                  v-for="o in accessOptions"
+                  :key="o.key"
+                  :class="['acc-opt', { 'acc-opt--on': pickedAccessMode === o.key }]"
+                  @click="pickAccessMode(o.key)"
+                >
+                  <i class="acc-opt__rd"></i>
+                  <div class="acc-opt__bd">
+                    <div class="acc-opt__h">
+                      <span>{{ $t(o.title) }}</span>
+                      <t-tag size="small" :theme="o.tagTheme">{{ $t(o.tag) }}</t-tag>
+                    </div>
+                    <div class="acc-opt__s">{{ $t(o.desc) }}</div>
+                    <div v-if="o.warn && pickedAccessMode === o.key && !certUsable" class="acc-opt__w">
+                      {{ $t(o.warn) }}
+                    </div>
+                  </div>
                 </div>
-                <div class="form-item-tips">{{ transportStatusTips }}</div>
-              </t-space>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.vpconfig.ssl_enable')">
-              <t-switch v-model="sslFormData.ssl_enable" @change="handleSslEnableChange" />
-              <div class="form-item-tips">{{ $t('page.vpconfig.ssl_enable_tips') }}</div>
-            </t-form-item>
-
-            <t-form-item :label="$t('page.vpconfig.ssl_force_https')" v-if="sslFormData.ssl_enable">
-              <t-switch v-model="sslForceHttpsFormData.force_https" @change="handleSslForceHttpsChange" />
-              <div class="form-item-tips">{{ $t('page.vpconfig.ssl_force_https_tips') }}</div>
-            </t-form-item>
-          </t-form>
-        </t-loading>
-      </t-card>
-
-      <!-- ===== 管理端证书：当前状态（只读）与更换（操作）彻底分开 ===== -->
-      <t-card class="list-card-container" v-if="sslFormData.ssl_enable">
-        <template #header>
-          <t-row justify="space-between">
-            <div class="card-header-title">
-              <t-space>
-                <div>{{ $t('page.vpconfig.cert_title') }}</div>
-                <t-tag v-if="certSource === 'none'" theme="warning">{{ $t('page.vpconfig.cert_unconfigured') }}</t-tag>
-                <t-tag v-else theme="success">{{ $t('page.vpconfig.cert_configured') }}</t-tag>
-              </t-space>
-            </div>
-          </t-row>
-        </template>
-
-        <t-loading :loading="sslLoading">
-          <!-- 当前证书摘要：把原先散在三处的"证书状态/本地证书/绑定证书夹"合成一条 -->
-          <div v-if="certSource === 'none'" class="cert-current cert-current--empty">
-            <div>{{ $t('page.vpconfig.cert_empty_title') }}</div>
-            <div class="form-item-tips" style="margin-top: 6px">{{ $t('page.vpconfig.cert_empty_tips') }}</div>
-          </div>
-
-          <div v-else class="cert-current">
-            <div class="cert-current__top">
-              <b>{{ certSummary.name }}</b>
-              <t-tag theme="success">{{ $t('page.vpconfig.cert_in_use') }}</t-tag>
-              <t-tag>{{ $t('page.vpconfig.cert_source') }}: {{ certSourceLabel }}</t-tag>
-              <t-tag :theme="certAutoRenew ? 'success' : 'warning'">
-                {{ certAutoRenew ? $t('page.vpconfig.cert_auto_renew') : $t('page.vpconfig.cert_manual_renew') }}
-              </t-tag>
-            </div>
-            <div class="cert-current__meta">
-              <span v-for="(m, i) in certSummary.meta" :key="i">
-                <i>{{ m.k }}</i>{{ m.v }}
-              </span>
-            </div>
-            <div class="cert-current__acts">
-              <t-button v-if="certSource === 'local'" theme="default" size="small" @click="handleDownloadLocalCa">
-                {{ $t('page.vpconfig.local_cert_download_ca') }}
-              </t-button>
-              <t-button v-if="certSource === 'local'" theme="default" size="small" :loading="localCertLoading" @click="handleGenerateLocalCert">
-                {{ $t('page.vpconfig.cert_renew_now') }}
-              </t-button>
-              <t-button theme="default" size="small" @click="openChangeCert(certSource)">
-                {{ $t('page.vpconfig.cert_change_current') }}
-              </t-button>
+              </div>
             </div>
           </div>
 
-          <!-- 未生效提示：替代原先常驻标题栏的重启按钮，只在真有待生效改动时出现 -->
-          <t-alert
-            v-if="certPending"
-            theme="warning"
-            class="cert-pending"
-            :message="$t('page.vpconfig.cert_pending')"
-          >
-            <template #operation>
-              <t-button theme="warning" size="small" @click="showRestartDialog">
-                {{ $t('page.vpconfig.restart_manager') }}
-              </t-button>
+          <!-- 第 2 步：证书。不按访问方式条件隐藏——先配证书再切协议才是更稳的顺序 -->
+          <div :class="['step', { 'step--dim': pickedAccessMode === 'http' }]">
+            <div class="step__t">
+              <span :class="['step__n', certStepClass]">{{ certStepDone ? '✓' : '2' }}</span>
+              <span>{{ $t('page.vpconfig.access_step2') }}</span>
+              <t-tag v-if="certSource === 'none'" theme="warning">{{ $t('page.vpconfig.cert_unconfigured') }}</t-tag>
+              <t-tag v-else-if="certProblem" theme="danger">{{ $t('page.vpconfig.cert_unusable') }}</t-tag>
+              <t-tag v-else theme="success">{{ $t('page.vpconfig.cert_configured') }}</t-tag>
+            </div>
+            <div class="step__d">{{ certStepDesc }}</div>
+            <div class="step__c">
+              <!-- 当前证书摘要：把原先散在三处的"证书状态/本地证书/绑定证书夹"合成一条 -->
+              <div v-if="certSource === 'none'" :class="['cert-current', 'cert-current--empty', { 'cert-current--bad': pickedAccessMode !== 'http' }]">
+                <div>{{ $t('page.vpconfig.cert_empty_title') }}</div>
+                <div class="form-item-tips" style="margin-top: 6px">{{ $t('page.vpconfig.cert_empty_tips') }}</div>
+              </div>
+
+              <div v-else class="cert-current">
+                <div class="cert-current__top">
+                  <b>{{ certSummary.name }}</b>
+                  <t-tag theme="success">{{ $t('page.vpconfig.cert_in_use') }}</t-tag>
+                  <t-tag>{{ $t('page.vpconfig.cert_source') }}: {{ certSourceLabel }}</t-tag>
+                  <t-tag :theme="certAutoRenew ? 'success' : 'warning'">
+                    {{ certAutoRenew ? $t('page.vpconfig.cert_auto_renew') : $t('page.vpconfig.cert_manual_renew') }}
+                  </t-tag>
+                </div>
+                <div class="cert-current__meta">
+                  <span v-for="(m, i) in certSummary.meta" :key="i">
+                    <i>{{ m.k }}</i>{{ m.v }}
+                  </span>
+                </div>
+                <div class="cert-current__acts">
+                  <t-button v-if="certSource === 'local'" theme="default" size="small" @click="handleDownloadLocalCa">
+                    {{ $t('page.vpconfig.local_cert_download_ca') }}
+                  </t-button>
+                  <t-button v-if="certSource === 'local'" theme="default" size="small" :loading="localCertLoading" @click="handleGenerateLocalCert">
+                    {{ $t('page.vpconfig.cert_renew_now') }}
+                  </t-button>
+                  <t-button theme="default" size="small" @click="openChangeCert(certSource)">
+                    {{ $t('page.vpconfig.cert_change_current') }}
+                  </t-button>
+                </div>
+              </div>
+
+              <div class="cert-divider"></div>
+
+              <!-- 更换证书：默认收起，日常进来只看到上面那条摘要 -->
+              <div v-if="!changeCertOpen">
+                <t-space align="center">
+                  <t-button theme="default" @click="openChangeCert()">{{ $t('page.vpconfig.cert_change') }}</t-button>
+                  <span class="form-item-tips">{{ $t('page.vpconfig.cert_change_tips') }}</span>
+                </t-space>
+              </div>
+
+              <div v-else>
+                <t-row justify="space-between" align="middle" style="margin-bottom: 12px">
+                  <b>{{ $t('page.vpconfig.cert_pick_source') }}</b>
+                  <t-button variant="text" theme="primary" @click="changeCertOpen = false">
+                    {{ $t('page.vpconfig.cert_collapse') }}
+                  </t-button>
+                </t-row>
+
+                <!-- 三张选择卡：把"我该走哪条路"的判断依据并排摆出来 -->
+                <div class="cert-choices">
+                  <div
+                    v-for="c in certChoices"
+                    :key="c.key"
+                    :class="['cert-choice', { 'cert-choice--on': pickedSource === c.key }]"
+                    @click="pickedSource = c.key"
+                  >
+                    <div class="cert-choice__title">
+                      <span>{{ $t(c.title) }}</span>
+                      <t-tag size="small" :theme="c.auto ? 'success' : 'warning'">
+                        {{ c.auto ? $t('page.vpconfig.cert_auto_renew') : $t('page.vpconfig.cert_manual_renew') }}
+                      </t-tag>
+                    </div>
+                    <div class="cert-choice__who">{{ $t(c.who) }}</div>
+                    <ul class="cert-choice__list">
+                      <li v-for="(li, i) in c.points" :key="i">{{ $t(li) }}</li>
+                    </ul>
+                    <div class="cert-choice__foot">{{ $t(c.foot) }}</div>
+                  </div>
+                </div>
+
+                <!-- 面板一：证书夹绑定（持续同步） -->
+                <div v-if="pickedSource === 'folder'" class="cert-panel">
+                  <div class="cert-panel__title">{{ $t('page.vpconfig.cert_folder_title') }}</div>
+                  <div class="form-item-tips" style="margin-bottom: 12px">{{ $t('page.vpconfig.cert_folder_tips') }}</div>
+
+                  <div v-if="sslBindCert.ssl_config_id" class="cert-current cert-current--bound">
+                    <div class="cert-current__top">
+                      <b>{{ sslBindCert.domains }}</b>
+                      <t-tag theme="primary">{{ $t('page.vpconfig.ssl_bind_cert_bound') }}</t-tag>
+                    </div>
+                    <div class="cert-current__meta">
+                      <span v-if="sslBindCert.valid_to"><i>{{ $t('page.ssl.label_valid_to') }}</i>{{ sslBindCert.valid_to }}</span>
+                    </div>
+                  </div>
+                  <div v-else class="cert-current cert-current--empty" style="padding: 18px">
+                    {{ $t('page.vpconfig.cert_folder_unbound') }}
+                  </div>
+
+                  <t-space style="margin-top: 14px">
+                    <t-button theme="primary" @click="showBindCertDialog">{{ $t('page.vpconfig.ssl_bind_cert_select') }}</t-button>
+                    <t-button theme="danger" variant="outline" v-if="sslBindCert.ssl_config_id" @click="handleUnbindCert">
+                      {{ $t('page.vpconfig.ssl_bind_cert_unbind') }}
+                    </t-button>
+                  </t-space>
+                </div>
+
+                <!-- 面板二：本机生成 -->
+                <div v-if="pickedSource === 'local'" class="cert-panel">
+                  <div class="cert-panel__title">{{ $t('page.vpconfig.local_cert_generate') }}</div>
+                  <div class="form-item-tips" style="margin-bottom: 10px">{{ $t('page.vpconfig.local_cert_sans_intro') }}</div>
+                  <t-input v-model="localCertSans" :placeholder="$t('page.vpconfig.local_cert_sans_placeholder')" />
+                  <div class="form-item-tips">{{ $t('page.vpconfig.local_cert_sans_tips') }}</div>
+
+                  <div class="cert-divider"></div>
+                  <div class="form-item-tips" style="margin-bottom: 6px">{{ $t('page.vpconfig.local_cert_next_steps') }}</div>
+                  <ol class="cert-steps">
+                    <li>{{ $t('page.vpconfig.local_cert_step_import') }}</li>
+                    <li>{{ $t('page.vpconfig.local_cert_step_restart') }}</li>
+                  </ol>
+                  <t-space>
+                    <t-button theme="primary" :loading="localCertLoading" @click="handleGenerateLocalCert">
+                      {{ $t('page.vpconfig.local_cert_do_generate') }}
+                    </t-button>
+                    <t-button theme="default" :disabled="!localCert.has_ca" @click="handleDownloadLocalCa">
+                      {{ $t('page.vpconfig.local_cert_download_ca') }}
+                    </t-button>
+                  </t-space>
+
+
+                  <!-- 生成后浏览器仍报「不安全」是最高频的疑问，直接把原因与操作写在页面上 -->
+                  <t-alert v-if="localCert.has_ca" theme="info" class="cert-guide-alert">
+                    <template #title>{{ $t('page.vpconfig.local_ca_notice_title') }}</template>
+                    <template #message>
+                      <div>{{ $t('page.vpconfig.local_ca_notice_body') }}</div>
+                      <div v-if="localCert.ca && localCert.ca.fingerprint" class="cert-fp">
+                        <div class="cert-fp__label">{{ $t('page.vpconfig.local_ca_fingerprint') }}</div>
+                        <code class="cert-fp__val">{{ localCert.ca.fingerprint }}</code>
+                        <div class="form-item-tips">{{ $t('page.vpconfig.local_ca_fingerprint_tips') }}</div>
+                      </div>
+                    </template>
+                  </t-alert>
+
+                  <t-collapse v-if="localCert.has_ca" class="cert-guide">
+                    <t-collapse-panel :header="$t('page.vpconfig.local_ca_guide_title')">
+                      <div class="cert-guide__intro">{{ $t('page.vpconfig.local_ca_guide_intro') }}</div>
+                      <div class="cert-guide__os">{{ $t('page.vpconfig.local_ca_guide_win_title') }}</div>
+                      <ul class="cert-guide__list">
+                        <li>{{ $t('page.vpconfig.local_ca_guide_win1') }}</li>
+                        <li class="cert-guide__key">{{ $t('page.vpconfig.local_ca_guide_win2') }}</li>
+                        <li class="cert-guide__key">{{ $t('page.vpconfig.local_ca_guide_win3') }}</li>
+                      </ul>
+                      <ul class="cert-guide__list">
+                        <li>{{ $t('page.vpconfig.local_ca_guide_mac') }}</li>
+                        <li>{{ $t('page.vpconfig.local_ca_guide_linux') }}</li>
+                        <li>{{ $t('page.vpconfig.local_ca_guide_firefox') }}</li>
+                      </ul>
+                      <div class="cert-guide__key">{{ $t('page.vpconfig.local_ca_guide_restart') }}</div>
+                    </t-collapse-panel>
+
+                    <t-collapse-panel :header="$t('page.vpconfig.local_ca_remove_title')">
+                      <div class="cert-guide__intro">{{ $t('page.vpconfig.local_ca_remove_intro') }}</div>
+                      <ul class="cert-guide__list">
+                        <li>{{ $t('page.vpconfig.local_ca_remove_win') }}</li>
+                        <li>{{ $t('page.vpconfig.local_ca_remove_mac') }}</li>
+                        <li>{{ $t('page.vpconfig.local_ca_remove_linux') }}</li>
+                        <li>{{ $t('page.vpconfig.local_ca_remove_firefox') }}</li>
+                      </ul>
+                    </t-collapse-panel>
+                  </t-collapse>
+
+                </div>
+
+                <!-- 面板三：手工粘贴 -->
+                <div v-if="pickedSource === 'manual'" class="cert-panel">
+                  <div class="cert-panel__title">{{ $t('page.vpconfig.cert_manual_title') }}</div>
+                  <div class="form-item-tips" style="margin-bottom: 12px">{{ $t('page.vpconfig.cert_manual_tips') }}</div>
+                  <t-form :label-width="120">
+                    <t-form-item :label="$t('page.vpconfig.cert_content')">
+                      <t-textarea
+                        v-model="certFormData.cert_content"
+                        :placeholder="$t('page.vpconfig.cert_content_placeholder')"
+                        :autosize="{ minRows: 5, maxRows: 10 }"
+                      />
+                    </t-form-item>
+                    <t-form-item :label="$t('page.vpconfig.key_content')">
+                      <t-textarea
+                        v-model="certFormData.key_content"
+                        :placeholder="$t('page.vpconfig.key_content_placeholder')"
+                        :autosize="{ minRows: 5, maxRows: 10 }"
+                      />
+                    </t-form-item>
+                  </t-form>
+                  <t-space>
+                    <t-button theme="primary" @click="showUploadCertDialog">{{ $t('page.vpconfig.upload_cert') }}</t-button>
+                    <t-button theme="default" @click="showCertListDialog">{{ $t('page.vpconfig.select_from_certfolder') }}</t-button>
+                  </t-space>
+                  <div class="form-item-tips">{{ $t('page.vpconfig.cert_manual_copy_tips') }}</div>
+                </div>
+              </div>
+
+              <!-- 本地 CA 的作废与清除。原先埋在「更换证书 → 本机生成」里面，要点三层才看得到，
+                   而"我想把它删掉"恰恰是签完之后最常见的诉求；提到卡片底部常驻，仍然默认折叠 -->
+              <div v-if="localCert.has_ca" class="cert-danger">
+                <t-collapse>
+                  <t-collapse-panel :header="$t('page.vpconfig.local_ca_danger_title')">
+                    <div class="cert-guide__intro">{{ $t('page.vpconfig.local_ca_danger_tips') }}</div>
+                    <div class="cert-guide__intro">{{ $t('page.vpconfig.local_ca_clear_precondition') }}</div>
+                    <t-space>
+                      <t-button theme="danger" variant="outline" :loading="localCertLoading" @click="handleRotateLocalCa">
+                        {{ $t('page.vpconfig.local_ca_rotate') }}
+                      </t-button>
+                      <t-button theme="danger" variant="outline" @click="handleClearLocalCert">
+                        {{ $t('page.vpconfig.local_ca_clear') }}
+                      </t-button>
+                    </t-space>
+                  </t-collapse-panel>
+                </t-collapse>
+              </div>
+            </div>
+          </div>
+
+          <!-- 状态提示统一一条：证书没配好 > 证书不可用 > 已保存待重启。
+               重启按钮不在这里——全页只留顶栏右上角一个 -->
+          <t-alert v-if="pickedAccessMode !== 'http' && certSource === 'none'" theme="error" class="cert-pending">
+            <template #title>{{ $t('page.vpconfig.ssl_step_cert_title') }}</template>
+            <template #message>
+              {{ pickedAccessMode === 'only' ? $t('page.vpconfig.ssl_step_cert_body_forced') : $t('page.vpconfig.ssl_step_cert_body') }}
             </template>
           </t-alert>
 
-          <div class="cert-divider"></div>
+          <t-alert v-else-if="pickedAccessMode !== 'http' && certProblem" theme="error" class="cert-pending">
+            <template #title>{{ $t('page.vpconfig.ssl_step_cert_bad_title') }}</template>
+            <template #message>{{ certProblem }}</template>
+          </t-alert>
 
-          <!-- 更换证书：默认收起，日常进来只看到上面那条摘要 -->
-          <div v-if="!changeCertOpen">
-            <t-space align="center">
-              <t-button theme="default" @click="openChangeCert()">{{ $t('page.vpconfig.cert_change') }}</t-button>
-              <span class="form-item-tips">{{ $t('page.vpconfig.cert_change_tips') }}</span>
-            </t-space>
-          </div>
-
-          <div v-else>
-            <t-row justify="space-between" align="middle" style="margin-bottom: 12px">
-              <b>{{ $t('page.vpconfig.cert_pick_source') }}</b>
-              <t-button variant="text" theme="primary" @click="changeCertOpen = false">
-                {{ $t('page.vpconfig.cert_collapse') }}
-              </t-button>
-            </t-row>
-
-            <!-- 三张选择卡：把"我该走哪条路"的判断依据并排摆出来 -->
-            <div class="cert-choices">
-              <div
-                v-for="c in certChoices"
-                :key="c.key"
-                :class="['cert-choice', { 'cert-choice--on': pickedSource === c.key }]"
-                @click="pickedSource = c.key"
-              >
-                <div class="cert-choice__title">
-                  <span>{{ $t(c.title) }}</span>
-                  <t-tag size="small" :theme="c.auto ? 'success' : 'warning'">
-                    {{ c.auto ? $t('page.vpconfig.cert_auto_renew') : $t('page.vpconfig.cert_manual_renew') }}
-                  </t-tag>
-                </div>
-                <div class="cert-choice__who">{{ $t(c.who) }}</div>
-                <ul class="cert-choice__list">
-                  <li v-for="(li, i) in c.points" :key="i">{{ $t(li) }}</li>
-                </ul>
-                <div class="cert-choice__foot">{{ $t(c.foot) }}</div>
-              </div>
-            </div>
-
-            <!-- 面板一：证书夹绑定（持续同步） -->
-            <div v-if="pickedSource === 'folder'" class="cert-panel">
-              <div class="cert-panel__title">{{ $t('page.vpconfig.cert_folder_title') }}</div>
-              <div class="form-item-tips" style="margin-bottom: 12px">{{ $t('page.vpconfig.cert_folder_tips') }}</div>
-
-              <div v-if="sslBindCert.ssl_config_id" class="cert-current cert-current--bound">
-                <div class="cert-current__top">
-                  <b>{{ sslBindCert.domains }}</b>
-                  <t-tag theme="primary">{{ $t('page.vpconfig.ssl_bind_cert_bound') }}</t-tag>
-                </div>
-                <div class="cert-current__meta">
-                  <span v-if="sslBindCert.valid_to"><i>{{ $t('page.ssl.label_valid_to') }}</i>{{ sslBindCert.valid_to }}</span>
-                </div>
-              </div>
-              <div v-else class="cert-current cert-current--empty" style="padding: 18px">
-                {{ $t('page.vpconfig.cert_folder_unbound') }}
-              </div>
-
-              <t-space style="margin-top: 14px">
-                <t-button theme="primary" @click="showBindCertDialog">{{ $t('page.vpconfig.ssl_bind_cert_select') }}</t-button>
-                <t-button theme="danger" variant="outline" v-if="sslBindCert.ssl_config_id" @click="handleUnbindCert">
-                  {{ $t('page.vpconfig.ssl_bind_cert_unbind') }}
-                </t-button>
-              </t-space>
-            </div>
-
-            <!-- 面板二：本机生成 -->
-            <div v-if="pickedSource === 'local'" class="cert-panel">
-              <div class="cert-panel__title">{{ $t('page.vpconfig.local_cert_generate') }}</div>
-              <div class="form-item-tips" style="margin-bottom: 10px">{{ $t('page.vpconfig.local_cert_sans_intro') }}</div>
-              <t-input v-model="localCertSans" :placeholder="$t('page.vpconfig.local_cert_sans_placeholder')" />
-              <div class="form-item-tips">{{ $t('page.vpconfig.local_cert_sans_tips') }}</div>
-
-              <div class="cert-divider"></div>
-              <div class="form-item-tips" style="margin-bottom: 6px">{{ $t('page.vpconfig.local_cert_next_steps') }}</div>
-              <ol class="cert-steps">
-                <li>{{ $t('page.vpconfig.local_cert_step_import') }}</li>
-                <li>{{ $t('page.vpconfig.local_cert_step_restart') }}</li>
-              </ol>
-              <t-space>
-                <t-button theme="primary" :loading="localCertLoading" @click="handleGenerateLocalCert">
-                  {{ $t('page.vpconfig.local_cert_do_generate') }}
-                </t-button>
-                <t-button theme="default" :disabled="!localCert.has_ca" @click="handleDownloadLocalCa">
-                  {{ $t('page.vpconfig.local_cert_download_ca') }}
-                </t-button>
-              </t-space>
-
-
-              <!-- 生成后浏览器仍报「不安全」是最高频的疑问，直接把原因与操作写在页面上 -->
-              <t-alert v-if="localCert.has_ca" theme="info" class="cert-guide-alert">
-                <template #title>{{ $t('page.vpconfig.local_ca_notice_title') }}</template>
-                <template #message>
-                  <div>{{ $t('page.vpconfig.local_ca_notice_body') }}</div>
-                  <div v-if="localCert.ca && localCert.ca.fingerprint" class="cert-fp">
-                    <div class="cert-fp__label">{{ $t('page.vpconfig.local_ca_fingerprint') }}</div>
-                    <code class="cert-fp__val">{{ localCert.ca.fingerprint }}</code>
-                    <div class="form-item-tips">{{ $t('page.vpconfig.local_ca_fingerprint_tips') }}</div>
-                  </div>
-                </template>
-              </t-alert>
-
-              <t-collapse v-if="localCert.has_ca" class="cert-guide">
-                <t-collapse-panel :header="$t('page.vpconfig.local_ca_guide_title')">
-                  <div class="cert-guide__intro">{{ $t('page.vpconfig.local_ca_guide_intro') }}</div>
-                  <div class="cert-guide__os">{{ $t('page.vpconfig.local_ca_guide_win_title') }}</div>
-                  <ul class="cert-guide__list">
-                    <li>{{ $t('page.vpconfig.local_ca_guide_win1') }}</li>
-                    <li class="cert-guide__key">{{ $t('page.vpconfig.local_ca_guide_win2') }}</li>
-                    <li class="cert-guide__key">{{ $t('page.vpconfig.local_ca_guide_win3') }}</li>
-                  </ul>
-                  <ul class="cert-guide__list">
-                    <li>{{ $t('page.vpconfig.local_ca_guide_mac') }}</li>
-                    <li>{{ $t('page.vpconfig.local_ca_guide_linux') }}</li>
-                    <li>{{ $t('page.vpconfig.local_ca_guide_firefox') }}</li>
-                  </ul>
-                  <div class="cert-guide__key">{{ $t('page.vpconfig.local_ca_guide_restart') }}</div>
-                </t-collapse-panel>
-
-                <t-collapse-panel :header="$t('page.vpconfig.local_ca_remove_title')">
-                  <div class="cert-guide__intro">{{ $t('page.vpconfig.local_ca_remove_intro') }}</div>
-                  <ul class="cert-guide__list">
-                    <li>{{ $t('page.vpconfig.local_ca_remove_win') }}</li>
-                    <li>{{ $t('page.vpconfig.local_ca_remove_mac') }}</li>
-                    <li>{{ $t('page.vpconfig.local_ca_remove_linux') }}</li>
-                    <li>{{ $t('page.vpconfig.local_ca_remove_firefox') }}</li>
-                  </ul>
-                </t-collapse-panel>
-                <t-collapse-panel :header="$t('page.vpconfig.local_ca_danger_title')">
-                  <div class="cert-guide__intro">{{ $t('page.vpconfig.local_ca_danger_tips') }}</div>
-                  <t-space>
-                    <t-button theme="danger" variant="outline" :loading="localCertLoading" @click="handleRotateLocalCa">
-                      {{ $t('page.vpconfig.local_ca_rotate') }}
-                    </t-button>
-                    <t-button theme="danger" variant="outline" @click="handleClearLocalCert">
-                      {{ $t('page.vpconfig.local_ca_clear') }}
-                    </t-button>
-                  </t-space>
-                </t-collapse-panel>
-              </t-collapse>
-
-            </div>
-
-            <!-- 面板三：手工粘贴 -->
-            <div v-if="pickedSource === 'manual'" class="cert-panel">
-              <div class="cert-panel__title">{{ $t('page.vpconfig.cert_manual_title') }}</div>
-              <div class="form-item-tips" style="margin-bottom: 12px">{{ $t('page.vpconfig.cert_manual_tips') }}</div>
-              <t-form :label-width="120">
-                <t-form-item :label="$t('page.vpconfig.cert_content')">
-                  <t-textarea
-                    v-model="certFormData.cert_content"
-                    :placeholder="$t('page.vpconfig.cert_content_placeholder')"
-                    :autosize="{ minRows: 5, maxRows: 10 }"
-                  />
-                </t-form-item>
-                <t-form-item :label="$t('page.vpconfig.key_content')">
-                  <t-textarea
-                    v-model="certFormData.key_content"
-                    :placeholder="$t('page.vpconfig.key_content_placeholder')"
-                    :autosize="{ minRows: 5, maxRows: 10 }"
-                  />
-                </t-form-item>
-              </t-form>
-              <t-space>
-                <t-button theme="primary" @click="showUploadCertDialog">{{ $t('page.vpconfig.upload_cert') }}</t-button>
-                <t-button theme="default" @click="showCertListDialog">{{ $t('page.vpconfig.select_from_certfolder') }}</t-button>
-              </t-space>
-              <div class="form-item-tips">{{ $t('page.vpconfig.cert_manual_copy_tips') }}</div>
-            </div>
-          </div>
+          <t-alert
+            v-else-if="restartPending"
+            theme="warning"
+            class="cert-pending"
+            :message="$t('page.vpconfig.restart_pending')"
+          />
         </t-loading>
       </t-card>
-      
+
       <!-- 安全路径入口卡片 -->
-      <t-card class="list-card-container">
+      <t-card id="vp-sec-entry" class="list-card-container" :style="sectionStyle">
         <template #header>
           <t-row justify="space-between">
             <div class="card-header-title">
@@ -548,7 +641,7 @@
       </t-card>
 
       <!-- 通知标题前缀卡片 -->
-      <t-card class="list-card-container">
+      <t-card id="vp-sec-notice" class="list-card-container" :style="sectionStyle">
         <template #header>
           <t-row justify="space-between">
             <div class="card-header-title">
@@ -579,6 +672,8 @@
           </t-form>
         </t-loading>
       </t-card>
+        </div>
+      </div>
 
       <!-- 域名白名单确认对话框 -->
       <t-dialog
@@ -639,7 +734,7 @@
         :visible.sync="restartDialogVisible"
         :header="$t('common.confirm')"
         :body="$t('page.vpconfig.restart_confirm')"
-        @confirm="handleRestartManager"
+        @confirm="handleRestartManager(false)"
         @cancel="restartDialogVisible = false"
       />
 
@@ -756,7 +851,44 @@
         pickedSource: 'folder',
         // 有待生效的证书改动。后端没有这个状态，也不必新增字段——
         // 它只在本次会话内有意义：做过写入即置位，点过重启即清除。
-        certPending: false,
+        restartPending: false,
+        // SSL 状态拉回来之前不下"上游终止 TLS"的结论：默认值 false 会让判定短暂成立，
+        // 页面一进来先闪一下橙色提示很唬人
+        sslStatusLoaded: false,
+        // 访问方式：pickedAccessMode 是待保存值，savedAccessMode（computed）是已保存值，
+        // 两者不等即为"有改动未保存"。accessTouched 用来防止后台刷新覆盖用户正在改的选择。
+        pickedAccessMode: 'http',
+        accessTouched: false,
+        // 三选一的文案表；顺序即界面顺序，从宽松到严格
+        accessOptions: [
+          {
+            key: 'http',
+            tag: 'page.vpconfig.access_opt_default',
+            tagTheme: 'default',
+            title: 'page.vpconfig.access_opt_http',
+            desc: 'page.vpconfig.access_opt_http_desc',
+          },
+          {
+            key: 'https',
+            tag: 'page.vpconfig.access_opt_recommend',
+            tagTheme: 'success',
+            title: 'page.vpconfig.access_opt_https',
+            desc: 'page.vpconfig.access_opt_https_desc',
+            warn: 'page.vpconfig.access_opt_https_warn',
+          },
+          {
+            key: 'only',
+            tag: 'page.vpconfig.access_opt_strict',
+            tagTheme: 'warning',
+            title: 'page.vpconfig.access_opt_only',
+            desc: 'page.vpconfig.access_opt_only_desc',
+            warn: 'page.vpconfig.access_opt_only_warn',
+          },
+        ],
+        // 锚点导航：当前高亮的节 + 顶栏吸顶时要避开的高度（多标签页签条的高度）
+        activeSection: '',
+        stickyTop: 0,
+        spyLock: false,
         // 三张选择卡的文案表；点位与顺序即界面顺序
         certChoices: [
           {
@@ -848,6 +980,34 @@
       };
     },
     computed: {
+      // ===== 左侧锚点导航 =====
+      // 顺序即页面顺序；show 为假的节（如未启用 SSL 时的证书节）连锚点一起隐藏，
+      // 否则点了会跳空。dirty 用来在左侧打黄点，让"哪一节还没生效"不用逐节找。
+      sections() {
+        return [
+          { id: 'vp-sec-ip', label: this.$t('page.vpconfig.ip_whitelist'), show: true, dirty: false },
+          { id: 'vp-sec-proxy', label: this.$t('page.vpconfig.trusted_proxies_title'), show: true, dirty: false },
+          { id: 'vp-sec-cors', label: this.$t('page.vpconfig.cors_title'), show: true, dirty: false },
+          { id: 'vp-sec-domain', label: this.$t('page.vpconfig.domain_whitelist_title'), show: true, dirty: false },
+          { id: 'vp-sec-access', label: this.$t('page.vpconfig.access_cert_title'), show: true, dirty: this.accessDirty || this.restartPending },
+          { id: 'vp-sec-entry', label: this.$t('page.vpconfig.security_entry_title'), show: true, dirty: false },
+          { id: 'vp-sec-notice', label: this.$t('page.vpconfig.notice_title_title'), show: true, dirty: false },
+        ];
+      },
+      visibleSections() {
+        return this.sections.filter((s) => s.show);
+      },
+      activeSectionLabel() {
+        const hit = this.visibleSections.find((s) => s.id === this.activeSection);
+        return hit ? hit.label : '';
+      },
+      // 顶栏是吸顶的，锚点跳过去若不留出这段高度，小节标题会被顶栏盖住
+      anchorOffset() {
+        return this.stickyTop + 64;
+      },
+      sectionStyle() {
+        return { scrollMarginTop: `${this.anchorOffset}px` };
+      },
       // 传输加密状态：按当前访问方式判定，与后端配置无关——
       // 用户可能配了证书却仍从 http 端口进来，这里要如实反映"这一次访问"是不是加密的
       // ===== 证书来源判定（把原先散在三处的状态合成一个）=====
@@ -867,6 +1027,50 @@
           manual: 'page.vpconfig.cert_source_manual',
         };
         return map[this.certSource] ? this.$t(map[this.certSource]) : '';
+      },
+      // 顶部说明里的条目。选的都是实际会被问到的，不是把文档抄一遍：
+      // 「浏览器报不安全」「改完没生效」「打不开了怎么救」占了这一节问题的绝大多数
+      accessHelpItems() {
+        return [
+          { k: this.$t('page.vpconfig.access_help_k_save'), v: this.$t('page.vpconfig.access_help_v_save'), tone: 'brand' },
+          { k: this.$t('page.vpconfig.access_help_k_insecure'), v: this.$t('page.vpconfig.access_help_v_insecure') },
+          { k: this.$t('page.vpconfig.access_help_k_pick'), v: this.$t('page.vpconfig.access_help_v_pick') },
+          { k: this.$t('page.vpconfig.access_help_k_locked'), v: this.$t('page.vpconfig.access_help_v_locked'), tone: 'danger' },
+          { k: this.$t('page.vpconfig.access_help_k_local'), v: this.$t('page.vpconfig.access_help_v_local') },
+          { k: this.$t('page.vpconfig.access_help_k_cdn'), v: this.$t('page.vpconfig.access_help_v_cdn') },
+        ];
+      },
+      // ===== 访问方式（三选一）=====
+      // 已保存值由后端两个 bool 推出来；界面上的三个选项与它们的映射见
+      // 原型设计/2026-08-27-管理端访问与证书合并-原型.html
+      savedAccessMode() {
+        if (!this.sslFormData.ssl_enable) return 'http';
+        return this.sslForceHttpsFormData.force_https ? 'only' : 'https';
+      },
+      accessDirty() {
+        return this.pickedAccessMode !== this.savedAccessMode;
+      },
+      // 证书能不能真的把 HTTPS 起起来：既没配是不行，配了但过期/不配对也是不行
+      certUsable() {
+        return this.certSource !== 'none' && !this.certProblem;
+      },
+      certStepDone() {
+        return this.pickedAccessMode !== 'http' && this.certUsable;
+      },
+      certStepClass() {
+        if (this.pickedAccessMode === 'http') return 'step__n--todo';
+        return this.certUsable ? 'step__n--done' : '';
+      },
+      certStepDesc() {
+        if (this.pickedAccessMode === 'http') return this.$t('page.vpconfig.access_step2_desc_http');
+        if (this.certUsable) return this.$t('page.vpconfig.access_step2_desc_ok');
+        return this.$t('page.vpconfig.access_step2_desc_need', { mode: this.accessModeLabel(this.pickedAccessMode) });
+      },
+      // 证书在、却起不来的原因（过期 / 与私钥不配对 / 文件损坏），由后端判定后回传。
+      // 没配证书是另一回事（certSource === 'none'），那条走"还差一步"的引导
+      certProblem() {
+        if (this.certSource === 'none') return '';
+        return this.localCert && this.localCert.cert_usable === false ? (this.localCert.cert_problem || '') : '';
       },
       // 只有证书夹绑定与本地签发能自动续期；手工上传只能提醒
       certAutoRenew() {
@@ -903,13 +1107,20 @@
         const ms = new Date(this.localCert.cert.not_after).getTime() - Date.now();
         return Math.max(0, Math.floor(ms / 86400000));
       },
+      // 浏览器看到 HTTPS、而管理端自己没开 SSL——TLS 一定终止在上游（CDN / 反向代理 / 隧道）。
+      // 这时浏览器到上游那一段是加密的，上游到管理端那一段不是。两段必须分开说：
+      // 只看 window.location.protocol 会给出一个"全程加密"的绿标签，那是不对的。
+      transportUpstreamTls() {
+        return this.sslStatusLoaded && window.location.protocol === 'https:' && !this.sslFormData.ssl_enable;
+      },
       transportSecure() {
-        return window.location.protocol === 'https:';
+        return window.location.protocol === 'https:' && !this.transportUpstreamTls;
       },
       transportLoopback() {
         return window.location.protocol !== 'https:' && isLoopbackHost(window.location.hostname);
       },
       transportStatusTips() {
+        if (this.transportUpstreamTls) return this.$t('page.vpconfig.transport_status_upstream_tips');
         if (this.transportSecure) return this.$t('page.vpconfig.transport_status_https_tips');
         if (this.transportLoopback) return this.$t('page.vpconfig.transport_status_loopback_tips');
         return this.$t('page.vpconfig.transport_status_http_tips');
@@ -932,8 +1143,97 @@
       this.fetchLocalCertStatus();
       this.fetchSecurityEntry();
       this.fetchNoticeTitle();
+      this.setupScrollSpy();
+    },
+    beforeDestroy() {
+      this.teardownScrollSpy();
+    },
+    watch: {
+      // 后端值变了（首次拉取、保存后重新拉取）而用户没有正在编辑时，待保存值跟随已保存值。
+      // 有未保存改动时不跟随——否则一次后台刷新就把用户选了一半的东西抹掉了
+      savedAccessMode: {
+        immediate: true,
+        handler(val) {
+          if (!this.accessTouched) this.pickedAccessMode = val;
+        },
+      },
+      // 证书节是条件渲染的：关掉 SSL 后它连同锚点一起消失，
+      // 当时若正停在这一节，高亮要落回一个还存在的节，否则顶栏的"当前"会空着
+      visibleSections(list) {
+        if (this.activeSection && !list.some((s) => s.id === this.activeSection)) {
+          this.activeSection = list.length ? list[list.length - 1].id : '';
+        }
+      },
     },
     methods: {
+      // ===== 锚点定位与滚动高亮 =====
+      // 这页不自建滚动容器：真正滚动的是布局的 .{prefix}-layout。
+      // 监听 window 是没用的（它根本不滚），所以先把那个容器找出来。
+      setupScrollSpy() {
+        const layout = this.$el && this.$el.closest ? this.$el.closest(`.${prefix}-layout`) : null;
+        this.spyScroller = layout || this.findScrollParent(this.$el);
+        // 顶栏要停在多标签页签条下面，不能压在它身上（页签是 sticky top:0，z-index 更高）
+        const tabs = document.querySelector(`.${prefix}-layout-tabs-nav`);
+        this.stickyTop = tabs ? Math.round(tabs.getBoundingClientRect().height) : 0;
+
+        this.spyHandler = () => {
+          if (this.spyRaf) return;
+          this.spyRaf = window.requestAnimationFrame(() => {
+            this.spyRaf = 0;
+            this.updateActiveSection();
+          });
+        };
+        (this.spyScroller || window).addEventListener('scroll', this.spyHandler, { passive: true });
+        window.addEventListener('resize', this.spyHandler, { passive: true });
+        this.$nextTick(() => this.updateActiveSection());
+      },
+      teardownScrollSpy() {
+        if (this.spyHandler) {
+          (this.spyScroller || window).removeEventListener('scroll', this.spyHandler);
+          window.removeEventListener('resize', this.spyHandler);
+        }
+        if (this.spyRaf) window.cancelAnimationFrame(this.spyRaf);
+        clearTimeout(this.spyTimer);
+      },
+      findScrollParent(el) {
+        let node = el && el.parentElement;
+        while (node && node !== document.body) {
+          const oy = window.getComputedStyle(node).overflowY;
+          if (/(auto|scroll|overlay)/.test(oy) && node.scrollHeight > node.clientHeight + 1) return node;
+          node = node.parentElement;
+        }
+        return null;
+      },
+      updateActiveSection() {
+        const list = this.visibleSections;
+        if (!list.length) return;
+        // 平滑滚动途中会依次经过中间几节，跟着高亮看起来像乱跳；点击后先锁住
+        if (this.spyLock) return;
+        const line = this.anchorOffset + 12;
+        let current = list[0].id;
+        list.forEach((s) => {
+          const el = document.getElementById(s.id);
+          if (el && el.getBoundingClientRect().top - line <= 0) current = s.id;
+        });
+        // 最后一节可能很短，滚到底也越不过判定线，这里补一刀
+        const sc = this.spyScroller;
+        if (sc && sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4) {
+          current = list[list.length - 1].id;
+        }
+        this.activeSection = current;
+      },
+      jumpTo(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        this.activeSection = id;
+        this.spyLock = true;
+        clearTimeout(this.spyTimer);
+        this.spyTimer = setTimeout(() => {
+          this.spyLock = false;
+          this.updateActiveSection();
+        }, 600);
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
       fetchData() {
         this.dataLoading = true;
         getIpWhitelistApi({})
@@ -1186,6 +1486,7 @@
           .then((res) => {
             if (res.code === 0) {
               this.sslFormData.ssl_enable = res.data.ssl_enable || false;
+              this.sslStatusLoaded = true;
               this.sslFormData.has_cert = res.data.has_cert || false;
               this.sslFormData.cert_expire_at = res.data.cert_expire_at || '';
               this.sslFormData.cert_domain = res.data.cert_domain || '';
@@ -1205,30 +1506,88 @@
             this.sslLoading = false;
           });
       },
-      handleSslEnableChange(value) {
-        this.sslLoading = true;
-        updateSslEnableApi({
-          ssl_enable: value
-        })
-          .then((res) => {
-            if (res.code === 0) {
-              MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
-              this.fetchSslStatus();
-            } else {
-              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
-              // 恢复原值
-              this.sslFormData.ssl_enable = !value;
-            }
-          })
-          .catch((error) => {
-            console.error('更新SSL启用状态失败:', error);
-            MessagePlugin.error(this.$t('common.tips.save_failed'));
-            // 恢复原值
-            this.sslFormData.ssl_enable = !value;
-          })
-          .finally(() => {
-            this.sslLoading = false;
+      accessModeLabel(mode) {
+        const map = {
+          http: 'page.vpconfig.access_opt_http',
+          https: 'page.vpconfig.access_opt_https',
+          only: 'page.vpconfig.access_opt_only',
+        };
+        return map[mode] ? this.$t(map[mode]) : '';
+      },
+      pickAccessMode(mode) {
+        this.pickedAccessMode = mode;
+        this.accessTouched = true;
+      },
+      // 保存不做硬拦：先存开关、再配证书是完全合理的顺序，只提醒。
+      // 真正的硬拦在重启——后端 RestartManagerApi 会校验证书可用性并拒绝，
+      // 那才是"点下去就回不了头"的地方。两道关卡力度不同，缺一不可。
+      handleSaveAccessMode() {
+        if (!this.accessDirty) return;
+        const target = this.pickedAccessMode;
+        if (target !== 'http' && !this.certUsable) {
+          const why = this.certSource === 'none'
+            ? this.$t('page.vpconfig.access_save_no_cert')
+            : this.$t('page.vpconfig.access_save_bad_cert', { reason: this.certProblem });
+          const tail = target === 'only'
+            ? this.$t('page.vpconfig.access_save_tail_only')
+            : this.$t('page.vpconfig.access_save_tail_https');
+          const dia = this.$dialog.confirm({
+            header: this.$t('page.vpconfig.access_save_confirm_title'),
+            body: `${why}
+
+${tail}
+
+${this.$t('page.vpconfig.access_save_tail_common')}`,
+            confirmBtn: { content: this.$t('page.vpconfig.access_save_anyway'), theme: 'warning' },
+            onConfirm: () => {
+              dia.hide();
+              this.doSaveAccessMode(target);
+            },
           });
+          return;
+        }
+        this.doSaveAccessMode(target);
+      },
+      // 只提交真正变了的那一个，把"前一个成功后一个失败"的半保存面积压到最小。
+      // 顺序：开启先 enable 后 force，关闭反过来——中间态不会比目标更宽松。
+      async doSaveAccessMode(target) {
+        const enable = target !== 'http';
+        const force = target === 'only';
+        const needEnable = enable !== !!this.sslFormData.ssl_enable;
+        const needForce = force !== !!this.sslForceHttpsFormData.force_https;
+        if (!needEnable && !needForce) return;
+
+        const stepEnable = needEnable ? () => updateSslEnableApi({ ssl_enable: enable }) : null;
+        const stepForce = needForce ? () => updateSslForceHttpsApi({ force_https: force }) : null;
+        const steps = (enable ? [stepEnable, stepForce] : [stepForce, stepEnable]).filter(Boolean);
+
+        this.sslLoading = true;
+        let done = 0;
+        try {
+          for (const step of steps) {
+            // eslint-disable-next-line no-await-in-loop
+            const res = await step();
+            if (!res || res.code !== 0) {
+              MessagePlugin.error((res && res.msg) || this.$t('common.tips.save_failed'));
+              if (done > 0) MessagePlugin.warning(this.$t('page.vpconfig.access_save_partial'));
+              return;
+            }
+            done += 1;
+          }
+          // 全部成功才认为"用户想要的状态已经落盘"，此时才让待保存值跟随后端
+          this.accessTouched = false;
+          MessagePlugin.success(this.$t('common.tips.save_success'));
+          this.markRestartPending();
+        } catch (error) {
+          console.error('保存访问方式失败:', error);
+          MessagePlugin.error(this.$t('common.tips.save_failed'));
+          if (done > 0) MessagePlugin.warning(this.$t('page.vpconfig.access_save_partial'));
+        } finally {
+          this.sslLoading = false;
+          // 成败都以后端为准重新拉一次：半保存时界面不能停在骗人的状态上
+          this.fetchSslStatus();
+          this.fetchSslForceHttps();
+        }
       },
       showUploadCertDialog() {
         if (!this.certFormData.cert_content || !this.certFormData.key_content) {
@@ -1245,7 +1604,7 @@
         })
           .then((res) => {
             if (res.code === 0) {
-              this.markCertPending();
+              this.markRestartPending();
               MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
               this.certFormData.cert_content = '';
               this.certFormData.key_content = '';
@@ -1347,7 +1706,7 @@
         })
           .then((res) => {
             if (res.code === 0) {
-              this.markCertPending();
+              this.markRestartPending();
               MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
               this.certListDialogVisible = false;
               this.fetchSslBindCert();
@@ -1370,7 +1729,7 @@
         })
           .then((res) => {
             if (res.code === 0) {
-              this.markCertPending();
+              this.markRestartPending();
               MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
               this.fetchSslBindCert();
             } else {
@@ -1391,8 +1750,8 @@
         this.pickedSource = src || (this.certSource === 'none' ? 'folder' : this.certSource);
       },
       // 任何会改动落盘证书的操作都要置位——重启前那张证书还没真正生效
-      markCertPending() {
-        this.certPending = true;
+      markRestartPending() {
+        this.restartPending = true;
       },
       // ===== 管理端本地证书（T24a/T25）=====
       // 与"上传证书""绑定证书夹"并列的第三条路：本机 CA 签一张给管理端用。
@@ -1430,7 +1789,7 @@
           const res = await generateLocalCertApi({ sans: this.localCertSans });
           if (res.code === 0) {
             MessagePlugin.success(this.$t('page.vpconfig.local_cert_generated'));
-            this.markCertPending();
+            this.markRestartPending();
             await this.fetchLocalCertStatus();
             await this.fetchSslStatus();
           } else {
@@ -1455,7 +1814,7 @@
               const res = await rotateLocalCaApi({ sans: this.localCertSans });
               if (res.code === 0) {
                 MessagePlugin.success(this.$t('page.vpconfig.local_ca_rotated'));
-                this.markCertPending();
+                this.markRestartPending();
                 await this.fetchLocalCertStatus();
                 await this.fetchSslStatus();
               } else {
@@ -1532,28 +1891,6 @@
           })
           .catch((error) => {
             console.error('获取仅HTTPS开关失败:', error);
-          });
-      },
-      handleSslForceHttpsChange(value) {
-        this.sslLoading = true;
-        updateSslForceHttpsApi({
-          force_https: value
-        })
-          .then((res) => {
-            if (res.code === 0) {
-              MessagePlugin.success(res.msg || this.$t('common.tips.save_success'));
-            } else {
-              MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
-              this.sslForceHttpsFormData.force_https = !value;
-            }
-          })
-          .catch((error) => {
-            console.error('更新仅HTTPS开关失败:', error);
-            MessagePlugin.error(this.$t('common.tips.save_failed'));
-            this.sslForceHttpsFormData.force_https = !value;
-          })
-          .finally(() => {
-            this.sslLoading = false;
           });
       },
       showRestartDialog() {
@@ -1728,34 +2065,51 @@
             this.noticeTitleLoading = false;
           });
       },
-      handleRestartManager() {
+      // force 为真时跳过后端的证书可用性拦截。
+      // 拦截本身是防"重启完就打不开、只能上服务器改配置文件"，但确实存在明知故犯的场景
+      // （比如正准备去改配置文件），所以留一个需要二次确认的出口，而不是死拦。
+      handleRestartManager(force) {
         this.restartDialogVisible = false;
         MessagePlugin.loading({
           content: this.$t('page.vpconfig.restarting'),
           duration: 0
         });
-        
-        restartManagerApi({})
+
+        restartManagerApi({ force: !!force })
           .then((res) => {
             if (res.code === 0) {
-              this.certPending = false;
+              this.restartPending = false;
               MessagePlugin.success(res.msg || this.$t('page.vpconfig.restart_success'));
-              
+
               // 提示用户等待
               setTimeout(() => {
                 MessagePlugin.info(this.$t('page.vpconfig.restart_wait_tip'));
               }, 1500);
-              
+
               // 5秒后尝试刷新页面
               setTimeout(() => {
                 window.location.reload();
               }, 5000);
+            } else if (!force) {
+              // 多半是证书不可用被拦下了：原因照抄给用户，再让他自己决定要不要硬来
+              MessagePlugin.closeAll();
+              const dia = this.$dialog.confirm({
+                header: this.$t('page.vpconfig.restart_blocked_title'),
+                body: `${res.msg || this.$t('page.vpconfig.restart_failed')}\n\n${this.$t('page.vpconfig.restart_blocked_tips')}`,
+                confirmBtn: { content: this.$t('page.vpconfig.restart_anyway'), theme: 'danger' },
+                onConfirm: () => {
+                  dia.hide();
+                  this.handleRestartManager(true);
+                },
+              });
             } else {
+              MessagePlugin.closeAll();
               MessagePlugin.error(res.msg || this.$t('page.vpconfig.restart_failed'));
             }
           })
           .catch((error) => {
             console.error('重启管理端失败:', error);
+            MessagePlugin.closeAll();
             MessagePlugin.error(this.$t('page.vpconfig.restart_failed'));
           });
       }
@@ -1764,11 +2118,282 @@
   </script>
   
   <style lang="less" scoped>
+  /* ===== 页面外壳：吸顶顶栏 + 左锚点 / 右长页 ===== */
+  .vpconfig-bar {
+    position: sticky;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 52px;
+    padding: 0 16px;
+    margin-bottom: 12px;
+    background: var(--td-bg-color-container, #fff);
+    border-radius: var(--td-radius-medium, 3px);
+    box-shadow: var(--td-shadow-1, 0 1px 10px rgba(0, 0, 0, 0.05));
+
+    &__title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--td-text-color-primary, rgba(0, 0, 0, 0.9));
+      white-space: nowrap;
+    }
+
+    &__gap {
+      flex: 1;
+    }
+
+    &__hint {
+      font-size: 12px;
+      color: var(--td-warning-color, #e37318);
+      white-space: nowrap;
+    }
+  }
+
+  .vpconfig-help {
+    margin-bottom: 12px;
+  }
+
+  .vpconfig-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .vpconfig-nav {
+    position: sticky;
+    flex: none;
+    width: 190px;
+    padding: 12px 0;
+    background: var(--td-bg-color-container, #fff);
+    border-radius: var(--td-radius-medium, 3px);
+    box-shadow: var(--td-shadow-1, 0 1px 10px rgba(0, 0, 0, 0.05));
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+
+    &__title {
+      padding: 0 16px 8px;
+      font-size: 12px;
+      color: var(--td-text-color-placeholder, rgba(0, 0, 0, 0.4));
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--td-text-color-secondary, rgba(0, 0, 0, 0.6));
+      border-left: 3px solid transparent;
+
+      &:hover {
+        background: var(--td-brand-color-light, #f2f3ff);
+        color: var(--td-text-color-primary, rgba(0, 0, 0, 0.9));
+      }
+
+      &.is-active {
+        background: var(--td-brand-color-light, #f2f3ff);
+        color: var(--td-brand-color, #0052d9);
+        border-left-color: var(--td-brand-color, #0052d9);
+        font-weight: 500;
+      }
+    }
+
+    &__dot {
+      flex: none;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--td-warning-color, #e37318);
+      visibility: hidden;
+    }
+
+    &__item.is-dirty &__dot {
+      visibility: visible;
+    }
+
+    &__text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .vpconfig-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* 窄屏放不下侧栏：改成一条横向的锚点带，仍然可点可高亮 */
+  @media (max-width: 1100px) {
+    .vpconfig-body {
+      flex-direction: column;
+    }
+
+    .vpconfig-nav {
+      position: static;
+      width: 100%;
+      max-height: none;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 8px 10px;
+
+      &__title {
+        padding: 0 8px;
+      }
+
+      &__item {
+        border-left: none;
+        border-radius: var(--td-radius-medium, 3px);
+        padding: 4px 10px;
+
+        &.is-active {
+          border-left: none;
+        }
+      }
+    }
+  }
+
+  /* ===== 管理端访问与证书：编号步骤 + 三选一 ===== */
+  .access-dirty {
+    font-size: 12px;
+    color: var(--td-brand-color, #0052d9);
+    white-space: nowrap;
+  }
+
+  .access-now {
+    margin-bottom: 20px;
+  }
+
+  .step {
+    margin-bottom: 24px;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+
+    &--dim {
+      opacity: 0.6;
+    }
+
+    &__t {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    &__n {
+      flex: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--td-brand-color, #0052d9);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &--done {
+        background: var(--td-success-color, #2ba471);
+      }
+
+      &--todo {
+        background: #c6c6c6;
+      }
+    }
+
+    &__d {
+      margin: 4px 0 12px 26px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.4);
+      line-height: 1.7;
+    }
+
+    &__c {
+      margin-left: 26px;
+    }
+  }
+
+  .acc-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 780px;
+  }
+
+  .acc-opt {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 11px 14px;
+    border: 1px solid var(--td-component-stroke, #e7e7e7);
+    border-radius: var(--td-radius-medium, 3px);
+    cursor: pointer;
+    background: var(--td-bg-color-container, #fff);
+
+    &:hover {
+      border-color: var(--td-brand-color-focus, #d9e1ff);
+    }
+
+    &--on {
+      border-color: var(--td-brand-color, #0052d9);
+      background: var(--td-brand-color-light, #f2f3ff);
+    }
+
+    &__rd {
+      flex: none;
+      width: 15px;
+      height: 15px;
+      margin-top: 3px;
+      border-radius: 50%;
+      border: 1px solid #c6c6c6;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    &--on &__rd {
+      border-color: var(--td-brand-color, #0052d9);
+      border-width: 5px;
+    }
+
+    &__bd {
+      flex: 1;
+      min-width: 0;
+    }
+
+    &__h {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    &__s {
+      margin-top: 3px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.7;
+    }
+
+    &__w {
+      margin-top: 5px;
+      font-size: 12px;
+      color: var(--td-warning-color, #e37318);
+      line-height: 1.7;
+    }
+  }
+
   .list-card-container {
     padding: 16px;
     margin-bottom: 16px;
   }
-  
+
   .card-header-title {
     font-size: 16px;
     font-weight: 500;
@@ -1787,6 +2412,12 @@
     border-radius: 3px;
     padding: 14px 16px;
     background: var(--td-bg-color-container-hover, #fafafa);
+  }
+
+  .cert-current--bad {
+    border-color: #f5b3b3;
+    background: var(--td-error-color-1, #fdecee);
+    color: var(--td-error-color, #d54941);
   }
 
   .cert-current--empty {
@@ -1838,6 +2469,10 @@
 
   .cert-pending {
     margin-top: 12px;
+  }
+
+  .cert-danger {
+    margin-top: 16px;
   }
 
   .cert-divider {
