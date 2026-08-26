@@ -183,3 +183,36 @@ export function updateDomainWhitelistApi(data) {
     data: data
   })
 }
+//获取管理端本地证书状态（本地CA是否存在、当前证书是否本地签发、SAN 与到期时间）
+export function getLocalCertStatusApi(params) {
+  return request({
+    url: 'vipconfig/localCertStatus',
+    method: 'get',
+    params: params
+  })
+}
+//生成/重新签发管理端本地证书（同一批访问地址重签即为续期，CA 不变、已导入的信任不受影响）
+export function generateLocalCertApi(data) {
+  return request({
+    url: 'vipconfig/generateLocalCert',
+    method: 'post',
+    data: data
+  })
+}
+
+//重建本地CA（作废旧根证书，破坏性操作：所有导入过旧根证书的电脑都要重新导入）
+export function rotateLocalCaApi(data) {
+  return request({
+    url: 'vipconfig/rotateLocalCa',
+    method: 'post',
+    data: data
+  })
+}
+//清除本地CA与本地证书（需先关闭SSL或改用其它来源）
+export function clearLocalCertApi(data) {
+  return request({
+    url: 'vipconfig/clearLocalCert',
+    method: 'post',
+    data: data
+  })
+}

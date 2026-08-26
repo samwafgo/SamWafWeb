@@ -1,5 +1,7 @@
 <template>
   <div>
+    <!-- HTTP 访问提示条：放在三种布局之外，side/top/mix 都能显示 -->
+    <insecure-banner />
     <template v-if="setting.layout === 'side'">
       <t-layout key="side">
         <t-aside><layout-sidebar /></t-aside>
@@ -36,6 +38,7 @@ import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import { NotifyPlugin } from 'tdesign-vue';
 
+import InsecureBanner from './components/InsecureBanner.vue';
 import LayoutHeader from './components/LayoutHeader.vue';
 import LayoutContent from './components/LayoutContent.vue';
 import LayoutSidebar from './components/LayoutSidebar.vue';
@@ -51,6 +54,7 @@ const name = `${prefix}-base-layout`;
 export default Vue.extend({
   name,
   components: {
+    InsecureBanner,
     LayoutHeader,
     LayoutContent,
     LayoutSidebar,

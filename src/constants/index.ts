@@ -18,6 +18,13 @@ export const clearLocalStorageExceptPreserved = () => {
       localStorage.removeItem(key);
     }
   });
+  // HTTP 提示条的"本次会话已收起"标记随登出一并清掉——它的语义是"下次登录重现"，
+  // 只靠 sessionStorage 的话同一个标签页登出再登入会继续沿用上一次的收起状态
+  try {
+    sessionStorage.removeItem('__samwaf_insecure_dismissed__');
+  } catch {
+    // ignore
+  }
 };
 // URL安全验证函数
 export const isValidRedirectUrl = (url: string): boolean => {
