@@ -59,7 +59,9 @@ export default Vue.extend({
       }
     },
     goSslSetting() {
-      this.$router.push('/sys/VpConfig').catch(() => {});
+      // 带 section 参数，让管理配置页落地就停在「管理端访问与证书」那一节，
+      // 不用用户到了页面再自己找——这一节在长页中部，是本条提示唯一的落点
+      this.$router.push({ path: '/sys/VpConfig', query: { section: 'access' } }).catch(() => {});
     },
   },
 });

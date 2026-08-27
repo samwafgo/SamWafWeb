@@ -758,7 +758,19 @@
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
   import { MessagePlugin } from 'tdesign-vue';
   import { isLoopbackHost } from '@/utils/insecure';
-  
+
+  // 外部入口（如顶部 HTTP 提示条）用 ?section=xxx 指定落地后停在哪一节。
+  // URL 里走短名而不是锚点 id：短名是对外契约，id 是本页实现，改 id 不该牵动调用方
+  const SECTION_BY_KEY = {
+    ip: 'vp-sec-ip',
+    proxy: 'vp-sec-proxy',
+    cors: 'vp-sec-cors',
+    domain: 'vp-sec-domain',
+    access: 'vp-sec-access',
+    entry: 'vp-sec-entry',
+    notice: 'vp-sec-notice',
+  };
+
   export default Vue.extend({
     name: 'VpConfig',
     data() {
@@ -1144,11 +1156,22 @@
       this.fetchSecurityEntry();
       this.fetchNoticeTitle();
       this.setupScrollSpy();
+      // 放在 setupScrollSpy 之后：锚点让位高度依赖它测出来的 stickyTop
+      this.consumeRouteSection();
+    },
+    // 本页在 keep-alive 里，第二次进来只有 activated，没有 mounted
+    activated() {
+      this.consumeRouteSection();
     },
     beforeDestroy() {
       this.teardownScrollSpy();
+      clearTimeout(this.sectionSettleTimer);
     },
     watch: {
+      // 已经停在本页时点顶部提示条：组件不会重建，只有路由参数变，靠这里接住
+      $route() {
+        this.consumeRouteSection();
+      },
       // 后端值变了（首次拉取、保存后重新拉取）而用户没有正在编辑时，待保存值跟随已保存值。
       // 有未保存改动时不跟随——否则一次后台刷新就把用户选了一半的东西抹掉了
       savedAccessMode: {
@@ -1222,7 +1245,7 @@
         }
         this.activeSection = current;
       },
-      jumpTo(id) {
+      jumpTo(id, behavior = 'smooth') {
         const el = document.getElementById(id);
         if (!el) return;
         this.activeSection = id;
@@ -1232,7 +1255,29 @@
           this.spyLock = false;
           this.updateActiveSection();
         }, 600);
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.scrollIntoView({ behavior, block: 'start' });
+      },
+      // 外部入口带 ?section=xxx 进来时，落地直接停在那一节。
+      // 参数读完即清：本页在 keep-alive 里，不清的话连点两次横幅第二次路由没变化就没反应了
+      consumeRouteSection() {
+        const key = this.$route.query && this.$route.query.section;
+        if (!key) return;
+        const query = { ...this.$route.query };
+        delete query.section;
+        this.$router.replace({ path: this.$route.path, query }).catch(() => {});
+
+        const id = SECTION_BY_KEY[String(key)];
+        if (!id) return;
+        this.$nextTick(() => {
+          // 是"直接落到位"不是"从头滚过去"，这里不要平滑动画
+          this.jumpTo(id, 'auto');
+          // 各节内容是异步拉的，撑开后目标会往下走，落定再校一次位置。
+          // 期间用户自己点了别的锚点（高亮变了）就不抢他的滚动条
+          clearTimeout(this.sectionSettleTimer);
+          this.sectionSettleTimer = setTimeout(() => {
+            if (this.activeSection === id) this.jumpTo(id, 'auto');
+          }, 500);
+        });
       },
       fetchData() {
         this.dataLoading = true;
