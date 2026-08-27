@@ -394,6 +394,11 @@ export default [
         component: () => import('@/pages/waf/sysruntime/index.vue'),
         meta: { title: 'menu.system.system_runtime_title' },
       }, {
+        path: 'RunDiagnostic',
+        name: 'RunDiagnostic',
+        component: () => import('@/pages/waf/diagnostic/index.vue'),
+        meta: { title: 'menu.system.diagnostic_title' },
+      }, {
         path: 'OneKeyMod',
         name: 'OneKeyMod',
         component: () => import('@/pages/waf/onekeymod/index.vue'),
