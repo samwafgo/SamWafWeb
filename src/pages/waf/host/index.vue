@@ -29,6 +29,40 @@
         </div>
       </t-row>
 
+      <!-- 分组导航（轻量文本条）：放顶部而不是左栏——横向宽度已经卡死在「操作列点不到」的边缘，
+           纵向多一行几乎无感。刻意去掉边框/底色、选中态只用主色文字+下划线，
+           好让它明显低于上面那排动作按钮：分组是筛选维度，不是主操作 -->
+      <div class="host-group-bar">
+        <span class="hg-bar-label">{{ $t('page.host.group.title') }}</span>
+        <span class="hg-gl" :class="{ on: currentGroup === 'all' }" @click="pickGroup('all')">
+          <span class="hg-nm">{{ $t('page.host.group.all_hosts') }}</span><em>{{ groupAllCount }}</em>
+        </span>
+        <span class="hg-gl" :class="{ on: currentGroup === '__none__' }" @click="pickGroup('__none__')">
+          <span class="hg-nm">{{ $t('page.host.group.ungrouped') }}</span><em>{{ groupNoneCount }}</em>
+        </span>
+        <span v-if="hostGroups.length" class="hg-gsep"></span>
+        <span v-for="(g, gi) in hostGroups" :key="g.group_code" class="hg-gl"
+              :class="{ on: currentGroup === g.group_code }" :title="g.group_name"
+              @click="pickGroup(g.group_code)">
+          <span class="hg-nm">{{ g.group_name }}</span><em>{{ g.host_count }}</em>
+          <!-- click.native.stop 加在组件根元素上：阻止冒泡到「切换分组」，
+               同时不影响 dropdown 自己挂在同一元素上的展开逻辑 -->
+          <t-dropdown :options="groupMenuOptions(gi)" trigger="click"
+                      @click="onGroupMenuClick($event, g, gi)" @click.native.stop>
+            <span class="hg-more">⋮</span>
+          </t-dropdown>
+        </span>
+        <span class="hg-gsep"></span>
+        <!-- 「新建分组」「移动到分组」都是分组域内的动作，和分组标签放一起；
+             主工具栏只留网站维度的动作，主次才不会又混在一起 -->
+        <span class="hg-gl add" @click="openGroupForm(null)">＋ {{ $t('page.host.group.new_group') }}</span>
+        <span class="hg-gl add" :class="{ disabled: selectedRowKeys.length === 0 }"
+              :title="selectedRowKeys.length === 0 ? $t('page.host.group.move_need_select') : ''"
+              @click="selectedRowKeys.length && openAssignGroup()">
+          ⇄ {{ selectedRowKeys.length ? $t('page.host.group.move_to_group_n', { n: selectedRowKeys.length }) : $t('page.host.group.move_to_group') }}
+        </span>
+      </div>
+
       <div class="table-container">
         <help-block :summary="$t('page.host.core_features')" doc="guide/Host" />
         <t-table :columns="columns" size="small" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign"
@@ -77,6 +111,18 @@
                 >{{ p }}</t-tag>
               </template>
             </div>
+          </template>
+          <template #group_code="{ row }">
+            <!-- 全局网站不参与分组；组名/颜色由 hostgroup/all 的字典映射，映射不到即「未知分组」（跨实例导入的常见情形） -->
+            <span v-if="row.global_host === 1" style="color: var(--td-text-color-placeholder);">—</span>
+            <span v-else-if="!row.group_code" class="hg-tag none">{{ $t('page.host.group.ungrouped') }}</span>
+            <span v-else-if="!groupDict[row.group_code]" class="hg-tag unknown"
+                  :title="$t('page.host.group.unknown_group_tip')">{{ $t('page.host.group.unknown_group') }}</span>
+            <span v-else class="hg-tag"
+                  :style="{ background: hexToSoft(groupDict[row.group_code].color), color: groupDict[row.group_code].color }"
+                  @click="pickGroup(row.group_code)">
+              <i class="hg-dot" :style="{ background: groupDict[row.group_code].color }"></i>{{ groupDict[row.group_code].group_name }}
+            </span>
           </template>
           <template #data_stats="{ row }">
             <div style="line-height: 1.8;">
@@ -129,10 +175,18 @@
             </div>
           </template>
           <template #op="slotProps">
-            <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickCopy(slotProps)">{{ $t('common.copy') }}</a>
-            <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
-            <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
-            <a class="t-button-link" v-if="slotProps.row.global_host!==1" @click="handleClickSSLApply(slotProps)">{{ $t('page.host.ssl_auto_apply') }}</a>
+            <!-- 高频的「编辑」「证书申请」保持文字直出，低频的「复制」「删除」收进「更多」：
+                 4 个链接平铺会折成两行且长度参差，收敛后一行、整齐，以后再加操作项也只是往「更多」里塞 -->
+            <div v-if="slotProps.row.global_host!==1" class="op-cell">
+              <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
+              <!-- 表格里用短标签，全称走 title：全称 8 个字，直出会把这一列重新撑破 -->
+              <a class="t-button-link" :title="$t('page.host.ssl_auto_apply')"
+                 @click="handleClickSSLApply(slotProps)">{{ $t('page.host.ssl_auto_apply_short') }}</a>
+              <span class="op-vline"></span>
+              <t-dropdown :options="rowMoreOptions()" trigger="click" @click="onRowMoreClick($event, slotProps)">
+                <span class="op-more">{{ $t('page.host.group.more') }} ▾</span>
+              </t-dropdown>
+            </div>
           </template>
         </t-table>
       </div>
@@ -140,6 +194,51 @@
         <router-view></router-view>
       </div>
     </t-card>
+
+    <!-- 新建 / 编辑分组 -->
+    <t-dialog :visible.sync="groupFormVisible" :header="groupForm.id ? $t('page.host.group.edit_group') : $t('page.host.group.new_group')"
+              :width="480" :confirm-btn="$t('common.confirm')" :cancel-btn="$t('common.cancel')" @confirm="saveGroup">
+      <t-form :label-width="90" colon>
+        <t-form-item :label="$t('page.host.group.name')">
+          <t-input v-model="groupForm.group_name" :maxlength="50" :placeholder="$t('page.host.group.name_placeholder')" />
+        </t-form-item>
+        <t-form-item :label="$t('page.host.group.color')">
+          <div class="hg-color-picker">
+            <i v-for="c in groupColors" :key="c" :class="{ on: groupForm.color === c }"
+               :style="{ background: c }" @click="groupForm.color = c"></i>
+          </div>
+        </t-form-item>
+        <t-form-item :label="$t('common.remarks')">
+          <t-input v-model="groupForm.remarks" :maxlength="200" :placeholder="$t('common.placeholder')" />
+        </t-form-item>
+      </t-form>
+    </t-dialog>
+
+    <!-- 删除分组确认：必须写清楚有几个网站会回落到未分组 -->
+    <t-dialog :visible.sync="groupDelVisible" :header="$t('page.host.group.del_confirm_title', { name: groupDelTarget.group_name })"
+              :width="460" theme="warning" :confirm-btn="{ content: $t('common.confirm'), theme: 'danger' }"
+              :cancel-btn="$t('common.cancel')" @confirm="doDelGroup">
+      <p v-if="groupDelTarget.host_count > 0">{{ $t('page.host.group.del_confirm_body', { n: groupDelTarget.host_count }) }}</p>
+      <p v-else>{{ $t('page.host.group.del_confirm_empty') }}</p>
+      <p style="color: var(--td-text-color-secondary); font-size: 12px;">{{ $t('page.host.group.del_confirm_keep') }}</p>
+    </t-dialog>
+
+    <!-- 批量移动网站到分组 -->
+    <t-dialog :visible.sync="assignVisible" :header="$t('page.host.group.move_to_group')" :width="480"
+              :confirm-btn="$t('common.confirm')" :cancel-btn="$t('common.cancel')" @confirm="doAssignGroup">
+      <p style="color: var(--td-text-color-secondary); font-size: 13px;">
+        {{ $t('page.host.group.move_tip', { n: selectedRowKeys.length }) }}
+        <span v-if="assignGlobalCount > 0">{{ $t('page.host.group.move_tip_global', { n: assignGlobalCount }) }}</span>
+      </p>
+      <!-- 分组之间是并列关系，不是层级关系：TDesign 的 radio 自带横向间距，
+           竖排时会表现成逐条往右递进的缩进，这里统一清零把它拉平 -->
+      <t-radio-group v-model="assignGroupCode" class="assign-group-list">
+        <t-radio value="">{{ $t('page.host.group.move_out') }}</t-radio>
+        <t-radio v-for="g in hostGroups" :key="g.group_code" :value="g.group_code">
+          <i class="hg-dot" :style="{ background: g.color, marginRight: '6px' }"></i>{{ g.group_name }}
+        </t-radio>
+      </t-radio-group>
+    </t-dialog>
 
     <!-- New WebSite Dialog -->
     <t-dialog :visible.sync="addFormVisible" :width="hostFormDialogWidth" :footer="false">
@@ -154,6 +253,8 @@
         <host-form
           :value="formData"
           :select-can-filter="selectCanFilter"
+          :host-groups="hostGroups"
+          @group-changed="loadHostGroups"
           @close="onClickCloseBtn"
           @submit="onSubmit"
           @tab-placement-change="onHostTabPlacementChange"
@@ -171,6 +272,8 @@
         <host-form
         :value="formEditData"
         :select-can-filter="selectCanFilter"
+        :host-groups="hostGroups"
+        @group-changed="loadHostGroups"
         :is-edit="true"
         :init-tab="editInitTab"
         @close="onClickCloseEditBtn"
@@ -369,6 +472,7 @@ import {prefix} from '@/config/global';
 
 import {export_api} from '@/apis/common';
 import {allhost, changeGuardStatus, changeStartStatus, hostlist,getHostDetail,delHost,addHost,editHost,modifyAllGuardStatus,batchCopyConfig} from '@/apis/host';
+import {allHostGroup, addHostGroup, editHostGroup, delHostGroup, sortHostGroup, assignHostGroup} from '@/apis/hostgroup';
 
 import SslOrderList from "@/pages/waf/sslorder/index.vue";
 import { v4 as uuidv4 } from 'uuid';
@@ -488,7 +592,15 @@ export default Vue.extend({
       selectedRowKeys: [],
       value: 'first',
       columns: [
-
+        // 多选列：目前唯一的使用方是「移动到分组」。
+        // 全局网站不参与分组（它不是真实站点），直接禁选，省得用户勾了却没生效。
+        {
+          colKey: 'row-select',
+          type: 'multiple',
+          width: 46,
+          fixed: 'left',
+          disabled: ({ row }) => row.global_host === 1,
+        },
         {
           title: this.$t('page.host.host'),
           align: 'left',
@@ -520,6 +632,13 @@ export default Vue.extend({
             },
             showConfirmAndReset: true,
           },
+        },
+        {
+          title: this.$t('page.host.group.column'),
+          width: 100,
+          ellipsis: true,
+          colKey: 'group_code',
+          cell: 'group_code'
         },
         {
           title: this.$t('page.host.stats_info'),
@@ -587,9 +706,12 @@ export default Vue.extend({
         },
         {
           align: 'left',
-          width: 200,
+          width: 180,
           colKey: 'op',
           title: this.$t('common.op'),
+          // 吸附右侧：表格总列宽 ~1600px，窄屏必然横向滚动，
+          // 不固定的话操作列会被推出可视区，得先把表格拖到底才点得到
+          fixed: 'right',
         },
       ],
       rowKey: 'code',
@@ -602,11 +724,26 @@ export default Vue.extend({
         current: 1,
         pageSize: 10
       },
-      // 顶部搜索
+      // 顶部搜索（group_code 一并随请求发出：走后端精确匹配，不进 filter_by 的 like 通道）
       searchformData: {
         remarks: "",
-        code: ""
+        code: "",
+        group_code: ""
       },
+
+      // ---------- 网站分组 ----------
+      hostGroups: [],          // hostgroup/all 返回的分组列表
+      groupAllCount: 0,        // 全部网站数（不含全局网站）
+      groupNoneCount: 0,       // 未分组网站数
+      currentGroup: 'all',     // 左栏当前选中：all / __none__ / 分组短码
+      groupColors: ['#0052D9', '#2BA471', '#E37318', '#D54941', '#834EC2', '#0594FA', '#8B8B8B', '#D4A017'],
+      groupFormVisible: false,
+      groupForm: { id: '', group_name: '', color: '#0052D9', remarks: '' },
+      groupDelVisible: false,
+      groupDelTarget: { id: '', group_name: '', host_count: 0 },
+      assignVisible: false,
+      assignGroupCode: '',
+      assignGlobalCount: 0,
       // 排序字段
       sorts: {
         sortBy:"create_time",
@@ -669,6 +806,15 @@ export default Vue.extend({
     };
   },
   computed: {
+    /**
+     * group_code -> 分组对象 的字典，供表格「分组」列渲染。
+     * 后端不做 join，组名与颜色都在前端映射；映射不到就是「未知分组」（跨实例导入没带 host_group 表的情形）。
+     */
+    groupDict() {
+      const dict = {};
+      (this.hostGroups || []).forEach((g) => { dict[g.group_code] = g; });
+      return dict;
+    },
     confirmBody() {
       if (this.deleteIdx > -1) {
         const {
@@ -729,6 +875,7 @@ export default Vue.extend({
     }
   },
   mounted() {
+    this.loadHostGroups();
     this.loadHostList().then(() => {
       this.getList("");
     });
@@ -753,6 +900,194 @@ export default Vue.extend({
   },
 
   methods: {
+    // ==================== 网站分组 ====================
+    /**
+     * 拉取全部分组 + 未分组/全部计数（左栏与表格「分组」列共用一份数据）
+     */
+    loadHostGroups() {
+      return allHostGroup({}).then((res) => {
+        if (res.code === 0 && res.data) {
+          this.hostGroups = res.data.list || [];
+          this.groupNoneCount = res.data.none_count || 0;
+          this.groupAllCount = res.data.all_count || 0;
+          // 当前选中的分组被别处删掉了，退回「全部网站」，免得一直查一个不存在的组
+          if (this.currentGroup !== 'all' && this.currentGroup !== '__none__'
+              && !this.hostGroups.some((g) => g.group_code === this.currentGroup)) {
+            this.currentGroup = 'all';
+            this.searchformData.group_code = '';
+          }
+        }
+      }).catch((e: Error) => {
+        console.log(e);
+      });
+    },
+    /**
+     * 切换左栏分组：分页必须重置到第 1 页，
+     * 否则停在第 3 页切到只有 1 页的组会显示空列表，看着像数据丢了。
+     */
+    pickGroup(code) {
+      this.currentGroup = code;
+      this.searchformData.group_code = code === 'all' ? '' : code;
+      this.pagination.current = 1;
+      this.selectedRowKeys = [];
+      this.getList('');
+    },
+    /**
+     * 预设色 -> 浅色底，用于分组标签背景（颜色本身来自后端白名单，不是任意字符串）
+     */
+    hexToSoft(hex) {
+      if (!hex || hex.length !== 7) {
+        return '#f3f3f3';
+      }
+      const r = parseInt(hex.substr(1, 2), 16);
+      const g = parseInt(hex.substr(3, 2), 16);
+      const b = parseInt(hex.substr(5, 2), 16);
+      return `rgba(${r}, ${g}, ${b}, 0.1)`;
+    },
+    /**
+     * 行内「更多」里的低频操作。高频的「编辑」「证书申请」在单元格里直出，不进这里。
+     */
+    rowMoreOptions() {
+      return [
+        { content: this.$t('common.copy'), value: 'copy' },
+        { content: this.$t('common.delete'), value: 'del', theme: 'error' },
+      ];
+    },
+    onRowMoreClick(data, slotProps) {
+      const act = data && data.value ? data.value : data;
+      if (act === 'copy') {
+        this.handleClickCopy(slotProps);
+      } else if (act === 'del') {
+        this.handleClickDelete(slotProps);
+      }
+    },
+    groupMenuOptions(idx) {
+      return [
+        { content: this.$t('page.host.group.rename'), value: 'edit' },
+        { content: this.$t('page.host.group.move_left'), value: 'up', disabled: idx === 0 },
+        { content: this.$t('page.host.group.move_right'), value: 'down', disabled: idx === this.hostGroups.length - 1 },
+        { content: this.$t('common.delete'), value: 'del', theme: 'error' },
+      ];
+    },
+    onGroupMenuClick(data, group, idx) {
+      const act = data && data.value ? data.value : data;
+      if (act === 'edit') {
+        this.openGroupForm(group);
+      } else if (act === 'up') {
+        this.moveGroup(idx, -1);
+      } else if (act === 'down') {
+        this.moveGroup(idx, 1);
+      } else if (act === 'del') {
+        this.askDelGroup(group);
+      }
+    },
+    openGroupForm(group) {
+      if (group) {
+        this.groupForm = {
+          id: group.id,
+          group_name: group.group_name,
+          color: group.color || this.groupColors[0],
+          remarks: group.remarks || '',
+        };
+      } else {
+        this.groupForm = { id: '', group_name: '', color: this.groupColors[0], remarks: '' };
+      }
+      this.groupFormVisible = true;
+    },
+    saveGroup() {
+      const name = (this.groupForm.group_name || '').trim();
+      if (!name) {
+        this.$message.warning(this.$t('page.host.group.name_required'));
+        return;
+      }
+      const body = { group_name: name, color: this.groupForm.color, remarks: this.groupForm.remarks };
+      const req = this.groupForm.id
+        ? editHostGroup({ ...body, id: this.groupForm.id })
+        : addHostGroup(body);
+      req.then((res) => {
+        if (res.code === 0) {
+          this.$message.success(res.msg || this.$t('common.success'));
+          this.groupFormVisible = false;
+          this.loadHostGroups();
+          this.getList('');
+        } else {
+          this.$message.error(res.msg || this.$t('common.failed'));
+        }
+      }).catch((e: Error) => {
+        console.log(e);
+      });
+    },
+    askDelGroup(group) {
+      this.groupDelTarget = {
+        id: group.id,
+        group_name: group.group_name,
+        host_count: group.host_count || 0,
+      };
+      this.groupDelVisible = true;
+    },
+    doDelGroup() {
+      delHostGroup({ id: this.groupDelTarget.id }).then((res) => {
+        if (res.code === 0) {
+          this.$message.success(res.msg || this.$t('common.success'));
+          this.groupDelVisible = false;
+          // 被删的组正好是当前筛选条件时退回「全部网站」
+          this.loadHostGroups().then(() => {
+            this.pickGroup(this.currentGroup === 'all' ? 'all' : this.currentGroup);
+          });
+        } else {
+          this.$message.error(res.msg || this.$t('common.failed'));
+        }
+      }).catch((e: Error) => {
+        console.log(e);
+      });
+    },
+    moveGroup(idx, delta) {
+      const target = idx + delta;
+      if (target < 0 || target >= this.hostGroups.length) {
+        return;
+      }
+      const arr = this.hostGroups.slice();
+      const tmp = arr[idx];
+      arr[idx] = arr[target];
+      arr[target] = tmp;
+      sortHostGroup({ ids: arr.map((g) => g.id) }).then((res) => {
+        if (res.code === 0) {
+          this.hostGroups = arr;
+        } else {
+          this.$message.error(res.msg || this.$t('common.failed'));
+        }
+      }).catch((e: Error) => {
+        console.log(e);
+      });
+    },
+    openAssignGroup() {
+      if (this.selectedRowKeys.length === 0) {
+        return;
+      }
+      // 全局网站不参与分组，后端也会剔除；这里只是先把数量告诉用户
+      this.assignGlobalCount = (this.data || []).filter(
+        (row) => this.selectedRowKeys.indexOf(row.code) > -1 && row.global_host === 1,
+      ).length;
+      this.assignGroupCode = '';
+      this.assignVisible = true;
+    },
+    doAssignGroup() {
+      assignHostGroup({ host_codes: this.selectedRowKeys, group_code: this.assignGroupCode }).then((res) => {
+        if (res.code === 0) {
+          this.$message.success(res.msg || this.$t('common.success'));
+          this.assignVisible = false;
+          this.selectedRowKeys = [];
+          this.loadHostGroups();
+          this.getList('');
+        } else {
+          this.$message.error(res.msg || this.$t('common.failed'));
+          // 目标组可能刚被别处删掉，刷新左栏让用户看到最新的组
+          this.loadHostGroups();
+        }
+      }).catch((e: Error) => {
+        console.log(e);
+      });
+    },
     // HostForm 内切换 Tab 布局时联动调整弹窗宽度
     onHostTabPlacementChange(placement: string) {
       this.hostFormDialogWidth = placement === 'top' ? 750 : 920;
@@ -988,6 +1323,7 @@ export default Vue.extend({
           that.pagination.current = 1
 
           that.formData = { ...INITIAL_DATA };
+          that.loadHostGroups();
           that.getList("")
         } else {
           that.$message.warning(resdata.msg);
@@ -1011,6 +1347,7 @@ export default Vue.extend({
           if (resdata.code === 0) {
             that.$message.success(resdata.msg);
             that.editFormVisible = false;
+            that.loadHostGroups();
             that.getList("")
           } else {
             that.$message.warning(resdata.msg);
@@ -1107,6 +1444,7 @@ export default Vue.extend({
           console.log(resdata)
           if (resdata.code === 0) {
 
+            that.loadHostGroups();
             that.getList("")
             that.$message.success(resdata.msg);
           } else {
@@ -1575,6 +1913,205 @@ export default Vue.extend({
     color: var(--td-text-color-secondary);
   }
 
+}
+
+/* ==================== 网站分组：顶部轻量文本条 ==================== */
+/* 刻意不给边框和底色：上面那排动作按钮才是主，分组只是筛选维度。
+   选中态用「主色文字 + 2px 下划线」而不是实心块，避免比主按钮还抢眼。 */
+.host-group-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  margin: 2px 0 6px;
+}
+
+.hg-bar-label {
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+  margin-right: 8px;
+}
+
+.hg-gl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* 组名最长 50 字，不限宽会把「＋新建分组」「移动到分组」整个顶出可视区。
+     flex: none 保证它只换行不被压缩，超出部分交给 .hg-nm 省略号，全称走 title */
+  flex: none;
+  max-width: 220px;
+  min-width: 0;
+  padding: 5px 10px 6px;
+  font-size: 13px;
+  color: var(--td-text-color-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--td-brand-color);
+  }
+
+  &.on {
+    color: var(--td-brand-color);
+    font-weight: 600;
+    border-bottom-color: var(--td-brand-color);
+  }
+
+  .hg-nm {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  em {
+    font-style: normal;
+    font-size: 12px;
+    color: var(--td-text-color-placeholder);
+    flex: none;
+  }
+
+  &.on em {
+    color: var(--td-brand-color);
+  }
+
+  &.add {
+    color: var(--td-brand-color);
+  }
+
+  &.disabled {
+    color: var(--td-text-color-disabled);
+    cursor: not-allowed;
+  }
+
+  &:hover .hg-more {
+    opacity: 0.5;
+  }
+}
+
+.hg-gsep {
+  width: 1px;
+  height: 12px;
+  background: var(--td-component-stroke);
+  margin: 0 6px;
+}
+
+.hg-more {
+  font-weight: 700;
+  opacity: 0;
+  padding: 0 2px;
+  flex: none;
+
+  &:hover {
+    opacity: 1 !important;
+  }
+}
+
+/* 「移动到分组」列表：并列关系，逐条左对齐 */
+.assign-group-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+
+  ::v-deep .t-radio {
+    margin: 0 !important;
+  }
+}
+
+/* ==================== 操作列：编辑 / 证书申请 + 更多 ==================== */
+.op-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  /* reset.less 给全局 a / .t-button-link 加了 margin-right，
+     叠在 flex gap 上会把「更多」挤出列宽，这里必须清掉 */
+  .t-button-link {
+    margin-right: 0;
+  }
+}
+
+.op-vline {
+  width: 1px;
+  height: 11px;
+  background: var(--td-component-stroke);
+  flex: none;
+}
+
+.op-more {
+  color: var(--td-brand-color);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-block;
+}
+
+.hg-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: currentColor;
+  }
+
+  &.none {
+    background: var(--td-bg-color-component);
+    color: var(--td-text-color-placeholder);
+    cursor: default;
+
+    &:hover {
+      border-color: transparent;
+    }
+  }
+
+  &.unknown {
+    background: var(--td-bg-color-component);
+    color: var(--td-text-color-placeholder);
+    border: 1px dashed var(--td-component-stroke);
+    cursor: default;
+  }
+}
+
+.hg-color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  height: 32px;
+
+  i {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+
+    &.on {
+      border-color: var(--td-text-color-primary);
+    }
+  }
 }
 
 .search-input {
