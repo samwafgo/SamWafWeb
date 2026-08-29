@@ -229,6 +229,8 @@ export default {
       password: "密码必填",
       verifyCode: "验证码必填"
     },
+    session_expired: "登录状态已失效，请重新登录。",
+    login_request_failed: "无法连接后端，请确认服务已启动或稍后重试。",
     login_success: "登录成功",
   },
   topNav: {
@@ -4110,6 +4112,11 @@ export default {
       set_read: "设为已读",
       empty: "暂无通知",
       all: "查看全部",
+      tab_guard: "防护",
+      tab_system: "系统",
+      kind_net: "连接",
+      kind_ops: "运维",
+      net_error_tip: "与后端通信异常 {count} 次",
     },
     gpt: {
       assistant: "AI助手",

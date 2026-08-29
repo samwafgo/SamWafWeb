@@ -82,6 +82,8 @@ export default {
       qpsPoints: [] as number[],
       qpsMax: 0,
       qpsTimer: 0,
+      qpsFailCount: 0,
+      qpsStopped: false,
     };
   },
   computed: {
@@ -125,11 +127,12 @@ export default {
   },
   mounted() {
     this.loadQpsTrend();
-    this.qpsTimer = window.setInterval(this.loadQpsTrend, 5000);
   },
   beforeDestroy() {
     this.animFrames.forEach((id: number) => cancelAnimationFrame(id));
-    if (this.qpsTimer) clearInterval(this.qpsTimer);
+    // 先置标志再清 timer：销毁时可能还有请求在飞，它的 finally 会再排一次
+    this.qpsStopped = true;
+    if (this.qpsTimer) clearTimeout(this.qpsTimer);
   },
   methods: {
     jumpLog(index) {
@@ -238,10 +241,28 @@ export default {
         previous: item.compare.Previous,
       });
     },
+    // 连续失败后指数退避：5s → 10s → 30s → 60s 封顶，成功后立刻回到 5s。
+    // 后端不可用时固定 5 秒轮询会持续制造失败，是「提示铺满右侧」的放大器。
+    nextQpsDelay() {
+      const f = this.qpsFailCount;
+      if (f < 3) return 5000;
+      if (f === 3) return 10000;
+      if (f === 4) return 30000;
+      return 60000;
+    },
+    scheduleQpsPoll(delay: number) {
+      if (this.qpsStopped) return;
+      if (this.qpsTimer) clearTimeout(this.qpsTimer);
+      this.qpsTimer = window.setTimeout(() => this.loadQpsTrend(), delay);
+    },
     loadQpsTrend() {
-      if (typeof document !== 'undefined' && document.hidden) return;
-      wafstatqpstrendapi({ limit: 60 })
+      if (typeof document !== 'undefined' && document.hidden) {
+        this.scheduleQpsPoll(5000);
+        return;
+      }
+      wafstatqpstrendapi({ limit: 60 }, { background: true })
         .then((res) => {
+          this.qpsFailCount = 0;
           if (res.code !== 0 || !res.data) return;
           this.qpsPoints = (res.data.Points || []).map((p) => Number(p.V) || 0);
           this.qpsMax = Number(res.data.Max) || 0;
@@ -252,7 +273,11 @@ export default {
           }
         })
         .catch((e: Error) => {
+          this.qpsFailCount += 1;
           console.log(e);
+        })
+        .finally(() => {
+          this.scheduleQpsPoll(this.nextQpsDelay());
         });
     },
     formatNumber(val) {

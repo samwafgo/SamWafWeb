@@ -7,6 +7,9 @@
     label-width="0"
     @submit="onSubmit"
   >
+    <!-- 登录失败的原因就摆在表单上方（视线必经之路），不再飘到右上角去。
+         同一时刻只留一条，新的覆盖旧的 -->
+    <t-alert v-if="loginError" theme="error" :message="loginError" class="login-error-tip" close @close="loginError = ''" />
     <template v-if="type == 'password'">
       <t-form-item name="lang" label="语言选择">
         <t-select  v-model="langValue"
@@ -76,6 +79,7 @@ import Vue from 'vue';
 import QrcodeVue from 'qrcode.vue';
 import { UserIcon, LockOnIcon, BrowseOffIcon, BrowseIcon, RefreshIcon } from 'tdesign-icons-vue';
 import { loginapi } from '@/apis/login';
+import { takeLogoutReason } from '@/utils/localnotice';
 import { getSafeRedirectUrl } from '@/constants';
 import ChangePasswordDialog from '@/pages/waf/account/components/ChangePasswordDialog.vue';
 const INITIAL_DATA = {
@@ -107,6 +111,7 @@ export default Vue.extend({
   },
   data() {
     return {
+      loginError: '',
       FORM_RULES,
       type: 'password',
       formData: { ...INITIAL_DATA },
@@ -135,6 +140,12 @@ export default Vue.extend({
     clearInterval(this.intervalTimer);
   },
   mounted() {
+    // 被踢回登录页时告诉用户一次「为什么」——右上角那一串回声已被抑制，
+    // 但「登录状态已失效」这条本身是有信息量的，摆在表单上方说一次
+    const reason = takeLogoutReason();
+    if (reason === 'auth') {
+      this.loginError = this.$t('login.session_expired');
+    }
     this.init()
   },
   methods: {
@@ -174,6 +185,7 @@ export default Vue.extend({
         })
         .then((res) => {
           console.log(res);
+          this.loginError = '';
           if (res.code == 0) {
             localStorage.setItem("access_token", res.data.access_token);
             localStorage.setItem("current_account", this.formData.account);
@@ -209,13 +221,15 @@ export default Vue.extend({
           } else if (res.code == -2) {
             this.showSecretCode = true;
             this.formData.secretCode = "";
-            this.$message.error(res.msg);
+            this.loginError = res.msg;
           } else {
-            this.$message.error(res.msg);
+            this.loginError = res.msg;
           }
         })
         .catch((err) => {
           console.log(err);
+          // 连不上后端 / 超时：登录页没有铃铛可收，直接摆在表单上方
+          this.loginError = this.$t('login.login_request_failed');
         });
       }
     },
@@ -243,3 +257,9 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style scoped>
+.login-error-tip {
+  margin-bottom: 16px;
+}
+</style>

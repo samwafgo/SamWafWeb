@@ -21,7 +21,7 @@
     </t-descriptions>
 
     <div style="margin-top:16px">
-      <t-button theme="primary" :loading="checking" @click="onCheck">
+      <t-button theme="primary" :loading="checking" @click="onCheck(true)">
         {{ $t('page.owasp.upgrade.check') }}
       </t-button>
       <t-button theme="warning" :disabled="!info.need_update" :loading="applying" @click="onApply">
@@ -61,9 +61,10 @@ export default Vue.extend({
     this.onCheck();
   },
   methods: {
-    onCheck() {
+    // manual=true 是用户点按钮；mounted 自动那次走后台通道
+    onCheck(manual = false) {
       this.checking = true;
-      owaspUpdateCheckApi()
+      owaspUpdateCheckApi(manual ? undefined : { background: true })
         .then((res) => {
           if (res.code === 0) {
             this.info = { ...this.info, ...res.data };

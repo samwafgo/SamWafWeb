@@ -23,10 +23,12 @@ import { purifyHtml } from './utils/purify';  // 引入 purify.js
 Vue.prototype.$purifyHtml = purifyHtml;  // 将清理函数注册为全局方法
 import { setupDialogOverlayGuard } from './utils/dialogOverlayGuard';  // 修复弹窗内按下、遮罩上松开被误关闭
 setupDialogOverlayGuard();
+import { setupMessageGuard } from './utils/messageguard';  // 全局提示去重 + 跳登录后抑制回声
 
 
 Vue.use(VueRouter);
 Vue.use(TDesign);
+setupMessageGuard();  // 必须在 Vue.use(TDesign) 之后：此时 $message 才挂上
 Vue.use(VueClipboard);
 Vue.use(VueMeta);
 Vue.prototype.$bus = bus

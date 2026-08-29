@@ -163,7 +163,7 @@
         <span class="sec-title">{{ $t('page.iplocation.sec_files') }}</span>
         <span class="sec-rule"></span>
         <div class="sec-actions">
-          <t-button size="small" theme="default" variant="outline" :loading="downloadChecking" @click="handleCheckUpgrade">
+          <t-button size="small" theme="default" variant="outline" :loading="downloadChecking" @click="handleCheckUpgrade(true)">
             {{ $t('page.iplocation.download_check') }}
           </t-button>
           <t-button size="small" theme="default" variant="outline" @click="handleReload">
@@ -219,7 +219,7 @@
       </div>
       <div v-else-if="!hasFileRows" class="files-empty">
         <span>{{ $t('page.iplocation.files_empty_tip') }}</span>
-        <t-button size="small" theme="primary" variant="outline" @click="handleCheckUpgrade">
+        <t-button size="small" theme="primary" variant="outline" @click="handleCheckUpgrade(true)">
           {{ $t('page.iplocation.download_check') }}
         </t-button>
       </div>
@@ -807,11 +807,12 @@ export default Vue.extend({
     },
     // 检查远端可下载的数据库。拿不到远端清单也要把本地状态展示出来（内网环境是常态），
     // 所以后端在失败时也会带回 info，这里照样渲染表格，只是多一条告警。
-    async handleCheckUpgrade() {
+    // manual=true 是用户点按钮：超时照常弹通知；进页面自动跑的那次只进小铃铛
+    async handleCheckUpgrade(manual = false) {
       this.downloadChecking = true;
       this.upgradeError = '';
       try {
-        const res = await checkIPDBUpgradeApi();
+        const res = await checkIPDBUpgradeApi(manual ? undefined : { background: true });
         if (res.code === 0 && res.data) {
           this.upgradeInfo = res.data.info || { files: [] };
           if (res.data.error) {

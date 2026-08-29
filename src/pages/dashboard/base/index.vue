@@ -256,7 +256,8 @@ export default {
     },
     // 加载公告信息
     loadAnnouncements() {
-      GetAnnouncementApi({}).then(res => {
+      // 首页自动拉取，超时只进小铃铛
+      GetAnnouncementApi({}, { background: true }).then(res => {
         console.log("GetAnnouncementApi",res)
         if (res.code==0 && res.data.code=='success'){
            //将data字符串转换成json对象

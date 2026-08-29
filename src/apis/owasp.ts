@@ -86,10 +86,11 @@ export function owaspFileContentApi(params) {
 }
 
 // 升级
-export function owaspUpdateCheckApi() {
+export function owaspUpdateCheckApi(opts?) {
   return request({
     url: '/owasp/update/check',
     method: 'get',
+    ...(opts || {})
   })
 }
 

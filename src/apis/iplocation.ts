@@ -53,10 +53,11 @@ export function testIPLookupApi(data) {
 
 // IP数据库管理 - 检查可在线下载的数据库
 // 只有 ip2region 系列（Apache-2.0）能由官方转发分发；GeoLite2 / IPDB 受各自授权限制需自备
-export function checkIPDBUpgradeApi() {
+export function checkIPDBUpgradeApi(opts?) {
   return request({
     url: '/iplocation/upgrade/check',
-    method: 'get'
+    method: 'get',
+    ...(opts || {})
   })
 }
 

@@ -8,11 +8,12 @@ export function wafstatsumdayapi(params) {
   })
 }
 //查询实时QPS趋势(内存采样)
-export function wafstatqpstrendapi(params) {
+export function wafstatqpstrendapi(params?, opts?) {
   return request({
     url: 'wafstatqpstrend',
     method: 'get',
-    params: params
+    params: params,
+    ...(opts || {})
   })
 }
 //查询周期区间的攻击和正常信息

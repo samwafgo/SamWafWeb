@@ -229,6 +229,8 @@ export default {
       password: "Password is required",
       verifyCode: "Verification code is required"
     },
+    session_expired: "Your session has expired. Please sign in again.",
+    login_request_failed: "Cannot reach the backend. Make sure the service is running, then try again.",
     login_success: "Login successful",
   },
   topNav: {
@@ -4100,7 +4102,12 @@ export default {
       clear: "Clear",
       set_read: "Mark as Read",
       empty: "No Notifications",
-      all: "View All"
+      all: "View All",
+      tab_guard: "Protection",
+      tab_system: "System",
+      kind_net: "Network",
+      kind_ops: "Ops",
+      net_error_tip: "{count} backend communication failures"
     },
     gpt: {
       assistant: "AI",

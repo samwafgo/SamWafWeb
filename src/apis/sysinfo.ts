@@ -18,11 +18,13 @@ export function SysRuntimeInfoApi() {
 }
 
 //查询是否需要升级版本信息
-export function CheckVersionApi(params) {
+// opts 可传 { background: true }：页面自动发起的检查，超时只进小铃铛不弹通知
+export function CheckVersionApi(params?, opts?) {
   return request({
     url: 'sysinfo/checkversion',
     method: 'get',
-    params: params
+    params: params,
+    ...(opts || {})
   })
 }
 
@@ -34,11 +36,12 @@ export function DoUpdateApi(params) {
     params: params
   })
 }
-export function GetAnnouncementApi(params) {
+export function GetAnnouncementApi(params?, opts?) {
   return request({
     url: 'sysinfo/announcement',
     method: 'get',
-    params: params
+    params: params,
+    ...(opts || {})
   })
 }
 

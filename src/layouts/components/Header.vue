@@ -452,7 +452,8 @@ docker compose up -d</pre>
       },
       checkVersion(method){
           let that = this;
-          CheckVersionApi().then((res) => {
+          // auto 是进入页面时自动跑的：超时只进小铃铛，不弹右上角通知
+          CheckVersionApi(undefined, method === 'manual' ? undefined : { background: true }).then((res) => {
             let resdata = res
             console.log(resdata)
             if (resdata.code === 0) {
