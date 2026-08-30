@@ -113,3 +113,21 @@ export function clearIpSourceProbe(params) {
     params: params
   })
 }
+
+//保存前预检端口监听表(issue #955)
+export function checkHostPorts(data) {
+  return request({
+    url: 'wafhost/host/checkports',
+    method: 'post',
+    data: data
+  })
+}
+
+//端口占用总览
+export function getPortOverview(params) {
+  return request({
+    url: 'wafhost/port/overview',
+    method: 'get',
+    params: params
+  })
+}
