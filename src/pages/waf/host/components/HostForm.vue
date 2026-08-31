@@ -148,7 +148,7 @@
               <h4 class="hf-sect-title">
                 {{ $t('page.host.sect.cert') }}
                 <span class="hf-sect-extra">
-                  <t-tag v-if="formData.ssl=='1'" theme="success" variant="light" size="small">{{ certSummary }}</t-tag>
+                  <t-tag v-if="formData.ssl=='1'" :theme="certSummaryTheme" variant="light" size="small">{{ certSummary }}</t-tag>
                   <t-tag v-else theme="default" variant="light" size="small">{{ $t('page.host.sect.cert_off') }}</t-tag>
                 </span>
               </h4>
@@ -178,7 +178,7 @@
               <div style="display: flex; align-items: center; width: 100%;">
                 <t-select @change="handleSslChange" :filterable="selectCanFilter" v-model="formData.bind_ssl_id" :placeholder="$t('common.select_placeholder')+$t('page.host.ssl_folder')" style="flex-grow: 1;">
                   <t-option value="" :label="$t('common.select_placeholder')+$t('page.host.ssl_folder')" key=""></t-option>
-                  <t-option v-for="item in sslConfigList" :value="item.id" :label="`${item.domains} (${item.valid_to})`" :key="item.id"></t-option>
+                  <t-option v-for="item in sslOptions" :value="item.value" :label="item.label" :key="item.value"></t-option>
                 </t-select>
 
                 <t-button @click="handleAddNewSsl" style="margin-left: 10px;">{{$t('page.host.add_new_ssl')}}</t-button>
@@ -920,6 +920,12 @@
       initTab: {
         type: Number,
         default: 0
+      },
+      // 所在弹窗是否可见。弹窗内容只 created 一次，不下发这个开关的话，
+      // 在证书申请页新签发的证书，回到列表再打开编辑时下拉里仍然没有（只剩一串ID）
+      dialogVisible: {
+        type: Boolean,
+        default: false
       }
     },
     data() {
@@ -1060,13 +1066,37 @@
       };
     },
     computed: {
+      // 证书夹下拉项。绑定ID在证书夹里找不到时（条目已被删除等）补一条同值选项，
+      // 否则 t-select 直接把原始ID显示出来，看着像是没加载
+      sslOptions() {
+        const list = this.sslConfigList.map(item => ({
+          value: item.id,
+          label: `${item.domains} (${item.valid_to})`
+        }));
+        const bindId = this.formData.bind_ssl_id;
+        if (bindId && !list.some(item => item.value === bindId)) {
+          list.unshift({ value: bindId, label: this.$t('page.host.ssl_folder_missing') });
+        }
+        return list;
+      },
       // 证书小节标题右侧的一句话摘要：不展开也能看出绑的是哪张证书、什么时候到期
       certSummary() {
         const hit = this.sslConfigList.find(item => item.id === this.formData.bind_ssl_id);
         if (hit) {
           return `${hit.domains} (${hit.valid_to})`;
         }
+        if (this.formData.bind_ssl_id) {
+          return this.$t('page.host.sect.cert_missing');
+        }
         return this.$t('page.host.sect.cert_unbound');
+      },
+      // 绑定的证书夹条目已不存在时用告警色，别拿绿色标签把这事盖过去
+      certSummaryTheme() {
+        const bindId = this.formData.bind_ssl_id;
+        if (bindId && !this.sslConfigList.some(item => item.id === bindId)) {
+          return 'warning';
+        }
+        return 'success';
       },
       // 只有存在 HTTPS 端口、且主端口本身不是 80 时才需要这个勾选项：
       // 主端口就是 80 的话 http01 直接用主端口即可，不用再补一行
@@ -1190,6 +1220,13 @@
         handler(val) {
           if (val > 0) this.activeTab = val;
         },
+      },
+      // 每次打开弹窗都重新拉一次证书夹：组件只 created 一次，
+      // 期间在证书申请/证书夹页面新增的证书，不刷新的话这里永远看不到
+      dialogVisible(val) {
+        if (val) {
+          this.getSslFolderList();
+        }
       },
       // 切换 Tab 后把内容区和弹窗滚动位置复位到顶部，避免左侧导航过长时右侧内容"看起来是空的"
       activeTab() {
