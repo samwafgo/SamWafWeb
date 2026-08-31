@@ -59,3 +59,13 @@ export function GetRollbackListApi() {
 export function DoRollbackApi(params: { version: string }) {
   return request({ url: 'sysinfo/rollback', method: 'get', params })
 }
+
+// 查询升级进度（升级中会被高频轮询，且重启期间必然请求失败，一律走 background 不弹全局错误）
+export function GetUpdateProgressApi() {
+  return request({ url: 'sysinfo/updateprogress', method: 'get', background: true })
+}
+
+// 取消升级（仅下载阶段可取消）
+export function CancelUpdateApi() {
+  return request({ url: 'sysinfo/cancelupdate', method: 'get' })
+}
