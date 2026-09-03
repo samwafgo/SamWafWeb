@@ -1324,7 +1324,9 @@
                 that.captchaConfigData.path_prefix = getOrDefault(that.captchaConfigData, "path_prefix", "");
                 that.captchaConfigData.expire_time = getOrDefault(that.captchaConfigData, "expire_time", 24);
                 that.captchaConfigData.ip_mode = getOrDefault(that.captchaConfigData, "ip_mode", "nic");
-                that.captchaConfigData.engine_type = getOrDefault(that.captchaConfigData, "engine_type", "default");
+                // 兜底值必须是引擎认得的取值。写 "default" 会存进 captcha_json，
+                // 而引擎按验证方式分发挑战页时只认 traditional / capJs，取到别的值就发不出挑战。
+                that.captchaConfigData.engine_type = getOrDefault(that.captchaConfigData, "engine_type", "traditional");
                 if ( that.captchaConfigData.cap_js_config == null){
                   that.captchaConfigData.cap_js_config = {
                     challengeCount: 50,
@@ -2213,6 +2215,8 @@
             postdata['healthy_json'] = JSON.stringify(healthyData);
 
             // 处理验证码配置
+            // ⚠️ 这是一张白名单：验证码配置新增字段必须同时加进来，
+            // 漏了的话界面上填得进去、保存也不报错，但值根本没进后端——静默丢弃。
             let captchaData = {
               is_enable_captcha: parseInt(this.captchaConfigData.is_enable_captcha),
               path_prefix: this.captchaConfigData.path_prefix || '',
@@ -2220,6 +2224,7 @@
               expire_time: this.captchaConfigData.expire_time,
               ip_mode: this.captchaConfigData.ip_mode,
               engine_type: this.captchaConfigData.engine_type,
+              contact_info: this.captchaConfigData.contact_info || '',
               cap_js_config: this.captchaConfigData.cap_js_config 
             };
             postdata['captcha_json'] = JSON.stringify(captchaData);

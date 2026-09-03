@@ -963,10 +963,12 @@ export default Vue.extend({
         this.addFormVisible = true
       }
     }
-    // 从访问日志「IP提取有问题?」跳过来：直接打开该站点编辑弹窗，并定位到「其他配置」
+    // 别处（访问日志「IP提取有问题?」、CC 规则「去设置」）跳过来：直接打开该站点编辑弹窗并定位到对应页签
     if (this.$route.query && this.$route.query.editcode) {
       const editCode = String(this.$route.query.editcode);
-      this.editInitTab = this.$route.query.tab === 'ipsource' ? 4 : 1;
+      // tab 用名字传，避免调用方去记面板编号
+      const tabMap = { ipsource: 4, captcha: 7 };
+      this.editInitTab = tabMap[String(this.$route.query.tab || '')] || 1;
       this.formEditData = { code: '' };
       this.editFormVisible = true;
       this.getDetail(editCode);

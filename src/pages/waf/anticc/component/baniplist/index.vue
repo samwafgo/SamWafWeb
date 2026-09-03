@@ -1,12 +1,31 @@
 <template>
   <div>
     <t-card class="list-card-container">
+      <div class="ban-toolbar">
+        <t-button variant="outline" size="small" :loading="dataLoading" @click="getList('')">
+          {{ $t('common.refresh') }}
+        </t-button>
+        <t-select v-model="filterScope" size="small" :style="{ width: '220px', marginLeft: '8px' }"
+                  @change="applyFilter">
+          <t-option value="" :label="$t('page.ccrule.ban_filter_all')" />
+          <t-option value="global" :label="$t('page.ccrule.ban_scope_global')" />
+          <t-option v-for="h in bannedHosts" :key="h.code" :value="h.code" :label="h.name" />
+        </t-select>
+        <span class="ban-toolbar-tip">{{ $t('page.ccrule.ban_refresh_tip') }}</span>
+      </div>
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
                  :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
                  @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
                  @filter-change="onFilterChange"
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
+          <template #scope="{ row }">
+            <template v-if="row.scope === 'host'">
+              <t-tag theme="primary" variant="light">{{ $t('page.ccrule.ban_scope_host') }}</t-tag>
+              <span class="ban-host-name">{{ hostName(row) }}</span>
+            </template>
+            <t-tag v-else theme="warning" variant="light">{{ $t('page.ccrule.ban_scope_global') }}</t-tag>
+          </template>
 
           <template #op="slotProps">
             <a class="t-button-link" @click="handleRemoveBanIp(slotProps)">{{ $t('page.cc.remove_ban_ip') }}</a>
@@ -34,6 +53,7 @@ import {
   wafAntiCCAddApi,
   wafAntiCCBanIPListApi, wafAntiCCRemoveBanIpApi
 } from '@/apis/anticc';
+import { allhost } from '@/apis/host';
 
 const INITIAL_DATA = {
   host_code: '',
@@ -81,7 +101,11 @@ export default Vue.extend({
       textareaValue: '',
       prefix,
       dataLoading: false,
-      data: [], //列表数据信息
+      data: [], //列表数据信息（当前筛选后的视图）
+      rawData: [], //接口返回的原始数据，筛选都在它之上做
+      filterScope: '', //作用范围筛选：空=全部，global=全局生效，其余为站点码
+      ipKeyword: '', //IP 列的筛选关键字
+      hosts: [], //站点列表，用于把站点码换成域名
       detail_data: [], //加载详情信息用于编辑
       selectedRowKeys: [],
       value: 'first',
@@ -114,6 +138,12 @@ export default Vue.extend({
           colKey: 'region',
         },
         {
+          title: this.$t('page.ccrule.ban_col_scope'),
+          minWidth: 220,
+          ellipsis: true,
+          colKey: 'scope',
+        },
+        {
           align: 'left',
           width: 150,
           colKey: 'op',
@@ -141,6 +171,22 @@ export default Vue.extend({
     };
   },
   computed: {
+    hostDict() {
+      const dict = {};
+      (this.hosts || []).forEach((h) => { dict[h.value] = h.pre_host || h.label; });
+      return dict;
+    },
+    // 只列出当前确实有封禁的站点，避免下拉里塞一堆选了也没结果的站点
+    bannedHosts() {
+      const seen = {};
+      const list = [];
+      (this.rawData || []).forEach((r) => {
+        if (r.scope !== 'host' || !r.host_code || seen[r.host_code]) return;
+        seen[r.host_code] = true;
+        list.push({ code: r.host_code, name: this.hostName(r) });
+      });
+      return list;
+    },
     confirmBody() {
       if (this.deleteIdx > -1) {
         const {
@@ -155,10 +201,25 @@ export default Vue.extend({
     },
   },
   mounted() {
+    this.loadHosts();
     this.getList("")
   },
 
   methods: {
+    loadHosts() {
+      // 后端返回的 host_name 是「域名:端口」形式的显示名（同一域名常有多个端口各成一个站点）；
+      // 万一取不到（例如站点已删除），再用站点列表兜一层，最后才退回站点码——
+      // 直接显示一串 UUID 对用户没有意义
+      allhost({}).then((res) => {
+        if (res.code === 0) {
+          this.hosts = res.data || [];
+        }
+      }).catch(() => { /* 只是显示用，取不到不影响封禁列表本身 */ });
+    },
+    hostName(row) {
+      if (!row) return '-';
+      return row.host_name || this.hostDict[row.host_code] || row.host_code || '-';
+    },
     getList(keyword) {
       let that = this
       wafAntiCCBanIPListApi( {
@@ -171,13 +232,13 @@ export default Vue.extend({
           console.log(resdata)
           if (resdata.code === 0) {
 
-            this.data = resdata.data.list;
-            this.data_attach = []
-            console.log('getList',this.data)
-            this.pagination = {
-              ...this.pagination,
-              total: resdata.data.total,
-            };
+            this.rawData = resdata.data.list || [];
+            // 选中的站点这一轮可能已经没有封禁了，筛选条件留着会显示空列表，退回全部
+            if (this.filterScope && this.filterScope !== 'global'
+                && !this.rawData.some((r) => r.host_code === this.filterScope)) {
+              this.filterScope = '';
+            }
+            this.applyFilter();
           }
         })
         .catch((e: Error) => {
@@ -230,14 +291,25 @@ export default Vue.extend({
         .finally(() => {});
     },
     /**
-     * 筛选结果
+     * 作用范围与 IP 关键字两个筛选条件叠加生效，都在 rawData 之上做，
+     * 免得先筛一次之后 data 变小、第二个条件在残缺数据上过滤
      */
-    onFilterChange(e){
-      if (e.ip) {
-         this.data = this.data.filter(item => item.ip.includes(e.ip));
-      }else{
-         this.getList("");
+    applyFilter() {
+      let list = this.rawData || [];
+      if (this.filterScope === 'global') {
+        list = list.filter((r) => r.scope !== 'host');
+      } else if (this.filterScope) {
+        list = list.filter((r) => r.host_code === this.filterScope);
       }
+      if (this.ipKeyword) {
+        list = list.filter((r) => (r.ip || '').includes(this.ipKeyword));
+      }
+      this.data = list;
+      this.pagination = { ...this.pagination, total: list.length };
+    },
+    onFilterChange(e) {
+      this.ipKeyword = e.ip || '';
+      this.applyFilter();
     }
     //END Methods
   },
@@ -270,6 +342,23 @@ export default Vue.extend({
 
 .search-input {
   width: 360px;
+}
+
+.ban-host-name {
+  margin-left: 6px;
+  color: var(--td-text-color-secondary);
+}
+
+.ban-toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+
+  .ban-toolbar-tip {
+    margin-left: 8px;
+    font-size: 12px;
+    color: var(--td-text-color-placeholder);
+  }
 }
 
 .t-button+.t-button {

@@ -1,15 +1,9 @@
 <template>
   <div class="captcha-config">
-    <t-form-item :label="$t('page.host.captcha.is_enable')">
-      <t-tooltip class="placement top center" :content="$t('page.host.captcha.is_enable_tips')" placement="top"
-                 :overlay-style="{ width: '200px' }" show-arrow>
-        <t-radio-group v-model="localCaptchaConfig.is_enable_captcha" @change="updateParent">
-          <t-radio value="0">{{ $t('common.off') }}</t-radio>
-          <t-radio value="1">{{ $t('common.on') }}</t-radio>
-        </t-radio-group>
-      </t-tooltip>
-    </t-form-item> 
-    <t-form-item :label="$t('page.host.captcha.engine_type')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+    <!-- 能力区：与「站点常开」开关无关。CC 规则等触发来源同样使用这些设置，
+         所以它们必须始终可见可改，不能挂在开关的 v-if 后面。 -->
+    <t-divider align="left">{{ $t('page.host.captcha.group_ability') }}</t-divider>
+    <t-form-item :label="$t('page.host.captcha.engine_type')">
       <t-tooltip class="placement top center" :content="$t('page.host.captcha.engine_type_tips')" placement="top"
                  :overlay-style="{ width: '200px' }" show-arrow>
         <t-radio-group v-model="localCaptchaConfig.engine_type" @change="updateParent">
@@ -19,7 +13,7 @@
       </t-tooltip>
     </t-form-item>
 
-    <t-form-item :label="$t('page.host.captcha.path_prefix')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+    <t-form-item :label="$t('page.host.captcha.path_prefix')">
       <t-tooltip class="placement top center" :content="$t('page.host.captcha.path_prefix_tips')" placement="top"
                  :overlay-style="{ width: '300px' }" show-arrow>
         <t-input :style="{ width: '300px' }"
@@ -35,7 +29,7 @@
       </t-tooltip>
     </t-form-item>
 
-    <t-form-item :label="$t('page.host.captcha.exclude_urls')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+    <t-form-item :label="$t('page.host.captcha.exclude_urls')">
       <t-tooltip class="placement top center" :content="$t('page.host.captcha.exclude_urls_tips')" placement="top"
                  :overlay-style="{ width: '200px' }" show-arrow>
         <t-textarea :style="{ width: '480px' }"
@@ -44,9 +38,20 @@
                     :placeholder="$t('page.host.captcha.exclude_urls_placeholder')">
         </t-textarea>
       </t-tooltip>
+      <template #help>{{ $t('page.host.captcha.exclude_urls_desc') }}</template>
     </t-form-item>
 
-    <t-form-item :label="$t('page.host.captcha.expire_time')" v-if="localCaptchaConfig.is_enable_captcha == '1'">
+    <t-form-item :label="$t('page.host.captcha.contact_info')">
+      <t-textarea :style="{ width: '480px' }"
+                  v-model="localCaptchaConfig.contact_info"
+                  :maxlength="200"
+                  @change="updateParent"
+                  :placeholder="$t('page.host.captcha.contact_info_placeholder')">
+      </t-textarea>
+      <template #help>{{ $t('page.host.captcha.contact_info_desc') }}</template>
+    </t-form-item>
+
+    <t-form-item :label="$t('page.host.captcha.expire_time')">
       <t-tooltip class="placement top center" :content="$t('page.host.captcha.expire_time_tips')" placement="top"
                  :overlay-style="{ width: '200px' }" show-arrow>
         <t-input-number :style="{ width: '150px' }"
@@ -55,11 +60,12 @@
                         :placeholder="$t('page.host.captcha.expire_time_placeholder')">
         </t-input-number>
       </t-tooltip>
+      <template #help>{{ $t('page.host.captcha.expire_time_desc') }}</template>
     </t-form-item>
 
 
     <!-- capJS配置部分 -->
-    <div v-if="localCaptchaConfig.is_enable_captcha == '1' && localCaptchaConfig.engine_type == 'capJs'">
+    <div v-if="localCaptchaConfig.engine_type == 'capJs'">
       <t-divider>{{ $t('page.host.captcha.capjs_config') }}</t-divider>
       
       <t-form-item :label="$t('page.host.captcha.challenge_count')">
@@ -154,6 +160,19 @@
         </t-tooltip>
       </t-form-item>
     </div>
+
+    <!-- 触发来源区：开关只是众多来源之一，不是总闸 -->
+    <t-divider align="left">{{ $t('page.host.captcha.group_trigger') }}</t-divider>
+    <t-form-item :label="$t('page.host.captcha.is_enable')">
+      <t-radio-group v-model="localCaptchaConfig.is_enable_captcha" @change="updateParent">
+        <t-radio value="0">{{ $t('common.off') }}</t-radio>
+        <t-radio value="1">{{ $t('common.on') }}</t-radio>
+      </t-radio-group>
+      <template #help>{{ $t('page.host.captcha.is_enable_tips') }}</template>
+    </t-form-item>
+    <t-form-item :label="$t('page.host.captcha.other_sources')">
+      <div class="cap-sources">{{ $t('page.host.captcha.other_sources_desc') }}</div>
+    </t-form-item>
   </div>
 </template>
 
@@ -184,6 +203,10 @@ export default {
         }
         if (!this.localCaptchaConfig.path_prefix) {
           this.localCaptchaConfig.path_prefix = '';
+        }
+        // 老配置里没有这一栏，补空串——textarea 绑到 undefined 会变成非受控输入
+        if (this.localCaptchaConfig.contact_info === undefined || this.localCaptchaConfig.contact_info === null) {
+          this.localCaptchaConfig.contact_info = '';
         }
         if (!this.localCaptchaConfig.cap_js_config) {
           this.localCaptchaConfig.cap_js_config = {
@@ -237,6 +260,17 @@ export default {
 </script>
 
 <style lang="less" scoped>
+/* 说明统一走 t-form-item 的 help 插槽，样式由 TDesign 的 .t-input__help 负责 */
+::v-deep .t-input__help {
+  line-height: 1.6;
+}
+.cap-sources {
+  font-size: 12px;
+  color: var(--td-text-color-secondary);
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
 .mode-desc {
   font-size: 12px;
   color: var(--td-text-color-secondary);
