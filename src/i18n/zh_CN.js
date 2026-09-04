@@ -4660,7 +4660,7 @@ export default {
       type_serverchan: "Server酱",
       type_webhook: "自定义Webhook",
       // 通用Webhook配置
-      webhook_config_tip: "自定义请求地址、方法、请求头和报文模板，可对接 Slack、Telegram、Bark、ntfy、Gotify 或你自建的告警平台。仅允许 http/https，且目标不能是内网地址。",
+      webhook_config_tip: "自定义请求地址、方法、请求头和报文模板，可对接 Slack、Telegram、Bark、ntfy、Gotify 或你自建的告警平台。仅允许 http/https，目标默认必须是公网地址；自建在内网的告警平台，可在服务端 conf/config.yml 的 security.outbound_allowed_hosts 里声明放行。",
       webhook_preset: "常用模板",
       webhook_preset_tip: "选择后会自动填好请求方法、请求头和报文模板，地址仍需你自己填写；选「自定义」则不改动现有内容。",
       webhook_preset_custom: "自定义（不填充）",

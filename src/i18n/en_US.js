@@ -4679,7 +4679,7 @@ export default {
       type_serverchan: "ServerChan",
       type_webhook: "Custom Webhook",
       // Generic webhook config
-      webhook_config_tip: "Define your own URL, method, headers and body template to integrate Slack, Telegram, Bark, ntfy, Gotify or your own alerting platform. Only http/https is allowed and the target must not be a private address.",
+      webhook_config_tip: "Define your own URL, method, headers and body template to integrate Slack, Telegram, Bark, ntfy, Gotify or your own alerting platform. Only http/https is allowed and the target must be a public address by default; for a self-hosted platform on the intranet, allow it in security.outbound_allowed_hosts in conf/config.yml on the server.",
       webhook_preset: "Preset",
       webhook_preset_tip: "Picking a preset fills in the method, headers and body template. You still need to enter the URL yourself. \"Custom\" leaves everything untouched.",
       webhook_preset_custom: "Custom (no fill)",
