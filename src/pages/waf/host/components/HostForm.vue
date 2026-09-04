@@ -1886,7 +1886,9 @@
           .then((res) => {
             let resdata = res;
             if (resdata.code === 0) {
-              this.sslConfigList = resdata.data.list;
+              // 证书夹为空时后端返回 list:null，直接赋值会让 certSummary/sslOptions 在渲染中抛错，
+              // 整个弹窗从此不再更新（表现为点哪都没反应）
+              this.sslConfigList = resdata.data.list || [];
             }
           })
           .catch((e: Error) => {
