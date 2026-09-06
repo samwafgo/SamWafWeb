@@ -163,7 +163,59 @@
                 :placeholder="$t('page.vpconfig.trusted_proxies_placeholder')"
                 :autosize="{ minRows: 3, maxRows: 8 }"
               />
+              <div class="proxy-header-presets">
+                <span class="preset-label">{{ $t('page.vpconfig.trusted_proxies_quickfill') }}</span>
+                <t-tag
+                  size="small"
+                  variant="outline"
+                  theme="primary"
+                  style="cursor: pointer; margin: 2px 6px 2px 0;"
+                  @click="addTrustedProxyToken('private')"
+                >{{ $t('page.vpconfig.trusted_proxies_private') }}</t-tag>
+              </div>
+              <t-alert
+                v-if="trustedProxiesOverBroad"
+                theme="error"
+                :message="$t('page.vpconfig.trusted_proxies_overbroad', { entry: trustedProxiesOverBroad })"
+                style="margin-top: 8px;"
+              />
+              <div class="form-item-tips">{{ $t('page.vpconfig.trusted_proxies_private_tip') }}</div>
               <div class="form-item-tips">{{ $t('page.vpconfig.trusted_proxies_tips') }}</div>
+            </t-form-item>
+            <t-form-item v-if="enableManageProxy" :label="$t('page.vpconfig.probe_title')">
+              <t-space direction="vertical" style="width: 100%;">
+                <t-button theme="default" :loading="probeLoading" @click="handleClientIpProbe">
+                  {{ $t('page.vpconfig.probe_button') }}
+                </t-button>
+                <div v-if="probeResult" class="ip-probe-result">
+                  <div>
+                    <b>{{ $t('page.vpconfig.probe_remote_ip') }}</b>: {{ probeResult.remote_ip }}
+                    <span :class="probeResult.peer_trusted ? 'probe-ok' : 'probe-warn'">
+                      ({{ probeResult.peer_trusted ? $t('page.vpconfig.probe_peer_trusted_yes') : $t('page.vpconfig.probe_peer_trusted_no') }}{{ probeResult.peer_trusted_by ? ': ' + probeResult.peer_trusted_by : '' }})
+                    </span>
+                    <span v-if="probeResult.gate_over_broad" class="probe-warn">{{ $t('page.vpconfig.probe_gate_overbroad') }}</span>
+                  </div>
+                  <div>
+                    <b>{{ $t('page.vpconfig.probe_client_ip') }}</b>: <span class="probe-ok">{{ probeResult.client_ip }}</span>
+                  </div>
+                  <div><b>{{ $t('page.vpconfig.probe_reason') }}</b>: {{ probeReasonText(probeResult.reason) }}</div>
+                  <div v-if="probeResult.headers && probeResult.headers.length">
+                    <b>{{ $t('page.vpconfig.probe_headers') }}</b>
+                    <div v-for="h in probeResult.headers" :key="h.name" class="ip-probe-header">
+                      <div>{{ h.name }}: {{ h.value || $t('page.vpconfig.probe_header_empty') }}
+                        <span v-if="h.too_long" class="probe-warn">{{ $t('page.vpconfig.probe_header_toolong') }}</span>
+                      </div>
+                      <div v-for="(hop, hi) in (h.hops || [])" :key="hi" class="ip-probe-hop">
+                        {{ hop.ip }}
+                        <span v-if="!hop.valid" class="probe-warn">[{{ $t('page.vpconfig.probe_hop_invalid') }}]</span>
+                        <span v-else-if="hop.trusted" class="probe-muted">[{{ $t('page.vpconfig.probe_hop_trusted') }}{{ hop.trusted_by ? ': ' + hop.trusted_by : '' }}]</span>
+                        <span v-else class="probe-ok">[{{ $t('page.vpconfig.probe_hop_untrusted') }}]</span>
+                        <span v-if="h.used && hop.ip === probeResult.client_ip" class="probe-ok">[{{ $t('page.vpconfig.probe_hop_used') }}]</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </t-space>
             </t-form-item>
           </t-form>
         </t-loading>
@@ -752,7 +804,7 @@
   <script lang="ts">
   import Vue from 'vue';
   import { prefix } from '@/config/global';
-  import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getManageCDNProviderApi, updateManageCDNProviderApi, getCorsAllowOriginsApi, updateCorsAllowOriginsApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi, getLocalCertStatusApi, generateLocalCertApi, rotateLocalCaApi, clearLocalCertApi } from '@/apis/vpconfig';
+  import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getManageCDNProviderApi, updateManageCDNProviderApi, manageClientIpProbeApi, getCorsAllowOriginsApi, updateCorsAllowOriginsApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi, getLocalCertStatusApi, generateLocalCertApi, rotateLocalCaApi, clearLocalCertApi } from '@/apis/vpconfig';
   import { wafCDNProviderInfoApi } from '@/apis/cdnip';
   import { get_detail_by_item_api, edit_system_config_by_item_api } from '@/apis/systemconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
@@ -812,6 +864,9 @@
           trusted_proxies: ''
         },
         trustedProxiesLoading: false,
+        // 管理端「本次访问」真实IP诊断结果
+        probeLoading: false,
+        probeResult: null,
         // 管理端代理头(DB参数 gwaf_manage_proxy_header)：从哪些头识别真实客户端IP，留空=直接用网络IP
         manageProxyHeader: '',
         // 总开关：代理头有值即开启；关闭=按直连网络IP判定，并隐藏下面代理头/①CDN/②网段
@@ -992,6 +1047,21 @@
       };
     },
     computed: {
+      // 可信代理网段里第一个"过宽"条目(没有则空串)。判据与后端 isOverBroadProxyCIDR 保持一致：
+      // IPv4 掩码<=4、IPv6 掩码<=3。这类条目只能放行闸门，后端不会据此从代理头取客户端IP。
+      trustedProxiesOverBroad() {
+        const raw = this.trustedProxiesFormData.trusted_proxies || '';
+        const entries = raw.split(',').map((t) => t.trim()).filter((t) => t !== '');
+        for (const entry of entries) {
+          const idx = entry.indexOf('/');
+          if (idx < 0) continue;
+          const ones = parseInt(entry.slice(idx + 1), 10);
+          if (Number.isNaN(ones)) continue;
+          const isV6 = entry.slice(0, idx).indexOf(':') >= 0;
+          if (isV6 ? ones <= 3 : ones <= 4) return entry;
+        }
+        return '';
+      },
       // ===== 左侧锚点导航 =====
       // 顺序即页面顺序；show 为假的节（如未启用 SSL 时的证书节）连锚点一起隐藏，
       // 否则点了会跳空。dirty 用来在左侧打黄点，让"哪一节还没生效"不用逐节找。
@@ -1351,6 +1421,40 @@
       },
       handleTrustedProxiesRefresh() {
         this.fetchTrustedProxies();
+        this.probeResult = null;
+      },
+      // 快捷追加一个可信代理条目(已存在则忽略，大小写不敏感)
+      addTrustedProxyToken(token) {
+        const cur = this.trustedProxiesFormData.trusted_proxies || '';
+        const tokens = cur.split(',').map((t) => t.trim()).filter((t) => t !== '');
+        if (tokens.some((t) => t.toLowerCase() === token.toLowerCase())) {
+          return;
+        }
+        tokens.push(token);
+        this.trustedProxiesFormData.trusted_proxies = tokens.join(',');
+      },
+      // 拉取本次访问的真实IP判定过程
+      handleClientIpProbe() {
+        this.probeLoading = true;
+        manageClientIpProbeApi({})
+          .then((res) => {
+            if (res.code === 0) {
+              this.probeResult = res.data;
+            } else {
+              MessagePlugin.error(res.msg || this.$t('common.tips.api_error'));
+            }
+          })
+          .catch(() => {
+            MessagePlugin.error(this.$t('common.tips.api_error'));
+          })
+          .finally(() => {
+            this.probeLoading = false;
+          });
+      },
+      probeReasonText(reason) {
+        const key = `page.vpconfig.probe_reason_${reason}`;
+        const text = this.$t(key);
+        return text === key ? reason : text;
       },
       // 加载管理端引用的CDN厂商 + 其中心库状态
       fetchManageCdnProvider() {
@@ -1400,7 +1504,13 @@
         ])
           .then(([headerRes, proxiesRes]) => {
             if (headerRes.code === 0 && proxiesRes.code === 0) {
-              MessagePlugin.success(this.$t('common.tips.save_success'));
+              // 网段过宽时后端会在 msg 里说明"代理头将不被采信"，原样提示，别被通用成功文案盖掉
+              if (this.trustedProxiesOverBroad && proxiesRes.msg) {
+                MessagePlugin.warning(proxiesRes.msg);
+              } else {
+                MessagePlugin.success(this.$t('common.tips.save_success'));
+              }
+              this.probeResult = null;
             } else {
               MessagePlugin.error(
                 (headerRes.code !== 0 ? headerRes.msg : proxiesRes.msg) ||
@@ -2689,5 +2799,35 @@ ${this.$t('page.vpconfig.access_save_tail_common')}`,
     color: rgba(0, 0, 0, 0.6);
     font-size: 14px;
     line-height: 24px;
+  }
+
+  .ip-probe-result {
+    border: 1px solid var(--td-component-border);
+    border-radius: 3px;
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 22px;
+    word-break: break-all;
+
+    .ip-probe-header {
+      margin-top: 4px;
+    }
+
+    .ip-probe-hop {
+      padding-left: 16px;
+      color: rgba(0, 0, 0, 0.7);
+    }
+
+    .probe-ok {
+      color: var(--td-success-color);
+    }
+
+    .probe-warn {
+      color: var(--td-error-color);
+    }
+
+    .probe-muted {
+      color: rgba(0, 0, 0, 0.4);
+    }
   }
   </style>

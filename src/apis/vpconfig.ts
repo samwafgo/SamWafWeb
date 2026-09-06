@@ -31,6 +31,14 @@ export function updateManageTrustedProxiesApi(data) {
     data: data
   })
 }
+//管理端「本次访问」真实IP诊断（只回显本次请求自身的判定过程）
+export function manageClientIpProbeApi(params) {
+  return request({
+    url: 'vipconfig/manageClientIpProbe',
+    method: 'get',
+    params: params
+  })
+}
 //CDN厂商快捷填充：获取某厂商官方回源段CIDR
 export function getCdnProviderRangesApi(params) {
   return request({
