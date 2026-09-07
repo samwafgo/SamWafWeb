@@ -156,6 +156,30 @@
                 <div class="form-tips">{{ $t('page.access.config.service_tokens_tips') }}</div>
               </t-form-item>
 
+              <t-divider align="left">{{ $t('page.access.config.section_cors') }}</t-divider>
+
+              <t-form-item :label="$t('page.access.config.label_cors_allow_origins')" name="cors_allow_origins">
+                <t-textarea :style="{ width: '520px' }" v-model="formData.cors_allow_origins"
+                  :autosize="{ minRows: 2, maxRows: 6 }"
+                  placeholder="https://app.example.com&#10;https://admin.example.com:8443"></t-textarea>
+                <div class="form-tips">{{ $t('page.access.config.cors_allow_origins_tips') }}</div>
+              </t-form-item>
+              <t-form-item :label="$t('page.access.config.label_cors_allow_methods')" name="cors_allow_methods">
+                <t-input :style="{ width: '520px' }" v-model="formData.cors_allow_methods"
+                  placeholder="GET,POST,PUT,PATCH,DELETE,OPTIONS"></t-input>
+                <div class="form-tips">{{ $t('page.access.config.cors_allow_methods_tips') }}</div>
+              </t-form-item>
+              <t-form-item :label="$t('page.access.config.label_cors_allow_headers')" name="cors_allow_headers">
+                <t-input :style="{ width: '520px' }" v-model="formData.cors_allow_headers"
+                  placeholder="Content-Type,Authorization,X-Requested-With"></t-input>
+                <div class="form-tips">{{ $t('page.access.config.cors_allow_headers_tips') }}</div>
+              </t-form-item>
+              <t-form-item :label="$t('page.access.config.label_cors_max_age')" name="cors_max_age">
+                <t-input-number :style="{ width: '200px' }" v-model="formData.cors_max_age"
+                  theme="column" :min="0" :max="7200"></t-input-number>
+                <div class="form-tips">{{ $t('page.access.config.cors_max_age_tips') }}</div>
+              </t-form-item>
+
               <t-divider align="left">{{ $t('page.access.config.section_behavior') }}</t-divider>
 
               <t-form-item :label="$t('page.access.config.label_unauth_action')" name="unauth_action">
@@ -234,6 +258,11 @@ const INITIAL_CONFIG = {
   service_token_header: '',
   // 服务令牌明文只在提交时传，后端只存 sha256；留空表示保持原样不动
   service_tokens: '',
+  // 跨源(CORS)：全空即不启用，存量部署行为不变
+  cors_allow_origins: '',
+  cors_allow_methods: '',
+  cors_allow_headers: '',
+  cors_max_age: 0,
   unauth_action: 'auto',
   pass_identity_header: 0,
   force_secure_cookie: 0,
@@ -289,6 +318,10 @@ export default Vue.extend({
             bypass_ip_group_code: d.bypass_ip_group_code ?? '',
             service_token_header: d.service_token_header ?? '',
             service_tokens: '',
+            cors_allow_origins: d.cors_allow_origins ?? '',
+            cors_allow_methods: d.cors_allow_methods ?? '',
+            cors_allow_headers: d.cors_allow_headers ?? '',
+            cors_max_age: d.cors_max_age ?? 0,
             unauth_action: d.unauth_action || 'auto',
             pass_identity_header: d.pass_identity_header ?? 0,
             force_secure_cookie: d.force_secure_cookie ?? 0,
