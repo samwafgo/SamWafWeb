@@ -36,6 +36,9 @@ const WS_RECONNECT_MAX_DELAY = 10000;
 // 连接活过这个时长才算「连上过」，重连间隔才复位。
 // 否则鉴权失败(-999)这类「一连上就被踢」的场景会退化成 1s 一次的死循环。
 const WS_STABLE_THRESHOLD = 30000;
+// 未登录时的等待间隔：这不是"断线重连"，不该走指数退避，
+// 否则登录成功后要干等十几秒才连上。
+const WS_TOKEN_WAIT_DELAY = 2000;
 
 export default Vue.extend({
   computed: {
@@ -47,6 +50,7 @@ export default Vue.extend({
     return {
       ws: null,
       wsConnecting: false,
+      tokenWaitTimer: null,
       disConnectTimer: null,
       reconnectDelay: WS_RECONNECT_BASE_DELAY,
       wsOpenedAt: 0,
@@ -118,6 +122,14 @@ export default Vue.extend({
         // 已有连接就别再建：这个判断必须在 await 之前，否则两次调用（created 与一次重连）
         // 会双双穿过判断各建一条，重蹈「一条广播被同一页面收 N 次」的覆辙
         if(this.ws || this.wsConnecting) return;
+        // 没有登录态就不建连接。WebSocket 带不了自定义头，令牌只能放进子协议，
+        // 而 localStorage 取不到时会被浏览器字符串化成 "null" 原样发出去——服务端收到的是个
+        // 非空字符串，只能判成无效令牌。于是登录页停着不动，也会每隔几秒失败一次。
+        const token = this.currentWsToken();
+        if (!token) {
+          this.scheduleTokenWait();
+          return;
+        }
         this.wsConnecting = true;
         try {
           // WebSocket 建连不能带自定义头，会话密钥只能走查询参数；
@@ -143,7 +155,7 @@ export default Vue.extend({
           const gen = ++this.wsGeneration;
           this.ws = websocket.useWebSocket(
               url,	// url
-              localStorage.getItem("access_token"),
+              token,
               () => this.wsOnOpen(gen), // 链接回调
               (e) => this.wsOnMessage(e, gen),	// 连接成功后处理接口返回信息
               () => this.wsOnClose(gen), // 关闭回调
@@ -154,6 +166,22 @@ export default Vue.extend({
           );
         }
 
+      },
+      // 取当前可用的令牌；取不到或是字面量 null/undefined 都算没有
+      currentWsToken() {
+        try {
+          const t = localStorage.getItem("access_token");
+          if (!t || t === "null" || t === "undefined") return "";
+          return t;
+        } catch (_) { return ""; }
+      },
+      // 未登录期间按固定间隔轻量重试，不发起连接、不动退避间隔
+      scheduleTokenWait() {
+        if (this.tokenWaitTimer) return;
+        this.tokenWaitTimer = setTimeout(() => {
+          this.tokenWaitTimer = null;
+          this.initWebSocket();
+        }, WS_TOKEN_WAIT_DELAY);
       },
       // 是否为当前连接发来的事件；过期连接的一律忽略
       isCurrentWs(gen) {
