@@ -66,13 +66,19 @@
                   <t-icon name="help-circle" />
                 </t-tooltip>
               </div>
-              <t-radio-group :value="ipTagDb" variant="default-filled" size="small" :disabled="ipTagDbSaving"
+              <t-radio-group :value="ipTagDb" variant="default-filled" size="small"
+                             :disabled="ipTagDbSaving || ipTagMerging"
                              @change="onIpTagDbChange">
                 <t-radio-button value="0">{{ $t('page.attack_log.iptag_db_main') }}</t-radio-button>
                 <t-radio-button value="1">{{ $t('page.attack_log.iptag_db_stats') }}</t-radio-button>
               </t-radio-group>
               <div class="foot-hint">
-                {{ ipTagDb === '1' ? $t('page.attack_log.iptag_db_current_stats') : $t('page.attack_log.iptag_db_current_main') }}
+                <template v-if="ipTagMerging">
+                  <t-loading size="12px" style="margin-right:4px;" />{{ $t('page.attack_log.iptag_db_merging') }}
+                </template>
+                <template v-else>
+                  {{ ipTagDb === '1' ? $t('page.attack_log.iptag_db_current_stats') : $t('page.attack_log.iptag_db_current_main') }}
+                </template>
               </div>
             </div>
           </template>
@@ -101,6 +107,9 @@
             </t-tooltip>
             <t-button v-if="attackSearchformData.rule" theme="danger" variant="outline" size="small" @click="handleDeleteTag">
               {{ $t('page.attack_log.delete_current_tag') }}
+            </t-button>
+            <t-button theme="default" variant="outline" size="small" @click="openWatchListDialog">
+              {{ $t('page.visit_log.watch_manage') }}
             </t-button>
             <t-button theme="danger" variant="outline" size="small" @click="handleBatchDeleteTag">
               {{ $t('common.batch_delete.title') }}
@@ -141,6 +150,7 @@
               </template>
               <template #op="slotProps">
                 <a class="t-button-link" @click="handleClickDetail(slotProps)">{{$t('common.details')}}</a>
+                <a class="t-button-link" style="margin-left: 8px" @click="openWatchDialog(slotProps.row)">{{ $t('page.visit_log.watch_add') }}</a>
               </template>
             </t-table>
           </div>
@@ -199,6 +209,36 @@
     >
       <web-log-list ref="childLog" :attack_ip="trans_to_parent_ip"></web-log-list>
     </t-dialog>
+
+    <!-- 加入观察名单 -->
+    <t-dialog :header="$t('page.visit_log.watch_dialog_title')" :visible.sync="watchDialogVisible" width="420px"
+      :confirmBtn="{ content: $t('common.confirm'), loading: watchSaving }"
+      :onConfirm="confirmWatchAdd" :onClose="() => { this.watchDialogVisible = false }">
+      <t-form :label-width="90">
+        <t-form-item label="IP">
+          <t-input v-model="watchForm.ip" readonly />
+        </t-form-item>
+        <t-form-item :label="$t('page.visit_log.watch_days')">
+          <t-input-number v-model="watchForm.days" :min="1" :max="30" style="width: 100%;" />
+        </t-form-item>
+        <t-form-item :label="$t('page.visit_log.watch_reason')">
+          <t-input v-model="watchForm.reason" :placeholder="$t('page.visit_log.watch_reason_placeholder')" />
+        </t-form-item>
+      </t-form>
+    </t-dialog>
+
+    <!-- 观察名单管理 -->
+    <t-dialog :header="$t('page.visit_log.watch_manage')" :visible.sync="watchListVisible" width="720px" :footer="false"
+      :onClose="() => { this.watchListVisible = false }">
+      <t-table :columns="watchListColumns" :data="watchListData" size="small" rowKey="id"
+        :loading="watchListLoading" :pagination="watchListPagination"
+        @page-change="onWatchPageChange" :empty="$t('page.visit_log.watch_empty')">
+        <template #expire_at="{ row }">{{ formatWatchExpire(row.expire_at) }}</template>
+        <template #op="{ row }">
+          <a class="t-button-link" @click="handleWatchRemove(row)">{{ $t('page.visit_log.watch_remove') }}</a>
+        </template>
+      </t-table>
+    </t-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -206,9 +246,10 @@ import Vue from 'vue';
 import { SearchIcon } from 'tdesign-icons-vue';
 import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
-import {attackIpListApi,allattacktaglist,deleteTagByNameApi} from '@/apis/waflog/attacklog';
+import {attackIpListApi,allattacktaglist,deleteTagByNameApi,ipTagDbStatusApi,ipWatchlistAddApi,ipWatchlistDelApi,ipWatchlistListApi} from '@/apis/waflog/attacklog';
 import {get_detail_by_item_api, edit_system_config_api} from '@/apis/systemconfig';
 import WebLogList  from './index.vue'
+import { ConvertUnixToDate } from '@/utils/date';
 export default Vue.extend({
   name: 'WebLogAttackListBase',
   components: {
@@ -320,9 +361,26 @@ export default Vue.extend({
       ipTagDb: '0',
       ipTagDbItem: null,
       ipTagDbSaving: false,
+      // 切换归属后后端会把另一个库的历史标签并过来，合并期间列表数字还在变，界面要如实说明
+      ipTagMerging: false,
+      ipTagMergeTimer: null,
       currentTab:"",
       attackIpVisible:false,//访问明细
       trans_to_parent_ip:"",//传递给
+      // 观察名单
+      watchDialogVisible: false,
+      watchSaving: false,
+      watchForm: { ip: '', days: 7, reason: '' },
+      watchListVisible: false,
+      watchListData: [],
+      watchListLoading: false,
+      watchListPagination: { current: 1, pageSize: 10, total: 0 },
+      watchListColumns: [
+        { colKey: 'ip', title: 'IP', width: 150 },
+        { colKey: 'reason', title: this.$t('page.visit_log.watch_reason'), ellipsis: true },
+        { colKey: 'expire_at', title: this.$t('page.visit_log.watch_expire_at'), width: 170, cell: 'expire_at' },
+        { colKey: 'op', title: this.$t('common.op'), width: 80 },
+      ],
       deleteLogMode: 'tag_only',//删除模式
       batchDeleteVisible: false,
       // 批量删除用的是「含被排除标签」的完整清单，否则被排除的标签没入口清理历史数据
@@ -411,6 +469,11 @@ export default Vue.extend({
     this.getIpTags()
     this.getList("");
     this.loadIpTagDb();
+    // 合并可能是上一次会话触发的，进页面先问一次后端在不在跑
+    this.pollIpTagMerge(false);
+  },
+  beforeDestroy() {
+    this.stopIpTagMergePoll();
   },
   methods: {
     // 大数字用万/亿，否则计数比规则名还长
@@ -488,6 +551,38 @@ export default Vue.extend({
         },
       });
     },
+    stopIpTagMergePoll() {
+      if (this.ipTagMergeTimer) {
+        clearTimeout(this.ipTagMergeTimer);
+        this.ipTagMergeTimer = null;
+      }
+    },
+    // 问一次合并状态：还在跑就 2 秒后再问；跑完了(refreshOnDone)把列表按新库重拉一遍
+    pollIpTagMerge(refreshOnDone) {
+      ipTagDbStatusApi()
+        .then((res) => {
+          if (res.code !== 0 || !res.data) return;
+          const merging = res.data.merging === true;
+          const was = this.ipTagMerging;
+          this.ipTagMerging = merging;
+          if (merging) {
+            this.stopIpTagMergePoll();
+            this.ipTagMergeTimer = setTimeout(() => this.pollIpTagMerge(true), 2000);
+            return;
+          }
+          this.stopIpTagMergePoll();
+          if (was && refreshOnDone) {
+            this.$message.success(this.$t('page.attack_log.iptag_db_merge_done'));
+            this.getIpTags();
+            this.getList('');
+          }
+        })
+        .catch(() => {
+          // 状态查不到就当没在合并，不打扰用户
+          this.stopIpTagMergePoll();
+          this.ipTagMerging = false;
+        });
+    },
     doSaveIpTagDb(next) {
       const item = this.ipTagDbItem;
       if (!item) {
@@ -515,6 +610,9 @@ export default Vue.extend({
             that.pagination.current = 1;
             that.getIpTags();
             that.getList('');
+            // 后端这时候正在把另一个库的历史标签并过来，盯着它，并完再拉一次
+            that.ipTagMerging = true;
+            that.pollIpTagMerge(true);
           } else {
             that.$message.warning(res.msg);
           }
@@ -593,6 +691,66 @@ export default Vue.extend({
       console.log(ip)
       this.attackIpVisible = true
       this.trans_to_parent_ip = ip
+    },
+    // 观察名单：加入/续期（已存在则到期时间取更晚者）
+    openWatchDialog(row) {
+      this.watchForm = { ip: row.ip, days: 7, reason: '' };
+      this.watchDialogVisible = true;
+    },
+    confirmWatchAdd() {
+      if (!this.watchForm.ip) return;
+      this.watchSaving = true;
+      ipWatchlistAddApi({ ip: this.watchForm.ip, days: this.watchForm.days, reason: this.watchForm.reason })
+        .then((res) => {
+          if (res.code === 0) {
+            this.$message.success(this.$t('page.visit_log.watch_added'));
+            this.watchDialogVisible = false;
+          } else {
+            this.$message.error(res.msg);
+          }
+        })
+        .catch(() => {})
+        .finally(() => { this.watchSaving = false; });
+    },
+    // 观察名单管理弹窗
+    openWatchListDialog() {
+      this.watchListVisible = true;
+      this.watchListPagination.current = 1;
+      this.loadWatchList();
+    },
+    loadWatchList() {
+      this.watchListLoading = true;
+      ipWatchlistListApi({ pageIndex: this.watchListPagination.current, pageSize: this.watchListPagination.pageSize })
+        .then((res) => {
+          if (res.code === 0) {
+            this.watchListData = res.data.list || [];
+            this.watchListPagination = { ...this.watchListPagination, total: res.data.total };
+          }
+        })
+        .catch(() => {})
+        .finally(() => { this.watchListLoading = false; });
+    },
+    onWatchPageChange(curr) {
+      this.watchListPagination.current = curr.current;
+      this.watchListPagination.pageSize = curr.pageSize;
+      this.loadWatchList();
+    },
+    formatWatchExpire(ts) {
+      if (!ts) return '-';
+      return ConvertUnixToDate(ts * 1000);
+    },
+    handleWatchRemove(row) {
+      if (!confirm(this.$t('page.visit_log.watch_remove_confirm'))) return;
+      ipWatchlistDelApi({ ip: row.ip })
+        .then((res) => {
+          if (res.code === 0) {
+            this.$message.success(this.$t('page.visit_log.watch_removed'));
+            this.loadWatchList();
+          } else {
+            this.$message.error(res.msg);
+          }
+        })
+        .catch(() => {});
     },
     handleClickDelete(row : { rowIndex : any }) {
       this.deleteIdx = row.rowIndex;

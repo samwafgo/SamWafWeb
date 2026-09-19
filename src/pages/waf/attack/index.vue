@@ -104,6 +104,27 @@
               </t-form-item>
             </t-col>
           </t-row>
+
+          <t-row :gutter="16">
+            <t-col :span="6">
+              <t-form-item label="访问日志档位" name="access_log_mode">
+                <t-select v-model="logConfig.access_log_mode" style="width: 100%;">
+                  <t-option value="db" label="全部入库" />
+                  <t-option value="sample" label="采样入库" />
+                  <t-option value="off" label="仅安全事件" />
+                </t-select>
+                <div v-if="logConfig.access_log_mode !== 'db'" class="log-config-hint">
+                  「仅安全事件」会失去 CC 阈值推荐、AI 训练负样本与异常 IP 的正常行为回溯
+                </div>
+              </t-form-item>
+            </t-col>
+
+            <t-col :span="6">
+              <t-form-item label="访问日志保留天数" name="access_log_retention_days">
+                <t-input-number v-model="logConfig.access_log_retention_days" style="width: 100%;" :min="1" />
+              </t-form-item>
+            </t-col>
+          </t-row>
         </t-form>
       </div>
     </t-card>
@@ -178,7 +199,13 @@
         <div class="table-toolbar"
           style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <div class="left-actions">
-            <!-- 可以放置其他操作按钮 -->
+            <!-- 视图切换：访问日志=全量窄行（事件双写在内），安全事件=命中子集。
+                 内嵌在风险日志详情里时，访问日志视图就是该 IP 的「全部行为」 -->
+            <t-radio-group v-model="searchformData.view_type" variant="default-filled" size="small"
+              @change="onViewTypeChange">
+              <t-radio-button value="access">{{ accessViewLabel }}</t-radio-button>
+              <t-radio-button value="event">{{ $t('page.visit_log.view_event') }}</t-radio-button>
+            </t-radio-group>
           </div>
           <div class="right-actions">
             <t-space>
@@ -251,9 +278,24 @@
         </t-table>
       </div>
     </t-card>
-    <t-dialog :header="$t('page.visit_log.export_db_file_header')" :body="$t('page.visit_log.export_db_file_content')"
-      :visible.sync="exportDbVisible" @confirm="handelExport" width="40%" :confirmOnEnter="true"
+    <t-dialog :header="$t('page.visit_log.export_db_file_header')"
+      :visible.sync="exportDbVisible" @confirm="handelExport" width="520px" :confirmOnEnter="true"
       :onClose="() => { this.exportDbVisible = false }">
+      <t-alert theme="info" :message="$t('page.visit_log.export_db_file_content')" style="margin-bottom: 12px;" />
+      <t-form :label-width="110">
+        <t-form-item :label="$t('page.visit_log.export_time_range')">
+          <t-date-range-picker v-model="exportForm.range" enable-time-picker clearable
+            valueType="YYYY-MM-DD HH:mm:ss" style="width: 100%;" />
+        </t-form-item>
+        <t-form-item :label="$t('page.visit_log.export_tiers')">
+          <t-checkbox-group v-model="exportForm.tiers">
+            <t-checkbox value="access">{{ $t('page.visit_log.view_access') }}</t-checkbox>
+            <t-checkbox value="event">{{ $t('page.visit_log.view_event') }}</t-checkbox>
+            <t-checkbox value="payload">{{ $t('page.visit_log.export_tier_payload') }}</t-checkbox>
+            <t-checkbox value="weblog">{{ $t('page.visit_log.export_tier_weblog') }}</t-checkbox>
+          </t-checkbox-group>
+        </t-form-item>
+      </t-form>
     </t-dialog>
 
 
@@ -417,7 +459,7 @@ import { CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_TYPES, CONTRACT_PAYM
 const staticColumn = ['action', 'op'];
 
 // 默认不显示的可选列：新增后不会被"新列自动加入"逻辑塞进已有用户的可见列，需用户主动勾选
-const OPT_OUT_NEW_COLUMNS = ['host_nickname', 'ai_score'];
+const OPT_OUT_NEW_COLUMNS = ['host_nickname', 'ai_score', 'user_agent', 'referer'];
 
 // 列配置持久化：服务端（按登录账号）为准，localStorage 只作首屏秒开缓存 + 接口不可用兜底。
 // v2 起把"可见列"与"用户已见过的列基线"合并到同一个 key，
@@ -429,7 +471,7 @@ const COLUMN_PREF_NAME = 'visit_log_columns'; // 服务端偏好名（后端白�
 
 // 可由外部路由 query 预设的筛选字段（必须是 searchformData 的合法键，防止任意 query 注入）。
 // 不含 unix_add_time_begin/end（由日期控件驱动）和 current_db_name（由 loadShareDbList 异步定值）
-const ROUTE_FILTER_QUERY_KEYS = ['action', 'src_ip', 'host_code', 'rule', 'req_uuid', 'status_code', 'method', 'log_only_mode'];
+const ROUTE_FILTER_QUERY_KEYS = ['action', 'src_ip', 'host_code', 'rule', 'req_uuid', 'status_code', 'method', 'log_only_mode', 'view_type'];
 // 外部页面可用这两个 query 指定日期区间（形如 2026-07-01 00:00:00），不传则用"今天"
 const ROUTE_DATE_QUERY_KEYS = ['date_begin', 'date_end'];
 
@@ -544,7 +586,8 @@ export default Vue.extend({
       // 默认显示的列配置
       defaultDisplayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country','log_only_mode','req_uuid']),
       displayColumns: staticColumn.concat(['guest_identification', 'time_spent', 'create_time', 'host', 'method', 'url', 'src_ip', 'country', 'log_only_mode' ]),
-      columns: [
+      // 全部列定义（访问日志视图由 computed columns 摘掉 header 列——报文已搬进报文表，窄行没有这一列）
+      allColumns: [
         {
           title: this.$t('page.visit_log.guest_identity'),
           width: 100,
@@ -702,6 +745,37 @@ export default Vue.extend({
           colKey: 'status',
         },
         {
+          // UA / Referer：窄行上的列，两个视图都可筛选；访问日志视图靠它们替代「请求」全文筛选
+          title: this.$t('page.visit_log.user_agent'),
+          width: 200,
+          ellipsis: true,
+          colKey: 'user_agent',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            showConfirmAndReset: true,
+          },
+        },
+        {
+          title: this.$t('page.visit_log.referer'),
+          width: 200,
+          ellipsis: true,
+          colKey: 'referer',
+          filter: {
+            type: 'input',
+            resetValue: '',
+            confirmEvents: ['onEnter'],
+            props: {
+              placeholder: this.$t('common.placeholder'),
+            },
+            showConfirmAndReset: true,
+          },
+        },
+        {
           align: 'left',
           width: 120,
           colKey: 'op',
@@ -735,6 +809,7 @@ export default Vue.extend({
         unix_add_time_end: "",
         current_db_name: "local_log.db",
         log_only_mode: "",
+        view_type: "access", // access=访问日志(全量窄行) event=安全事件
       },
       //table 字段
       table: {
@@ -765,6 +840,8 @@ export default Vue.extend({
       isFileBasedDb: true,
       //export db
       exportDbVisible: false,
+      // 导出物=「按时间段导出选定层」的新 SQLite 文件（不再是整库备份）
+      exportForm: { range: [], tiers: ['access', 'event', 'payload', 'weblog'] },
       visitDetailVisible: false,//访问详情弹窗
       visitDetailUid: "",//访问详情id
       
@@ -783,6 +860,8 @@ export default Vue.extend({
         log_persist_enable: '0',
         batch_insert: '0',
         ip_tag_db: '0',
+        access_log_mode: 'db',
+        access_log_retention_days: '30',
       },
       logConfigItems: {}, // 存储配置项的完整信息（包含ID等）
       
@@ -802,6 +881,17 @@ export default Vue.extend({
   computed: {
     offsetTop() {
       return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
+    },
+    // 当前视图可见的列：访问日志视图没有 header 列（报文已搬进报文表，UA/Referer 顶替它的筛选位）
+    columns() {
+      if (this.searchformData.view_type !== 'access') {
+        return this.allColumns;
+      }
+      return this.allColumns.filter((c) => c.colKey !== 'header');
+    },
+    // 内嵌在风险日志详情里时，访问日志视图展示的是该 IP 的全部行为
+    accessViewLabel() {
+      return this.attack_ip !== '' ? this.$t('page.visit_log.view_access_all') : this.$t('page.visit_log.view_access');
     },
     // 确认攻击时的类别下拉选项（空=默认自动判定）
     aiCatSelectOptions() {
@@ -840,6 +930,8 @@ export default Vue.extend({
         { value: 'method', label: this.$t('page.visit_log.access_method') },
         { value: 'url', label: this.$t('page.visit_log.access_url') },
         { value: 'header', label: this.$t('page.visit_log.request') },
+        { value: 'user_agent', label: this.$t('page.visit_log.user_agent') },
+        { value: 'referer', label: this.$t('page.visit_log.referer') },
         { value: 'country', label: this.$t('page.visit_log.country') },
         { value: 'province', label: this.$t('page.visit_log.province') },
         { value: 'city', label: this.$t('page.visit_log.city') },
@@ -1202,6 +1294,8 @@ export default Vue.extend({
       if (this.attack_ip != "") {
         console.log("attack ip index", this.attack_ip)
         this.searchformData.src_ip = this.attack_ip
+        // 风险详情默认落在安全事件视图（命中明细）；旁边的「全部行为」页签是该 IP 的访问日志视图
+        this.searchformData.view_type = 'event'
         this.dateControl.range1[0] = "2022-01-01 00:00:00"
         this.dateControl.range1[1] = NowDate + " 23:59:59"
         this.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
@@ -1419,21 +1513,21 @@ export default Vue.extend({
 
       let sort_descending = that.sorts.descending ? "desc" : "asc"
 
+      if (that.exportForm.tiers.length === 0) {
+        that.$message.warning(that.$t('page.visit_log.export_tiers'));
+        return;
+      }
       exportlog({
-        batch_size: 1000,
-        pageSize: that.pagination.pageSize,
-        pageIndex: that.pagination.current,
-        sort_by: that.sorts.sortBy,
-        sort_descending: sort_descending,
-        filter_by: that.filters.filter_by,
-        filter_value: that.filters.filter_value,
-        unix_add_time_begin: ConvertStringToUnix(this.dateControl.range1[0]).toString(),
-        unix_add_time_end: ConvertStringToUnix(this.dateControl.range1[1]).toString(),
-        ...that.searchformData
+        start_time: (that.exportForm.range && that.exportForm.range[0]) || '',
+        end_time: (that.exportForm.range && that.exportForm.range[1]) || '',
+        tiers: that.exportForm.tiers.join(','),
       }
       ).then((res) => {
-        let resdata = res
-        console.log(resdata)
+        if (res.code === 0) {
+          that.$message.success(that.$t('page.visit_log.export_started') || '导出已开始，完成后请到下载中心获取');
+        } else {
+          that.$message.error(res.msg || '导出失败');
+        }
       })
         .catch((e: Error) => {
           console.log(e);
@@ -1525,6 +1619,15 @@ export default Vue.extend({
      */
     filterGuestChange(e) {
     },
+    // 切换访问日志/安全事件视图。「请求」全文筛选只在安全事件视图有，切走时摘掉，否则后端会拒
+    onViewTypeChange() {
+      if (this.searchformData.view_type !== 'event' && this.filters.filter_by.indexOf('header') >= 0) {
+        this.filters.filter_by = "";
+        this.filters.filter_value = "";
+      }
+      this.pagination.current = 1;
+      this.getList("");
+    },
     /**
      * 筛选结果
      */
@@ -1556,7 +1659,26 @@ export default Vue.extend({
           this.filters.filter_value = this.filters.filter_value + "|" + e.header;
         }
       }
-       
+      //User-Agent / Referer（窄行列，两个视图都可用）
+      if (e.user_agent != undefined && e.user_agent != "") {
+        if (this.filters.filter_by == "") {
+          this.filters.filter_by = "user_agent";
+          this.filters.filter_value = e.user_agent;
+        } else {
+          this.filters.filter_by = this.filters.filter_by + "|user_agent";
+          this.filters.filter_value = this.filters.filter_value + "|" + e.user_agent;
+        }
+      }
+      if (e.referer != undefined && e.referer != "") {
+        if (this.filters.filter_by == "") {
+          this.filters.filter_by = "referer";
+          this.filters.filter_value = e.referer;
+        } else {
+          this.filters.filter_by = this.filters.filter_by + "|referer";
+          this.filters.filter_value = this.filters.filter_value + "|" + e.referer;
+        }
+      }
+
       this.getList("")
     },
     resetState() {
@@ -1601,8 +1723,10 @@ export default Vue.extend({
         'log_persist_enable',
         'batch_insert',
         'ip_tag_db',
+        'access_log_mode',
+        'access_log_retention_days',
       ];
-      
+
       // 使用 Promise.all 并行获取所有配置项
       const promises = configKeys.map(key => {
         return get_detail_by_item_api({ item: key })
@@ -1646,8 +1770,10 @@ export default Vue.extend({
         'log_persist_enable',
         'batch_insert',
         'ip_tag_db',
+        'access_log_mode',
+        'access_log_retention_days',
       ];
-      
+
       const savePromises = configKeys.map(key => {
         const item = this.logConfigItems[key];
         if (item) {
@@ -1752,5 +1878,12 @@ export default Vue.extend({
 .ipl-link:hover {
   color: var(--td-brand-color-hover);
   text-decoration: underline;
+}
+
+.log-config-hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--td-warning-color);
+  line-height: 1.4;
 }
 </style>

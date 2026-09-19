@@ -28,7 +28,7 @@
             </t-tooltip>
           </template>
           <template #iptags="{ row }">
-            <ip-tag-cell :ip="row.ip" :tags="row.ip_tags" @view-log="handleIpClick" />
+            <ip-tag-cell :ip="row.ip" :tags="row.ip_tags" :count="row.count" @view-log="handleIpClick" />
           </template>
           <template #operation="{ row }">
             <t-button
@@ -72,7 +72,7 @@
             </t-tooltip>
           </template>
           <template #iptags="{ row }">
-            <ip-tag-cell :ip="row.ip" :tags="row.ip_tags" @view-log="handleIpClick" />
+            <ip-tag-cell :ip="row.ip" :tags="row.ip_tags" :count="row.count" @view-log="handleIpClick" />
           </template>
           <template #operation="{ row }">
             <t-button

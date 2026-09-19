@@ -1,6 +1,8 @@
 <template>
   <div class="detail-base">
 
+    <t-alert v-if="payloadMissing" theme="info" :message="$t('page.visit_log.detail.payload_missing')"
+      style="margin-bottom: 12px;" />
     <t-tag v-if="detail_data.rule!='' && detail_data.log_only_mode!='0' " :theme="detail_data.log_only_mode == '1' ? 'danger' : 'success'" variant="light-outline">
       {{$t("page.visit_log.log_only_mode")}} : {{ detail_data.log_only_mode == '1' ? $t('page.visit_log.log_only_mode_on') : $t('page.visit_log.log_only_mode_off') }}
     </t-tag>
@@ -318,6 +320,7 @@
         prefix,
         baseInfoData: model.getBaseInfoData(),
         detail_data: {},
+        detailLoaded: false, // 详情已返回（payloadMissing 提示要等数据回来再判断）
         quickAddRuleChecked:false,
         bodyExpanded: false,
         resBodyExpanded: false,
@@ -379,6 +382,13 @@
         const body = (this.detail_data as any).res_body || '';
         if (this.resBodyExpanded || body.length <= 300) return body;
         return body.substring(0, 300) + ' ...';
+      },
+      // 报文列全空 = 这条没有报文行：正常请求默认只记访问行，
+      // 采样命中或观察名单内的请求才有报文（user_agent/url 是窄行字段，不算报文）
+      payloadMissing() {
+        if (!this.detailLoaded) return false;
+        const d = (this.detail_data as any) || {};
+        return !d.header && !d.cookies && !d.body && !d.post_form && !d.res_header && !d.res_body;
       },
       isOwaspRule() {
         const rule = (this.detail_data as any).rule || '';
@@ -517,6 +527,7 @@
 
         this.detail_req.req_uuid = id
         this.detail_req.current_db = current_db_name
+        this.detailLoaded = false
         this.bodyExpanded = false
         this.resBodyExpanded = false
         let that = this
@@ -529,6 +540,7 @@
             console.log(resdata)
             if (resdata.code === 0) {
               that.detail_data = resdata.data;
+              that.detailLoaded = true;
             }
           })
           .catch((e: Error) => {

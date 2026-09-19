@@ -16,11 +16,12 @@ export function allsharedblist(params) {
     params: params
   })
 }
-//导出json数据
-export function exportlog(data) {
+//导出日志（按时间段导出选定层，参数见后端 ExportDBApi）
+export function exportlog(params) {
   return request({
     url: 'waflog/attack/export',
     method: 'get',
+    params: params
   })
 }
 //下载已经生成好的数据
@@ -69,5 +70,36 @@ export function deleteTagByNameApi(data) {
     method: 'post',
     data: data,
     timeout: 600000 // 10分钟超时，适用于大数据量删除
+  })
+}
+// IP标签归属与合并进度（切换归属后会把另一个库的历史标签并过来，量大时要跑一会儿）
+export function ipTagDbStatusApi() {
+  return request({
+    url: 'waflog/attack/iptagdbstatus',
+    method: 'get',
+  })
+}
+// 加入重点 IP 观察名单（或续期）
+export function ipWatchlistAddApi(data) {
+  return request({
+    url: 'waflog/attack/watchlist/add',
+    method: 'post',
+    data: data
+  })
+}
+// 移出观察名单
+export function ipWatchlistDelApi(data) {
+  return request({
+    url: 'waflog/attack/watchlist/del',
+    method: 'post',
+    data: data
+  })
+}
+// 观察名单分页
+export function ipWatchlistListApi(data) {
+  return request({
+    url: 'waflog/attack/watchlist/list',
+    method: 'post',
+    data: data
   })
 }

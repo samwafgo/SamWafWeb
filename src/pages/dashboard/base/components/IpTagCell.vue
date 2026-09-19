@@ -66,11 +66,15 @@ export default {
   props: {
     ip: { type: String, default: '' },
     tags: { type: Array, default: () => [] },
+    // 该行的总计数（放行榜就是放行次数）：tags 为空时用它合成「正常」芯片兜底
+    count: { type: [Number, String], default: 0 },
   },
   computed: {
-    // 按触发次数倒序，次数相同的按标签名稳定排序
+    // 按触发次数倒序，次数相同的按标签名稳定排序。
+    // ip_tags 不再记「正常」标签：一个只放行过的 IP 标签列表是空的，
+    // 合成一个「正常」芯片兜底，不然放行榜的标签列会整列空白。
     sortedTags() {
-      return (this.tags || [])
+      const list = (this.tags || [])
         .filter((item) => item && item.ip_tag)
         .map((item) => ({
           ip_tag: item.ip_tag,
@@ -78,6 +82,10 @@ export default {
           cat: this.categoryOf(item.ip_tag),
         }))
         .sort((a, b) => b.cnt - a.cnt || a.ip_tag.localeCompare(b.ip_tag));
+      if (list.length === 0 && Number(this.count) > 0) {
+        return [{ ip_tag: this.$t('dashboard.ip_rank.tag_normal'), cnt: Number(this.count), cat: 'pass' }];
+      }
+      return list;
     },
     // 主标签优先取「非放行」里次数最多的，否则一个正常访问多的攻击 IP 会顶着「正常」上榜
     leadTag() {
