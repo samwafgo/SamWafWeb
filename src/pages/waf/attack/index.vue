@@ -124,6 +124,16 @@
                 <t-input-number v-model="logConfig.access_log_retention_days" style="width: 100%;" :min="1" />
               </t-form-item>
             </t-col>
+          
+          </t-row>
+
+          <t-row :gutter="16">
+            <t-col :span="12">
+              <t-form-item label="全局排除记录日志的IP" name="exclude_ip_log">
+                <t-textarea v-model="logConfig.exclude_ip_log" :placeholder="'单IP/CIDR/通配符/区间，或 group:组短码 引用IP组；逗号或换行分隔，#开头为注释。只静音正常请求，安全事件照常记录；站点级清单在网站编辑里'"
+                            :autosize="{ minRows: 2, maxRows: 6 }" style="width: 100%;" />
+              </t-form-item>
+            </t-col>
           </t-row>
         </t-form>
       </div>
@@ -1725,6 +1735,7 @@ export default Vue.extend({
         'ip_tag_db',
         'access_log_mode',
         'access_log_retention_days',
+        'exclude_ip_log',
       ];
 
       // 使用 Promise.all 并行获取所有配置项
@@ -1772,6 +1783,7 @@ export default Vue.extend({
         'ip_tag_db',
         'access_log_mode',
         'access_log_retention_days',
+        'exclude_ip_log',
       ];
 
       const savePromises = configKeys.map(key => {

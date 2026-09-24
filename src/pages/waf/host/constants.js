@@ -17,6 +17,7 @@ export const INITIAL_DATA = {
   captcha_json: '{"is_enable_captcha":0,"path_prefix":"","exclude_urls":[],"expire_time":24,"engine_type":"traditional","cap_js_config":{"challengeCount":50,"challengeSize":32,"challengeDifficulty":4,"expiresMs":600000,"infoTitle":{"en":"","zh":""},"infoText":{"en":"","zh":""}}}',
   start_status: '0',
   exclude_url_log: '',
+  exclude_ip_log: '',
   is_enable_load_balance: '0',
   load_balance_stage: '1',
   unrestricted_port: '0',

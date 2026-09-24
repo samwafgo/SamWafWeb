@@ -1861,6 +1861,8 @@ export default {
       remarks: "Remarks",
       exclude_url_log: "Exclude URL When Logging",
       exclude_url_log_tips: "Exclude URL prefix data when logging",
+      exclude_ip_log: "Exclude IP When Logging",
+      exclude_ip_log_tips: "Skip access logs by source IP: single IP/CIDR/wildcard/range, or group:CODE to reference an IP group; comma or newline separated, # starts a comment. Only normal requests are silenced, security events are still recorded. The global list lives in Log Config on the attack log page",
       ip_mode: "IP Extraction Mode",
       ip_mode_tips: "Choose how to extract client IP address from requests. This setting applies to all functions including CC protection, captcha, IP whitelist, etc.",
       ip_mode_nic: "NIC Mode",
