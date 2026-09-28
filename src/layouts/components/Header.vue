@@ -549,7 +549,7 @@ docker compose up -d</pre>
         if (!this.rollback_selected) return;
         const that = this;
         const target = this.rollback_selected;
-        this.$dialog.confirm({
+        const confirmDia = this.$dialog.confirm({
           header: '确认回退版本',
           body: `确定将程序回退到版本 ${target.version}？\n回退后服务将自动重启，请耐心等待。`,
           confirmBtn: { theme: 'danger', content: '确认回退' },
@@ -557,12 +557,15 @@ docker compose up -d</pre>
             that.isRollbackLoading = true;
             DoRollbackApi({ version: target.version }).then((res: any) => {
               if (res.code === 0) {
+                confirmDia.destroy();
                 that.$message.success(res.msg || '已发起回退，等待重启通知');
                 that.rollback_visible = false;
               } else {
+                confirmDia.hide();
                 that.$message.warning(res.msg || '回退失败');
               }
             }).catch(() => {
+              confirmDia.hide();
               that.$message.warning('回退请求失败');
             }).finally(() => {
               that.isRollbackLoading = false;
