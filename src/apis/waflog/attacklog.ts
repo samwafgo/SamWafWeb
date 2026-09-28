@@ -16,6 +16,14 @@ export function allsharedblist(params) {
     params: params
   })
 }
+//主动删除一个归档分区（不看保留期；文件型删文件、服务型丢表，记录一并清掉）
+export function delsharedb(data) {
+  return request({
+    url: 'waflog/attack/shard/del',
+    method: 'post',
+    data: data
+  })
+}
 //导出日志（按时间段导出选定层，参数见后端 ExportDBApi）
 export function exportlog(params) {
   return request({

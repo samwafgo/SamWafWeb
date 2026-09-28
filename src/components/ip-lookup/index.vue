@@ -270,7 +270,7 @@ export default Vue.extend({
     // 威胁情报要编译十万条的大集合，放一批里会被拖死
     groups() {
       return [
-        { key: 'list', label: this.$t('common.ip_lookup.step_list'), sources: ['ip_white', 'ip_black', 'ip_group'] },
+        { key: 'list', label: this.$t('common.ip_lookup.step_list'), sources: ['ip_white', 'ip_black', 'ip_group', 'log_exclude'] },
         { key: 'ban', label: this.$t('common.ip_lookup.step_ban'), sources: ['ip_failure', 'cc_ban', 'firewall'] },
         { key: 'threat', label: this.$t('common.ip_lookup.step_threat'), sources: ['threat_ip'] },
         { key: 'cdn', label: this.$t('common.ip_lookup.step_cdn'), sources: ['cdn'] },
@@ -403,6 +403,8 @@ export default Vue.extend({
     effectTheme(effect) {
       if (effect === 'allow') return 'success';
       if (effect === 'block') return 'danger';
+      // 日志排除既不放行也不拦截，只是「不记日志」，用中性色区别于封禁类
+      if (effect === 'log_skip') return 'default';
       return 'warning';
     },
     // 打开威胁情报误报排除表单。
@@ -441,6 +443,7 @@ export default Vue.extend({
     effectText(effect) {
       if (effect === 'allow') return this.$t('common.ip_lookup.effect_allow');
       if (effect === 'block') return this.$t('common.ip_lookup.effect_block');
+      if (effect === 'log_skip') return this.$t('common.ip_lookup.effect_log_skip');
       return this.$t('common.ip_lookup.effect_none');
     },
     sourceName(code) {

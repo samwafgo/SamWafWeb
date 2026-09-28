@@ -48,6 +48,13 @@
             {{ detail_data.create_time }}
           </span>
         </div>
+        <!-- 这条记录是从哪个分区读出来的：自动模式下用户没选分区，排障时要能对上库里的东西 -->
+        <div class="info-item" v-if="detail_data.shard_name">
+          <h1> {{ $t('page.visit_log.detail.shard_name') }}</h1>
+          <span :title="detail_data.shard_name">
+            {{ detail_data.shard_name }}
+          </span>
+        </div>
         <div class="info-item">
           <h1> {{ $t('page.visit_log.detail.request_domain') }}</h1>
           <span>

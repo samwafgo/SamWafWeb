@@ -173,8 +173,20 @@
               :placeholder="$t('common.placeholder') + $t('page.visit_log.source_ip')" :style="{ minWidth: '100px' }" />
           </t-form-item>
           <t-form-item :label="$t('page.visit_log.access_date')" name="unix_add_time" v-if="attack_ip == ''">
-            <t-date-range-picker v-model="dateControl.range1" :presets="dateControl.presets" enable-time-picker
-              valueType="YYYY-MM-DD HH:mm:ss" />
+            <t-tooltip :content="$t('page.visit_log.date_disabled_tip')" :disabled="!isUuidLookup">
+              <t-date-range-picker v-model="dateControl.range1" :presets="dateControl.presets" enable-time-picker
+                :disabled="isUuidLookup" valueType="YYYY-MM-DD HH:mm:ss" />
+            </t-tooltip>
+          </t-form-item>
+          <!-- 内嵌在风险日志 IP 明细里时没有日期控件，给一个时间范围快选，默认近 30 天 -->
+          <t-form-item :label="$t('page.visit_log.access_date')" name="quick_range" v-else>
+            <t-select v-model="quickRange" :disabled="isUuidLookup" :style="{ width: '130px' }"
+                      @change="applyQuickRange">
+              <t-option value="1" :label="$t('page.visit_log.date_range_today')" />
+              <t-option value="7" :label="$t('page.visit_log.date_range_last_7_days')" />
+              <t-option value="30" :label="$t('page.visit_log.range_last_30_days')" />
+              <t-option value="0" :label="$t('page.visit_log.range_all')" />
+            </t-select>
           </t-form-item>
           <t-form-item :label="$t('page.visit_log.access_method')" name="method">
             <t-select v-model="searchformData.method" class="form-item-content`" :options="method_options"
@@ -182,11 +194,19 @@
               :style="{ width: '100px' }" />
           </t-form-item>
           <t-form-item :label="$t('page.visit_log.log_archive_db')" name="sharedb">
-            <t-select v-model="searchformData.current_db_name" clearable :style="{ width: '150px' }">
-              <t-option v-for="(item, index) in share_db_dic" :value="index" :label="item" :key="index">
-                {{ item }}
-              </t-option>
-            </t-select>
+            <t-tooltip :content="$t('page.visit_log.shard_disabled_tip')" :disabled="!isUuidLookup">
+              <t-select v-model="searchformData.current_db_name" :disabled="isUuidLookup"
+                        :style="{ width: '190px' }">
+                <t-option value="auto" :label="$t('page.visit_log.shard_auto')">
+                  <span :title="$t('page.visit_log.shard_auto_tip')">{{ $t('page.visit_log.shard_auto') }}</span>
+                </t-option>
+                <t-option-group v-for="g in shardGroups" :key="g.label" :label="g.label">
+                  <t-option v-for="it in g.options" :key="it.value" :value="it.value" :label="it.label">
+                    <span :title="it.value">{{ it.label }}</span>
+                  </t-option>
+                </t-option-group>
+              </t-select>
+            </t-tooltip>
           </t-form-item>
           <t-form-item>
             <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }}
@@ -205,6 +225,56 @@
       </t-row>
 
       <div class="table-container">
+        <!-- 查不到老数据时，最先该看的就是保留期：直接摆在列表上方，点一下就能去改 -->
+        <div style="margin-bottom:8px;color:rgba(0,0,0,.6);font-size:12px">
+          {{ $t('page.visit_log.retention_line', {
+            d: logConfig.delete_history_log_day || '-',
+            a: logConfig.access_log_retention_days || '-'
+          }) }}
+          <a class="t-button-link" @click="openRetentionSetting">{{ $t('page.visit_log.retention_setting') }}</a>
+        </div>
+
+        <!-- 查询超出后端预算：给出「能怎么办」，而不是让人对着不完整的数字猜 -->
+        <t-alert v-if="queryMeta.partial" theme="warning" style="margin-bottom:12px">
+          <template #message>
+            {{ $t('page.visit_log.query_partial', { ms: queryMeta.took_ms }) }}
+            <a class="t-button-link" style="margin-left:8px" @click="narrowRange">{{ $t('page.visit_log.query_partial_narrow') }}</a>
+          </template>
+        </t-alert>
+
+        <!-- 这次查了哪些分区：自动模式下用户没选分区，界面得说明数据从哪来 -->
+        <t-alert v-if="queryMeta.uuid_lookup && queryMeta.found_in" theme="success" style="margin-bottom:12px"
+                 :message="$t('page.visit_log.uuid_found', { shard: shardTitle(queryMeta.found_in), n: queryMeta.scanned })" />
+        <t-alert v-else-if="queryMeta.uuid_lookup" theme="warning" style="margin-bottom:12px">
+          <template #message>
+            <div>{{ $t('page.visit_log.uuid_miss', { n: queryMeta.scanned }) }}</div>
+            <ul style="margin:6px 0 0 18px;padding:0">
+              <li>{{ $t('page.visit_log.uuid_miss_r1') }}</li>
+              <li>{{ $t('page.visit_log.uuid_miss_r2') }}</li>
+              <li>{{ $t('page.visit_log.uuid_miss_r3') }}</li>
+            </ul>
+          </template>
+        </t-alert>
+        <t-alert v-else-if="queryMeta.shards && queryMeta.shards.length > 1" theme="info" style="margin-bottom:12px">
+          <template #message>
+            <!-- 分区多的时候全列出来就是一大堆，默认只给一行概括，要看再展开 -->
+            {{ $t('page.visit_log.shard_cover', { n: queryMeta.shards.length }) }}
+            <span style="color:rgba(0,0,0,.6)">{{ shardCoverSummary }}</span>
+            <a class="t-button-link" @click="covExpanded = !covExpanded">
+              {{ covExpanded ? $t('page.visit_log.shard_cover_fold') : $t('page.visit_log.shard_cover_detail') }}
+            </a>
+            <span v-if="queryMeta.sort_forced_time" style="color:rgba(0,0,0,.6)">
+              {{ $t('page.visit_log.sort_forced_time') }}
+            </span>
+            <div v-show="covExpanded" style="margin-top:6px">
+              <span v-for="sh in queryMeta.shards" :key="sh.name" :title="sh.name"
+                    style="display:inline-block;margin:2px 6px 2px 0;padding:0 8px;background:#f3f3f3;border-radius:2px">
+                {{ shardTitle(sh.name) }} · {{ sh.count }}
+              </span>
+            </div>
+          </template>
+        </t-alert>
+
         <!-- 自定义工具栏，将所有按钮放在一起 -->
         <div class="table-toolbar"
           style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -230,9 +300,21 @@
               <t-button theme="default" variant="outline" size="small" @click="resetColumnConfig">
                 {{ $t('common.reset_column_config') }}
               </t-button>
+              <!-- 分区管理：看每个分区还剩哪些层，并可主动删除腾空间 -->
+              <t-button v-if="attack_ip == ''" theme="default" variant="outline" size="small"
+                        @click="openShardManage">
+                {{ $t('page.visit_log.shard_manage') }}
+              </t-button>
             </t-space>
           </div>
         </div>
+        <!-- 空态给线索：查不到日志最常见的原因就那么几条，别让人对着「暂无数据」猜 -->
+        <template v-if="data.length === 0 && !queryMeta.uuid_lookup">
+          <div class="empty-hint" style="padding:6px 0 10px;color:rgba(0,0,0,.6);font-size:12px">
+            {{ $t('page.visit_log.empty_hint') }}
+            <a class="t-button-link" @click="openIpLookupForHint">{{ $t('common.ip_lookup.title') }}</a>
+          </div>
+        </template>
         <t-table :columns="columns" :data="data" size="small" :rowKey="rowKey" :verticalAlign="verticalAlign"
           :displayColumns.sync="displayColumns"
           :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
@@ -288,6 +370,33 @@
         </t-table>
       </div>
     </t-card>
+    <!-- 分区管理 -->
+    <t-dialog :header="$t('page.visit_log.shard_manage')" :visible.sync="shardManageVisible" width="820px"
+      :footer="false" :onClose="() => { this.shardManageVisible = false }">
+      <t-alert theme="info" :message="$t('page.visit_log.shard_manage_tip')" style="margin-bottom:12px" />
+      <t-table :data="shardRows" :columns="shardManageColumns" row-key="file_name" size="small" max-height="420">
+        <template #label="{ row }">
+          <span :title="row.file_name">{{ shardTitle(row.file_name) }}</span>
+        </template>
+        <template #tiers="{ row }">
+          <span v-if="row.is_current" style="color:rgba(0,0,0,.4)">—</span>
+          <span v-else-if="!row.tiers || row.tiers.length === 0" style="color:rgba(0,0,0,.4)">
+            {{ $t('page.visit_log.shard_tier_unknown') }}
+          </span>
+          <t-tag v-else v-for="t in row.tiers" :key="t" size="small" variant="light"
+                 :theme="t === 'access_log' ? 'primary' : 'default'" style="margin-right:4px">
+            {{ tierLabel(t) }}
+          </t-tag>
+        </template>
+        <template #op="{ row }">
+          <span v-if="row.is_current" style="color:rgba(0,0,0,.4)">{{ $t('page.visit_log.shard_live') }}</span>
+          <a v-else class="t-button-link" style="color:#d54941" @click="confirmDeleteShard(row)">
+            {{ $t('common.delete') }}
+          </a>
+        </template>
+      </t-table>
+    </t-dialog>
+
     <t-dialog :header="$t('page.visit_log.export_db_file_header')"
       :visible.sync="exportDbVisible" @confirm="handelExport" width="520px" :confirmOnEnter="true"
       :onClose="() => { this.exportDbVisible = false }">
@@ -447,7 +556,7 @@ import { SearchIcon } from 'tdesign-icons-vue';
 import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
 import IpSourceProbeDialog from '@/pages/waf/host/components/IpSourceProbeDialog.vue';
-import { allsharedblist, exportlog } from '@/apis/waflog/attacklog';
+import { allsharedblist, exportlog, delsharedb } from '@/apis/waflog/attacklog';
 import { aiMarkLabelApi, aiUnmarkLabelApi, aiLabelByUuidsApi } from '@/apis/ai';
 import VisitDetailPage from './detail/index.vue'
 
@@ -519,6 +628,13 @@ export default Vue.extend({
   },
   data() {
     return {
+      // 这次查询覆盖了哪些分区（后端给）：自动模式与识别码直查都靠它向用户解释数据来源
+      queryMeta: { shards: [], found_in: "", scanned: 0, uuid_lookup: false, sort_forced_time: false, partial: false, took_ms: 0 },
+      shardGroups: [],
+      covExpanded: false,
+      shardManageVisible: false,
+      shardRows: [],
+      quickRange: "30",
       dateControl: {
         presets: {
           最近300天: [ConvertDateToString(new Date(+new Date() - 86400000 * 299)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
@@ -817,7 +933,7 @@ export default Vue.extend({
         method: "",
         unix_add_time_begin: "",
         unix_add_time_end: "",
-        current_db_name: "local_log.db",
+        current_db_name: "auto",
         log_only_mode: "",
         view_type: "access", // access=访问日志(全量窄行) event=安全事件
       },
@@ -900,6 +1016,29 @@ export default Vue.extend({
       return this.allColumns.filter((c) => c.colKey !== 'header');
     },
     // 内嵌在风险日志详情里时，访问日志视图展示的是该 IP 的全部行为
+    shardManageColumns() {
+      return [
+        { colKey: 'label', title: this.$t('page.visit_log.log_archive_db'), width: 230 },
+        { colKey: 'cnt', title: this.$t('page.visit_log.shard_rows'), width: 110 },
+        { colKey: 'tiers', title: this.$t('page.visit_log.shard_tiers'), width: 280 },
+        { colKey: 'op', title: this.$t('common.operation'), width: 90 },
+      ];
+    },
+    // 覆盖概括：分区一多就不该把它们全铺在提示条里，先给「跨度 + 总条数」
+    shardCoverSummary() {
+      const list = this.queryMeta.shards || [];
+      if (list.length < 2) return '';
+      let total = 0;
+      list.forEach((x) => { total += Number(x.count) || 0; });
+      // shards 由后端按时间从新到旧给出
+      const newest = this.shardTitle(list[0].name).split(' ·')[0];
+      const oldest = this.shardTitle(list[list.length - 1].name).split(' ·')[0];
+      return ' · ' + oldest + ' ~ ' + newest + (total ? this.fmtCnt(total) : '');
+    },
+    // 填了访问识别码 = 点查，时间与分区都不该再要求用户选
+    isUuidLookup() {
+      return !!(this.searchformData.req_uuid && this.searchformData.req_uuid.trim());
+    },
     accessViewLabel() {
       return this.attack_ip !== '' ? this.$t('page.visit_log.view_access_all') : this.$t('page.visit_log.view_access');
     },
@@ -1315,6 +1454,123 @@ export default Vue.extend({
       }
 
     },
+    // 条数写成人能读的样子：13.5 万条 而不是 135140
+    fmtCnt(n) {
+      if (n === undefined || n === null || n === '') return '';
+      const v = Number(n);
+      if (isNaN(v)) return '';
+      if (v >= 10000) return ' · ' + (v / 10000).toFixed(1) + ' 万条';
+      return ' · ' + v + ' 条';
+    },
+    // 归档分片的显示名：实时单独标出，按月分区显示「年-月」，
+    // 旧分片显示起止时间——同一天切了好几个时必须带上时分，否则七条长得一模一样。
+    shardLabel(item) {
+      const cnt = this.fmtCnt(item.cnt);
+      if (item.is_current) {
+        return this.$t('page.visit_log.shard_live') + cnt;
+      }
+      // 按层过期之后，窄行那一层可能已经被回收，只剩安全事件与报文——
+      // 下拉里得标出来，否则选中它再切到访问日志视图只会得到一句生硬的报错
+      const note = (item.tiers && item.tiers.length > 0 && item.tiers.indexOf('access_log') < 0)
+        ? ' · ' + this.$t('page.visit_log.shard_only_event')
+        : '';
+      if (item.period_key && item.period_key.length >= 6) {
+        return item.period_key.substring(0, 4) + '-' + item.period_key.substring(4, 6) + cnt + note;
+      }
+      const day = (v) => (v ? String(v).substring(0, 10) : '');
+      const hm = (v) => (v ? String(v).substring(11, 16) : '');
+      const from = day(item.start_time);
+      const to = day(item.end_time);
+      if (from && from === to) {
+        // 同一天内切出来的：带时分才分得清
+        const a = hm(item.start_time);
+        const b = hm(item.end_time);
+        return (a || b ? from + ' ' + a + '~' + b : from) + cnt + note;
+      }
+      if (from || to) {
+        return from + ' ~ ' + to + cnt + note;
+      }
+      // 时间信息都缺（脏数据）：退回显示原始标识，至少还能对上库里的东西
+      return item.file_name + cnt;
+    },
+    // 识别码直查模式：填了访问识别码就忽略时间与分区，后端按主键跨分区找
+    applyQuickRange() {
+      const d = (t) => {
+        const p = (n) => (n < 10 ? '0' + n : '' + n);
+        return t.getFullYear() + '-' + p(t.getMonth() + 1) + '-' + p(t.getDate());
+      };
+      const days = parseInt(this.quickRange, 10);
+      const end = d(new Date()) + ' 23:59:59';
+      const start = days > 0
+        ? d(new Date(+new Date() - 86400000 * (days - 1))) + ' 00:00:00'
+        : '1970-01-02 00:00:00';
+      this.dateControl.range1 = [start, end];
+    },
+    // 分区管理：打开前刷一次，免得删完别处看到的还是旧列表
+    openShardManage() {
+      this.loadShareDbList();
+      this.shardManageVisible = true;
+    },
+    tierLabel(t) {
+      const m = {
+        access_log: this.$t('page.visit_log.view_access'),
+        security_event: this.$t('page.visit_log.view_event'),
+        event_payload: this.$t('page.visit_log.export_tier_payload'),
+        web_logs: this.$t('page.visit_log.export_tier_weblog'),
+      };
+      return m[t] || t;
+    },
+    confirmDeleteShard(row) {
+      const that = this;
+      const name = this.shardTitle(row.file_name);
+      this.$dialog.confirm({
+        header: this.$t('page.visit_log.shard_del_title'),
+        body: this.$t('page.visit_log.shard_del_body', { name: name, raw: row.file_name }),
+        theme: 'warning',
+        confirmBtn: { content: this.$t('common.delete'), theme: 'danger' },
+        onConfirm: ({ e }) => {
+          delsharedb({ file_name: row.file_name })
+            .then((res) => {
+              if (res.code === 0) {
+                that.$message.success(res.msg || that.$t('page.visit_log.shard_del_done'));
+                that.loadShareDbList();
+                // 删掉的可能正好是当前锁定的分区，回到自动模式免得查了个不存在的东西
+                if (that.searchformData.current_db_name === row.file_name) {
+                  that.searchformData.current_db_name = 'auto';
+                }
+                that.getList('all');
+              } else {
+                that.$message.error(res.msg || that.$t('page.visit_log.shard_del_fail'));
+              }
+            })
+            .catch(() => { that.$message.error(that.$t('page.visit_log.shard_del_fail')); });
+        },
+      });
+    },
+    // 空态里点「IP归属查询」：带上当前筛的来源IP，直接看它是不是被排除清单命中了
+    openIpLookupForHint() {
+      const ip = (this.searchformData.src_ip || '').trim();
+      this.openIpLookup(ip);
+    },
+    // 展开「日志配置」卡并滚到顶：保留天数就在那里改
+    openRetentionSetting() {
+      this.logConfigVisible = true;
+      this.$nextTick(() => {
+        const el = document.querySelector('.log-config-card');
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    },
+    // 超预算时的一键补救：把时间范围收到最近 7 天再查
+    narrowRange() {
+      this.quickRange = "7";
+      this.applyQuickRange();
+      this.getList('all');
+    },
+    // 分区的显示名：优先用下拉里已经算好的标签，取不到就退回原始标识
+    shardTitle(name) {
+      if (!name) return '';
+      return this.share_db_dic[name] || name;
+    },
     loadShareDbList() {
       let that = this;
       allsharedblist("").then((res) => {
@@ -1323,17 +1579,29 @@ export default Vue.extend({
         if (resdata.code === 0) {
           let share_options = resdata.data;
           let currentName = "";
+          that.shardRows = share_options;
+          const gLive = { label: that.$t('page.visit_log.shard_group_live'), options: [] };
+          const gPeriod = { label: that.$t('page.visit_log.shard_group_period'), options: [] };
+          const gLegacy = { label: that.$t('page.visit_log.shard_group_legacy'), options: [] };
           for (let i = 0; i < share_options.length; i++) {
-            that.share_db_dic[share_options[i].file_name] = share_options[i].file_name + "(" + share_options[i].cnt + ")"
+            const it = share_options[i];
+            // 下拉里显示「时间段」而不是文件名/表名：归档分区按月切，用户要找的是某段时间的日志
+            const label = that.shardLabel(it);
+            that.share_db_dic[it.file_name] = label;
+            const opt = { value: it.file_name, label: label };
             // 后端按驱动标记当前(实时)分片：SQLite=local_log.db，MySQL=web_logs
-            if (share_options[i].is_current) {
-              currentName = share_options[i].file_name;
+            if (it.is_current) {
+              currentName = it.file_name;
+              gLive.options.push(opt);
+            } else if (it.period_key) {
+              gPeriod.options.push(opt);
+            } else {
+              gLegacy.options.push(opt);
             }
           }
-          // 默认选中当前驱动的实时分片，避免 MySQL 下仍显示 SQLite 味的 local_log.db
-          if (currentName !== "") {
-            that.searchformData.current_db_name = currentName;
-          }
+          that.shardGroups = [gLive, gPeriod, gLegacy].filter((g) => g.options.length > 0);
+          // 默认停在「自动（按时间范围）」：分区由时间算出来，不再让用户自己猜
+          // （旧默认是实时分片，会出现「日期选了上个月、分区停在实时 → 0 条」）
           // 文件型(SQLite)实时分片名以 .db 结尾；MySQL 为 web_logs(无后缀)。据此决定是否显示导出按钮
           that.isFileBasedDb = currentName === "" || currentName.endsWith(".db");
         }
@@ -1404,6 +1672,16 @@ export default Vue.extend({
             //const { list = [] } = resdata.data.list;
 
             this.data = resdata.data.list ?? [];
+            // 这次查了哪些分区 / 识别码在哪找到的：自动模式下用户没选分区，界面要能解释
+            this.queryMeta = {
+              shards: resdata.data.shards || [],
+              found_in: resdata.data.found_in || "",
+              scanned: resdata.data.scanned || 0,
+              uuid_lookup: !!resdata.data.uuid_lookup,
+              sort_forced_time: !!resdata.data.sort_forced_time,
+              partial: !!resdata.data.partial,
+              took_ms: resdata.data.took_ms || 0,
+            };
             this.pagination = {
               ...this.pagination,
               total: resdata.data.total,
@@ -1560,16 +1838,16 @@ export default Vue.extend({
     rehandleChange(changeParams, triggerAndData) {
     },
     handleClickDetail(e) {
-      console.log(e)
       const { req_uuid } = e.row
-      console.log(req_uuid)
+      // 行自带来源分区（扇出时后端回填）：带上它详情就能直达，不必再逐个分区找
+      const shard = e.row.shard_name || this.searchformData.current_db_name;
 
       if (this.attack_ip == "") {
         this.$router.push(
           {
             path: '/waf/wafattacklogdetail',
             query: {
-              req_uuid: req_uuid + "#" + this.searchformData.current_db_name,
+              req_uuid: req_uuid + "#" + shard,
             },
           },
         );
