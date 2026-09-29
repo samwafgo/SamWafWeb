@@ -213,7 +213,7 @@
             <t-button theme="primary" :style="{ marginLeft: '8px' }" @click="getList('all')"> {{ $t('common.search') }}
             </t-button>
             <t-button theme="primary" :style="{ marginLeft: '8px' }" v-if="attack_ip == '' && isFileBasedDb"
-              @click="exportDbVisible = true">
+              @click="openExportDialog">
               {{
                 $t('common.export') }} </t-button>
           
@@ -415,12 +415,13 @@
     </t-dialog>
 
     <t-dialog :header="$t('page.visit_log.export_db_file_header')"
-      :visible.sync="exportDbVisible" @confirm="handelExport" width="520px" :confirmOnEnter="true"
+      :visible.sync="exportDbVisible" @confirm="handelExport" width="600px" :confirmOnEnter="true"
       :onClose="() => { this.exportDbVisible = false }">
       <t-alert theme="info" :message="$t('page.visit_log.export_db_file_content')" style="margin-bottom: 12px;" />
       <t-form :label-width="110">
         <t-form-item :label="$t('page.visit_log.export_time_range')">
           <t-date-range-picker v-model="exportForm.range" enable-time-picker clearable
+            :placeholder="$t('page.visit_log.export_time_range_ph')"
             valueType="YYYY-MM-DD HH:mm:ss" style="width: 100%;" />
         </t-form-item>
         <t-form-item :label="$t('page.visit_log.export_tiers')">
@@ -1816,6 +1817,13 @@ export default Vue.extend({
         })
         .catch(() => {});
     },
+    // 打开导出弹窗：默认最近 4 小时（每次打开重算，clearable 清空仍是「全部」）。
+    // 全空默认=导全部，历史分区大时一次导出几个 GB 还占满带宽
+    openExportDialog() {
+      const now = Date.now()
+      this.exportForm.range = [ConvertUnixToDate(now - 4 * 3600 * 1000), ConvertUnixToDate(now)]
+      this.exportDbVisible = true
+    },
     handelExport(keyword) {
 
       let that = this
@@ -1839,6 +1847,13 @@ export default Vue.extend({
       ).then((res) => {
         if (res.code === 0) {
           that.$message.success(that.$t('page.visit_log.export_started') || '导出已开始，完成后请到下载中心获取');
+        } else if (res.code === -7) {
+          // 导出被配置关闭（response.EXPORT_DISABLED）：给出开启方法，而不是一句报错
+          that.$dialog.warning({
+            header: that.$t('page.visit_log.export_disabled_title'),
+            body: that.$t('page.visit_log.export_disabled_body'),
+            confirmBtn: that.$t('common.confirm'),
+          });
         } else {
           that.$message.error(res.msg || '导出失败');
         }
