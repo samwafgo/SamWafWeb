@@ -1305,6 +1305,8 @@ export default {
       shard_only_event: "仅安全事件",
       shard_missing: "文件缺失",
       shard_issue_title: "以下分区有登记但读不到数据，已在本次查询中跳过：",
+      shard_issue_collapsed: "共 {n} 个分区有登记但读不到数据，已在本次查询中跳过。",
+      shard_issue_expand: "展开明细",
       shard_issue_missing: "存储已不存在（登记 {n} 条）——文件或分区表可能被手工删除，或放在了当前未挂载的磁盘上",
       shard_issue_empty: "文件在，但里面没有任何数据（登记 {n} 条）——文件可能被替换或清空过",
       shard_issue_manage: "去分区管理处理",

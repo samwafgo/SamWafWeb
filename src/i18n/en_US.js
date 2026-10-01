@@ -1305,6 +1305,8 @@ export default {
       shard_only_event: "security events only",
       shard_missing: "file missing",
       shard_issue_title: "These partitions are registered but hold no readable data, and were skipped in this query:",
+      shard_issue_collapsed: "A total of {n} partitions are registered but hold no readable data, and were skipped in this query.",
+      shard_issue_expand: "show details",
       shard_issue_missing: "storage no longer exists ({n} rows registered) - the file or partition tables may have been deleted by hand, or sit on a disk that is not mounted right now",
       shard_issue_empty: "the file exists but contains no data ({n} rows registered) - it may have been replaced or emptied",
       shard_issue_manage: "Open Partitions",
