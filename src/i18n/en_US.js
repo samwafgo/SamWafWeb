@@ -2069,6 +2069,7 @@ export default {
       overview_traffic: "Traffic Today",
       overview_qps: "Live QPS",
       overview_conn: "Live Conns",
+      site_trend_tip: "24h · PV {pv} · Blocked {atk}",
       overview_all_sites: "All sites",
       overview_sub_global: "incl. {n} global",
       overview_sub_groups: "{n} groups",

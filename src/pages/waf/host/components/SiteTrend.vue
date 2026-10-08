@@ -42,7 +42,9 @@ export default Vue.extend({
     atkPoints(): string { return this.buildPoints('attack'); },
     tip(): string {
       if (!this.hasData) return '';
-      return `24h · PV ${this.series.reduce((a, b) => a + b.total, 0)} · 拦截 ${this.series.reduce((a, b) => a + b.attack, 0)}`;
+      const pv = this.series.reduce((a, b) => a + b.total, 0);
+      const atk = this.series.reduce((a, b) => a + b.attack, 0);
+      return String(this.$t('page.host.site_trend_tip', { pv, atk }));
     },
   },
   watch: {

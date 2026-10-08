@@ -2072,6 +2072,7 @@ export default {
       overview_traffic: "今日流量",
       overview_qps: "实时 QPS",
       overview_conn: "活跃连接",
+      site_trend_tip: "24h · PV {pv} · 拦截 {atk}",
       overview_all_sites: "全站合计",
       overview_sub_global: "含全局站点 {n}",
       overview_sub_groups: "{n} 个分组",
