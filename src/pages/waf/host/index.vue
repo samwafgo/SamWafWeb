@@ -2111,7 +2111,29 @@ export default Vue.extend({
       }
 
       if (e.backend) {
-        filters.push({ by: "remote_ip", value: e.backend });
+        // 「后端」列显示的是 formatBackendAddr 拼出的完整地址，而库里 remote_ip 只存 IP：
+        // 整串（如 192.168.100.14:80）直接 like remote_ip 永远查不到，剥掉端口只按 IP 查；
+        // IPv6 一并去掉展示用的方括号。纯数字视为端口，走 remote_port 等值查。
+        // 注：这里刻意不追加 remote_port 条件——存量后端对整型列 like 过滤匹配不到任何行，
+        // 「只按 IP 查」在新旧后端都能查到人，宁可多带出同 IP 的站点也不要查空。
+        const raw = String(e.backend).trim();
+        if (/^\d+$/.test(raw)) {
+          filters.push({ by: "remote_port", value: raw });
+        } else {
+          let ip = raw;
+          if (ip.startsWith("[")) {
+            const close = ip.indexOf("]");
+            if (close > -1) {
+              ip = ip.slice(1, close);
+            }
+          } else {
+            const colon = ip.lastIndexOf(":");
+            if (colon > -1 && ip.indexOf(":") === colon) {
+              ip = ip.slice(0, colon);
+            }
+          }
+          filters.push({ by: "remote_ip", value: ip });
+        }
       }
 
       // 将 filters 数组中的 by 和 value 属性分别拼接到 filter_by 和 filter_value 字符串中
