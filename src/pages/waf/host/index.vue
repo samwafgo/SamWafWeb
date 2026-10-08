@@ -998,6 +998,7 @@ export default Vue.extend({
     this.loadHostGroups();
     this.loadHostList().then(() => {
       this.getList("");
+      this.loadStats(); // 首次进入拉一次全站汇总（之后只在增删改 / 开关变更后刷新）
     });
     this.baseUrl = getBaseUrl()
     this.fileUploadUrl = `${this.baseUrl  }/import`
@@ -1564,6 +1565,7 @@ export default Vue.extend({
           if (response.code === 0) {
             this.$message.success(this.$t('common.success'));
             this.getList('all'); // 刷新列表
+            this.loadStats(); // 批量开关会影响「防护开启」等汇总
           } else {
             this.$message.error(response.msg || this.$t('common.failed'));
           }
@@ -1643,8 +1645,8 @@ export default Vue.extend({
           this.dataLoading = false;
         });
       this.dataLoading = true;
-      // 列表变化（分页 / 检索 / 增删改）后同步刷新顶部态势总览
-      this.loadStats();
+      // 顶部态势总览不在这里刷新：翻页 / 筛选不改变汇总数字，
+      // 只在增删改 / 防护开关成功后由各回调显式调用 loadStats()（否则每翻一页都全量重拉 1000 行）
     },
     getContainer() {
       return document.querySelector('.tdesign-starter-layout');
@@ -1794,6 +1796,7 @@ export default Vue.extend({
           that.formData = { ...INITIAL_DATA };
           that.loadHostGroups();
           that.getList("")
+          that.loadStats();
         } else {
           that.$message.warning(resdata.msg);
         }
@@ -1818,6 +1821,7 @@ export default Vue.extend({
             that.editFormVisible = false;
             that.loadHostGroups();
             that.getList("")
+            that.loadStats();
           } else {
             that.$message.warning(resdata.msg);
           }
@@ -1915,6 +1919,7 @@ export default Vue.extend({
 
             that.loadHostGroups();
             that.getList("")
+            that.loadStats();
             that.$message.success(resdata.msg);
           } else {
             that.$message.warning(resdata.msg);
@@ -2046,6 +2051,7 @@ export default Vue.extend({
 
       this.tips = lastMsg;
       this.getList("")
+      this.loadStats();
     },
     // 跳转界面
     // 更改teatarea
@@ -2081,6 +2087,7 @@ export default Vue.extend({
           console.log(resdata)
           if (resdata.code === 0) {
             that.getList("")
+            that.loadStats();
             that.$message.success(resdata.msg)
             that.guardStatusIdx = -1;
             this.guardConfirmVisible = false
@@ -2119,6 +2126,7 @@ export default Vue.extend({
           console.log(resdata)
           if (resdata.code === 0) {
             that.getList("")
+            that.loadStats();
             that.$message.success(resdata.msg)
             this.startStatusIdx = -1;
           } else {
