@@ -1328,6 +1328,13 @@ export default Vue.extend({
         const clone = table.cloneNode(true);
         clone.style.tableLayout = 'auto';
         clone.style.width = 'auto';
+        // resizable 会把当前列宽写成 <col style="width:...">，auto 布局下这些宽度仍是「下限」，
+        // 不清掉就只能量出≈当前配置宽度，域名短的场景永远收不回去
+        clone.querySelectorAll('col').forEach((col) => {
+          col.removeAttribute('width');
+          col.style.width = '';
+          col.style.minWidth = '';
+        });
         holder.appendChild(clone);
         document.body.appendChild(holder);
 
