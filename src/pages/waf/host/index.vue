@@ -1480,7 +1480,7 @@ export default Vue.extend({
       const items = [
         { k: this.$t('common.remarks'), v: row.remarks || '—' },
         { k: this.$t('common.create_time'), v: row.create_time || '—' },
-        { k: this.$t('page.host.remote_ip'), v: `${row.remote_ip || '—'}${row.remote_port ? `:${row.remote_port}` : ''}` },
+        { k: this.$t('page.host.remote_ip'), v: this.formatBackendAddr(row) || '—' },
       ];
       // 「来源严格端口」是安全相关的工作模式，旧列表页每行会标出来；
       // 改版后主行不放次要标记，就在这里补上（只在开启时显示，与旧版一致）
