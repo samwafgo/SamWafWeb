@@ -37,6 +37,10 @@
                 </t-option>
               </t-select>
             </t-form-item>
+            <t-form-item :label="$t('common.remarks')" name="remarks">
+              <t-input v-model="searchformData.remarks" clearable :placeholder="$t('common.placeholder')"
+                       :style="{ width: '160px' }" @enter="getList('all')" />
+            </t-form-item>
             <t-form-item>
               <t-button theme="primary" @click="getList('all')">
                 {{ $t('common.search') }}
@@ -1560,13 +1564,14 @@ export default Vue.extend({
     getList(keyword) {
       const that = this
       const sort_descending =that.sorts.descending?"desc":"asc"
+      const filterParams = this.composeFilterParams();
       hostlist({
         pageSize: that.pagination.pageSize,
         pageIndex: that.pagination.current,
         sort_by: that.sorts.sortBy,
         sort_descending,
-        filter_by:that.filters.filter_by,
-        filter_value:that.filters.filter_value,
+        filter_by: filterParams.filter_by,
+        filter_value: filterParams.filter_value,
         ...that.searchformData
       }).then((res) => {
         const resdata = res
@@ -2096,6 +2101,21 @@ export default Vue.extend({
     onStartStatusCancel() {
       this.startConfirmVisible = false
       this.startStatusIdx = -1;
+    },
+    /**
+     * 组合筛选参数：表格列筛选（filters）+ 顶部「备注」搜索框。
+     * 备注列改版后挪进了展开行、没有独立列了，但后端支持 remarks 的 like 查询，
+     * 这里统一并入 filter_by / filter_value 通道，两种条件可叠加。
+     */
+    composeFilterParams() {
+      let by = this.filters.filter_by;
+      let value = this.filters.filter_value;
+      const remarks = String(this.searchformData.remarks || '').trim();
+      if (remarks) {
+        by = by ? `${by}|remarks` : 'remarks';
+        value = value ? `${value}|${remarks}` : remarks;
+      }
+      return { filter_by: by, filter_value: value };
     },
     /**
      * 筛选结果
