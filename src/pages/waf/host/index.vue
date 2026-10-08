@@ -1400,43 +1400,62 @@ export default Vue.extend({
     /**
      * 拉取全量站点用于计算顶部态势总览。独立于列表分页/筛选：
      * 列表是「当前作用域」，总览始终是「全站」。
+     * 站点超过单页上限时分页拉全，保证汇总与「站点总数」同一口径——
+     * 否则 >1000 站点时总数显示真实值、其余指标只算前 1000 条，相邻卡片互相矛盾。
      */
-    loadStats() {
+    async loadStats() {
       this.statsLoading = true;
-      hostlist({ pageSize: 1000, pageIndex: 1, sort_by: 'create_time', sort_descending: 'desc' })
-        .then((res) => {
-          if (res && res.code === 0) {
-            const rows = (res.data && res.data.list) || [];
-            const total = (res.data && res.data.total) || rows.length;
-            const s = {
-              total: Number(total) || rows.length,
-              protected: 0, abnormal: 0,
-              attack: 0, pv: 0, uv: 0,
-              trafficIn: 0, trafficOut: 0,
-              qps: 0, conn: 0, lbSites: 0, globalCount: 0,
-              firstAbnormal: '',
-            };
-            rows.forEach((r) => {
-              if (Number(r.guard_status) === 1) s.protected += 1;
-              if (Number(r.global_host) === 1) s.globalCount += 1;
-              if (Number(r.is_enable_load_balance) === 1) s.lbSites += 1;
-              s.attack += Number(r.today_attack_count) || 0;
-              s.pv += Number(r.today_pv_count) || 0;
-              s.uv += Number(r.today_uv_count) || 0;
-              s.trafficIn += Number(r.today_traffic_in) || 0;
-              s.trafficOut += Number(r.today_traffic_out) || 0;
-              s.qps += Number(r.real_time_qps) || 0;
-              s.conn += Number(r.real_time_connect_cnt) || 0;
-              if (this.isHostAbnormal(r)) {
-                s.abnormal += 1;
-                if (!s.firstAbnormal) s.firstAbnormal = r.nickname || r.host;
-              }
-            });
-            this.hostStats = s;
+      try {
+        const pageSize = 1000;
+        const rows = [];
+        let total = 0;
+        let pageIndex = 1;
+        let gotAny = false;
+        for (;;) {
+          // 分页只能串行：下一翻要靠上一页返回的 total 判断是否已经拉完
+          // eslint-disable-next-line no-await-in-loop
+          const res = await hostlist({ pageSize, pageIndex, sort_by: 'create_time', sort_descending: 'desc' });
+          if (!res || res.code !== 0) break;
+          gotAny = true;
+          const list = (res.data && res.data.list) || [];
+          total = Number((res.data && res.data.total) || 0) || list.length;
+          rows.push(...list);
+          // 拉完 / 空页即停；用 rows >= total 兜底，防止服务端 total 与实际可翻页数不一致时死循环
+          if (list.length === 0 || rows.length >= total) break;
+          pageIndex += 1;
+        }
+        // 一页都没拿到时保留上一次汇总，避免请求失败把整排 KPI 清零
+        if (!gotAny) return;
+        const s = {
+          total: total || rows.length,
+          protected: 0, abnormal: 0,
+          attack: 0, pv: 0, uv: 0,
+          trafficIn: 0, trafficOut: 0,
+          qps: 0, conn: 0, lbSites: 0, globalCount: 0,
+          firstAbnormal: '',
+        };
+        rows.forEach((r) => {
+          if (Number(r.guard_status) === 1) s.protected += 1;
+          if (Number(r.global_host) === 1) s.globalCount += 1;
+          if (Number(r.is_enable_load_balance) === 1) s.lbSites += 1;
+          s.attack += Number(r.today_attack_count) || 0;
+          s.pv += Number(r.today_pv_count) || 0;
+          s.uv += Number(r.today_uv_count) || 0;
+          s.trafficIn += Number(r.today_traffic_in) || 0;
+          s.trafficOut += Number(r.today_traffic_out) || 0;
+          s.qps += Number(r.real_time_qps) || 0;
+          s.conn += Number(r.real_time_connect_cnt) || 0;
+          if (this.isHostAbnormal(r)) {
+            s.abnormal += 1;
+            if (!s.firstAbnormal) s.firstAbnormal = r.nickname || r.host;
           }
-        })
-        .catch((e: Error) => { console.log(e); })
-        .finally(() => { this.statsLoading = false; });
+        });
+        this.hostStats = s;
+      } catch (e) {
+        console.log(e);
+      } finally {
+        this.statsLoading = false;
+      }
     },
     /** 单站点是否健康异常：全局站点不计；无健康数据视为「未知」不算异常 */
     isHostAbnormal(row) {
