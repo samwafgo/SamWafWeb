@@ -14,8 +14,10 @@
 import Vue from 'vue';
 import { wafstatsitedetailapi } from '@/apis/stats';
 
-// 会话级缓存：同一站点只请求一次，翻页 / 重渲染不重复打后端
-const trendCache: Record<string, any[]> = {};
+// 会话级缓存：同一站点短时间内只请求一次，翻页 / 重渲染不重复打后端。
+// 必须带过期时间：24h 趋势随时间滚动，会话内永久缓存会和其他「今日」数据对不上。
+const TREND_CACHE_TTL = 5 * 60 * 1000;
+const trendCache: Record<string, { at: number; data: any[] }> = {};
 
 export default Vue.extend({
   name: 'SiteTrend',
@@ -52,8 +54,9 @@ export default Vue.extend({
       const code = this.hostCode;
       this.series = [];
       if (!code) return;
-      if (trendCache[code]) {
-        this.series = trendCache[code];
+      const hit = trendCache[code];
+      if (hit && Date.now() - hit.at < TREND_CACHE_TTL) {
+        this.series = hit.data;
         return;
       }
       wafstatsitedetailapi({ host_code: code, time_range: '24h' })
@@ -63,7 +66,7 @@ export default Vue.extend({
               total: Number(p.total_count) || 0,
               attack: Number(p.attack_count) || 0,
             }));
-            trendCache[code] = pts;
+            trendCache[code] = { at: Date.now(), data: pts };
             this.series = pts;
           }
         })
