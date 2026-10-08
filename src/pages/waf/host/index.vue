@@ -1481,6 +1481,14 @@ export default Vue.extend({
         { k: this.$t('common.create_time'), v: row.create_time || '—' },
         { k: this.$t('page.host.remote_ip'), v: `${row.remote_ip || '—'}${row.remote_port ? `:${row.remote_port}` : ''}` },
       ];
+      // 「来源严格端口」是安全相关的工作模式，旧列表页每行会标出来；
+      // 改版后主行不放次要标记，就在这里补上（只在开启时显示，与旧版一致）
+      if (Number(row.global_host) !== 1 && (row.unrestricted_port === 0 || row.unrestricted_port === '0')) {
+        items.push({
+          k: this.$t('page.host.unrestricted_port.label_unrestricted_port_is_enable'),
+          v: this.$t('page.host.unrestricted_port.label_unrestricted_port_is_enable_on'),
+        });
+      }
       if (row.bind_more_host && String(row.bind_more_host).trim()) {
         items.push({
           k: this.$t('page.host.bind_domains'),
