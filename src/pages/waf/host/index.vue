@@ -82,7 +82,7 @@
 
       <div class="table-container">
         <help-block :summary="$t('page.host.core_features')" doc="guide/Host" />
-        <t-table :columns="columns" size="small" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign"
+        <t-table class="host-list-table" :columns="columns" size="small" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign"
                  :hover="hover" :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
                  :resizable="true" tableLayout="fixed"
                  @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"  @sort-change="onSortChange"
@@ -2722,20 +2722,22 @@ export default Vue.extend({
    t-table 的展开图标列默认 64px，且表格拉伸后会按比例放大到 90px+，
    和勾选框之间空出一大块，显得很散。这里把两列的基础宽度压小并让图标居中。 */
 /* 注意：t-table 会为「吸顶表头」单独渲染一张 table，
-   只覆盖 .t-table__content 会造成吸顶表头与内容列错位，所以选择器要覆盖整个 .t-table */
-::v-deep .t-table colgroup col:nth-child(1) {
+   只覆盖 .t-table__content 会造成吸顶表头与内容列错位，所以选择器要覆盖整个 .t-table；
+   但必须再限定到列表表格（.host-list-table）上：组件里还有「端口占用总览」等弹窗表格
+   是就地渲染在本组件子树里的，不收窄的话它们的列也会被下面两条列宽规则压扁 */
+::v-deep .host-list-table colgroup col:nth-child(1) {
   width: 30px !important;
 }
 
-::v-deep .t-table colgroup col:nth-child(2) {
+::v-deep .host-list-table colgroup col:nth-child(2) {
   width: 36px !important;
 }
 
-::v-deep .t-table .t-table__expandable-icon-cell {
+::v-deep .host-list-table .t-table__expandable-icon-cell {
   padding: 0 !important;
 }
 
-::v-deep .t-table__expand-box {
+::v-deep .host-list-table .t-table__expand-box {
   display: flex;
   align-items: center;
   justify-content: center;
