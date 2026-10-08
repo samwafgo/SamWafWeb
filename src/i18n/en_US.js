@@ -2077,9 +2077,6 @@ export default {
       overview_pv_sub: "UV {n}",
       overview_traffic_sub: "in {in} · out {out}",
       overview_lb_sites: "{n} LB sites",
-      guard_short: "Guard",
-      start_short: "Auto",
-      health_short: "Health",
       loadbalance: {
         label_loadbalance_is_enable: "Enable Load Balancing",
         label_loadbalance_type: "Load Balancing Type",

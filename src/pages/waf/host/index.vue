@@ -93,13 +93,6 @@
                  @filter-change="onFilterChange"
                  :expandedRow="expandedRow" :expandedRowKeys="expandedRowKeys" @expand-change="onExpandChange"
                  :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
-          <template #healthy_status="{ row }">
-            <health-status
-              v-if="row.global_host!==1"
-              :healthyStatus="row.healthy_status"
-              :isLoadBalance="row.is_enable_load_balance === '1' || row.is_enable_load_balance === 1"
-            />
-          </template>
           <template #host="{ row }">
             <div class="host-cell">
               <!-- 第一行：域名（真实访问地址，可点开） -->
@@ -556,7 +549,6 @@ import {
 } from '@/constants';
 import LoadBalance from "../loadbalance/index.vue";
 import HttpAuthBase from "../http_auth_base/index.vue"
-import HealthStatus from "./components/health-status/HealthStatus.vue";
 import HostForm from './components/HostForm.vue';
 import SiteTrend from './components/SiteTrend.vue';
 
@@ -584,7 +576,6 @@ export default Vue.extend({
     SslOrderList,
     LoadBalance,
     HttpAuthBase,
-    HealthStatus,
     HostForm,
     SiteTrend,
   },
@@ -749,7 +740,6 @@ export default Vue.extend({
         },
       ],
       rowKey: 'code',
-      tableLayout: 'auto',
       verticalAlign: 'top',
       hover: true,
       rowClassName: (rowKey: string) => `${rowKey}-class`,

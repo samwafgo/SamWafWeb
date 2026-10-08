@@ -2080,9 +2080,6 @@ export default {
       overview_pv_sub: "UV {n}",
       overview_traffic_sub: "入 {in} · 出 {out}",
       overview_lb_sites: "负载均衡站点 {n}",
-      guard_short: "防护",
-      start_short: "自启",
-      health_short: "健康",
       loadbalance: {
         label_loadbalance_is_enable: "是否启用负载",
         label_loadbalance_type: "负载均衡类型",
