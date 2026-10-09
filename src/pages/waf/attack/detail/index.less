@@ -395,6 +395,29 @@
   cursor: default;
 }
 
+/* 快捷加入规则：选区旁浮出的确认按钮（fixed 定位，坐标为 mouseup 时的视口坐标） */
+.vd-sel-btn {
+  position: fixed;
+  z-index: 3000;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 15px;
+  background: var(--td-brand-color);
+  color: #fff;
+  font-size: 12px;
+  line-height: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+
+  &:hover {
+    background: var(--td-brand-color-hover);
+  }
+}
+
 .pl-block + .pl-block {
   margin-top: 12px;
 }

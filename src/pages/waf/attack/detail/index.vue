@@ -119,7 +119,7 @@
                   </span>
                 </div>
                 <pre v-if="f.value" class="pl-code" :class="{ 'is-expanded': expandedMap[f.key] }"
-                  @mouseup="captureSelection(f.key)">{{ displayValue(f) }}</pre>
+                  @mouseup="captureSelection(f.key, $event)">{{ displayValue(f) }}</pre>
                 <div v-else class="pl-empty">{{ $t('page.visit_log.detail.empty_content') }}</div>
               </div>
             </div>
@@ -155,7 +155,7 @@
                   </span>
                 </div>
                 <pre v-if="f.value" class="pl-code" :class="{ 'is-expanded': expandedMap[f.key] }"
-                  @mouseup="captureSelection(f.key)">{{ displayValue(f) }}</pre>
+                  @mouseup="captureSelection(f.key, $event)">{{ displayValue(f) }}</pre>
                 <div v-else class="pl-empty">{{ $t('page.visit_log.detail.empty_content') }}</div>
               </div>
             </div>
@@ -238,6 +238,15 @@
         </div>
       </div>
     </template>
+
+    <!-- 快捷加入规则：选中内容后浮出的确认按钮。
+         不再用「点击页面空白」这种隐式触发——那个方案会把 AI 分析、误报反馈等
+         任何一次点击都吞掉并劫持成跳转；改成显式点击本按钮才跳。 -->
+    <button v-if="pendingSel" class="vd-sel-btn"
+            :style="{ left: pendingSel.x + 'px', top: pendingSel.y + 'px' }"
+            @mousedown.prevent @click="applySelRule">
+      <t-icon name="add" />{{ $t('page.visit_log.detail.quick_add_rule_apply') }}
+    </button>
 
     <t-dialog :header="$t('page.visit_log.detail.http_copy_mask')" :visible.sync="httpCopyMaskVisible"
       @confirm="() => { httpCopyMaskVisible = false }" :onCancel="() => { httpCopyMaskVisible = false }">
@@ -594,13 +603,15 @@ export default {
     },
   },
   mounted() {
-    // 快捷加入规则靠「点击空白处」触发：选中不跳，等下一次外部点击
-    document.addEventListener('click', this.onDocumentClick);
+    // 快捷加入规则：选区被取消（点别处 / 拖拽取消）或页面滚动时，收起浮出的确认按钮
+    document.addEventListener('selectionchange', this.onSelectionChange);
+    document.addEventListener('scroll', this.dismissSel, true);
     const target = this.prop_req_uuid ? `${this.prop_req_uuid}#${this.prop_current_db}` : this.$route.query.req_uuid;
     this.getDetail(target);
   },
   beforeDestroy() {
-    document.removeEventListener('click', this.onDocumentClick);
+    document.removeEventListener('selectionchange', this.onSelectionChange);
+    document.removeEventListener('scroll', this.dismissSel, true);
   },
   methods: {
     goToOwaspRule() {
@@ -798,23 +809,41 @@ export default {
         this.$message.error(this.$t('page.visit_log.detail.copy_failed'));
       });
     },
-    // ===== 快捷加入规则：选中文本后，点击空白处跳到规则编辑器 =====
-    captureSelection(sourcePoint) {
-      // 不在可映射白名单里的报文块（如响应报文）不参与：选中的内容在规则引擎里没有对应的
-      // 请求字段，落进规则编辑页会掉到默认分支生成 USER_AGENT.Contains(...) 这种错位规则
-      if (QUICK_RULE_FIELDS.indexOf(sourcePoint) < 0) return;
-      if (!this.quickAddRuleChecked) return;
+    // ===== 快捷加入规则：选中文本 → 选区旁浮出「加入规则」按钮 =====
+    captureSelection(sourcePoint, e) {
+      // 不在可映射白名单里的报文块（如响应报文）不提供入口：选中只当普通复制，
+      // 顺带清掉可能残留的按钮（选区已经换到了别的块）
+      if (QUICK_RULE_FIELDS.indexOf(sourcePoint) < 0 || !this.quickAddRuleChecked) {
+        this.pendingSel = null;
+        return;
+      }
       const sel = window.getSelection ? window.getSelection() : null;
       const text = sel ? sel.toString() : '';
-      if (text && text.length > 0) {
-        this.pendingSel = { text, sourcePoint };
+      if (!text) {
+        // 同一块里的空 mouseup（点一下取消选择）也要收起按钮
+        this.pendingSel = null;
+        return;
+      }
+      const x = Math.min((e && e.clientX ? e.clientX : 0) + 10, window.innerWidth - 132);
+      const y = Math.min((e && e.clientY ? e.clientY : 0) + 16, window.innerHeight - 46);
+      this.pendingSel = { text, sourcePoint, x, y };
+    },
+    /** 选区被取消（点别处、拖拽取消）时收起浮出按钮 */
+    onSelectionChange() {
+      const sel = window.getSelection ? window.getSelection() : null;
+      const hasText = sel && !sel.isCollapsed && String(sel.toString()).length > 0;
+      if (!hasText && this.pendingSel) {
+        this.pendingSel = null;
       }
     },
-    onDocumentClick(e) {
+    dismissSel() {
+      if (this.pendingSel) {
+        this.pendingSel = null;
+      }
+    },
+    /** 点击浮出按钮：带选中文本跳到规则编辑器 */
+    applySelRule() {
       if (!this.pendingSel) return;
-      const el = e.target as HTMLElement;
-      // 仍在报文块里调整选择时不跳转
-      if (el && el.closest && el.closest('.pl-code')) return;
       const { text, sourcePoint } = this.pendingSel;
       this.pendingSel = null;
       this.$router.push({
