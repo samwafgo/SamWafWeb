@@ -331,6 +331,11 @@ import { wafIPBlockAddApi } from '@/apis/ipblock';
 import { getHeaderCopyDetail, geWebLogDetail } from '@/apis/waflog/attacklog';
 import { get_detail_by_item_api, edit_system_config_api } from '@/apis/systemconfig';
 
+// 可映射到规则引擎请求侧字段的报文块，必须与规则编辑页 setRuleContentByMode 的 case 一一对应：
+// url/header/user_agent/cookies/body 是同名字段；post_form 在规则编辑页映射到 POST_FORM。
+// 响应侧（res_header / res_body）在请求检测字段里没有对应物，不能进快捷加规则流程。
+const QUICK_RULE_FIELDS = ['url', 'header', 'user_agent', 'cookies', 'body', 'post_form'];
+
 export default {
   name: 'WafAttackLogDetail',
   components: {
@@ -795,6 +800,9 @@ export default {
     },
     // ===== 快捷加入规则：选中文本后，点击空白处跳到规则编辑器 =====
     captureSelection(sourcePoint) {
+      // 不在可映射白名单里的报文块（如响应报文）不参与：选中的内容在规则引擎里没有对应的
+      // 请求字段，落进规则编辑页会掉到默认分支生成 USER_AGENT.Contains(...) 这种错位规则
+      if (QUICK_RULE_FIELDS.indexOf(sourcePoint) < 0) return;
       if (!this.quickAddRuleChecked) return;
       const sel = window.getSelection ? window.getSelection() : null;
       const text = sel ? sel.toString() : '';
