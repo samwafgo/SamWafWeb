@@ -92,6 +92,10 @@
   &--warning::before {
     background: var(--td-warning-color);
   }
+
+  &--default::before {
+    background: var(--td-text-color-placeholder);
+  }
 }
 
 .vd-hero-top {
@@ -126,6 +130,11 @@
   .vd-hero--warning & {
     color: var(--td-warning-color);
     background: var(--td-warning-color-light);
+  }
+
+  .vd-hero--default & {
+    color: var(--td-text-color-secondary);
+    background: var(--td-bg-color-secondarycontainer);
   }
 }
 
@@ -325,6 +334,10 @@
 
   &--danger::before {
     background: var(--td-error-color);
+  }
+
+  &--default::before {
+    background: var(--td-text-color-placeholder);
   }
 }
 

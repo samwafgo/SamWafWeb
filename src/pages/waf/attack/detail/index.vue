@@ -334,7 +334,7 @@
   </div>
 </template>
 <script lang="ts">
-import { LogoAndroidIcon, SecuredFilledIcon, ShieldErrorFilledIcon, ErrorTriangleFilledIcon } from 'tdesign-icons-vue';
+import { LogoAndroidIcon, SecuredFilledIcon, ShieldErrorFilledIcon, ErrorTriangleFilledIcon, InfoCircleFilledIcon } from 'tdesign-icons-vue';
 
 import { wafIPBlockAddApi } from '@/apis/ipblock';
 import { getHeaderCopyDetail, geWebLogDetail } from '@/apis/waflog/attacklog';
@@ -352,6 +352,7 @@ export default {
     SecuredFilledIcon,
     ShieldErrorFilledIcon,
     ErrorTriangleFilledIcon,
+    InfoCircleFilledIcon,
   },
   props: {
     prop_req_uuid: {
@@ -423,12 +424,16 @@ export default {
       return m ? m[1] : '';
     },
     // 防御动作 → 语义色
+    // 防御动作 → 语义色。action 的完整取值来自后端 web_logs.ACTION，共 5 种：
+    // 放行（通过全部检测正常代理）、通过（日志创建时的初始值，正常完成会被覆写成「放行」，
+    // 只有个别提前返回的异常路径会残留）、阻止（检测命中被拦截）、禁止（闸门类拒绝）、
+    // 客户端断开（代理过程中访客主动断开）；记录不存在时还可能为空串。
     verdictTheme(): string {
       const a = this.detail_data.action || '';
-      if (a.indexOf('放行') > -1) return 'success';
-      if (a.indexOf('阻止') > -1 || a.indexOf('禁止') > -1 || a.indexOf('拦截') > -1) return 'error';
-      if (a) return 'warning';
-      return 'brand';
+      if (a === '放行' || a === '通过') return 'success';
+      if (a === '阻止' || a === '禁止') return 'error';
+      if (a === '客户端断开') return 'warning';
+      return 'default';
     },
     verdictTagTheme(): string {
       const t = this.verdictTheme;
@@ -437,7 +442,8 @@ export default {
     verdictIconComp(): string {
       if (this.verdictTheme === 'success') return 'SecuredFilledIcon';
       if (this.verdictTheme === 'error') return 'ShieldErrorFilledIcon';
-      return 'ErrorTriangleFilledIcon';
+      if (this.verdictTheme === 'warning') return 'ErrorTriangleFilledIcon';
+      return 'InfoCircleFilledIcon';
     },
     // 响应状态文案：后端 status 如 "200 OK" / 403 等
     statusChip(): string {
