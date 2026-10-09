@@ -23,10 +23,10 @@ export default {
   components: { LogoFullIcon, LogoGithubIcon, HelpCircleIcon, SettingIcon },
   methods: {
     navToGitHub() {
-      window.open('https://github.com/Tencent/tdesign-vue-starter');
+      window.open('https://github.com/Tencent/tdesign-vue-starter', '_blank', 'noopener,noreferrer');
     },
     navToHelper() {
-      window.open('https://tdesign.tencent.com/starter/docs/get-started');
+      window.open('https://tdesign.tencent.com/starter/docs/get-started', '_blank', 'noopener,noreferrer');
     },
     toggleSettingPanel() {
       this.$store.commit('setting/toggleSettingPanel', true);

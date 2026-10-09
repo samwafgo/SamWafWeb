@@ -472,7 +472,7 @@
       },
       // 打开视频教程
       openVideoTutorial() {
-        window.open('https://www.bilibili.com/video/BV1pn8Ez2ELQ/', '_blank');
+        window.open('https://www.bilibili.com/video/BV1pn8Ez2ELQ/', '_blank', 'noopener,noreferrer');
       },
       handelToAi(){
         console.log("handelToAi",this.httpAiMask)

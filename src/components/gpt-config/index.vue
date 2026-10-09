@@ -62,7 +62,7 @@
           </div>
           <div class="gpt-preset-ops">
             <t-button size="small" variant="outline" @click="applyGptPreset(p)">{{ $t('page.gpt.config.preset_use') }}</t-button>
-            <t-link theme="primary" hover="color" size="small" :href="p.home" target="_blank">{{ $t('page.gpt.config.preset_apply_key') }}</t-link>
+            <t-link theme="primary" hover="color" size="small" :href="p.home" target="_blank" rel="noopener noreferrer">{{ $t('page.gpt.config.preset_apply_key') }}</t-link>
           </div>
         </div>
       </div>

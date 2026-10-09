@@ -1,6 +1,12 @@
 <template>
   <div class="doc-container">
-    <iframe :src="docUrl" class="doc-iframe" frameborder="0" />
+    <t-card class="doc-card">
+      <p class="doc-title">{{ $t('menu.oplatform.doc_title') }}</p>
+      <!-- 不内嵌 iframe：点击才跳转，且不带 Referer -->
+      <t-link theme="primary" :href="docUrl" target="_blank" rel="noopener noreferrer">
+        {{ docUrl }}
+      </t-link>
+    </t-card>
   </div>
 </template>
 
@@ -17,15 +23,14 @@ export default {
 
 <style scoped>
 .doc-container {
-  width: 100%;
-  height: calc(100vh - 120px);
-  display: flex;
-  flex-direction: column;
+  padding: 16px;
 }
-
-.doc-iframe {
-  width: 100%;
-  flex: 1;
-  border: none;
+.doc-card {
+  max-width: 640px;
+}
+.doc-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
 }
 </style>

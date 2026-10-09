@@ -301,7 +301,7 @@
               :class="{ 'host-form-dialog-fullscreen': hostFormFullscreen }">
       <div slot="header">
         {{ $t('common.new') }}
-        <t-link theme="primary" :href="hostAddUrl" target="_blank">
+        <t-link theme="primary" :href="hostAddUrl" target="_blank" rel="noopener noreferrer">
           <link-icon slot="prefix-icon"></link-icon>
           {{ $t('common.online_document') }}
         </t-link>

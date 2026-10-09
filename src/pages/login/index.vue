@@ -15,7 +15,7 @@
       <tdesign-setting />
     </div>
 
-    <footer class="copyright">Copyright @ 2022-{{ new Date().getFullYear() }} SamWaf. All Rights Reserved  <t-link theme="primary" @click="handleJumpOnlineUrl"> {{$t('login.login_has_question')}} </t-link>  <a href="https://doc.samwaf.com">{{$t('login.login_online_document')}} </a></footer>
+    <footer class="copyright">Copyright @ 2022-{{ new Date().getFullYear() }} SamWaf. All Rights Reserved  <t-link theme="primary" @click="handleJumpOnlineUrl"> {{$t('login.login_has_question')}} </t-link>  <a href="https://doc.samwaf.com" target="_blank" rel="noopener noreferrer">{{$t('login.login_online_document')}} </a></footer>
   </div>
 </template>
 <script>
@@ -44,7 +44,7 @@ export default {
     },
     //跳转界面
     handleJumpOnlineUrl(){
-      window.open(this.samwafglobalconfig.getOnlineUrl()+"");
+      window.open(this.samwafglobalconfig.getOnlineUrl()+"", '_blank', 'noopener,noreferrer');
     },
   },
 };

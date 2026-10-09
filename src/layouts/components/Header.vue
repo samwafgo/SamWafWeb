@@ -6,7 +6,7 @@
       <template #confirmBtn>
         <!-- 容器环境：应用内升级会在容器重建后回退，这里不给"确认更新"，只给文档入口 -->
         <t-link v-if="!self_update_allowed" theme="primary" underline
-                href="https://doc.samwaf.com/quickstart/Update.html" target="_blank">
+                href="https://doc.samwaf.com/quickstart/Update.html" target="_blank" rel="noopener noreferrer">
           {{$t('topNav.update.container_doc_link')}}
         </t-link>
         <t-button v-else :theme="update_new_ver && update_new_ver.toLowerCase().includes('beta') ? 'danger' : 'warning'" @click="handleConfirmUpdate">
@@ -42,7 +42,7 @@ docker compose up -d</pre>
         <div>
           <t-link theme="primary"
           underline href="https://doc.samwaf.com/quickstart/Update.html"
-           target="black">{{ $t('topNav.update.more_label') }}</t-link>
+           target="_blank" rel="noopener noreferrer">{{ $t('topNav.update.more_label') }}</t-link>
 
         </div>
       </div>
@@ -425,7 +425,7 @@ docker compose up -d</pre>
         this.$router.push(url);
       },
       navToHelper() {
-        window.open(this.samwafglobalconfig.getOnlineUrl());
+        window.open(this.samwafglobalconfig.getOnlineUrl(), '_blank', 'noopener,noreferrer');
       },
       resetServer() {
         let that = this

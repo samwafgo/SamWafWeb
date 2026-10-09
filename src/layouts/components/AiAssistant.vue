@@ -53,11 +53,11 @@
           </div>
           <!-- 模型本身不能联网，这两个入口是给用户自己查的 -->
           <div class="welcome-links">
-            <t-link theme="primary" hover="color" size="small" :href="docUrl" target="_blank">
+            <t-link theme="primary" hover="color" size="small" :href="docUrl" target="_blank" rel="noopener noreferrer">
               {{ $t('page.gpt.link_doc') }}
             </t-link>
             <span class="welcome-links-split">·</span>
-            <t-link theme="primary" hover="color" size="small" :href="issueUrl" target="_blank">
+            <t-link theme="primary" hover="color" size="small" :href="issueUrl" target="_blank" rel="noopener noreferrer">
               {{ $t('page.gpt.link_issue') }}
             </t-link>
           </div>
