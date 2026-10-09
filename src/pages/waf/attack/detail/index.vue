@@ -648,7 +648,7 @@ export default {
     },
     // 打开视频教程
     openVideoTutorial() {
-      window.open('https://www.bilibili.com/video/BV1pn8Ez2ELQ/', '_blank');
+      window.open('https://www.bilibili.com/video/BV1pn8Ez2ELQ/', '_blank', 'noopener,noreferrer');
     },
     handelToAi() {
       // 日志详情走"安全风险分析"提示词

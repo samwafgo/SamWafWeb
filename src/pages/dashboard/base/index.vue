@@ -322,7 +322,7 @@ export default {
           this.$router.push(item.link);
         } else {
           // 如果是外部链接，在新窗口打开
-          window.open(item.link, '_blank');
+          window.open(item.link, '_blank', 'noopener,noreferrer');
         }
       }
     }

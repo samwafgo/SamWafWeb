@@ -5,7 +5,7 @@
         {{ $t(item.title)}}
       </t-breadcrumbItem>
     </t-breadcrumb>
-    <a href="https://mp.weixin.qq.com/s/AMKCsYO6XcwiUzuCcKUS1g" target="_blank" class="comm-channel-link">{{ $t('common.online_channel') }}</a>
+    <a href="https://mp.weixin.qq.com/s/AMKCsYO6XcwiUzuCcKUS1g" target="_blank" rel="noopener noreferrer" class="comm-channel-link">{{ $t('common.online_channel') }}</a>
   </div>
 </template>
 

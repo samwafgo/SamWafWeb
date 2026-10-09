@@ -965,7 +965,7 @@ export default Vue.extend({
       return date.toLocaleString();
     },
     handleJumpOnlineUrl() {
-      window.open(this.samwafglobalconfig.getOnlineUrl() + "/guide/FirewallIPBlock.html");
+      window.open(this.samwafglobalconfig.getOnlineUrl() + "/guide/FirewallIPBlock.html", '_blank', 'noopener,noreferrer');
     },
   },
 });

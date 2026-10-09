@@ -315,9 +315,9 @@
                     <code class="file-name is-target">{{ row.file_name }}</code>
                   </div>
                   <div class="manual-pop-links">
-                    <t-link href="https://gitee.com/lionsoul/ip2region/tree/master/data" target="_blank" theme="primary">Gitee</t-link>
+                    <t-link href="https://gitee.com/lionsoul/ip2region/tree/master/data" target="_blank" rel="noopener noreferrer" theme="primary">Gitee</t-link>
                     <span class="manual-pop-sep">|</span>
-                    <t-link href="https://github.com/lionsoul2014/ip2region/tree/master/data" target="_blank" theme="primary">GitHub</t-link>
+                    <t-link href="https://github.com/lionsoul2014/ip2region/tree/master/data" target="_blank" rel="noopener noreferrer" theme="primary">GitHub</t-link>
                   </div>
                   <div class="manual-pop-foot">
                     {{ manualNeedsRename(row) ? $t('page.iplocation.manual_row_foot_rename') : $t('page.iplocation.manual_row_foot') }}
