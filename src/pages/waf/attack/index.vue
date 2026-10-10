@@ -666,10 +666,14 @@ export default Vue.extend({
       quickRange: "30",
       dateControl: {
         presets: {
-          最近300天: [ConvertDateToString(new Date(+new Date() - 86400000 * 299)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
-          最近7天: [ConvertDateToString(new Date(+new Date() - 86400000 * 6)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
-          最近3天: [ConvertDateToString(new Date(+new Date() - 86400000 * 2)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
-          今天: [ConvertDateToString(new Date()) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_last_300_days')]: [ConvertDateToString(new Date(+new Date() - 86400000 * 299)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_last_90_days')]: [ConvertDateToString(new Date(+new Date() - 86400000 * 89)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_last_60_days')]: [ConvertDateToString(new Date(+new Date() - 86400000 * 59)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_last_30_days')]: [ConvertDateToString(new Date(+new Date() - 86400000 * 29)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_last_15_days')]: [ConvertDateToString(new Date(+new Date() - 86400000 * 14)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_last_7_days')]: [ConvertDateToString(new Date(+new Date() - 86400000 * 6)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_last_3_days')]: [ConvertDateToString(new Date(+new Date() - 86400000 * 2)) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
+          [this.$t('page.visit_log.date_range_today')]: [ConvertDateToString(new Date()) + " 00:00:00", ConvertDateToString(new Date()) + " 23:59:59"],
         },
         range1: ['2023-11-01 00:00:00', '2023-11-16 23:59:59'],
       },
