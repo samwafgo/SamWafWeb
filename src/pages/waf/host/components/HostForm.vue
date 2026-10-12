@@ -670,6 +670,32 @@
                 </t-input>
               </t-tooltip>
             </t-form-item>
+            <t-form-item v-if="formData.is_enable_http_auth_base === '1'" :label="$t('page.host.http_auth_path_scope')">
+              <t-tooltip class="placement top center" :content="$t('page.host.http_auth_path_scope_tips')" placement="top"
+                       :overlay-style="{ width: '420px' }" show-arrow>
+                <t-radio-group v-model="httpAuthConfigData.path_scope">
+                  <t-radio value="all">{{$t('page.host.http_auth_path_scope_all')}}</t-radio>
+                  <t-radio value="include">{{$t('page.host.http_auth_path_scope_include')}}</t-radio>
+                  <t-radio value="exclude">{{$t('page.host.http_auth_path_scope_exclude')}}</t-radio>
+                </t-radio-group>
+              </t-tooltip>
+            </t-form-item>
+            <t-form-item v-if="formData.is_enable_http_auth_base === '1' && httpAuthConfigData.path_scope !== 'all'" :label="$t('page.host.http_auth_paths')">
+              <t-tooltip class="placement top center" :content="$t('page.host.http_auth_paths_tips')" placement="top"
+                       :overlay-style="{ width: '500px' }" show-arrow>
+                <t-textarea v-model="httpAuthConfigData.paths" :placeholder="$t('page.host.http_auth_paths_ph')"
+                            :autosize="{ minRows: 3, maxRows: 8 }" :style="{ width: '480px' }"/>
+              </t-tooltip>
+            </t-form-item>
+            <t-form-item v-if="formData.is_enable_http_auth_base === '1'" :label="$t('page.host.http_auth_bypass_ip_group')">
+              <t-tooltip class="placement top center" :content="$t('page.host.http_auth_bypass_ip_group_tips')" placement="top"
+                       :overlay-style="{ width: '400px' }" show-arrow>
+                <t-select v-model="httpAuthConfigData.bypass_ip_group" clearable filterable :style="{ width: '480px' }"
+                          :placeholder="$t('common.select_placeholder')">
+                  <t-option v-for="g in ipGroupOptions" :key="g.group_code" :value="g.group_code" :label="g.group_name"></t-option>
+                </t-select>
+              </t-tooltip>
+            </t-form-item>
             <t-form-item v-if="formData.is_enable_http_auth_base === '1'" :label="$t('page.host.http_auth_session_ttl')">
               <t-tooltip class="placement top center" :content="$t('page.host.http_auth_session_ttl_tips')" placement="top"
                        :overlay-style="{ width: '400px' }" show-arrow>
@@ -898,6 +924,7 @@
   import {get_detail_by_item_api, edit_system_config_by_item_api} from '@/apis/systemconfig';
   import {wafCDNProviderInfoApi} from '@/apis/cdnip';
   import {addHostGroup} from '@/apis/hostgroup';
+  import {wafIPGroupOptionsApi} from '@/apis/ipgroup';
   import IpSourceProbeDialog from '../components/IpSourceProbeDialog.vue';
   export default Vue.extend({
     name: 'HostForm',
@@ -1016,6 +1043,8 @@
         antiLeechConfigData: {...INITIAL_CAPTCHA },
         cacheConfigData: { ...INITIAL_CACHE },
         httpAuthConfigData: { ...INITIAL_HTTP_AUTH },
+        // 网站密码访问「免密IP组」下拉的选项，弹窗每次打开时重拉
+        ipGroupOptions: [],
         staticSiteConfigData: {...INITIAL_STATIC_SITE},
         transportConfigData: {...INITIAL_TRANSPORT},
         customHeadersConfigData: {...INITIAL_CUSTOM_HEADERS},
@@ -1267,6 +1296,7 @@
       dialogVisible(val) {
         if (val) {
           this.getSslFolderList();
+          this.getIpGroupOptions();
         }
       },
       // 切换 Tab 后把内容区和弹窗滚动位置复位到顶部，避免左侧导航过长时右侧内容"看起来是空的"
@@ -1534,7 +1564,12 @@
                   // bind_ip 是显式三态：给了 0 就是用户主动关掉，不能当缺省再拉回 1；
                   // 但整份 JSON 没这个键时（老配置）必须保持 1
                   bind_ip: (parsed.bind_ip === undefined || parsed.bind_ip === null
-                    ? 1 : parsed.bind_ip).toString()
+                    ? 1 : parsed.bind_ip).toString(),
+                  // 保护范围同理：老配置没有这些键 → 整站(等价现状)；非法值也回落整站，与后端 Decode 口径一致
+                  path_scope: (parsed.path_scope === 'include' || parsed.path_scope === 'exclude')
+                    ? parsed.path_scope : 'all',
+                  paths: (typeof parsed.paths === 'string' ? parsed.paths : ''),
+                  bypass_ip_group: (typeof parsed.bypass_ip_group === 'string' ? parsed.bypass_ip_group : '')
                 };
               } else {
                 that.httpAuthConfigData = { ...INITIAL_HTTP_AUTH };
@@ -1970,6 +2005,15 @@
           });
         this.dataLoading = true;
       },
+      // 拉取IP组下拉选项（网站密码访问的免密IP组用）。
+      // 失败静默：接口不可用不应影响弹窗里其它配置的编辑
+      getIpGroupOptions() {
+        wafIPGroupOptionsApi().then((res) => {
+          if (res.code === 0) {
+            this.ipGroupOptions = res.data ?? [];
+          }
+        }).catch(() => {});
+      },
       // 处理SSL选择变更
       handleSslChange(value) {
         // 查找选中的SSL配置
@@ -2326,10 +2370,36 @@
             // ⚠️ 同样是一张白名单：新增字段必须同时加进来，漏了就是静默丢弃。
             // session_ttl 兜底 1440 而不是 0：0 会让后端按「非法值」回落，虽然结果一样，
             // 但页面上留个 0 让人以为设成了「永不过期」，实际是 24 小时。
+            // 范围类字段同理兜底：非法值回落 all，交给后端按整站处理。
+            let httpAuthPathScope = this.httpAuthConfigData.path_scope;
+            if (httpAuthPathScope !== 'include' && httpAuthPathScope !== 'exclude') {
+              httpAuthPathScope = 'all';
+            }
+            // 选了按路径开启却没填路径：拦在保存前。后端虽然会按整站 fail-closed，
+            // 但那和用户在页面上看到的意图不一致，静默改语义不如明说
+            if (httpAuthPathScope !== 'all' && !(this.httpAuthConfigData.paths || '').trim()) {
+              this.$message.warning(this.$t('page.host.http_auth_paths_required'));
+              return;
+            }
+            // 上限与后端 BuildPathPatterns 的截断一致（50 条、每条 256 字符），
+            // 超限提示而不是静默截断，避免用户以为配了实际没生效
+            let httpAuthPathLines = (this.httpAuthConfigData.paths || '')
+              .split(/[\n,]/).map(s => s.trim()).filter(s => s !== '');
+            if (httpAuthPathLines.length > 50) {
+              this.$message.warning(this.$t('page.host.http_auth_paths_too_many'));
+              return;
+            }
+            if (httpAuthPathLines.some(s => s.length > 256)) {
+              this.$message.warning(this.$t('page.host.http_auth_paths_too_long'));
+              return;
+            }
             let httpAuthData = {
               session_ttl: parseInt(this.httpAuthConfigData.session_ttl, 10) || 1440,
               idle_timeout: parseInt(this.httpAuthConfigData.idle_timeout, 10) || 0,
-              bind_ip: parseInt(this.httpAuthConfigData.bind_ip, 10) || 0
+              bind_ip: parseInt(this.httpAuthConfigData.bind_ip, 10) || 0,
+              path_scope: httpAuthPathScope,
+              paths: this.httpAuthConfigData.paths || '',
+              bypass_ip_group: this.httpAuthConfigData.bypass_ip_group || ''
             };
             postdata['http_auth_json'] = JSON.stringify(httpAuthData);
 
