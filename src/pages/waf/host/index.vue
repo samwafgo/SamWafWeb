@@ -327,6 +327,12 @@
       <div slot="header">
         {{ $t('common.edit') }}
         <span v-if="editHostLabel" class="dialog-header-host">{{ editHostLabel }}</span>
+        <div v-if="formEditData.code" class="dialog-header-code">
+          <span>Host Code: {{ formEditData.code }}</span>
+          <t-button size="small" variant="text" :title="$t('common.copy')" :aria-label="$t('common.copy')" @click="copyHostCode">
+            <file-copy-icon style="font-size: 14px; margin-right: 0" />
+          </t-button>
+        </div>
       </div>
       <div slot="body">
         <host-form
@@ -530,7 +536,7 @@ import {getBaseUrl} from '@/utils/usuallytool';
 import {decryptIncoming} from '@/utils/seccrypto';
 import Vue from 'vue';
 import {
-  FileSafetyIcon, LinkIcon, SearchIcon,
+  FileSafetyIcon, FileCopyIcon, LinkIcon, SearchIcon,
   ViewListIcon, SecuredIcon, ErrorCircleIcon, CloseCircleIcon, ChartLineIcon, CloudUploadIcon, ThunderIcon,
   CheckCircleFilledIcon, ErrorCircleFilledIcon, HelpCircleFilledIcon,
 } from 'tdesign-icons-vue';
@@ -560,6 +566,7 @@ export default Vue.extend({
   components: {
     SearchIcon,
     FileSafetyIcon,
+    FileCopyIcon,
     LinkIcon,
     // 态势总览 KPI 图标
     ViewListIcon,
@@ -1013,6 +1020,16 @@ export default Vue.extend({
   },
 
   methods: {
+    copyHostCode(event: MouseEvent) {
+      const code = this.formEditData.code;
+      if (!code) return;
+      const container = (event.currentTarget as HTMLElement).parentElement;
+      this.$copyText(code, container || undefined).then(() => {
+        this.$message.success(this.$t('page.visit_log.detail.copied'));
+      }).catch(() => {
+        this.$message.error(this.$t('page.visit_log.detail.copy_failed'));
+      });
+    },
     // ==================== 网站分组 ====================
     /**
      * 拉取全部分组 + 未分组/全部计数（左栏与表格「分组」列共用一份数据）
@@ -3040,6 +3057,27 @@ export default Vue.extend({
   font-weight: normal;
   color: var(--td-text-color-secondary);
   word-break: break-all;
+}
+
+.dialog-header-code {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--td-text-color-secondary);
+
+  span {
+    user-select: text;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  .t-button {
+    color: inherit;
+    flex-shrink: 0;
+  }
 }
 
 .batch-copy-label {

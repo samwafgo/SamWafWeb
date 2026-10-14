@@ -5,7 +5,7 @@
       <t-loading size="28px" />
       <span class="vd-loading-text">{{ $t('page.visit_log.detail.loading') }}</span>
     </div>
-    <t-alert v-else-if="detailError" theme="error" :message="$t('page.visit_log.detail.load_failed')" />
+    <t-alert v-else-if="detailError" theme="error" :message="detailError" />
 
     <template v-else>
       <!-- 结论横幅：防御动作、命中规则与关键操作先给结论，细节往下展开 -->
@@ -368,7 +368,7 @@ export default {
     return {
       detail_data: {} as any,
       detailLoaded: false, // 详情已返回（payloadMissing 提示要等数据回来再判断）
-      detailError: false,
+      detailError: '',
       quickAddRuleChecked: false,
       // 各报文块的展开状态：>300 字符的块默认折叠，逐块展开
       expandedMap: {
@@ -679,35 +679,42 @@ export default {
     },
     beforeSendAi() {
       this.httpAiMask = '';
+      this.httpAiMaskVisible = false;
       getHeaderCopyDetail({
         REQ_UUID: this.detail_req.req_uuid,
         current_db_name: this.detail_req.current_db,
         output_format: 'raw',
       })
         .then((res) => {
-          if (res.code === 0) {
+          if (res.code === 0 && typeof res.data === 'string' && res.data.trim()) {
             this.httpAiMask = res.data;
             this.httpAiMaskVisible = true;
+          } else {
+            this.$message.error(res.code !== 0 && res.msg ? res.msg : this.$t('page.visit_log.detail.copy_failed'));
           }
         })
         .catch((e: Error) => {
-          console.log(e);
+          this.$message.error(e.message || this.$t('page.visit_log.detail.copy_failed'));
         });
     },
     loadHttpCopyMask() {
+      this.httpCopyMask = '';
+      this.httpCopyMaskVisible = false;
       getHeaderCopyDetail({
         REQ_UUID: this.detail_req.req_uuid,
         current_db_name: this.detail_req.current_db,
         output_format: 'curl',
       })
         .then((res) => {
-          if (res.code === 0) {
+          if (res.code === 0 && typeof res.data === 'string' && res.data.trim()) {
             this.httpCopyMask = res.data;
             this.httpCopyMaskVisible = true;
+          } else {
+            this.$message.error(res.code !== 0 && res.msg ? res.msg : this.$t('page.visit_log.detail.copy_failed'));
           }
         })
         .catch((e: Error) => {
-          console.log(e);
+          this.$message.error(e.message || this.$t('page.visit_log.detail.copy_failed'));
         });
     },
     backPage() {
@@ -724,7 +731,8 @@ export default {
       this.detail_req.req_uuid = id;
       this.detail_req.current_db = current_db_name;
       this.detailLoaded = false;
-      this.detailError = false;
+      this.detailError = '';
+      this.detail_data = {};
       this.pendingSel = null;
       this.expandedMap = {
         url: false,
@@ -741,17 +749,15 @@ export default {
         current_db_name,
       })
         .then((res) => {
-          if (res.code === 0) {
-            this.detail_data = res.data || {};
-            this.detailLoaded = true;
+          if (res.code === 0 && res.data && res.data.req_uuid) {
+            this.detail_data = res.data;
           } else {
-            this.detailError = true;
-            this.detailLoaded = true;
+            this.detailError = res.code !== 0 && res.msg ? res.msg : this.$t('page.visit_log.detail.load_failed');
           }
+          this.detailLoaded = true;
         })
         .catch((e: Error) => {
-          console.log(e);
-          this.detailError = true;
+          this.detailError = e.message || this.$t('page.visit_log.detail.load_failed');
           this.detailLoaded = true;
         });
     },

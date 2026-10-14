@@ -226,6 +226,8 @@
       </t-row>
 
       <div class="table-container">
+        <t-alert v-if="isUuidLookup" theme="info" style="margin-bottom:12px"
+                 :message="$t('page.visit_log.uuid_filters_tip')" />
         <!-- 查不到老数据时，最先该看的就是保留期：直接摆在列表上方，点一下就能去改 -->
         <div style="margin-bottom:8px;color:rgba(0,0,0,.6);font-size:12px">
           {{ $t('page.visit_log.retention_line', {
@@ -1686,25 +1688,25 @@ export default Vue.extend({
       if (keyword != undefined && keyword == "all") {
         that.pagination.current = 1
       }
-      that.searchformData.unix_add_time_begin = ConvertStringToUnix(this.dateControl.range1[0]).toString()
-      that.searchformData.unix_add_time_end = ConvertStringToUnix(this.dateControl.range1[1]).toString()
-
-      console.log("getList searchformData", that.searchformData)
-      let sort_descending = that.sorts.descending ? "desc" : "asc"
+      const requestData: Record<string, any> = {
+        ...that.getFilteredSearchData(),
+        pageSize: that.pagination.pageSize,
+        pageIndex: that.pagination.current,
+        sort_by: that.sorts.sortBy,
+        sort_descending: that.sorts.descending ? 'desc' : 'asc',
+        filter_by: that.filters.filter_by,
+        filter_value: that.filters.filter_value,
+        unix_add_time_begin: ConvertStringToUnix(this.dateControl.range1[0]).toString(),
+        unix_add_time_end: ConvertStringToUnix(this.dateControl.range1[1]).toString(),
+      };
+      if (requestData.req_uuid) {
+        requestData.current_db_name = 'auto';
+        delete requestData.unix_add_time_begin;
+        delete requestData.unix_add_time_end;
+      }
 
       this.$request
-        .post('/waflog/attack/list', {
-          pageSize: that.pagination.pageSize,
-          pageIndex: that.pagination.current,
-          sort_by: that.sorts.sortBy,
-          sort_descending: sort_descending,
-          filter_by: that.filters.filter_by,
-          filter_value: that.filters.filter_value,
-          unix_add_time_begin: ConvertStringToUnix(this.dateControl.range1[0]).toString(),
-          unix_add_time_end: ConvertStringToUnix(this.dateControl.range1[1]).toString(),
-          ...that.getFilteredSearchData()
-        },
-        )
+        .post('/waflog/attack/list', requestData)
         .then((res) => {
           let resdata = res
           console.log(resdata)

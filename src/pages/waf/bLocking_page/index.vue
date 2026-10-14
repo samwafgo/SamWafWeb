@@ -103,6 +103,7 @@
                           <t-radio-button value="code">{{ $t('page.blocking_page.editor_mode.code') }}</t-radio-button>
                           <t-radio-button value="preview">{{ $t('page.blocking_page.editor_mode.preview') }}</t-radio-button>
                         </t-radio-group>
+                        <div class="priority-tip">{{ $t('page.blocking_page.template_variables') }}</div>
                         <t-textarea
                           v-show="previewModeAdd === 'code'"
                           v-model="formData.response_content"
@@ -193,6 +194,7 @@
                               <t-radio-button value="code">{{ $t('page.blocking_page.editor_mode.code') }}</t-radio-button>
                               <t-radio-button value="preview">{{ $t('page.blocking_page.editor_mode.preview') }}</t-radio-button>
                             </t-radio-group>
+                            <div class="priority-tip">{{ $t('page.blocking_page.template_variables') }}</div>
                             <t-textarea
                               v-show="previewModeEdit === 'code'"
                               v-model="formEditData.response_content"
@@ -237,6 +239,7 @@
 </template>
 <script lang="ts">
   import Vue from 'vue';
+  import { purifyHtml } from '@/utils/purify';
   import {
     SearchIcon
   } from 'tdesign-icons-vue';
@@ -266,6 +269,7 @@
   // 预览时用来替换模板占位符的演示数据（后端模板分隔符是 [[ ]]，变量形如 [[.SAMWAF_REQ_UUID]]）
   const PREVIEW_PLACEHOLDER_VALUES = {
     SAMWAF_REQ_UUID: 'PREVIEW-0000-0000-0000',
+    SAMWAF_IP: '203.0.113.10',
     SAMWAF_BACKEND_STATUS: '403 Forbidden',
     SAMWAF_BACKEND_CODE: '403',
     SAMWAF_BACKEND_BODY: '{"code":403,"message":"forbidden"}',
@@ -469,9 +473,9 @@
           ...PREVIEW_PLACEHOLDER_VALUES,
           SAMWAF_BLOCK_INFO: this.$t('page.blocking_page.preview_demo_block_info'),
         };
-        return content.replace(/\[\[\s*\.?([A-Za-z0-9_]+)\s*\]\]/g, (match, key) =>
+        return purifyHtml(content.replace(/\[\[\s*\.([A-Za-z0-9_]+)\s*\]\]/g, (match, key) =>
           Object.prototype.hasOwnProperty.call(demo, key) ? demo[key] : match,
-        );
+        ));
       },
       getContentPriorityLabel(contentPriority) {
         const option = this.content_priority_options.find(opt => opt.value === (contentPriority || 'samwaf'));
