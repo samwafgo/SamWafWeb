@@ -736,7 +736,11 @@
               <t-icon name="activity" style="margin-right: 4px;color:#00a870"/>
               {{$t('page.host.tab_health_check')}}
             </template>
-            <healthy-config :healthy-config="healthyConfigData" @update="val => healthyConfigData = val"></healthy-config>
+            <healthy-config :healthy-config="healthyConfigData" @update="val => healthyConfigData = val"
+                            @test="testHealth" :test-loading="healthTestLoading" :test-results="healthTestResults"
+                            :test-total="healthTestTotal" :test-stale="healthTestStale" :test-error="healthTestError"
+                            :test-expected-codes="healthTestExpectedCodes"
+                            :load-balance-enabled="formData.is_enable_load_balance == '1'"></healthy-config>
           </t-tab-panel>
 
           <t-tab-panel :value="7">
@@ -897,7 +901,7 @@
   <script lang="ts">
   import Vue from 'vue';
   import { FileSafetyIcon } from 'tdesign-icons-vue';
-  import { checkHostPorts } from '@/apis/host';
+  import { checkHostPorts, testHostHealth } from '@/apis/host';
   import LoadBalance from "../../loadbalance/index.vue";
   import HttpAuthBase from "../../http_auth_base/index.vue";
   import HttpAuthSession from "../../http_auth_session/index.vue";
@@ -1037,6 +1041,15 @@
         },
         // 健康度检测配置
         healthyConfigData: { ...INITIAL_HEALTHY },
+        healthTestLoading: false,
+        healthTestResults: [],
+        healthTestTotal: 0,
+        healthTestStale: false,
+        healthTestError: '',
+        healthTestExpectedCodes: '',
+        healthTestGeneration: 0,
+        healthTestController: null as AbortController | null,
+        healthTestSnapshot: '',
         // 验证码配置
         captchaConfigData: { ...INITIAL_ANTILEECH },
         // 防恶意链接配置
@@ -1136,6 +1149,11 @@
       };
     },
     computed: {
+      healthTestConfigKey() {
+        const { code, host, remote_host, remote_ip, remote_port, is_enable_load_balance, is_trans_back_domain } = this.formData;
+        return JSON.stringify({ code, host, remote_host, remote_ip, remote_port, is_enable_load_balance,
+          is_trans_back_domain, healthy: this.healthyConfigData });
+      },
       // 证书夹下拉项。绑定ID在证书夹里找不到时（条目已被删除等）补一条同值选项，
       // 否则 t-select 直接把原始ID显示出来，看着像是没加载
       sslOptions() {
@@ -1283,6 +1301,12 @@
       }
     },
     watch: {
+      healthTestConfigKey() {
+        if (this.healthTestSnapshot && this.healthTestSnapshot !== this.healthTestConfigKey) {
+          this.cancelHealthTest();
+          this.healthTestStale = true;
+        }
+      },
       // 外部深链(如访问日志"IP提取有问题?"跳过来)指定要定位的 Tab。
       // 组件实例在弹窗打开前就已创建，data() 里取一次是取不到的，必须 watch。
       initTab: {
@@ -1294,6 +1318,7 @@
       // 每次打开弹窗都重新拉一次证书夹：组件只 created 一次，
       // 期间在证书申请/证书夹页面新增的证书，不刷新的话这里永远看不到
       dialogVisible(val) {
+        this.resetHealthTest();
         if (val) {
           this.getSslFolderList();
           this.getIpGroupOptions();
@@ -1310,6 +1335,7 @@
       },
       value: {
         handler(newVal) {
+          this.resetHealthTest();
           this.formData = {
             ...JSON.parse(JSON.stringify(newVal)),
             // 确保ssl_config_mode字段存在
@@ -1829,7 +1855,113 @@
         this.loadCdnProviderInfo(this.formData.cdn_provider);
       }
     },
+    beforeDestroy() {
+      this.cancelHealthTest();
+    },
     methods: {
+      cancelHealthTest() {
+        this.healthTestGeneration += 1;
+        if (this.healthTestController) this.healthTestController.abort();
+        this.healthTestController = null;
+        this.healthTestLoading = false;
+      },
+      resetHealthTest() {
+        this.cancelHealthTest();
+        this.healthTestResults = [];
+        this.healthTestTotal = 0;
+        this.healthTestStale = false;
+        this.healthTestError = '';
+        this.healthTestExpectedCodes = '';
+        this.healthTestSnapshot = '';
+      },
+      async testHealth(config) {
+        if (this.healthTestLoading || !this.dialogVisible) return;
+        this.resetHealthTest();
+        const initialGeneration = this.healthTestGeneration;
+        this.healthyConfigData = JSON.parse(JSON.stringify(config));
+        await this.$nextTick();
+        if (initialGeneration !== this.healthTestGeneration || this.healthTestLoading || !this.dialogVisible) return;
+        const healthy = {
+          is_enable_healthy: parseInt(config.is_enable_healthy, 10),
+          fail_count: parseInt(config.fail_count, 10),
+          success_count: parseInt(config.success_count, 10),
+          response_time: parseInt(config.response_time, 10),
+          check_method: config.check_method,
+          check_path: config.check_path,
+          expected_codes: config.expected_codes
+        };
+        const integerInRange = (value, min, max) => /^\d+$/.test(String(value))
+          && Number.isInteger(Number(value)) && Number(value) >= min && Number(value) <= max;
+        if (!integerInRange(config.is_enable_healthy, 0, 1)
+          || !integerInRange(config.fail_count, 1, 10) || !integerInRange(config.success_count, 1, 10)
+          || !integerInRange(config.response_time, 1, 120) || !['GET', 'HEAD'].includes(healthy.check_method)) {
+          this.healthTestError = String(this.$t('page.host.health_check.test_invalid_config'));
+          return;
+        }
+        const origin = this.formData;
+        const loadBalance = String(origin.is_enable_load_balance) === '1';
+        if (loadBalance && !origin.code) {
+          this.healthTestError = String(this.$t('page.host.health_check.test_save_loadbalance'));
+          return;
+        }
+        if (!origin.host || !/^https?:\/\/[^\s]+$/.test(origin.remote_host || '')
+          || (!loadBalance && !integerInRange(origin.remote_port, 1, 65535))) {
+          this.healthTestError = String(this.$t('page.host.health_check.test_invalid_origin'));
+          return;
+        }
+        const payload = {
+          code: origin.code || '', host: origin.host, remote_host: origin.remote_host,
+          remote_ip: origin.remote_ip || '', remote_port: parseInt(origin.remote_port, 10) || 0,
+          is_enable_load_balance: parseInt(origin.is_enable_load_balance, 10),
+          is_trans_back_domain: parseInt(origin.is_trans_back_domain, 10),
+          healthy_json: JSON.stringify(healthy), limit: 5
+        };
+        this.resetHealthTest();
+        const generation = this.healthTestGeneration;
+        const snapshot = this.healthTestConfigKey;
+        this.healthTestSnapshot = snapshot;
+        this.healthTestExpectedCodes = healthy.expected_codes;
+        this.healthTestLoading = true;
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        this.healthTestController = controller;
+        const isCurrent = () => generation === this.healthTestGeneration && this.dialogVisible
+          && snapshot === this.healthTestConfigKey;
+        try {
+          let offset = 0;
+          while (isCurrent()) {
+            const response: any = await testHostHealth({ ...payload, offset },
+              healthy.response_time * 1000 + 10000, controller ? controller.signal : undefined);
+            if (!isCurrent()) return;
+            if (response.code !== 0) {
+              this.healthTestError = response.msg || String(this.$t('page.host.health_check.test_request_failed'));
+              return;
+            }
+            const batch = response.data;
+            if (!batch || !Array.isArray(batch.results) || !Number.isInteger(batch.total) || batch.total < 0
+              || !Number.isInteger(batch.next_offset) || batch.results.length > 5
+              || batch.results.some(row => !row || !['passed', 'failed', 'skipped'].includes(row.outcome))) {
+              throw new Error(String(this.$t('page.host.health_check.test_invalid_response')));
+            }
+            this.healthTestResults = this.healthTestResults.concat(batch.results);
+            this.healthTestTotal = batch.total;
+            if (batch.next_offset === -1) break;
+            if (!batch.results.length || batch.next_offset !== offset + batch.results.length
+              || batch.next_offset >= batch.total) {
+              throw new Error(String(this.$t('page.host.health_check.test_invalid_response')));
+            }
+            offset = batch.next_offset;
+          }
+        } catch (error) {
+          if (isCurrent()) {
+            this.healthTestError = error.message || String(this.$t('page.host.health_check.test_request_failed'));
+          }
+        } finally {
+          if (isCurrent()) {
+            this.healthTestLoading = false;
+            this.healthTestController = null;
+          }
+        }
+      },
       openGroupQuickAdd() {
         this.groupQuickAdd = { group_name: '', color: this.groupColorOptions[0] };
         this.groupQuickAddVisible = true;
