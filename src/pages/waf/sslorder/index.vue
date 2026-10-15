@@ -1234,7 +1234,7 @@ export default Vue.extend({
           resolve(true);
           return;
         }
-        getHostDetail({ CODE: hostCode })
+        getHostDetail({ code: hostCode })
           .then((res) => {
             if (res.code === 0 && res.data) {
               const port = res.data.port;

@@ -1698,7 +1698,7 @@ export default Vue.extend({
       this.addFormVisible = true
       const that = this
       getHostDetail({
-        CODE: code,
+        code: code,
       })
         .then((res) => {
           const resdata = res
@@ -1917,7 +1917,7 @@ export default Vue.extend({
       } = this.data[this.deleteIdx]
       const that = this
       delHost({
-        CODE: code,
+        code: code,
       })
         .then((res) => {
           const resdata = res
@@ -1950,7 +1950,7 @@ export default Vue.extend({
     getDetail(id) {
       const that = this
       getHostDetail({
-        CODE: id,
+        code: id,
       })
         .then((res) => {
           const resdata = res
@@ -2086,8 +2086,8 @@ export default Vue.extend({
         code, guard_status
       } = this.data[this.guardStatusIdx]
       changeGuardStatus({
-        CODE: code,
-        GUARD_STATUS: guard_status == 1 ? 0 : 1,
+        code: code,
+        guard_status: guard_status == 1 ? 0 : 1,
       })
         .then((res) => {
           const resdata = res
@@ -2124,8 +2124,8 @@ export default Vue.extend({
       } = this.data[this.startStatusIdx]
       console.log("code,start_status", code, start_status)
       changeStartStatus({
-        CODE: code,
-        START_STATUS: start_status === 1 ? 0 : 1,
+        code: code,
+        start_status: start_status === 1 ? 0 : 1,
       }
       )
         .then((res) => {

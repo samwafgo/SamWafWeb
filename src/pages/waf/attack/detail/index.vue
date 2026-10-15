@@ -681,7 +681,7 @@ export default {
       this.httpAiMask = '';
       this.httpAiMaskVisible = false;
       getHeaderCopyDetail({
-        REQ_UUID: this.detail_req.req_uuid,
+        req_uuid: this.detail_req.req_uuid,
         current_db_name: this.detail_req.current_db,
         output_format: 'raw',
       })
@@ -701,7 +701,7 @@ export default {
       this.httpCopyMask = '';
       this.httpCopyMaskVisible = false;
       getHeaderCopyDetail({
-        REQ_UUID: this.detail_req.req_uuid,
+        req_uuid: this.detail_req.req_uuid,
         current_db_name: this.detail_req.current_db,
         output_format: 'curl',
       })
@@ -745,7 +745,7 @@ export default {
         res_body: false,
       };
       geWebLogDetail({
-        REQ_UUID: id,
+        req_uuid: id,
         current_db_name,
       })
         .then((res) => {

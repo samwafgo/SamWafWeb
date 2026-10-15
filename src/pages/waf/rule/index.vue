@@ -438,7 +438,7 @@ export default Vue.extend({
       this.confirmVisible = false;
       let {rule_code} =  this.data[this.deleteIdx]
       let that = this
-      wafRuleDelApi({ CODE: rule_code })
+      wafRuleDelApi({ code: rule_code })
         .then((res) => {
           let resdata = res
           console.log(resdata)
@@ -549,7 +549,7 @@ export default Vue.extend({
       const newStatus = currentStatus === 1 ? 0 : 1; // 切换为相反的状态
 
       let postData = {
-        CODE: row.rule_code,
+        code: row.rule_code,
         rule_status: newStatus
       }
       console.log("rule PostData",postData);

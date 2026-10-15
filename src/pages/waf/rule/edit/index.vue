@@ -824,7 +824,7 @@ export default {
       let that = this
       wafRuleDetailApi(
         {
-          CODE: id
+          code: id
         })
         .then((res) => {
           let resdata = res
