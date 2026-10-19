@@ -1710,7 +1710,8 @@ export default {
       healthy_status: "Health Status",
       healthy_status_normal: "Normal",
       healthy_status_abnormal: "Abnormal",
-      healthy_status_unknown: "Unopened",
+      healthy_status_unknown: "No data yet",
+      healthy_status_off: "Check off",
       healthy_status_detail: {
         ip: "Backend IP",
         port: "Backend Port",

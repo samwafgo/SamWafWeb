@@ -1837,7 +1837,8 @@ export default {
       healthy_status: "健康状态",
       healthy_status_normal: "正常",
       healthy_status_abnormal: "异常",
-      healthy_status_unknown: "未开启",
+      healthy_status_unknown: "暂无数据",
+      healthy_status_off: "检测已关闭",
       healthy_status_detail: {
         ip: "后端IP",
         port: "后端端口",
