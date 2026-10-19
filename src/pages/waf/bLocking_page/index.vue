@@ -4,6 +4,7 @@
       <t-row justify="space-between">
         <div class="left-operation-container">
           <t-button @click="handleAdd"> {{ $t('page.blocking_page.button_add_blocking_page') }} </t-button>
+          <t-button variant="outline" @click="openUnmatchedDialog">{{ $t('page.blocking_page.unmatched.title') }}</t-button>
         </div>
         <div class="right-operation-container">
             <t-form ref="form" :data="searchformData" :label-width="300" layout="inline" colon :style="{ marginBottom: '8px' }">
@@ -23,7 +24,10 @@
           :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
 
           <template #host_code="{ row }">
-            <span> {{host_dic[row.host_code]}}</span>
+            <span>{{ row.host_code === globalHostCode ? $t('page.blocking_page.global_website') : host_dic[row.host_code] }}</span>
+          </template>
+          <template #blocking_type="{ row }">
+            <span>{{ getBlockingTypeLabel(row.blocking_type) }}</span>
           </template>
           <template #attack_type="{ row }">
             <span>{{ getAttackTypeLabel(row.attack_type) }}</span>
@@ -232,6 +236,36 @@
       </div>
     </t-dialog>
 
+    <t-dialog :header="$t('page.blocking_page.unmatched.title')" :visible.sync="unmatchedVisible" :width="780" :footer="false"
+      :closeOnOverlayClick="!unmatchedSaving" :closeOnEscKeydown="!unmatchedSaving" :closeBtn="!unmatchedSaving">
+      <div slot="body">
+        <p>{{ $t('page.blocking_page.unmatched.description') }}</p>
+        <div style="width: 100%;">
+          <t-radio-group v-model="unmatchedActiveTab" variant="default-filled" size="small" style="margin-bottom: 8px;">
+            <t-radio-button value="edit">{{ $t('page.blocking_page.editor_mode.code') }}</t-radio-button>
+            <t-radio-button value="preview">{{ $t('page.blocking_page.editor_mode.preview') }}</t-radio-button>
+          </t-radio-group>
+          <div class="priority-tip">{{ $t('page.blocking_page.unmatched.builtin_tip') }}</div>
+          <div class="priority-tip">{{ $t('page.blocking_page.unmatched.variable_tip') }}</div>
+          <p v-if="unmatchedLoadError" role="alert">{{ $t('page.blocking_page.unmatched.load_failed') }}</p>
+          <p v-else-if="builtinLoadError" class="priority-tip" role="alert">{{ $t('page.blocking_page.unmatched.preview_builtin_failed') }}</p>
+          <t-textarea v-show="unmatchedActiveTab === 'edit'"
+            v-model="unmatchedData.response_content" :disabled="unmatchedLoading || unmatchedLoadError || unmatchedSaving"
+            :placeholder="$t('page.blocking_page.unmatched.placeholder')" :autosize="{ minRows: 12, maxRows: 20 }" />
+          <!-- sandbox 置空：预览框内不允许执行脚本、不同源，避免模板里的 JS 在管理端被执行 -->
+          <iframe v-show="unmatchedActiveTab === 'preview'" class="unmatched-preview-frame" sandbox=""
+            :srcdoc="unmatchedPreviewHtml"></iframe>
+        </div>
+        <div class="unmatched-actions">
+          <t-button variant="outline" :disabled="unmatchedLoading || unmatchedLoadError || unmatchedSaving || !builtinUnmatchedHtml"
+            @click="unmatchedData.response_content = builtinUnmatchedHtml">{{ $t('page.blocking_page.unmatched.clear') }}</t-button>
+          <t-button variant="outline" :disabled="unmatchedSaving" @click="unmatchedVisible = false">{{ $t('common.close') }}</t-button>
+          <t-button theme="primary" :loading="unmatchedSaving" :disabled="!unmatchedLoaded || unmatchedLoading || unmatchedLoadError || unmatchedSaving"
+            @click="saveUnmatchedResponse">{{ $t('common.confirm') }}</t-button>
+        </div>
+      </div>
+    </t-dialog>
+
     <t-dialog :header="$t('common.confirm_delete')" :body="confirmBody" :visible.sync="confirmVisible" @confirm="onConfirmDelete"
       :onCancel="onCancel">
     </t-dialog>
@@ -252,7 +286,7 @@
   } from '@/apis/host';
 
   import {
-    wafBlockingPageListApi,wafBlockingPageDelApi,wafBlockingPageEditApi,wafBlockingPageAddApi,wafBlockingPageDetailApi
+    wafBlockingPageListApi,wafBlockingPageDelApi,wafBlockingPageEditApi,wafBlockingPageAddApi,wafBlockingPageDetailApi,wafBlockingPageUnmatchedBuiltinApi
   } from '@/apis/blocking_page.ts';
 
   const INITIAL_DATA = {
@@ -266,12 +300,20 @@
     content_priority:'samwaf',
 
   };
+  const INITIAL_UNMATCHED_DATA = {
+    ...INITIAL_DATA,
+    id: '',
+    host_code: '',
+    blocking_type: 'not_match_website',
+    response_header: '[]',
+  };
   // 预览时用来替换模板占位符的演示数据（后端模板分隔符是 [[ ]]，变量形如 [[.SAMWAF_REQ_UUID]]）
   const PREVIEW_PLACEHOLDER_VALUES = {
     SAMWAF_REQ_UUID: 'PREVIEW-0000-0000-0000',
     SAMWAF_IP: '203.0.113.10',
     SAMWAF_BACKEND_STATUS: '403 Forbidden',
     SAMWAF_BACKEND_CODE: '403',
+    SAMWAF_HOST: 'notfound.example.com',
     SAMWAF_BACKEND_BODY: '{"code":403,"message":"forbidden"}',
   };
   export default Vue.extend({
@@ -284,6 +326,16 @@
       return {
         addFormVisible: false,
         editFormVisible: false,
+        unmatchedVisible: false,
+        unmatchedActiveTab: 'edit',
+        unmatchedLoading: false,
+        unmatchedLoaded: false,
+        unmatchedLoadError: false,
+        unmatchedSaving: false,
+        unmatchedLoadSequence: 0,
+        builtinUnmatchedHtml: '',
+        builtinLoadError: false,
+        unmatchedData: { ...INITIAL_UNMATCHED_DATA },
         guardVisible: false,
         confirmVisible: false,
         formData: {
@@ -325,13 +377,12 @@
              },
 
 
-          /*  { title: this.$t('page.blocking_page.blocking_type'),
+            { title: this.$t('page.blocking_page.blocking_type'),
                     width: 200,
                     ellipsis: true,
                     colKey: 'blocking_type',
              },
 
-*/
             { title: this.$t('page.blocking_page.host_code'),
                     width: 200,
                     ellipsis: true,
@@ -388,6 +439,7 @@
         guardStatusIdx :-1,
         //主机字典
         host_dic:{},
+        globalHostCode: '',
         //阻止类型
         blocking_type: [
           {
@@ -456,6 +508,16 @@
       previewHtmlEdit() {
         return this.buildPreviewHtml(this.formEditData.response_content);
       },
+      unmatchedPreviewHtml() {
+        if (!(this.unmatchedData.response_content || '').trim()) {
+          if (!this.builtinUnmatchedHtml) return '';
+          const demo = { SAMWAF_HOST: PREVIEW_PLACEHOLDER_VALUES.SAMWAF_HOST };
+          return purifyHtml(this.builtinUnmatchedHtml.replace(/\[\[\s*\.([A-Za-z0-9_]+)\s*\]\]/g, (match, key) =>
+            Object.prototype.hasOwnProperty.call(demo, key) ? demo[key] : match,
+          ));
+        }
+        return this.buildPreviewHtml(this.unmatchedData.response_content);
+      },
     },
     mounted() {
       this.loadHostList().then(() => {
@@ -464,6 +526,123 @@
     },
 
     methods: {
+      loadBuiltinUnmatched(sequence) {
+        wafBlockingPageUnmatchedBuiltinApi().then((res) => {
+          if (sequence !== this.unmatchedLoadSequence || !this.unmatchedVisible) return;
+          if (res.code === 0 && typeof res.data === 'string') {
+            this.builtinUnmatchedHtml = res.data;
+            // 无自定义记录时，编辑区预填内置页面，保证编辑与预览内容一致
+            if (this.unmatchedVisible && !(this.unmatchedData.response_content || '').trim()) {
+              this.unmatchedData.response_content = res.data;
+            }
+          } else {
+            this.builtinLoadError = true;
+          }
+        }).catch(() => {
+          if (sequence === this.unmatchedLoadSequence) this.builtinLoadError = true;
+        });
+      },
+      findGlobalHostCode(hosts) {
+        const marked = hosts.filter(host => Number(host.global_host) === 1);
+        const candidates = marked.length ? marked : hosts.filter(host =>
+          host.pre_host === 'global:80' || host.label === 'global:80' || host.label === 'global',
+        );
+        return candidates.length === 1 && typeof candidates[0].value === 'string'
+          ? candidates[0].value : '';
+      },
+      getBlockingTypeLabel(blockingType) {
+        if (blockingType === 'not_match_website') {
+          return this.$t('page.blocking_page.unmatched.title');
+        }
+        return blockingType === 'other_block' || !blockingType
+          ? this.$t('page.blocking_page.regular_response') : blockingType;
+      },
+      async openUnmatchedDialog() {
+        if (this.unmatchedSaving) return;
+        const sequence = ++this.unmatchedLoadSequence;
+        this.unmatchedVisible = true;
+        this.unmatchedActiveTab = 'edit';
+        this.unmatchedLoading = true;
+        this.unmatchedLoaded = false;
+        this.unmatchedLoadError = false;
+        this.builtinUnmatchedHtml = '';
+        this.builtinLoadError = false;
+        this.loadBuiltinUnmatched(sequence);
+        this.unmatchedData = {
+          ...INITIAL_UNMATCHED_DATA,
+          blocking_page_name: String(this.$t('page.blocking_page.unmatched.title')),
+        };
+        try {
+          const hosts = await allhost();
+          if (sequence !== this.unmatchedLoadSequence || !this.unmatchedVisible) return;
+          if (hosts.code !== 0 || !Array.isArray(hosts.data)) throw new Error('Unable to load websites');
+          const globalHostCode = this.findGlobalHostCode(hosts.data);
+          if (!globalHostCode) throw new Error('Global website is unavailable');
+          this.globalHostCode = globalHostCode;
+          this.unmatchedData.host_code = globalHostCode;
+          const res = await wafBlockingPageListApi({
+            host_code: globalHostCode,
+            blocking_type: 'not_match_website',
+            pageIndex: 1,
+            pageSize: 1,
+          });
+          if (sequence !== this.unmatchedLoadSequence || !this.unmatchedVisible) return;
+          if (res.code !== 0 || !res.data || !(Array.isArray(res.data.list) || (res.data.list === null && res.data.total === 0))) {
+            throw new Error('Unable to load response');
+          }
+          const record = (res.data.list || [])[0];
+          if (record) {
+            if (!record.id || record.host_code !== globalHostCode || record.blocking_type !== 'not_match_website') {
+              throw new Error('Unexpected response record');
+            }
+            const savedContent = record.response_content || '';
+            this.unmatchedData = {
+              ...this.unmatchedData,
+              ...record,
+              // 已存内容为空表示按内置页面生效；保留编辑区已有内容（内置预填或空），避免被空串覆盖
+              response_content: savedContent.trim() ? savedContent : this.unmatchedData.response_content,
+              response_header: record.response_header ?? '[]',
+            };
+          }
+          this.unmatchedLoaded = true;
+        } catch (e) {
+          if (sequence !== this.unmatchedLoadSequence || !this.unmatchedVisible) return;
+          this.unmatchedLoadError = true;
+        } finally {
+          if (sequence === this.unmatchedLoadSequence) this.unmatchedLoading = false;
+        }
+      },
+      async saveUnmatchedResponse() {
+        if (!this.unmatchedLoaded || this.unmatchedLoading || this.unmatchedLoadError || this.unmatchedSaving || !this.unmatchedData.host_code) return;
+        this.unmatchedSaving = true;
+        const custom = (this.unmatchedData.response_content || '').trim();
+        const builtin = (this.builtinUnmatchedHtml || '').trim();
+        const payload = {
+          ...this.unmatchedData,
+          host_code: this.unmatchedData.host_code,
+          blocking_type: 'not_match_website',
+          // 与内置页面一致或为空都按内置语义保存，避免无改动保存冻结模板
+          response_content: custom && custom !== builtin ? this.unmatchedData.response_content : '',
+          response_code: '403',
+          attack_type: '',
+          content_priority: 'samwaf',
+        };
+        try {
+          const res = await (payload.id ? wafBlockingPageEditApi(payload) : wafBlockingPageAddApi(payload));
+          if (res.code !== 0) {
+            this.$message.warning(res.msg || this.$t('page.blocking_page.unmatched.save_failed'));
+            return;
+          }
+          this.$message.success(res.msg);
+          this.unmatchedVisible = false;
+          this.pagination.current = 1;
+          this.getList('');
+        } catch (e) {
+          this.$message.warning(this.$t('page.blocking_page.unmatched.save_failed'));
+        } finally {
+          this.unmatchedSaving = false;
+        }
+      },
       // 把模板占位符替换成演示数据后给预览用；空值一律按默认的 samwaf 处理
       buildPreviewHtml(content) {
         if (!content) {
@@ -502,6 +681,7 @@
               console.log(resdata);
               if (resdata.code === 0) {
                 let host_options = resdata.data;
+                this.globalHostCode = this.findGlobalHostCode(host_options);
                 for (let i = 0; i < host_options.length; i++) {
                   this.host_dic[host_options[i].value] = host_options[i].label;
                 }
@@ -560,6 +740,10 @@
       rehandleChange(changeParams, triggerAndData) {
       },
       handleClickEdit(e) {
+        if (e.row.blocking_type === 'not_match_website') {
+          this.openUnmatchedDialog();
+          return;
+        }
         console.log(e)
         const {
           id,response_header
@@ -761,9 +945,28 @@
     }
   }
 
+  .unmatched-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 16px;
+
+    .t-button + .t-button {
+      margin-left: 0;
+    }
+  }
+
   .preview-frame {
     width: 100%;
     height: 320px;
+    border: 1px solid var(--td-component-border);
+    border-radius: var(--td-radius-default);
+    background-color: #fff;
+  }
+
+  .unmatched-preview-frame {
+    width: 100%;
+    height: 440px;
     border: 1px solid var(--td-component-border);
     border-radius: var(--td-radius-default);
     background-color: #fff;

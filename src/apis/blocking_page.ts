@@ -39,3 +39,10 @@ export function wafBlockingPageDetailApi(params) {
     params: params
   })
 }
+//未匹配网站内置页面（预览用）
+export function wafBlockingPageUnmatchedBuiltinApi() {
+  return request({
+    url: '/wafhost/blockingpage/unmatchedbuiltin',
+    method: 'get',
+  })
+}
