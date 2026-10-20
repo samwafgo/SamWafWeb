@@ -692,6 +692,36 @@
         </t-loading>
       </t-card>
 
+      <t-card id="vp-sec-title" class="list-card-container" :style="sectionStyle">
+        <template #header>
+          <t-row justify="space-between">
+            <div class="card-header-title">
+              <t-space>
+                <div>{{ $t('page.vpconfig.admin_titles_title') }}</div>
+                <t-tooltip :content="$t('page.vpconfig.admin_titles_description')">
+                  <t-icon name="help-circle" />
+                </t-tooltip>
+              </t-space>
+            </div>
+            <t-space>
+              <t-button theme="primary" :disabled="adminTitlesLoading" @click="fetchAdminTitles">{{ $t('common.refresh') }}</t-button>
+              <t-button theme="primary" :loading="adminTitlesLoading" :disabled="!adminTitlesLoaded" @click="handleSaveAdminTitles">{{ $t('common.save') }}</t-button>
+            </t-space>
+          </t-row>
+        </template>
+        <t-loading :loading="adminTitlesLoading">
+          <t-form :data="adminTitlesFormData" :label-width="180">
+            <t-form-item :label="$t('page.vpconfig.admin_titles_title')">
+              <t-input v-model="adminTitlesFormData.admin_title" :placeholder="$t('login.login_sub_title')"
+                       :maxlength="100" style="width: 100%; max-width: 520px;" clearable />
+            </t-form-item>
+            <t-form-item>
+              <div class="form-item-tips">{{ $t('page.vpconfig.admin_titles_tips') }}</div>
+            </t-form-item>
+          </t-form>
+        </t-loading>
+      </t-card>
+
       <!-- 通知标题前缀卡片 -->
       <t-card id="vp-sec-notice" class="list-card-container" :style="sectionStyle">
         <template #header>
@@ -805,6 +835,8 @@
   import Vue from 'vue';
   import { prefix } from '@/config/global';
   import { getIpWhitelistApi, updateIpWhitelistApi, getManageTrustedProxiesApi, updateManageTrustedProxiesApi, getManageCDNProviderApi, updateManageCDNProviderApi, manageClientIpProbeApi, getCorsAllowOriginsApi, updateCorsAllowOriginsApi, getSslStatusApi, updateSslEnableApi, uploadSslCertApi, restartManagerApi, getSecurityEntryApi, updateSecurityEntryApi, getNoticeTitleApi, updateNoticeTitleApi, getDomainWhitelistApi, updateDomainWhitelistApi, getSslForceHttpsApi, updateSslForceHttpsApi, getSslBindCertApi, updateSslBindCertApi, getLocalCertStatusApi, generateLocalCertApi, rotateLocalCaApi, clearLocalCertApi } from '@/apis/vpconfig';
+  import { getAdminTitlesApi, updateAdminTitlesApi } from '@/apis/vpconfig';
+  import { applyAdminTitles } from '@/utils/adminTitles';
   import { wafCDNProviderInfoApi } from '@/apis/cdnip';
   import { get_detail_by_item_api, edit_system_config_by_item_api } from '@/apis/systemconfig';
   import { sslConfigListApi, sslConfigDetailApi } from '@/apis/sslconfig';
@@ -820,6 +852,7 @@
     domain: 'vp-sec-domain',
     access: 'vp-sec-access',
     entry: 'vp-sec-entry',
+    title: 'vp-sec-title',
     notice: 'vp-sec-notice',
   };
 
@@ -842,6 +875,9 @@
         restartDialogVisible: false,
         securityEntryLoading: false,
         regenerateDialogVisible: false,
+        adminTitlesLoading: false,
+        adminTitlesLoaded: false,
+        adminTitlesFormData: { admin_title: '' },
         noticeTitleLoading: false,
         noticeTitleFormData: {
           notice_title: ''
@@ -1073,6 +1109,7 @@
           { id: 'vp-sec-domain', label: this.$t('page.vpconfig.domain_whitelist_title'), show: true, dirty: false },
           { id: 'vp-sec-access', label: this.$t('page.vpconfig.access_cert_title'), show: true, dirty: this.accessDirty || this.restartPending },
           { id: 'vp-sec-entry', label: this.$t('page.vpconfig.security_entry_title'), show: true, dirty: false },
+          { id: 'vp-sec-title', label: this.$t('page.vpconfig.admin_titles_title'), show: true, dirty: false },
           { id: 'vp-sec-notice', label: this.$t('page.vpconfig.notice_title_title'), show: true, dirty: false },
         ];
       },
@@ -1224,6 +1261,7 @@
       this.fetchSslBindCert();
       this.fetchLocalCertStatus();
       this.fetchSecurityEntry();
+      this.fetchAdminTitles();
       this.fetchNoticeTitle();
       this.setupScrollSpy();
       // 放在 setupScrollSpy 之后：锚点让位高度依赖它测出来的 stickyTop
@@ -2182,6 +2220,46 @@ ${this.$t('page.vpconfig.access_save_tail_common')}`,
           .finally(() => {
             this.securityEntryLoading = false;
           });
+      },
+      async fetchAdminTitles() {
+        if (this.adminTitlesLoading) return;
+        this.adminTitlesLoading = true;
+        try {
+          const res = await getAdminTitlesApi();
+          if (res.code === 0) {
+            this.adminTitlesFormData = {
+              admin_title: res.data.admin_title || '',
+            };
+            this.adminTitlesLoaded = true;
+            applyAdminTitles(res.data);
+          } else {
+            MessagePlugin.error(res.msg || this.$t('common.tips.api_error'));
+          }
+        } catch (_) {
+          MessagePlugin.error(this.$t('common.tips.api_error'));
+        } finally {
+          this.adminTitlesLoading = false;
+        }
+      },
+      async handleSaveAdminTitles() {
+        if (this.adminTitlesLoading || !this.adminTitlesLoaded) return;
+        this.adminTitlesLoading = true;
+        try {
+          const res = await updateAdminTitlesApi({ ...this.adminTitlesFormData });
+          if (res.code === 0) {
+            this.adminTitlesFormData = {
+              admin_title: res.data.admin_title || '',
+            };
+            applyAdminTitles(res.data);
+            MessagePlugin.success(this.$t('common.tips.save_success'));
+          } else {
+            MessagePlugin.error(res.msg || this.$t('common.tips.save_failed'));
+          }
+        } catch (_) {
+          MessagePlugin.error(this.$t('common.tips.save_failed'));
+        } finally {
+          this.adminTitlesLoading = false;
+        }
       },
       fetchNoticeTitle() {
         this.noticeTitleLoading = true;

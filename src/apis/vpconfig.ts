@@ -127,6 +127,14 @@ export function updateSecurityEntryApi(data) {
     data: data
   })
 }
+export function getAdminTitlesApi() {
+  return request({ url: 'vipconfig/getAdminTitles', method: 'get' })
+}
+
+export function updateAdminTitlesApi(data) {
+  return request({ url: 'vipconfig/updateAdminTitles', method: 'post', data })
+}
+
 //获取通知标题前缀
 export function getNoticeTitleApi(params) {
   return request({
