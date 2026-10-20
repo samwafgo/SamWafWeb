@@ -1212,6 +1212,8 @@ export default {
       visit_log: "Protection Logs",
       online_document: "Online Document",
       website: "Website",
+      url_keyword: "Access URL",
+      url_keyword_placeholder: "Enter a path or keyword (e.g. /api/login)",
       rule_name: "Rule Name",
       req_uuid: "Visit Identifier",
       access_status: "Access Status",

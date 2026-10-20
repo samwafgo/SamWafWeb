@@ -1212,6 +1212,8 @@ export default {
       visit_log: "防御日志",
       online_document: "在线文档",
       website: "网站",
+      url_keyword: "访问 URL",
+      url_keyword_placeholder: "输入路径或关键字（例如 /api/login）",
       rule_name: "规则名称",
       req_uuid: "访问识别码",
       access_status: "访问状态",
