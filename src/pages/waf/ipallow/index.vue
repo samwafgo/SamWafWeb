@@ -63,6 +63,9 @@
             <span v-else>{{ row.ip }}</span>
           </template>
 
+          <template #is_enable="{ row }">
+            <t-switch :value="row.is_enable === 1" @change="(v) => onToggle(row, v)" />
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -106,6 +109,9 @@
               {{ $t('page.ipallow.goto_group_manage') }}
             </a>
           </t-form-item>
+          <t-form-item :label="$t('page.ipallow.col_enable')" name="is_enable">
+            <t-switch v-model="formData.is_enable" :custom-value="[1, 0]" />
+          </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"  name="remarks">
             </t-textarea>
@@ -145,6 +151,9 @@
               <t-option v-for="g in group_options" :key="g.group_code" :value="g.group_code"
                 :label="g.group_name + ' (' + g.item_count + ')'"></t-option>
             </t-select>
+          </t-form-item>
+          <t-form-item :label="$t('page.ipallow.col_enable')" name="is_enable">
+            <t-switch v-model="formEditData.is_enable" :custom-value="[1, 0]" />
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks"  name="remarks">
@@ -199,7 +208,8 @@
 
   import {
     wafIPWhiteListApi,wafIPWhiteDelApi,wafIPWhiteEditApi,wafIPWhiteAddApi,wafIPWhiteDetailApi,
-    wafIPWhiteBatchDelApi,wafIPWhiteDelAllApi
+    wafIPWhiteBatchDelApi,wafIPWhiteDelAllApi,
+    wafIPWhiteToggleApi
   } from '@/apis/ipwhite';
   import {
     SSL_STATUS,
@@ -220,6 +230,7 @@
     remarks: '',
     ip_type: 'ip',
     group_code: '',
+    is_enable: 1,
   };
   export default Vue.extend({
     name: 'ListBase',
@@ -320,6 +331,11 @@
             colKey: 'create_time',
           },
 
+          {
+            title: this.$t('page.ipallow.col_enable'),
+            width: 90,
+            colKey: 'is_enable',
+          },
           {
             align: 'left',
             fixed: 'right',
@@ -436,6 +452,22 @@
             this.dataLoading = false;
           });
         this.dataLoading = true;
+      },
+      onToggle(row, checked) {
+        wafIPWhiteToggleApi({ id: row.id, is_enable: checked ? 1 : 0 })
+          .then((res) => {
+            if (res.code === 0) {
+              this.$message.success(res.msg);
+              this.getList("");
+            } else {
+              this.$message.warning(res.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            //失败也重拉一次：服务端可能已翻转但响应丢失，让开关与库内真实状态对齐
+            this.getList("");
+          });
       },
       getContainer() {
         return document.querySelector('.tdesign-starter-layout');
@@ -594,6 +626,8 @@
                 //存量记录的 ip_type 是空串，等价于「单条IP」
                 ip_type: that.detail_data.ip_type || 'ip',
                 group_code: that.detail_data.group_code || '',
+                //详情未带开关字段时按启用处理
+                is_enable: that.detail_data.is_enable === 0 ? 0 : 1,
               }
             }
           })

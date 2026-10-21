@@ -124,7 +124,7 @@ export default Vue.extend({
       wafIPBlockRecommendLayerApi({ host_code: this.form.host_code })
         .then((res) => {
           if (res.code === 0 && res.data) {
-            if (res.data.layer) this.form.target_layer = res.data.layer;
+            // 只展示推荐理由；默认层级保持 WAF，不自动改选中值
             this.layerReason = res.data.reason || '';
           }
         })

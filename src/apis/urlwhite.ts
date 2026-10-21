@@ -55,3 +55,12 @@ export function wafURLWhiteDelAllApi(params) {
     data: params
   })
 }
+
+//切换URL白名单条目启用状态
+export function wafURLWhiteToggleApi(params) {
+  return request({
+    url: '/wafhost/urlwhite/toggle',
+    method: 'post',
+    data: params
+  })
+}

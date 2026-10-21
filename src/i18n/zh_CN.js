@@ -2518,6 +2518,7 @@ export default {
       import_msg_host_empty: "主域名为空"
     },
     ipallow: {
+      col_enable: "启用",
       button_add_ip: "新建白名单IP",
       button_batch_delete: "批量删除",
       button_clear_all: "清空所有",
@@ -2762,6 +2763,7 @@ export default {
       ref_allow: "白名单",
     },
     ipblock: {
+      col_enable: "启用",
       button_add_ip: "新建黑名单IP",
       export_data: "导出数据",
       button_batch_delete: "批量删除",
@@ -3002,6 +3004,7 @@ export default {
       no_website_selected: "请先选择网站"
     },
     urlallow: {
+      col_enable: "启用",
       button_add_url: "新建白名单URL",
       button_batch_delete: "批量删除",
       button_clear_all: "清空所有",
@@ -3021,6 +3024,7 @@ export default {
       no_website_selected: "请先选择网站",
     },
     urlblock: {
+      col_enable: "启用",
       button_add_url: "新建黑名单URL",
       label_website: "网站",
       label_url: "URL",

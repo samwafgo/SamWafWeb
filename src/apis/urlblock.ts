@@ -55,3 +55,12 @@ export function wafURLBlockDelAllApi(params) {
     data: params
   })
 }
+
+//切换URL黑名单条目启用状态
+export function wafURLBlockToggleApi(params) {
+  return request({
+    url: '/wafhost/urlblock/toggle',
+    method: 'post',
+    data: params
+  })
+}

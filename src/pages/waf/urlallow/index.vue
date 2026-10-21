@@ -52,6 +52,9 @@
             <span> {{host_dic[row.host_code]}}</span>
           </template>
 
+          <template #is_enable="{ row }">
+            <t-switch :value="row.is_enable === 1" @change="(v) => onToggle(row, v)" />
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -85,6 +88,9 @@
           </t-form-item>
           <t-form-item :label="$t('page.urlallow.label_url')" name="url">
             <t-input :style="{ width: '480px' }" v-model="formData.url"  ></t-input>
+          </t-form-item>
+          <t-form-item :label="$t('page.urlallow.col_enable')" name="is_enable">
+            <t-switch v-model="formData.is_enable" :custom-value="[1, 0]" />
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"   name="remarks">
@@ -121,6 +127,9 @@
          <t-form-item :label="$t('page.urlallow.label_url')" name="url">
            <t-input :style="{ width: '480px' }" v-model="formEditData.url" ></t-input>
          </t-form-item>
+          <t-form-item :label="$t('page.urlallow.col_enable')" name="is_enable">
+            <t-switch v-model="formEditData.is_enable" :custom-value="[1, 0]" />
+          </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks" name="remarks">
             </t-textarea>
@@ -173,7 +182,8 @@
   } from '@/apis/host';
   import {
     wafURLWhiteListApi,wafURLWhiteDelApi,wafURLWhiteEditApi,wafURLWhiteAddApi,wafURLWhiteDetailApi,
-    wafURLWhiteBatchDelApi,wafURLWhiteDelAllApi
+    wafURLWhiteBatchDelApi,wafURLWhiteDelAllApi,
+    wafURLWhiteToggleApi
   } from '@/apis/urlwhite';
   import {
     SSL_STATUS,
@@ -188,7 +198,8 @@
     host_code: '',
     url: '',
     remarks: '',
-    compare_type:"等于"
+    compare_type:"等于",
+    is_enable: 1,
   };
   export default Vue.extend({
     name: 'ListBase',
@@ -283,6 +294,11 @@
             width: 200,
             ellipsis: true,
             colKey: 'create_time',
+          },
+          {
+            title: this.$t('page.urlallow.col_enable'),
+            width: 90,
+            colKey: 'is_enable',
           },
           {
             align: 'left',
@@ -382,6 +398,22 @@
             this.dataLoading = false;
           });
         this.dataLoading = true;
+      },
+      onToggle(row, checked) {
+        wafURLWhiteToggleApi({ id: row.id, is_enable: checked ? 1 : 0 })
+          .then((res) => {
+            if (res.code === 0) {
+              this.$message.success(res.msg);
+              this.getList("");
+            } else {
+              this.$message.warning(res.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            //失败也重拉一次：服务端可能已翻转但响应丢失，让开关与库内真实状态对齐
+            this.getList("");
+          });
       },
       getContainer() {
         return document.querySelector('.tdesign-starter-layout');
@@ -543,7 +575,9 @@
             if (resdata.code === 0) {
               that.detail_data = resdata.data;
               that.formEditData = {
-                ...that.detail_data
+                ...that.detail_data,
+                //详情未带开关字段时按启用处理
+                is_enable: that.detail_data.is_enable === 0 ? 0 : 1,
               }
             }
           })

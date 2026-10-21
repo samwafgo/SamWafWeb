@@ -64,6 +64,9 @@
             <span v-if="row.ip_type === 'group'">{{ groupLabel(row.group_code) }}</span>
             <span v-else>{{ row.ip }}</span>
           </template>
+          <template #is_enable="{ row }">
+            <t-switch :value="row.is_enable === 1" @change="(v) => onToggle(row, v)" />
+          </template>
           <template #op="slotProps">
             <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
             <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
@@ -128,6 +131,9 @@
             <div v-if="systemLayerDisabled" class="form-tips">{{ $t('page.ipblock.system_layer_unsupported') }}</div>
             <div v-if="recommendReason" style="margin-top:4px;font-size:12px;color:var(--td-text-color-secondary)">{{ recommendReason }}</div>
           </t-form-item>
+          <t-form-item :label="$t('page.ipblock.col_enable')" name="is_enable">
+            <t-switch v-model="formData.is_enable" :custom-value="[1, 0]" />
+          </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"  name="remarks">
             </t-textarea>
@@ -167,6 +173,9 @@
               <t-option v-for="g in group_options" :key="g.group_code" :value="g.group_code"
                 :label="g.group_name + ' (' + g.item_count + ')'"></t-option>
             </t-select>
+          </t-form-item>
+          <t-form-item :label="$t('page.ipblock.col_enable')" name="is_enable">
+            <t-switch v-model="formEditData.is_enable" :custom-value="[1, 0]" />
           </t-form-item>
           <t-form-item :label="$t('common.remarks')" name="remarks">
             <t-textarea :style="{ width: '480px' }" v-model="formEditData.remarks"  name="remarks">
@@ -217,7 +226,8 @@
     allhost
   } from '@/apis/host';
   import {
-    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi,wafIPBlockRecommendLayerApi
+    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi,wafIPBlockRecommendLayerApi,
+    wafIPBlockToggleApi
   } from '@/apis/ipblock';
   import {
     export_api
@@ -242,6 +252,7 @@
     target_layer: 'waf',
     ip_type: 'ip',
     group_code: '',
+    is_enable: 1,
   };
   export default Vue.extend({
     name: 'ListBase',
@@ -342,6 +353,11 @@
             colKey: 'create_time',
           },
 
+          {
+            title: this.$t('page.ipblock.col_enable'),
+            width: 90,
+            colKey: 'is_enable',
+          },
           {
             align: 'left',
             width: 200,
@@ -483,6 +499,22 @@
           });
         this.dataLoading = true;
       },
+      onToggle(row, checked) {
+        wafIPBlockToggleApi({ id: row.id, is_enable: checked ? 1 : 0 })
+          .then((res) => {
+            if (res.code === 0) {
+              this.$message.success(res.msg);
+              this.getList("");
+            } else {
+              this.$message.warning(res.msg);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            //失败也重拉一次：服务端可能已翻转但响应丢失，让开关与库内真实状态对齐
+            this.getList("");
+          });
+      },
       getContainer() {
         return document.querySelector('.tdesign-starter-layout');
       },
@@ -515,14 +547,13 @@
         this.formData = {...INITIAL_DATA};
         this.loadGroupOptions();
       },
-      // 站点变化时按后端智能推荐预选封禁层级
+      // 站点变化时展示后端推荐理由供参考；默认层级保持 WAF，不自动改选中值
       onHostChange(hostCode) {
         let that = this
         if (!hostCode) { that.recommendReason = ''; return }
         wafIPBlockRecommendLayerApi({ host_code: hostCode })
           .then((res) => {
             if (res.code === 0 && res.data) {
-              that.formData.target_layer = res.data.layer || 'waf'
               that.recommendReason = res.data.reason || ''
             }
           })
@@ -657,6 +688,8 @@
                 //存量记录的 ip_type 是空串，等价于「单条IP」
                 ip_type: that.detail_data.ip_type || 'ip',
                 group_code: that.detail_data.group_code || '',
+                //详情未带开关字段时按启用处理
+                is_enable: that.detail_data.is_enable === 0 ? 0 : 1,
               }
             }
           })

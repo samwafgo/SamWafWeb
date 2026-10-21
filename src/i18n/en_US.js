@@ -2514,6 +2514,7 @@ export default {
       import_msg_host_empty: "Primary domain is empty"
     },
     ipallow: {
+      col_enable: "Enable",
       button_add_ip: "Add Allowlist IP",
       button_batch_delete: "Batch Delete",
       button_clear_all: "Clear All",
@@ -2758,6 +2759,7 @@ export default {
       ref_allow: "allow list",
     },
     ipblock: {
+      col_enable: "Enable",
       button_add_ip: "Add Blocklist IP",
       export_data: "Export Data",
       button_batch_delete: "Batch Delete",
@@ -2998,6 +3000,7 @@ export default {
       no_website_selected: "Please select a website first"
     },
     urlallow: {
+      col_enable: "Enable",
       button_add_url: "Add Allowlist URL",
       button_batch_delete: "Batch Delete",
       button_clear_all: "Clear All",
@@ -3017,6 +3020,7 @@ export default {
       no_website_selected: "Please select a website first",
     },
     urlblock: {
+      col_enable: "Enable",
       button_add_url: "Add Blocklist URL",
       label_website: "Website",
       label_url: "URL",

@@ -63,3 +63,12 @@ export function wafIPBlockRecommendLayerApi(params) {
     params: params
   })
 }
+
+//切换IP黑名单条目启用状态
+export function wafIPBlockToggleApi(params) {
+  return request({
+    url: '/wafhost/ipblock/toggle',
+    method: 'post',
+    data: params
+  })
+}
