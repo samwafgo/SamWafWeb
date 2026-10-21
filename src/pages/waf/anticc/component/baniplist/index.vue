@@ -1,6 +1,6 @@
 <template>
   <div>
-    <t-card class="list-card-container">
+    <component :is="embedded ? 'div' : 't-card'" :class="{ 'list-card-container': !embedded }">
       <div class="ban-toolbar">
         <t-button variant="outline" size="small" :loading="dataLoading" @click="getList('')">
           {{ $t('common.refresh') }}
@@ -18,7 +18,7 @@
                  :pagination="pagination" :selected-row-keys="selectedRowKeys" :loading="dataLoading"
                  @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
                  @filter-change="onFilterChange"
-                 :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
+                 :headerAffixedTop="!embedded" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
           <template #scope="{ row }">
             <template v-if="row.scope === 'host'">
               <t-tag theme="primary" variant="light">{{ $t('page.ccrule.ban_scope_host') }}</t-tag>
@@ -32,10 +32,7 @@
           </template>
         </t-table>
       </div>
-      <div>
-        <router-view></router-view>
-      </div>
-    </t-card>
+    </component>
   </div>
 </template>
 <script lang="ts">
@@ -65,6 +62,9 @@ const INITIAL_DATA = {
 };
 export default Vue.extend({
   name: 'BanIpList',
+  props: {
+    embedded: { type: Boolean, default: false },
+  },
   components: {
     SearchIcon,
     Trend,
@@ -101,6 +101,7 @@ export default Vue.extend({
       textareaValue: '',
       prefix,
       dataLoading: false,
+      removing: false,
       data: [], //列表数据信息（当前筛选后的视图）
       rawData: [], //接口返回的原始数据，筛选都在它之上做
       filterScope: '', //作用范围筛选：空=全部，global=全局生效，其余为站点码
@@ -268,27 +269,29 @@ export default Vue.extend({
       console.log('统一Change', changeParams, triggerAndData);
     },
     handleRemoveBanIp(e) {
-      let that = this
-      const {
-        ip
-      } = e.row
-      wafAntiCCRemoveBanIpApi({
-        "ip":ip
-      })
-        .then((res) => {
-          let resdata = res
-          console.log(resdata)
-          if (resdata.code === 0) {
-            that.$message.success(resdata.msg);
-            that.getList("")
-          } else {
-            that.$message.warning(resdata.msg);
-          }
-        })
-        .catch((e: Error) => {
-          console.log(e);
-        })
-        .finally(() => {});
+      if (this.removing) return;
+      const { ip } = e.row;
+      const dialog = this.$dialog.confirm({
+        header: this.$t('page.ip_ban.cc_clear'),
+        body: this.$t('page.ip_ban.cc_clear_confirm', { ip }),
+        onConfirm: () => {
+          if (this.removing) return;
+          this.removing = true;
+          return wafAntiCCRemoveBanIpApi({ ip }).then((res) => {
+            if (res.code === 0) {
+              this.$message.success(res.msg);
+              this.getList('');
+              dialog.destroy();
+            } else {
+              this.$message.warning(res.msg);
+            }
+          }).catch(() => {
+            this.$message.error(this.$t('page.ip_ban.remove_failed'));
+          }).finally(() => {
+            this.removing = false;
+          });
+        },
+      });
     },
     /**
      * 作用范围与 IP 关键字两个筛选条件叠加生效，都在 rawData 之上做，

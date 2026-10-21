@@ -93,6 +93,16 @@
                   <a v-if="hit.source === 'threat_ip'" class="ipl-exclude-link" @click="openExclude(hit)">
                     {{ $t('common.ip_lookup.exclude_btn') }}
                   </a>
+                  <t-button
+                    v-if="hit.source === 'rule_ban'"
+                    theme="primary"
+                    variant="text"
+                    size="small"
+                    :loading="ruleBanRemoving"
+                    @click="confirmRemoveRuleBan"
+                  >
+                    {{ $t('common.ip_lookup.rule_ban_remove') }}
+                  </t-button>
                   <span class="ipl-effect">{{ effectText(hit.effect) }}</span>
                 </div>
                 <div v-if="hit.detail" class="ipl-detail">{{ hit.detail }}</div>
@@ -220,6 +230,7 @@ import { wafIPWhiteAddApi } from '@/apis/ipwhite';
 import { wafIPBlockAddApi } from '@/apis/ipblock';
 import { allhost } from '@/apis/host';
 import { wafThreatIPExcludeAddApi } from '@/apis/threatip';
+import { wafRuleBanRemoveBanIpApi } from '@/apis/rule_ban';
 
 // 全局站点在库里就是一条 host="全局网站"、port=0 的普通记录，code 是 uuid。
 // 全站其它页面(anticc / host / SpiderActive)也是按这个字面量认的，保持一致。
@@ -263,6 +274,7 @@ export default Vue.extend({
       // null = 收起；对象 = 展开威胁情报误报排除表单
       excludeForm: null,
       excludeSaving: false,
+      ruleBanRemoving: false,
     };
   },
   computed: {
@@ -271,7 +283,7 @@ export default Vue.extend({
     groups() {
       return [
         { key: 'list', label: this.$t('common.ip_lookup.step_list'), sources: ['ip_white', 'ip_black', 'ip_group', 'log_exclude'] },
-        { key: 'ban', label: this.$t('common.ip_lookup.step_ban'), sources: ['ip_failure', 'cc_ban', 'firewall'] },
+        { key: 'ban', label: this.$t('common.ip_lookup.step_ban'), sources: ['ip_failure', 'cc_ban', 'rule_ban', 'firewall'] },
         { key: 'threat', label: this.$t('common.ip_lookup.step_threat'), sources: ['threat_ip'] },
         { key: 'cdn', label: this.$t('common.ip_lookup.step_cdn'), sources: ['cdn'] },
       ];
@@ -398,6 +410,35 @@ export default Vue.extend({
         setTimeout(() => {
           if (!this.loading) this.partialDone = false;
         }, 600);
+      });
+    },
+    confirmRemoveRuleBan() {
+      if (this.ruleBanRemoving) return;
+      const ip = this.result.ip;
+      const dialog = this.$dialog.confirm({
+        header: this.$t('common.ip_lookup.rule_ban_remove'),
+        body: this.$t('common.ip_lookup.rule_ban_remove_confirm', { ip }),
+        zIndex: this.zIndex + 1,
+        onConfirm: () => {
+          if (this.ruleBanRemoving) return;
+          this.ruleBanRemoving = true;
+          return wafRuleBanRemoveBanIpApi({ ip })
+            .then((res) => {
+              if (res.code === 0) {
+                this.$message.success(res.msg);
+                dialog.destroy();
+                if (this.visible && this.result.ip === ip) this.doQuery();
+              } else {
+                this.$message.error(res.msg);
+              }
+            })
+            .catch(() => {
+              this.$message.error(this.$t('common.ip_lookup.rule_ban_remove_failed'));
+            })
+            .finally(() => {
+              this.ruleBanRemoving = false;
+            });
+        },
       });
     },
     effectTheme(effect) {

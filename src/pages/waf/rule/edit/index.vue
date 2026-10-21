@@ -1238,6 +1238,7 @@ export default {
       switch (action) {
         case 'allow': return 'success'
         case 'log': return 'primary'
+        case 'ban': return 'warning'
         default: return 'danger'
       }
     },
@@ -1245,6 +1246,7 @@ export default {
       switch (action) {
         case 'allow': return this.$t('page.rule.detail.rule_action_allow')
         case 'log': return this.$t('page.rule.detail.rule_action_log')
+        case 'ban': return this.$t('page.rule.detail.rule_action_ban')
         default: return this.$t('page.rule.detail.rule_action_deny')
       }
     },
@@ -1379,6 +1381,7 @@ export default {
       return [
         // ===== 命中动作 =====
         mk({ cat: 'action', action: 'deny', title: '拦截（默认动作，可不写）', desc: '命中规则即阻止请求并返回拦截页。不写任何动作时默认就是拦截。', cond: 'MF.URL.Contains("/wp-admin") == true', then: 'RF.Deny();', effect: '命中的请求被拦截并记入攻击日志' }),
+        mk({ cat: 'action', action: 'ban', title: '封禁（拦截并临时封禁IP）', desc: '命中拦截当前请求，并将客户端 IP 在当前站点临时封禁指定分钟数（正整数）。已有封禁不续期，封禁在「网站防护 → IP封禁」管理。', cond: 'MF.URL.Contains("/wp-admin") == true', then: 'RF.Ban(10);', effect: '该 IP 在此站点 10 分钟内无法再访问' }),
         mk({ cat: 'action', action: 'allow', title: '放行（后续检测照常）', desc: '命中后不被自定义规则拦截，但 SQLI/XSS/CC 等后续检测仍会执行。', cond: 'RF.IPInCIDR(MF.SRC_IP, "192.168.0.0/16") == true && MF.URL.HasPrefix("/admin") == true', then: 'RF.Allow();', salience: 100, effect: '内网访问后台不被规则拦，但仍受其他防护保护' }),
         mk({ cat: 'action', action: 'allow', title: '放行并跳过指定检测（CC/AI）', desc: '放行的同时跳过 CC、AI 检测。需在系统配置把"规则编排模式"设为"规则优先"才能跳过 CC 等前置检测。', cond: 'RF.IPEquals(MF.SRC_IP, "10.0.0.5") == true', then: 'RF.Allow("CC", "AI");', salience: 100, effect: '监控探针不触发限流和AI检测' }),
         mk({ cat: 'action', action: 'allow', title: '完全放行（跳过后续所有检测）', desc: '白名单式直通后端，跳过后面全部检测环节。', cond: 'RF.IPInRanges(MF.SRC_IP, "203.0.113.10-203.0.113.20") == true', then: 'RF.AllowAll();', salience: 200, effect: '可信来源直达后端' }),

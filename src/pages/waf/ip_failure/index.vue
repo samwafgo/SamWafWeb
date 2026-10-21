@@ -1,12 +1,14 @@
 <template>
   <div>
-    <t-card class="list-card-container">
-      <t-tabs v-model="activeTab">
-        <t-tab-panel value="ban_list" :label="$t('page.ip_failure.ban_list')">
-          <div class="table-container">
+    <component :is="embedded ? 'div' : 't-card'" :class="{ 'list-card-container': !embedded }">
+      <t-tabs v-if="!embedded && panel === 'all'" v-model="activeTab">
+        <t-tab-panel value="ban_list" :label="$t('page.ip_failure.ban_list')" />
+        <t-tab-panel value="config" :label="$t('page.ip_failure.config')" />
+      </t-tabs>
+      <div v-if="selectedPanel === 'ban_list'" class="table-container">
+            <t-alert theme="info" :message="$t('page.ip_ban.failure_list_notice')" :close="false" class="list-notice" />
             <div class="operation-container">
               <t-button theme="primary" @click="getList"> {{ $t('common.refresh') }} </t-button>
-              <ip-lookup ref="ipLookup" :style="{ marginLeft: '8px' }" />
             </div>
             <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
               :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange">
@@ -17,66 +19,43 @@
               </template>
               <template #op="slotProps">
                 <a class="t-button-link" @click="handleClickDetail(slotProps)">{{ $t('common.details') }}</a>
-                <a class="t-button-link" @click="handleClickUnban(slotProps)" style="margin-left: 8px;">{{ $t('page.ip_failure.unban') }}</a>
+                <a class="t-button-link" @click="handleClickUnban(slotProps)" style="margin-left: 8px;">{{ $t('page.ip_ban.failure_clear') }}</a>
               </template>
             </t-table>
           </div>
-        </t-tab-panel>
-        
-        <t-tab-panel value="config" :label="$t('page.ip_failure.config')">
-          <div class="config-container">
-            <t-alert theme="info" :title="$t('page.ip_failure.rule_guide_title')" :close="false" class="rule-guide-alert">
-              <template #message>
-                <div class="rule-guide-content">
-                  <div class="rule-important-notice">
-                    <t-icon name="info-circle" class="notice-icon" />
-                    <span>{{ $t('page.ip_failure.rule_guide_notice') }}</span>
-                    <t-button theme="primary" size="small" @click="goToRulePage" class="goto-rule-btn">
-                      {{ $t('page.ip_failure.goto_rule_page') }}
-                      <t-icon name="arrow-right" />
-                    </t-button>
-                  </div>
-                  <div class="rule-section">
-                    <h4>{{ $t('page.ip_failure.rule_example') }}</h4>
-                    <pre class="code-block">rule R80798f795d7947419ba6f593708b4013 "禁止5分钟内失败10次的IP访问" salience 10 {
-  when
-    MF.GetIPFailureCount(5) > 10
-  then
-    RF.Deny();
-}</pre>
-                  </div>
-                  <div class="rule-section">
-                    <h4>{{ $t('page.ip_failure.system_params') }}</h4>
-                    <ul class="params-list">
-                      <li><strong>ip_failure_ban_time_window</strong>: {{ $t('page.ip_failure.param_time_window_desc') }}</li>
-                      <li><strong>ip_failure_ban_max_count</strong>: {{ $t('page.ip_failure.param_max_count_desc') }}</li>
-                    </ul>
-                  </div>
-                </div>
-              </template>
-            </t-alert>
-            
-            <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="180">
-              <t-form-item :label="$t('page.ip_failure.enabled')" name="enabled">
+
+          <div v-if="selectedPanel === 'config'" class="config-container">
+            <p class="cfg-desc">{{ $t('page.ip_ban.failure_guide') }}</p>
+            <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
+              <t-form-item :label="$t('page.ip_ban.failure_enabled')" name="enabled">
                 <t-switch v-model="formData.enabled" :customValue="[1, 0]"></t-switch>
               </t-form-item>
               <t-form-item :label="$t('page.ip_failure.status_codes')" name="status_codes">
                 <t-input v-model="formData.status_codes" :placeholder="$t('page.ip_failure.status_codes_placeholder')" :style="{ width: '480px' }"></t-input>
                 <div class="desc">{{ $t('page.ip_failure.status_codes_desc') }}</div>
               </t-form-item>
-              <t-form-item :label="$t('page.ip_failure.lock_time')" name="lock_time">
+              <t-form-item :label="$t('page.ip_ban.failure_retention')" name="lock_time">
                 <t-input-number v-model="formData.lock_time" :min="1" :style="{ width: '480px' }"></t-input-number>
                 <span class="unit">{{ $t('common.unit_minute') }}</span>
-                <div class="desc">{{ $t('page.ip_failure.lock_time_desc') }}</div>
+                <div class="desc">{{ $t('page.ip_ban.failure_retention_desc') }}</div>
               </t-form-item>
-              <t-form-item>
+              <div class="example">
+                <div class="example-head">
+                  <span class="example-title">{{ $t('page.ip_failure.rule_example') }}</span>
+                  <div class="example-ops">
+                    <t-button variant="outline" size="small" @click="copyExample">{{ $t('common.copy') }}</t-button>
+                    <t-button variant="outline" size="small" @click="goToRulePage">{{ $t('page.ip_failure.goto_rule_page') }}</t-button>
+                  </div>
+                </div>
+                <pre class="example-code">{{ exampleCode }}</pre>
+                <div class="example-foot">{{ $t('page.ip_ban.failure_example_desc') }}</div>
+              </div>
+              <t-form-item class="cfg-foot">
                 <t-button theme="primary" type="submit">{{ $t('common.save') }}</t-button>
               </t-form-item>
             </t-form>
-          </div>
-        </t-tab-panel>
-      </t-tabs>
-    </t-card>
+      </div>
+    </component>
 
     <t-dialog
       :header="$t('page.attack_log.attack_ip_visit_detail_list_header')"
@@ -86,7 +65,7 @@
       :onConfirm="resetChildState"
       :onClose="resetChildState"
     >
-      <web-log-list ref="childLog" :attack_ip="trans_to_parent_ip"></web-log-list>
+      <web-log-list v-if="visitDetailVisible" ref="childLog" :attack_ip="trans_to_parent_ip"></web-log-list>
     </t-dialog>
   </div>
 </template>
@@ -106,9 +85,21 @@ export default Vue.extend({
   components: {
     WebLogList
   },
+  props: {
+    panel: {
+      type: String,
+      default: 'all',
+      validator: (value: string) => ['all', 'ban_list', 'config'].includes(value),
+    },
+    embedded: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data() {
     return {
       activeTab: 'ban_list',
+      exampleCode: 'rule R80798f795d7947419ba6f593708b4013 "5分钟内失败超过10次，封禁10分钟" salience 10 {\n  when\n    MF.GetIPFailureCount(5) > 10\n  then\n    RF.Ban(10);\n}',
       formData: {
         enabled: 0,
         status_codes: '',
@@ -143,35 +134,60 @@ export default Vue.extend({
       trans_to_parent_ip: '', // 传递给子组件的IP
     };
   },
-  mounted() {
-    this.getConfig();
-    this.getList();
+  computed: {
+    selectedPanel(): string {
+      return this.panel === 'all' ? this.activeTab : this.panel;
+    },
+  },
+  watch: {
+    selectedPanel: {
+      immediate: true,
+      handler(value: string) {
+        if (value === 'ban_list') this.getList();
+        if (value === 'config') this.getConfig();
+      },
+    },
   },
   methods: {
-    // 点日志里的 IP 直接开归属查询弹窗，省得用户复制粘贴
+    // 点 IP 开查询交给页面级按钮统一处理
     openIpLookup(ip) {
       if (!ip) return;
-      this.$refs.ipLookup && this.$refs.ipLookup.open(ip);
+      this.$emit('ip-lookup', ip);
+    },
+    copyExample() {
+      const done = () => this.$message.success(this.$t('page.ip_failure.copy_success'));
+      const fail = () => this.$message.warning(this.$t('page.ip_failure.copy_failed'));
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(this.exampleCode).then(done).catch(fail);
+      } else {
+        fail();
+      }
     },
     goToRulePage() {
       this.$router.push({ name: 'WafRule' });
     },
     getConfig() {
       wafIPFailureGetConfigApi().then(res => {
-        if (res.code === 0) {
+        if (res && res.code === 0 && res.data) {
           this.formData = res.data;
+        } else {
+          this.$message.warning((res && res.msg) || this.$t('common.tips.api_error'));
         }
+      }).catch(() => {
+        this.$message.error(this.$t('common.tips.api_error'));
       });
     },
     onSubmit({ result, firstError }) {
       if (!firstError) {
         wafIPFailureSetConfigApi(this.formData).then(res => {
-          if (res.code === 0) {
+          if (res && res.code === 0) {
             this.$message.success(res.msg);
             this.getConfig();
           } else {
-            this.$message.warning(res.msg);
+            this.$message.warning((res && res.msg) || this.$t('common.tips.save_failed'));
           }
+        }).catch(() => {
+          this.$message.error(this.$t('common.tips.save_failed'));
         });
       } else {
         this.$message.warning(firstError);
@@ -183,10 +199,14 @@ export default Vue.extend({
         pageIndex: this.pagination.current,
         pageSize: this.pagination.pageSize,
       }).then(res => {
-        if (res.code === 0) {
-          this.data = res.data.list || [];
-          this.pagination.total = res.data.total;
+        if (res && res.code === 0 && res.data) {
+          this.data = (Array.isArray(res.data.list) ? res.data.list : []).filter(Boolean);
+          this.pagination.total = res.data.total || 0;
+        } else {
+          this.$message.warning((res && res.msg) || this.$t('common.tips.api_error'));
         }
+      }).catch(() => {
+        this.$message.error(this.$t('common.tips.api_error'));
       }).finally(() => {
         this.dataLoading = false;
       });
@@ -210,19 +230,19 @@ export default Vue.extend({
     },
     handleClickUnban(row) {
       let dialogInstance  = this.$dialog.confirm({
-        header: this.$t('common.confirm_unban'),
-        body: this.$t('common.confirm_unban_content', { ip: row.row.ip }),
+        header: this.$t('page.ip_ban.failure_clear'),
+        body: this.$t('page.ip_ban.failure_clear_confirm', { ip: row.row.ip }),
         onConfirm: () => {
           return wafIPFailureRemoveBanIpApi({ ip: row.row.ip }).then(res => {
-            if (res.code === 0) {
+            if (res && res.code === 0) {
               this.$message.success(res.msg);
               this.getList();
               dialogInstance.destroy();
             } else {
-              this.$message.warning(res.msg);
+              this.$message.warning((res && res.msg) || this.$t('page.ip_ban.remove_failed'));
             }
-          }).catch(err => {
-            this.$message.error(err.message || '解封失败');
+          }).catch(() => {
+            this.$message.error(this.$t('page.ip_ban.remove_failed'));
             dialogInstance.destroy();
           });
         },
@@ -236,6 +256,11 @@ export default Vue.extend({
 .config-container {
   padding: 20px;
 }
+.cfg-desc {
+  color: var(--td-text-color-secondary);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
 .desc {
   font-size: 12px;
   color: var(--td-text-color-secondary);
@@ -247,87 +272,59 @@ export default Vue.extend({
 .operation-container {
   margin-bottom: 16px;
 }
-.rule-guide-alert {
-  margin-bottom: 24px;
+.list-notice {
+  margin-bottom: 16px;
 }
-.rule-guide-content {
-  .rule-important-notice {
+.example {
+  margin-top: 4px;
+  border: 1px solid var(--td-border-level-1-color);
+  border-radius: 6px;
+  overflow: hidden;
+
+  .example-head {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background: var(--td-warning-color-1);
-    border: 1px solid var(--td-warning-color-3);
-    border-radius: 6px;
-    margin-bottom: 16px;
-    
-    .notice-icon {
-      font-size: 18px;
-      color: var(--td-warning-color);
-      flex-shrink: 0;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--td-bg-color-component);
+    border-bottom: 1px solid var(--td-border-level-1-color);
+
+    .example-title {
+      font-size: 13px;
+      font-weight: 600;
     }
-    
-    span {
-      flex: 1;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--td-warning-color-9);
-    }
-    
-    .goto-rule-btn {
-      flex-shrink: 0;
+
+    .example-ops {
       display: flex;
-      align-items: center;
-      gap: 4px;
+      gap: 8px;
     }
   }
-  
-  .rule-section {
-    margin-bottom: 16px;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-    
-    h4 {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--td-text-color-primary);
-    }
-    
-    .code-block {
-      background: var(--td-bg-color-component);
-      border: 1px solid var(--td-border-level-1-color);
-      border-radius: 3px;
-      padding: 12px;
-      margin: 0;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 12px;
-      line-height: 1.6;
-      color: var(--td-text-color-primary);
-      overflow-x: auto;
-    }
-    
-    .params-list {
-      margin: 0;
-      padding-left: 20px;
-      
-      li {
-        margin-bottom: 6px;
-        font-size: 13px;
-        color: var(--td-text-color-secondary);
-        
-        &:last-child {
-          margin-bottom: 0;
-        }
-        
-        strong {
-          color: var(--td-brand-color);
-          font-family: 'Courier New', Courier, monospace;
-        }
-      }
-    }
+
+  .example-code {
+    padding: 14px 16px;
+    margin: 0;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--td-text-color-primary);
+    background: #fff;
+    overflow-x: auto;
+  }
+
+  .example-foot {
+    padding: 8px 16px 12px;
+    color: var(--td-text-color-placeholder);
+    font-size: 12px;
+  }
+}
+.cfg-foot {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--td-border-level-1-color);
+  text-align: right;
+
+  ::v-deep .t-form__controls {
+    margin-left: 0 !important;
   }
 }
 

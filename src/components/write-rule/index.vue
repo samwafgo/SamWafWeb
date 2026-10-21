@@ -56,6 +56,7 @@ const RF_FUNCS = [
   { text: 'Allow("CC");', dispZh: 'Allow(模块...)', dispEn: 'Allow(modules...)', zh: '动作：放行并跳过指定检测(CC/AI/SQLI...)', en: 'Action: allow and skip given checks' },
   { text: 'AllowAll();', dispZh: 'AllowAll()', dispEn: 'AllowAll()', zh: '动作：放行并跳过后续所有检测', en: 'Action: allow and skip all later checks' },
   { text: 'Log();', dispZh: 'Log()', dispEn: 'Log()', zh: '动作：仅记录不拦截', en: 'Action: log only, do not block' },
+  { text: 'Ban(10);', dispZh: 'Ban(分钟)', dispEn: 'Ban(minutes)', zh: '动作：拦截并临时封禁该IP，无需单独开启', en: 'Action: block and temporarily ban this IP; no separate switch required' },
   // IP 函数
   { text: 'IPInRange(MF.SRC_IP, "", "")', dispZh: 'IPInRange(ip,起,止)', dispEn: 'IPInRange(ip,start,end)', zh: 'IP是否在起止区间内', en: 'IP within start-end range' },
   { text: 'IPInRanges(MF.SRC_IP, "")', dispZh: 'IPInRanges(ip,区间...)', dispEn: 'IPInRanges(ip,ranges...)', zh: 'IP是否在多个区间/CIDR之一', en: 'IP in any range/CIDR' },

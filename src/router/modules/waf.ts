@@ -116,12 +116,24 @@ export default [
         name: 'WafBlockingPagelist',
         component: () => import('@/pages/waf/bLocking_page/index.vue'),
         meta: { title: 'menu.host.blocking_page' },
-      },       {
+      },
+      {
+        path: 'wafIPBan',
+        name: 'WafIPBan',
+        component: () => import('@/pages/waf/ip_ban/index.vue'),
+        meta: { title: 'menu.host.ip_ban', keepAlive: false },
+      },
+      {
         path: 'wafIPFailure',
         name: 'WafIPFailure',
-        component: () => import('@/pages/waf/ip_failure/index.vue'),
-        meta: { title: 'menu.host.ip_failure' },
-
+        redirect: to => ({ name: 'WafIPBan', query: { ...to.query, source: 'failure' }, hash: to.hash }),
+        meta: { title: 'menu.host.ip_ban', hidden: true },
+      },
+      {
+        path: 'wafRuleBan',
+        name: 'WafRuleBan',
+        redirect: to => ({ name: 'WafIPBan', query: { ...to.query, source: 'rule' }, hash: to.hash }),
+        meta: { title: 'menu.host.ip_ban', hidden: true },
       },
       {
         path: 'wafFirewallIPBlock',
