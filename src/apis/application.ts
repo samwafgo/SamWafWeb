@@ -36,6 +36,9 @@ function dangerousReq(config: any) {
 }
 
 // --- 普通 API ---
+export function wafAppFeatureStatusApi() {
+  return request({ url: '/application/app/feature_status', method: 'get' })
+}
 export function wafAppListApi(params: any) {
   return request({ url: '/application/app/list', method: 'post', data: params })
 }

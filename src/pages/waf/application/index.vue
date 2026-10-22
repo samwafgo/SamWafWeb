@@ -1,6 +1,36 @@
 <template>
   <div>
-    <t-card class="list-card-container">
+    <t-card v-if="featureState !== 'enabled'" class="feature-status-card">
+      <div v-if="featureState === 'loading'" class="feature-loading" role="status" aria-live="polite">
+        <t-loading size="small" :text="$t('page.application.feature_loading')" />
+      </div>
+      <t-alert v-else-if="featureState === 'error'" theme="error"
+        :title="$t('page.application.feature_error_title')"
+        :message="$t('page.application.feature_error_description')" />
+      <template v-else-if="featureState === 'disabled'">
+        <h3 class="feature-title">{{ $t('page.application.feature_disabled_title') }}</h3>
+        <p class="feature-description">{{ $t('page.application.feature_disabled_description') }}</p>
+        <ol class="feature-steps">
+          <li>
+            <strong>{{ $t('page.application.feature_step_config_title') }}</strong>
+            <p>{{ $t('page.application.feature_step_config') }}</p>
+            <pre>application_manage: true</pre>
+          </li>
+          <li>
+            <strong>{{ $t('page.application.feature_step_restart_title') }}</strong>
+            <p>{{ $t('page.application.feature_step_restart') }}</p>
+          </li>
+          <li>
+            <strong>{{ $t('page.application.feature_step_password_title') }}</strong>
+            <p>{{ $t('page.application.feature_step_password') }}</p>
+          </li>
+        </ol>
+      </template>
+      <t-button class="feature-recheck" :loading="featureChecking" :disabled="featureChecking" @click="checkFeatureStatus">
+        {{ $t(featureState === 'error' ? 'page.application.feature_retry' : 'page.application.feature_recheck') }}
+      </t-button>
+    </t-card>
+    <t-card v-else class="list-card-container">
       <t-alert theme="info" :message="$t('page.application.allow_dirs_tip')" :style="{ marginBottom: '16px' }" />
       <t-row justify="space-between">
         <div class="left-operation-container">
@@ -66,6 +96,7 @@
       </div>
     </t-card>
 
+    <template v-if="featureState === 'enabled'">
     <!-- 新增对话框 -->
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="760" :footer="false">
       <div slot="body">
@@ -143,6 +174,7 @@
         </div>
       </div>
     </t-dialog>
+    </template>
   </div>
 </template>
 
@@ -151,7 +183,7 @@ import Vue from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import { prefix } from '@/config/global';
 import {
-  wafAppListApi, wafAppAddApi, wafAppEditApi, wafAppDetailApi, wafAppDelApi,
+  wafAppFeatureStatusApi, wafAppListApi, wafAppAddApi, wafAppEditApi, wafAppDetailApi, wafAppDelApi,
   wafAppStartApi, wafAppStopApi, wafAppRestartApi, wafAppStatusApi,
   getAppOpPassword, saveAppOpPassword, wafAppVerifyPwdApi,
 } from '@/apis/application';
@@ -167,6 +199,9 @@ export default Vue.extend({
   data() {
     return {
       prefix,
+      featureState: 'loading' as 'loading' | 'enabled' | 'disabled' | 'error',
+      featureChecking: false,
+      pageDestroyed: false,
       dataLoading: false,
       data: [],
       selectedRowKeys: [],
@@ -212,9 +247,10 @@ export default Vue.extend({
     };
   },
   mounted() {
-    this.getList();
+    this.checkFeatureStatus();
   },
   beforeDestroy() {
+    this.pageDestroyed = true;
     const self = this as any;
     if (self._opPwdTimer) clearTimeout(self._opPwdTimer);
   },
@@ -229,16 +265,38 @@ export default Vue.extend({
       };
     },
     getContainer() { return document.querySelector('.t-layout__content'); },
+    async checkFeatureStatus() {
+      if (this.featureChecking || this.pageDestroyed) return;
+      this.featureChecking = true;
+      this.featureState = 'loading';
+      try {
+        const res = await wafAppFeatureStatusApi();
+        if (this.pageDestroyed) return;
+        if (!res || res.code !== 0 || !res.data || typeof res.data.enabled !== 'boolean') {
+          this.featureState = 'error';
+          return;
+        }
+        this.featureState = res.data.enabled === true ? 'enabled' : 'disabled';
+        if (res.data.enabled === true) this.getList();
+      } catch (error) {
+        if (!this.pageDestroyed) this.featureState = 'error';
+      } finally {
+        if (!this.pageDestroyed) this.featureChecking = false;
+      }
+    },
     getList() {
+      if (this.featureState !== 'enabled' || this.pageDestroyed) return;
       this.dataLoading = true;
-      wafAppListApi({ pageIndex: this.pagination.current, pageSize: this.pagination.pageSize })
+      return wafAppListApi({ pageIndex: this.pagination.current, pageSize: this.pagination.pageSize })
         .then(res => {
-          if (res && res.code === 0) {
+          if (this.pageDestroyed) return;
+          if (res && res.code === 0 && res.data) {
             this.data = res.data.list || [];
             this.pagination.total = res.data.total || 0;
           }
         })
-        .finally(() => { this.dataLoading = false; });
+        .catch(() => { /* 请求提示由全局拦截器处理 */ })
+        .finally(() => { if (!this.pageDestroyed) this.dataLoading = false; });
     },
     rehandlePageChange(curr) {
       this.pagination.current = curr.current;
@@ -438,6 +496,17 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+.feature-status-card { max-width: 800px; }
+.feature-loading { padding: 24px 0; }
+.feature-title { margin: 0 0 8px; font-size: 18px; color: var(--td-text-color-primary); }
+.feature-description, .feature-steps p { color: var(--td-text-color-secondary); line-height: 1.7; }
+.feature-description { margin: 0 0 20px; }
+.feature-steps { margin: 0; padding-left: 24px; }
+.feature-steps li { margin-bottom: 16px; padding-left: 4px; }
+.feature-steps strong { color: var(--td-text-color-primary); }
+.feature-steps p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.feature-steps pre { margin: 8px 0 0; padding: 10px 12px; border-radius: var(--td-radius-default); background: var(--td-bg-color-secondarycontainer); white-space: pre-wrap; overflow-wrap: anywhere; }
+.feature-recheck { margin-top: 16px; }
 .list-card-container { padding: 20px; }
 .left-operation-container, .right-operation-container { display: flex; align-items: center; margin-bottom: 16px; }
 .table-container { margin-top: 8px; }
