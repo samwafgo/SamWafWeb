@@ -27,6 +27,7 @@
             <t-button variant="outline" theme="default">{{ $t('page.host.toolbar_import') }} ▾</t-button>
           </t-dropdown>
           <t-button variant="outline" theme="default" @click="handlePortOverview">{{ $t('page.host.port_listen.overview_title') }}</t-button>
+          <t-button variant="outline" theme="default" @click="$router.push({ name: 'WebsiteDiagnostic' })">{{ $t('page.host.diagnostic.title') }}</t-button>
         </div>
         <div class="ht-right">
           <t-form ref="form" :data="searchformData" :label-width="80" colon layout="inline">
@@ -343,6 +344,7 @@
         @group-changed="loadHostGroups"
         :is-edit="true"
         :init-tab="editInitTab"
+        :init-section="editInitSection"
         @close="onClickCloseEditBtn"
         @submit="onSubmitEdit"
         @tab-placement-change="onHostTabPlacementChange"
@@ -628,6 +630,7 @@ export default Vue.extend({
       addFormVisible: false,
       editFormVisible: false,
       editInitTab: 1, //编辑弹窗打开时定位的Tab(从访问日志"IP提取有问题?"跳来时定位到"其他配置")
+      editInitSection: '',
       guardVisible: false,
       confirmVisible: false,
       sslAutoApplyVisible: false,
@@ -1007,19 +1010,26 @@ export default Vue.extend({
         this.addFormVisible = true
       }
     }
-    // 别处（访问日志「IP提取有问题?」、CC 规则「去设置」）跳过来：直接打开该站点编辑弹窗并定位到对应页签
-    if (this.$route.query && this.$route.query.editcode) {
+    this.openEditorFromQuery();
+  },
+
+  watch: {
+    '$route.query'(value) {
+      if (this.$route.name === 'WafHost' && value && value.editcode) this.openEditorFromQuery();
+    },
+  },
+  methods: {
+    openEditorFromQuery() {
+      if (this.$route.name !== 'WafHost' || !this.$route.query.editcode) return;
       const editCode = String(this.$route.query.editcode);
-      // tab 用名字传，避免调用方去记面板编号
-      const tabMap = { ipsource: 4, captcha: 7 };
+      const tabMap = { ipsource: 4, captcha: 7, basic: 1, other: 4 };
       this.editInitTab = tabMap[String(this.$route.query.tab || '')] || 1;
+      const section = String(this.$route.query.section || '');
+      this.editInitSection = ['listen', 'backend', 'tls'].includes(section) ? section : '';
       this.formEditData = { code: '' };
       this.editFormVisible = true;
       this.getDetail(editCode);
-    }
-  },
-
-  methods: {
+    },
     copyHostCode(event: MouseEvent) {
       const code = this.formEditData.code;
       if (!code) return;
@@ -1739,6 +1749,7 @@ export default Vue.extend({
     },
     handleClickEdit(e) {
       this.editInitTab = 1;
+      this.editInitSection = '';
       console.log(e)
       const {
         code, global_host

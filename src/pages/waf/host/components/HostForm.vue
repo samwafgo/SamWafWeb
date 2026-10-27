@@ -42,7 +42,7 @@
               </t-form-item>
             </div>
 
-            <div class="hf-sect">
+            <div class="hf-sect" data-diagnostic-section="listen">
               <h4 class="hf-sect-title">
                 {{ $t('page.host.sect.listen') }}
                 <small>{{ $t('page.host.sect.listen_desc') }}</small>
@@ -257,7 +257,7 @@
             </t-form-item>
             </div>
 
-            <div class="hf-sect">
+            <div class="hf-sect" data-diagnostic-section="backend">
               <h4 class="hf-sect-title">
                 {{ $t('page.host.sect.backend') }}
                 <small>{{ $t('page.host.sect.backend_desc') }}</small>
@@ -597,7 +597,7 @@
                 </t-textarea>
               </t-tooltip>
             </t-form-item>
-            <t-form-item :label="$t('page.host.insecure_skip_verify')" name="insecure_skip_verify">
+            <t-form-item :label="$t('page.host.insecure_skip_verify')" name="insecure_skip_verify" data-diagnostic-section="tls">
               <t-tooltip class="placement top center"
                          :content="$t('page.host.insecure_skip_verify_tips')" placement="top"
                          :overlay-style="{ width: '200px' }" show-arrow>
@@ -1002,6 +1002,10 @@
         type: Number,
         default: 0
       },
+      initSection: {
+        type: String,
+        default: ''
+      },
       // 所在弹窗是否可见。弹窗内容只 created 一次，不下发这个开关的话，
       // 在证书申请页新签发的证书，回到列表再打开编辑时下拉里仍然没有（只剩一串ID）
       dialogVisible: {
@@ -1079,6 +1083,7 @@
         tamperConfigData: { ...INITIAL_TAMPER },
         uploadSecurityConfigData: { ...INITIAL_UPLOAD_SECURITY },
         activeTab: 1, // 当前激活的配置 Tab（受控，供防御总览开关「配置详情」跳转/外部深链，见 initTab watch）
+        diagnosticScrollTimer: null,
         // Tab 布局：left=竖向（默认），top=横向；用户偏好持久化到 localStorage
         tabPlacement: localStorage.getItem('samwaf_host_tab_placement') === 'top' ? 'top' : 'left',
         isFullscreen: localStorage.getItem('samwaf_host_form_fullscreen') === '1',
@@ -1325,6 +1330,7 @@
           if (val > 0) this.activeTab = val;
         },
       },
+      initSection() { this.scrollToDiagnosticSection(); },
       // 每次打开弹窗都重新拉一次证书夹：组件只 created 一次，
       // 期间在证书申请/证书夹页面新增的证书，不刷新的话这里永远看不到
       dialogVisible(val) {
@@ -1332,6 +1338,7 @@
         if (val) {
           this.getSslFolderList();
           this.getIpGroupOptions();
+          this.scrollToDiagnosticSection();
         }
       },
       // 切换 Tab 后把内容区和弹窗滚动位置复位到顶部，避免左侧导航过长时右侧内容"看起来是空的"
@@ -1867,8 +1874,20 @@
     },
     beforeDestroy() {
       this.cancelHealthTest();
+      clearTimeout(this.diagnosticScrollTimer);
     },
     methods: {
+      scrollToDiagnosticSection() {
+        clearTimeout(this.diagnosticScrollTimer);
+        if (!this.dialogVisible || !['listen', 'backend', 'tls'].includes(this.initSection)) return;
+        this.$nextTick(() => {
+          this.diagnosticScrollTimer = setTimeout(() => {
+            if (!this.dialogVisible) return;
+            const target = this.$el.querySelector(`[data-diagnostic-section="${this.initSection}"]`);
+            if (target) target.scrollIntoView({ block: 'center', behavior: 'auto' });
+          }, 250);
+        });
+      },
       cancelHealthTest() {
         this.healthTestGeneration += 1;
         if (this.healthTestController) this.healthTestController.abort();

@@ -20,6 +20,12 @@ export default [
 
       },
       {
+        path: 'website-diagnostic',
+        name: 'WebsiteDiagnostic',
+        component: () => import('@/pages/waf/host/diagnostic.vue'),
+        meta: { title: 'page.host.diagnostic.title', hidden: true, keepAlive: false, roleCode: 'WafHost' },
+      },
+      {
         path: 'wafrule',
         name: 'WafRule',
         component: () => import('@/pages/waf/rule/index.vue'),
