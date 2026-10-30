@@ -23,7 +23,6 @@ import config from '@/config/style';
 import websocket from "@/utils/websocket.js";
 import { DialogPlugin } from 'tdesign-vue';
 import  {ensureSecSession, currentKeyId, decryptIncoming} from './utils/seccrypto'
-import { v4 as uuidv4 } from 'uuid'
 import { clearLocalStorageExceptPreserved, saveCurrentUrl } from '@/constants';
 const env = import.meta.env.MODE || 'development';
 
@@ -73,6 +72,14 @@ export default Vue.extend({
     this.initWebSocket();
   },
   methods:{
+      openLogExportTask(taskId) {
+        const id = typeof taskId === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(taskId) ? taskId : '';
+        if (this.$route.name === 'WafvisitLog') {
+          this.$bus.$emit('log-export-open', id);
+          return;
+        }
+        this.$router.push({ name: 'WafvisitLog', query: { export_task: id || 'tasks' } }).catch(() => {});
+      },
       setupGlobalErrorHandler() {
         const IGNORE_PATTERNS = [
           /network\s*error/i,
@@ -258,18 +265,23 @@ export default Vue.extend({
                     },
                   });
               return
+          }else if(wsData.msg_cmd_type==="LOG_EXPORT_READY"){
+            const attach = wsData.msg_data && wsData.msg_data.message_attach;
+            const taskId = attach && typeof attach.task_id === 'string' ? attach.task_id : '';
+            const dialog = this.$dialog.confirm({
+              header: this.$t('logExport.title'),
+              body: this.$t('logExport.readyNotice'),
+              confirmBtn: this.$t('logExport.detail'),
+              cancelBtn: this.$t('common.cancel'),
+              onConfirm: () => { dialog.destroy(); this.openLogExportTask(taskId); },
+              onClose: () => { dialog.destroy(); },
+            });
+            // 通知确认框只定位任务；原消息仍保留在铃铛中供稍后查看。
+            return;
           }else if(wsData.msg_cmd_type==="DOWNLOAD_LOG"){
-            let token  =localStorage.getItem("access_token")? localStorage.getItem("access_token"):""
-            //下载连接
-            const dlSecPath = window.__SAMWAF_SECURITY_PATH__ || (() => { try { return localStorage.getItem('__samwaf_security_path__') || ''; } catch { return ''; } })();
-            let downloadUrl = env=="development"
-              ? `http://127.0.0.1:26666${dlSecPath}/api/v1/waflog/attack/download`
-              : `${window.location.protocol}//${window.location.host}${dlSecPath}/api/v1/waflog/attack/download`
-            downloadUrl = downloadUrl +"?X-Token="+token
-              +"&X-Request-Time="+Math.floor(Date.now() / 1000).toString()
-              +"&X-Request-Id="+uuidv4()
-            console.log(downloadUrl)
-            window.open(downloadUrl)
+            this.$message.warning(this.$t('logExport.oldNotice'));
+            // 旧导出通知仅给升级指引；原消息仍保留在铃铛中。
+            return;
           }else if(wsData.msg_cmd_type==="SystemStats"){
              //console.log("相关统计信息赋值",wsData.msg_data.message_attach)
              // 将统计信息传递给stats store

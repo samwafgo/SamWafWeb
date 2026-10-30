@@ -5,7 +5,10 @@
  * menu - Left menu
  * page - Fields for specific functional pages
  */
+import { en as logExport } from './logExport';
+
 export default {
+  logExport,
   common: {
     yes: "Yes",
     no: "No",
@@ -1289,16 +1292,6 @@ export default {
       date_range_last_60_days: "Last 60 Days",
       date_range_last_90_days: "Last 90 Days",
       date_range_last_300_days: "Last 300 Days",
-      export_db_file_header: "Export Logs (SQLITE)",
-      export_db_file_content: "Exports a new log file filtered by time range (no longer a full database backup). Files may be large, please export during off-peak hours.",
-      export_time_range: "Time range",
-      export_time_range_ph: "Empty = all",
-      export_tiers: "Content",
-      export_tier_payload: "Payloads",
-      export_tier_weblog: "Legacy web_logs",
-      export_started: "Export started. Download the file from the Download Center when it finishes.",
-      export_disabled_title: "Log export is not enabled",
-      export_disabled_body: "Log export is turned off on this deployment. Edit conf/config.yml on the server, set export_download to true, restart SamWaf, and export again.",
       shard_live: "Live (current period)",
       shard_auto: "Auto (by time range)",
       shard_auto_tip: "Partitions are derived from the time range; paging spans them automatically",
