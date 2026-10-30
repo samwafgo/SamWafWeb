@@ -89,7 +89,7 @@
       <div slot="body">
         <t-form :data="formData" ref="form" :rules="rules" @submit="onSubmit" :labelWidth="100">
           <t-form-item :label="$t('page.ipblock.label_website')" name="host_code">
-            <t-select v-model="formData.host_code" clearable filterable :style="{ width: '480px' }" @change="onHostChange">
+            <t-select v-model="formData.host_code" clearable filterable :style="{ width: '480px' }">
               <t-option v-for="(item, index) in host_dic" :value="index" :label="item"
                 :key="index">
                 {{ item }}
@@ -116,21 +116,6 @@
               {{ $t('page.ipblock.goto_group_manage') }}
             </a>
           </t-form-item>
-          <t-form-item name="target_layer">
-            <template #label>
-              <span>{{ $t('page.ipblock.label_target_layer') }}</span>
-              <t-tooltip :content="$t('page.ipblock.target_layer_tips')" placement="top" :overlay-style="{ width: '300px' }" show-arrow>
-                <t-icon name="help-circle" style="margin-left:4px;cursor:pointer" />
-              </t-tooltip>
-            </template>
-            <t-select v-model="formData.target_layer" :style="{ width: '480px' }">
-              <t-option value="waf" :label="$t('page.ipblock.target_layer_waf')" />
-              <t-option value="system" :label="$t('page.ipblock.target_layer_system')" :disabled="systemLayerDisabled" />
-              <t-option value="both" :label="$t('page.ipblock.target_layer_both')" :disabled="systemLayerDisabled" />
-            </t-select>
-            <div v-if="systemLayerDisabled" class="form-tips">{{ $t('page.ipblock.system_layer_unsupported') }}</div>
-            <div v-if="recommendReason" style="margin-top:4px;font-size:12px;color:var(--td-text-color-secondary)">{{ recommendReason }}</div>
-          </t-form-item>
           <t-form-item :label="$t('page.ipblock.col_enable')" name="is_enable">
             <t-switch v-model="formData.is_enable" :custom-value="[1, 0]" />
           </t-form-item>
@@ -138,6 +123,12 @@
             <t-textarea :style="{ width: '480px' }" v-model="formData.remarks"  name="remarks">
             </t-textarea>
           </t-form-item>
+          <div class="form-tips" style="margin: 0 0 8px">
+            {{ $t('page.ipblock.system_layer_hint') }}
+            <a class="t-button-link" style="display:inline" @click="$router.push({ name: 'WafFirewallIPBlock' })">
+              {{ $t('page.ipblock.goto_firewall_ipblock') }}
+            </a>
+          </div>
           <t-form-item style="float: right">
             <t-button variant="outline" @click="onClickCloseBtn">{{ $t('common.close') }}</t-button>
             <t-button theme="primary" type="submit">{{ $t('common.confirm') }}</t-button>
@@ -226,7 +217,7 @@
     allhost
   } from '@/apis/host';
   import {
-    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi,wafIPBlockRecommendLayerApi,
+    wafIPBlockListApi,wafIPBlockDelApi,wafIPBlockEditApi,wafIPBlockAddApi,wafIPBlockDetailApi,wafIPBlockBatchDelApi,wafIPBlockDelAllApi,
     wafIPBlockToggleApi
   } from '@/apis/ipblock';
   import {
@@ -249,7 +240,6 @@
     host_code: '',
     ip: '',
     remarks: '',
-    target_layer: 'waf',
     ip_type: 'ip',
     group_code: '',
     is_enable: 1,
@@ -264,6 +254,7 @@
     data() {
       return {
         activeSourceTab: 'manual',
+        blockSubmitting: false,
         addFormVisible: false,
         editFormVisible: false,
         confirmVisible: false,
@@ -385,8 +376,6 @@
         guardStatusIdx :-1,
         //主机字典
         host_dic:{},
-        //推荐封禁层级的理由文案
-        recommendReason: ''
       };
     },
     computed: {
@@ -401,22 +390,6 @@
       },
       offsetTop() {
         return this.$store.state.setting.isUseTabsRouter ? 48 : 0;
-      },
-      // 系统防火墙(iptables/netsh)只认单IP与CIDR，通配符/区间/IP组都表达不了。
-      // 这里只是前端体验层的拦截，后端 api/waf_ip_entry_validate.go 还会再挡一次。
-      systemLayerDisabled() {
-        if (this.formData.ip_type === 'group') {
-          return true;
-        }
-        return /[*\-]/.test(this.formData.ip || '');
-      },
-    },
-    watch: {
-      // 切到不支持系统层的写法时，把已选的层级拉回 WAF 应用层，避免提交时才报错
-      systemLayerDisabled(disabled) {
-        if (disabled && this.formData.target_layer !== 'waf') {
-          this.formData.target_layer = 'waf';
-        }
       },
     },
     mounted() {
@@ -543,21 +516,47 @@
       },
       handleAddipblock() {
         this.addFormVisible = true
-        this.recommendReason = ''
         this.formData = {...INITIAL_DATA};
         this.loadGroupOptions();
       },
-      // 站点变化时展示后端推荐理由供参考；默认层级保持 WAF，不自动改选中值
-      onHostChange(hostCode) {
-        let that = this
-        if (!hostCode) { that.recommendReason = ''; return }
-        wafIPBlockRecommendLayerApi({ host_code: hostCode })
-          .then((res) => {
-            if (res.code === 0 && res.data) {
-              that.recommendReason = res.data.reason || ''
-            }
-          })
-          .catch((e: Error) => { console.log(e) })
+      async submitBlockEntry(postdata, editing) {
+        if (this.blockSubmitting) return;
+        this.blockSubmitting = true;
+        try {
+          const submit = editing ? wafIPBlockEditApi : wafIPBlockAddApi;
+          const payload = { ...postdata, confirm_block_all: false };
+          let res = await submit(payload);
+          if (res.code === -8) {
+            const host = this.host_dic[payload.host_code] || payload.host_code;
+            const accepted = await new Promise<boolean>((resolve) => {
+              const dialog = this.$dialog.confirm({
+                header: this.$t('page.ipblock.block_all_confirm_title'),
+                body: this.$t('page.ipblock.block_all_confirm_body', { host, ip: payload.ip }),
+                confirmBtn: this.$t('page.ipblock.block_all_confirm_save'),
+                cancelBtn: this.$t('common.cancel'),
+                onConfirm: () => { dialog.destroy(); resolve(true); },
+                onClose: () => { dialog.destroy(); resolve(false); },
+                onCancel: () => { dialog.destroy(); resolve(false); },
+              });
+            });
+            if (!accepted) return;
+            res = await submit({ ...payload, confirm_block_all: true });
+          }
+          if (res.code !== 0) {
+            this.$message.warning(res.msg);
+            return;
+          }
+          this.$message.success(res.msg);
+          if (editing) {
+            this.editFormVisible = false;
+          } else {
+            this.addFormVisible = false;
+            this.pagination.current = 1;
+          }
+          this.getList('');
+        } finally {
+          this.blockSubmitting = false;
+        }
       },
       onSubmit({
         result,
@@ -569,21 +568,7 @@
           let postdata = {
             ...that.formData
           }
-          wafIPBlockAddApi({
-              ...postdata
-            })
-            .then((res) => {
-              let resdata = res
-              console.log(resdata)
-              if (resdata.code === 0) {
-                that.$message.success(resdata.msg);
-                that.addFormVisible = false;
-                that.pagination.current = 1
-                that.getList("")
-              } else {
-                that.$message.warning(resdata.msg);
-              }
-            })
+          that.submitBlockEntry(postdata, false)
             .catch((e: Error) => {
               console.log(e);
             })
@@ -603,20 +588,7 @@
           let postdata = {
             ...that.formEditData
           }
-          wafIPBlockEditApi({
-              ...postdata
-            })
-            .then((res) => {
-              let resdata = res
-              console.log(resdata)
-              if (resdata.code === 0) {
-                that.$message.success(resdata.msg);
-                that.editFormVisible = false;
-                that.getList("")
-              } else {
-                that.$message.warning(resdata.msg);
-              }
-            })
+          that.submitBlockEntry(postdata, true)
             .catch((e: Error) => {
               console.log(e);
             })

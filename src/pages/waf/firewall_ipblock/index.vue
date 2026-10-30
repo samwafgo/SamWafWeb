@@ -30,13 +30,6 @@
         </div>
         <div class="right-operation-container">
           <t-form ref="searchForm" :data="searchformData" :label-width="80" layout="inline" colon :style="{ marginBottom: '8px' }">
-            <t-form-item :label="$t('page.firewall_ipblock.label_website')" name="host_code">
-              <t-select v-model="searchformData.host_code" clearable filterable :style="{ width: '150px' }">
-                <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
-                  {{ item }}
-                </t-option>
-              </t-select>
-            </t-form-item>
             <t-form-item :label="'IP'" name="ip">
               <t-input v-model="searchformData.ip" class="search-input" clearable>
               </t-input>
@@ -127,10 +120,6 @@
           @page-change="rehandlePageChange" @change="rehandleChange" @select-change="rehandleSelectChange"
           :headerAffixedTop="true" :headerAffixProps="{ offsetTop: offsetTop, container: getContainer }">
 
-          <template #host_code="{ row }">
-            <span> {{host_dic[row.host_code]}}</span>
-          </template>
-
           <template #status="{ row }">
             <t-tag v-if="row.status === 'active'" theme="success" variant="light">
               {{ $t('page.firewall_ipblock.status_active') }}
@@ -186,13 +175,6 @@
     <t-dialog :header="$t('common.new')" :visible.sync="addFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="formData" ref="addForm" :rules="rules" @submit="onSubmit" :labelWidth="120">
-          <t-form-item :label="$t('page.firewall_ipblock.label_website')" name="host_code">
-            <t-select v-model="formData.host_code" clearable filterable :style="{ width: '480px' }">
-              <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
-                {{ item }}
-              </t-option>
-            </t-select>
-          </t-form-item>
           <t-form-item :label="$t('page.firewall_ipblock.label_ip')" name="ip">
             <t-input :style="{ width: '480px' }" v-model="formData.ip" 
               :placeholder="$t('page.firewall_ipblock.ip_placeholder')">
@@ -234,13 +216,6 @@
     <t-dialog :header="$t('page.firewall_ipblock.batch_add_title')" :visible.sync="batchAddFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="batchAddFormData" ref="batchAddForm" :rules="batchAddRules" @submit="onSubmitBatchAdd" :labelWidth="120">
-          <t-form-item :label="$t('page.firewall_ipblock.label_website')" name="host_code">
-            <t-select v-model="batchAddFormData.host_code" clearable filterable :style="{ width: '480px' }">
-              <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
-                {{ item }}
-              </t-option>
-            </t-select>
-          </t-form-item>
           <t-form-item :label="$t('page.firewall_ipblock.label_ips')" name="ips">
             <t-textarea 
               :style="{ width: '480px', height: '200px' }" 
@@ -275,13 +250,6 @@
     <t-dialog :header="$t('common.edit')" :visible.sync="editFormVisible" :width="680" :footer="false">
       <div slot="body">
         <t-form :data="formEditData" ref="editForm" :rules="rules" @submit="onSubmitEdit" :labelWidth="120">
-          <t-form-item :label="$t('page.firewall_ipblock.label_website')" name="host_code">
-            <t-select v-model="formEditData.host_code" clearable :style="{ width: '480px' }">
-              <t-option v-for="(item, index) in host_dic" :value="index" :label="item" :key="index">
-                {{ item }}
-              </t-option>
-            </t-select>
-          </t-form-item>
           <t-form-item :label="$t('page.firewall_ipblock.label_ip')" name="ip">
             <t-input :style="{ width: '480px' }" v-model="formEditData.ip">
             </t-input>
@@ -347,7 +315,6 @@
 import Vue from 'vue';
 import { SearchIcon } from 'tdesign-icons-vue';
 import { prefix } from '@/config/global';
-import { allhost } from '@/apis/host';
 import ThreatSubSourcePanel from '@/pages/waf/threatip/components/ThreatSubSourcePanel.vue';
 import { wafThreatIPLandedSummaryApi } from '@/apis/threatip';
 import {
@@ -367,7 +334,6 @@ import {
 } from '@/apis/firewall_ipblock';
 
 const INITIAL_DATA = {
-  host_code: '',
   ip: '',
   reason: '',
   block_type: 'manual',
@@ -377,7 +343,6 @@ const INITIAL_DATA = {
 };
 
 const BATCH_ADD_INITIAL_DATA = {
-  host_code: '',
   ips_text: '',
   reason: '',
   block_type: 'manual',
@@ -403,11 +368,6 @@ export default Vue.extend({
       batchAddFormData: { ...BATCH_ADD_INITIAL_DATA },
       formEditData: { ...INITIAL_DATA },
       rules: {
-        host_code: [{
-          required: true,
-          message: this.$t('common.placeholder') + this.$t('page.firewall_ipblock.label_website'),
-          type: 'error'
-        }],
         ip: [{
           required: true,
           message: this.$t('common.placeholder') + this.$t('page.firewall_ipblock.label_ip'),
@@ -420,11 +380,6 @@ export default Vue.extend({
         }],
       },
       batchAddRules: {
-        host_code: [{
-          required: true,
-          message: this.$t('common.placeholder') + this.$t('page.firewall_ipblock.label_website'),
-          type: 'error'
-        }],
         ips_text: [{
           required: true,
           message: this.$t('common.placeholder') + this.$t('page.firewall_ipblock.label_ips'),
@@ -451,13 +406,6 @@ export default Vue.extend({
       },
       columns: [
         { colKey: 'row-select', type: 'multiple', width: 64, fixed: 'left' },
-        {
-          title: this.$t('page.firewall_ipblock.label_website'),
-          align: 'left',
-          width: 200,
-          ellipsis: true,
-          colKey: 'host_code',
-        },
         {
           title: this.$t('page.firewall_ipblock.label_ip'),
           width: 150,
@@ -519,12 +467,10 @@ export default Vue.extend({
       },
       searchformData: {
         ip: "",
-        host_code: "",
         status: "",
         block_type: ""
       },
       deleteIdx: -1,
-      host_dic: {}
     };
   },
   computed: {
@@ -540,10 +486,8 @@ export default Vue.extend({
   },
   mounted() {
     this.getCapability();
-    this.loadHostList().then(() => {
-      this.getList("");
-      this.getStatistics();
-    });
+    this.getList("");
+    this.getStatistics();
     this.loadSubLandedTotal();
   },
   methods: {
@@ -585,25 +529,6 @@ export default Vue.extend({
           console.log(e);
         });
     },
-    loadHostList() {
-      return new Promise((resolve, reject) => {
-        allhost()
-          .then((res) => {
-            let resdata = res;
-            if (resdata.code === 0) {
-              let host_options = resdata.data;
-              for (let i = 0; i < host_options.length; i++) {
-                this.host_dic[host_options[i].value] = host_options[i].label;
-              }
-            }
-            resolve();
-          })
-          .catch((e: Error) => {
-            console.log(e);
-            reject(e);
-          });
-      });
-    },
     getList(keyword) {
       let that = this;
       wafFirewallIPBlockListApi({
@@ -619,7 +544,6 @@ export default Vue.extend({
               ...this.pagination,
               total: resdata.data.total,
             };
-            this.loadHostList();
           }
         })
         .catch((e: Error) => {
@@ -715,7 +639,6 @@ export default Vue.extend({
         }
 
         let postdata = {
-          host_code: that.batchAddFormData.host_code,
           ips: ips,
           reason: that.batchAddFormData.reason,
           block_type: that.batchAddFormData.block_type,
@@ -877,7 +800,7 @@ export default Vue.extend({
     },
     handleSync() {
       let that = this;
-      wafFirewallIPBlockSyncApi({ host_code: this.searchformData.host_code })
+      wafFirewallIPBlockSyncApi({})
         .then((res) => {
           let resdata = res;
           if (resdata.code === 0) {

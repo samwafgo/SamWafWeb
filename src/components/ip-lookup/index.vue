@@ -179,13 +179,6 @@
                       <t-option v-for="(name, code) in hostDic" :key="code" :value="code" :label="name" />
                     </t-select>
                   </t-form-item>
-                  <t-form-item v-if="isBlockMode" :label="$t('common.ip_lookup.block_layer')">
-                    <t-select v-model="allowForm.target_layer" :style="{ width: '100%' }">
-                      <t-option value="waf" :label="$t('common.ip_lookup.layer_waf')" />
-                      <t-option value="system" :label="$t('common.ip_lookup.layer_system')" />
-                      <t-option value="both" :label="$t('common.ip_lookup.layer_both')" />
-                    </t-select>
-                  </t-form-item>
                   <t-form-item :label="isBlockMode ? $t('common.ip_lookup.block_reason') : $t('common.ip_lookup.allow_reason')">
                     <t-textarea
                       v-model="allowForm.remarks"
@@ -270,7 +263,7 @@ export default Vue.extend({
       // '' = 只显示按钮；'allow'/'block' = 展开对应表单
       actionMode: '',
       allowLoading: false,
-      allowForm: { host_code: '', remarks: '', target_layer: 'waf' },
+      allowForm: { host_code: '', remarks: '' },
       // null = 收起；对象 = 展开威胁情报误报排除表单
       excludeForm: null,
       excludeSaving: false,
@@ -495,7 +488,6 @@ export default Vue.extend({
       this.allowForm = {
         host_code: this.globalHostCode,
         remarks: this.buildReason(mode),
-        target_layer: 'waf',
       };
       this.loadHostDic();
     },
@@ -549,6 +541,7 @@ export default Vue.extend({
       }
 
       const block = this.isBlockMode;
+      // 黑名单已统一为纯 WAF 层，不再下发 target_layer
       const payload = {
         host_code: this.allowForm.host_code,
         ip: this.result.ip,
@@ -556,7 +549,6 @@ export default Vue.extend({
         ip_type: 'ip',
         group_code: '',
       };
-      if (block) payload.target_layer = this.allowForm.target_layer;
 
       this.allowLoading = true;
       (block ? wafIPBlockAddApi(payload) : wafIPWhiteAddApi(payload))

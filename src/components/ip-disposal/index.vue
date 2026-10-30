@@ -25,26 +25,27 @@
         <div v-if="hostCandidates.length > 1" class="ipd-tip">{{ $t('components.ip_disposal.host_multi_tip') }}</div>
       </t-form-item>
 
-      <!-- 白名单没有层级概念：系统防火墙只能挡不能放 -->
+      <!-- 黑名单统一在 WAF 应用层拦截；需要系统层封禁引导去防火墙IP封禁页 -->
       <t-form-item v-if="isBlock" :label="$t('components.ip_disposal.label_layer')">
-        <t-radio-group v-model="form.target_layer">
-          <t-radio-button value="waf">{{ $t('components.ip_disposal.layer_waf') }}</t-radio-button>
-          <t-radio-button value="both">{{ $t('components.ip_disposal.layer_both') }}</t-radio-button>
-          <t-radio-button value="system">{{ $t('components.ip_disposal.layer_system') }}</t-radio-button>
-        </t-radio-group>
-        <div v-if="layerReason" class="ipd-tip">{{ $t('components.ip_disposal.layer_recommend') }}：{{ layerReason }}</div>
+        <span class="ipd-tip" style="margin-top:0">{{ $t('components.ip_disposal.layer_waf_only_hint') }}</span>
       </t-form-item>
 
       <t-form-item :label="$t('components.ip_disposal.label_remarks')">
         <t-input v-model="form.remarks" :maxlength="200" />
       </t-form-item>
+      <div v-if="isBlock" class="ipd-tip" style="margin: 0 0 4px 90px">
+        {{ $t('components.ip_disposal.system_layer_hint') }}
+        <a class="t-button-link" style="display:inline" @click="$router.push({ name: 'WafFirewallIPBlock' })">
+          {{ $t('components.ip_disposal.goto_firewall_ipblock') }}
+        </a>
+      </div>
     </t-form>
   </t-dialog>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
-import { wafIPBlockAddApi, wafIPBlockRecommendLayerApi } from '@/apis/ipblock';
+import { wafIPBlockAddApi } from '@/apis/ipblock';
 import { wafIPWhiteAddApi } from '@/apis/ipwhite';
 import { allhost } from '@/apis/host';
 
@@ -56,7 +57,7 @@ export default Vue.extend({
   props: {
     visible: { type: Boolean, default: false },
     ip: { type: String, default: '' },
-    // block=加黑（带封禁层级） allow=加白（无层级）
+    // block=加黑 allow=加白（黑名单已统一为纯WAF层，不再有层级选择）
     mode: { type: String, default: 'block' },
     // 候选站点：[{ host_code, req_cnt }]，按请求数倒序。用来定默认值并在下拉里标注命中次数
     hostCandidates: { type: Array, default: () => [] },
@@ -68,8 +69,7 @@ export default Vue.extend({
     return {
       submitting: false,
       hostOptions: [] as Array<{ value: string; label: string }>,
-      layerReason: '',
-      form: { host_code: '', target_layer: 'waf', remarks: '' },
+      form: { host_code: '', remarks: '' },
     };
   },
   computed: {
@@ -93,11 +93,8 @@ export default Vue.extend({
   methods: {
     init() {
       this.form.remarks = this.remarks;
-      this.form.target_layer = 'waf';
-      this.layerReason = '';
       this.form.host_code = this.pickDefaultHost();
       this.loadHosts();
-      if (this.isBlock && this.form.host_code) this.loadRecommendLayer();
     },
     // 默认站点：页面筛过就用那个，否则取这个来源打得最多的站点
     pickDefaultHost(): string {
@@ -120,16 +117,6 @@ export default Vue.extend({
         })
         .catch(() => {});
     },
-    loadRecommendLayer() {
-      wafIPBlockRecommendLayerApi({ host_code: this.form.host_code })
-        .then((res) => {
-          if (res.code === 0 && res.data) {
-            // 只展示推荐理由；默认层级保持 WAF，不自动改选中值
-            this.layerReason = res.data.reason || '';
-          }
-        })
-        .catch(() => {});
-    },
     handleConfirm() {
       if (!this.form.host_code) {
         this.$message.warning(this.$t('components.ip_disposal.host_required'));
@@ -141,7 +128,6 @@ export default Vue.extend({
         ip: this.ip,
         remarks: this.form.remarks,
       };
-      if (this.isBlock) payload.target_layer = this.form.target_layer;
       const call = this.isBlock ? wafIPBlockAddApi(payload) : wafIPWhiteAddApi(payload);
       call
         .then((res) => {
