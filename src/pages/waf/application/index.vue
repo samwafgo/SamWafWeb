@@ -192,6 +192,7 @@ import AppLogs from './components/AppLogs.vue';
 import AppUpgrade from './components/AppUpgrade.vue';
 import AppNetwork from './components/AppNetwork.vue';
 import AppChangeLog from './components/AppChangeLog.vue';
+import { decideStartPoll } from './components/appFlow';
 
 export default Vue.extend({
   name: 'ApplicationList',
@@ -407,15 +408,31 @@ export default Vue.extend({
     },
     onCancel() { this.confirmVisible = false; },
 
-    pollUntilStatus(code, targetStatus, initialDelayMs, maxWaitMs) {
+    pollUntilStatus(code, targetStatus, initialDelayMs, maxWaitMs, attemptStartMs: number | null = null) {
       const deadline = Date.now() + maxWaitMs;
       const poll = () => {
-        if (Date.now() >= deadline) { this.actingCode = ''; this.getList(); return; }
         wafAppStatusApi({ code }).then(res => {
-          if (res && res.code === 0 && res.data.run_status === targetStatus) {
-            this.actingCode = ''; this.getList();
-          } else { setTimeout(poll, 1000); }
-        }).catch(() => { this.actingCode = ''; this.getList(); });
+          const decision = decideStartPoll(res && res.data, targetStatus, attemptStartMs, Date.now(), deadline);
+          if (decision.kind === 'pending') { setTimeout(poll, 1000); return; }
+          this.actingCode = '';
+          this.getList();
+          if (decision.kind === 'timeout') {
+            this.$message.warning(this.$t('page.application.start_unconfirmed'));
+          } else if (decision.kind === 'failed') {
+            this.$message.error(decision.error
+              ? this.$t('page.application.start_failed_detail', { error: decision.error, time: decision.time ? `（${decision.time}）` : '' })
+              : this.$t('page.application.start_failed_generic'));
+          }
+        }).catch(() => {
+          // 单次状态查询失败不终止轮询，由 deadline 兜底；到点仍未确认则明确提示
+          if (Date.now() >= deadline) {
+            this.actingCode = '';
+            this.getList();
+            this.$message.warning(this.$t('page.application.start_unconfirmed'));
+          } else {
+            setTimeout(poll, 1000);
+          }
+        });
       };
       setTimeout(poll, initialDelayMs);
     },
@@ -424,10 +441,11 @@ export default Vue.extend({
       const code = slotProps.row.code;
       this.ensureOpPassword(() => {
         this.actingCode = code;
+        const attemptStartMs = Date.now();
         wafAppStartApi({ code }).then(res => {
           if (res && res.code === 0) {
             this.$message.success(this.$t('page.application.start_sent'));
-            this.pollUntilStatus(code, 1, 800, 30000);
+            this.pollUntilStatus(code, 1, 800, 30000, attemptStartMs);
           } else { this.actingCode = ''; }
         }).catch(() => { this.actingCode = ''; });
       });
@@ -446,10 +464,11 @@ export default Vue.extend({
       const code = slotProps.row.code;
       this.ensureOpPassword(() => {
         this.actingCode = code;
+        const attemptStartMs = Date.now();
         wafAppRestartApi({ code }).then(res => {
           if (res && res.code === 0) {
             this.$message.success(this.$t('page.application.restart_sent'));
-            this.pollUntilStatus(code, 1, 3000, 60000);
+            this.pollUntilStatus(code, 1, 3000, 60000, attemptStartMs);
           } else { this.actingCode = ''; }
         }).catch(() => { this.actingCode = ''; });
       });

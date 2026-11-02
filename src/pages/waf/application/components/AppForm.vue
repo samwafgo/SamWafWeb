@@ -1,5 +1,8 @@
 <template>
   <t-form ref="form" :data="formData" :rules="rules" label-align="right" :label-width="140" @submit="onSubmit">
+    <!-- 保存/上传错误：持续显示在表单内，关闭弹窗或重新提交才清除 -->
+    <t-alert v-if="formError" theme="error" class="form-error-alert" :close-btn="false">{{ formError }}</t-alert>
+
     <!-- 基本配置 -->
     <t-divider>{{ $t('page.application.section_basic') }}</t-divider>
     <t-form-item :label="$t('page.application.name')" name="name">
@@ -10,10 +13,36 @@
     </t-form-item>
     <t-form-item :label="$t('page.application.app_dir')" name="app_dir">
       <t-input v-model="formData.app_dir" :placeholder="$t('page.application.app_dir_placeholder')" />
-      <div class="dir-hint" :class="{ 'dir-hint-warn': isDirAbsolute }">
-        {{ $t('page.application.app_dir_actual') }}{{ effectiveDir }}
-        <span v-if="isDirAbsolute">{{ $t('page.application.app_dir_absolute_warn') }}</span>
-        <span v-else>{{ $t('page.application.app_dir_relative_note') }}</span>
+      <div class="dir-preview">
+        <div v-if="previewState === 'loading'" class="dir-preview-line dir-preview-muted">
+          {{ $t('page.application.dir_preview_loading') }}
+        </div>
+        <template v-else-if="previewState === 'ok' && preview">
+          <div class="dir-preview-line">
+            <span class="dir-preview-label">{{ $t('page.application.dir_preview_actual') }}</span>
+            <code class="dir-preview-code">{{ preview.resolved_dir }}</code>
+          </div>
+          <div v-if="!(formData.app_dir && formData.app_dir.trim())" class="dir-preview-line dir-preview-muted">
+            {{ $t('page.application.dir_preview_default', { dir: preview.default_dir }) }}
+          </div>
+          <div v-if="preview.allowed_dirs && preview.allowed_dirs.length" class="dir-preview-line">
+            <span class="dir-preview-label">{{ $t('page.application.dir_preview_allowed') }}</span>
+            <code v-for="(d, i) in preview.allowed_dirs" :key="i" class="dir-preview-code">{{ d }}</code>
+          </div>
+          <div v-if="preview.path_base" class="dir-preview-line dir-preview-muted">
+            {{ $t('page.application.dir_preview_base', { base: preview.path_base }) }}
+          </div>
+          <div v-if="!preview.valid" class="dir-preview-line dir-preview-error">
+            {{ $t('page.application.dir_preview_invalid', { error: preview.error }) }}
+          </div>
+          <div class="dir-preview-line dir-preview-muted">{{ $t('page.application.dir_preview_no_move') }}</div>
+        </template>
+        <div v-else-if="previewState === 'unsupported'" class="dir-preview-line dir-preview-warn">
+          {{ $t('page.application.dir_preview_unsupported') }}
+        </div>
+        <div v-else-if="previewState === 'error'" class="dir-preview-line dir-preview-error">
+          {{ $t('page.application.dir_preview_error', { msg: previewErrorMsg }) }}
+        </div>
       </div>
     </t-form-item>
     <t-form-item :label="$t('page.application.env')" name="env">
@@ -76,16 +105,23 @@
       <t-input v-model="formData.remarks" />
     </t-form-item>
 
-    <!-- 初始文件上传（仅新建时） -->
+    <!-- 初始文件上传（仅新建时；记录已创建后可用于重试上传） -->
     <template v-if="!isEdit">
       <t-divider>{{ $t('page.application.section_upload_init') }}</t-divider>
       <t-form-item :label="$t('page.application.upload_file')">
-        <t-upload :action="''" :auto-upload="false" accept="*" :multiple="false" @change="onFileChange">
+        <t-upload :key="uploadResetKey" :action="''" :auto-upload="false" accept="*" :multiple="false" @change="onFileChange">
           <t-button variant="outline">{{ $t('page.application.select_file') }}</t-button>
         </t-upload>
         <div v-if="uploadFile" style="margin-top:6px;color:#666;font-size:12px">
           {{ uploadFile.name }} ({{ formatSize(uploadFile.size) }})
         </div>
+        <div v-if="uploadState === 'failed'" class="upload-retry-tip">{{ $t('page.application.upload_retry_tip') }}</div>
+        <t-progress
+          v-if="uploadProgress != null"
+          theme="line"
+          :percentage="uploadProgress"
+          :style="{ maxWidth: '300px', marginTop: '6px' }"
+        />
       </t-form-item>
       <t-form-item :label="$t('page.application.hash_sha256')">
         <t-input v-model="uploadHash" :placeholder="hashComputing ? $t('page.application.hash_computing') : $t('page.application.hash_placeholder')" :disabled="hashComputing" clearable />
@@ -103,7 +139,8 @@
 import Vue from 'vue';
 import CryptoJS from 'crypto-js';
 import request from '@/utils/request';
-import { wafAppAddApi, wafAppEditApi, buildUploadConfig } from '@/apis/application';
+import { wafAppAddApi, wafAppEditApi, wafAppListApi, wafAppDirPreviewApi, buildUploadConfig } from '@/apis/application';
+import { createDirPreviewController, planSubmit } from './appFlow';
 
 export default Vue.extend({
   name: 'AppForm',
@@ -115,33 +152,79 @@ export default Vue.extend({
   data() {
     return {
       formData: { ...this.value },
+      formError: '',
+      recordCreated: false,
+      recordId: '',
       uploadFile: null as File | null,
       uploadHash: '',
       hashComputing: false,
+      uploadState: '' as '' | 'success' | 'failed',
+      uploadProgress: null as number | null,
+      uploadResetKey: 0,
       submitting: false,
+      preview: null as any,
+      previewState: 'idle' as 'idle' | 'loading' | 'ok' | 'unsupported' | 'error',
+      previewErrorMsg: '',
+      previewCtl: null as any,
       rules: {
         name: [{ required: true, message: this.$t('page.application.name_required') }],
         start_cmd: [{ required: true, message: this.$t('page.application.start_cmd_required') }],
       },
     };
   },
-  computed: {
-    effectiveDir(): string {
-      const dir = (this.formData as any).app_dir;
-      if (dir && dir.trim()) return dir.trim();
-      const code = (this.formData as any).code || '';
-      return `data/applications/${code}/`;
-    },
-    isDirAbsolute(): boolean {
-      const dir = (this.formData as any).app_dir;
-      return !!(dir && dir.trim().startsWith('/'));
-    },
-  },
   watch: {
-    value(v) { this.formData = { ...v }; },
+    value(v) { this.onValueChange(v); },
+    'formData.app_dir': function onAppDirChange() { this.schedulePreview(); },
+  },
+  created() {
+    this.previewCtl = createDirPreviewController({
+      request: (body) => wafAppDirPreviewApi(body),
+      isNotFound: (err) => !!(err && err.response && err.response.status === 404),
+      onUpdate: (st) => {
+        if (st.state === 'ok') {
+          this.preview = st.data;
+          this.previewState = 'ok';
+          this.previewErrorMsg = '';
+        } else if (st.state === 'unsupported') {
+          this.preview = null;
+          this.previewState = 'unsupported';
+        } else {
+          this.preview = null;
+          this.previewState = 'error';
+          this.previewErrorMsg = st.message || this.$t('common.failed');
+        }
+      },
+    });
+    this.schedulePreview();
+  },
+  beforeDestroy() {
+    if (this.previewCtl) this.previewCtl.dispose();
   },
   methods: {
+    onValueChange(v: any) {
+      this.formData = { ...v };
+      this.formError = '';
+      this.recordCreated = false;
+      this.recordId = '';
+      this.uploadState = '';
+      this.uploadFile = null;
+      this.uploadHash = '';
+      this.uploadProgress = null;
+      this.uploadResetKey += 1;
+      if (this.previewCtl) this.schedulePreview();
+    },
+    schedulePreview() {
+      if (!this.previewCtl) return;
+      this.previewState = 'loading';
+      this.previewCtl.schedule({
+        code: (this.formData as any).code || '',
+        app_dir: (this.formData.app_dir || '').trim(),
+      });
+    },
+
     onFileChange(files) {
+      this.uploadState = '';
+      this.uploadProgress = null;
       if (files && files.length > 0) {
         this.uploadFile = files[0].raw || files[0];
         this.computeHash(this.uploadFile);
@@ -174,47 +257,147 @@ export default Vue.extend({
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
-    doUploadFile(code: string, done: () => void) {
-      const fd = new FormData();
-      fd.append('code', code);
-      fd.append('hash', this.uploadHash);
-      fd.append('file', this.uploadFile as File);
-      const timeout = Math.max(300000, Math.ceil((this.uploadFile as File).size / 102400) * 1000 + 90000);
-      request(buildUploadConfig('/application/app/upload', fd, timeout, this.opPassword))
-        .then(res => {
-          if (res && res.code === 0) {
-            this.$message.success(this.$t('page.application.upload_init_uploaded'));
-          } else {
-            this.$message.warning(res ? res.msg : this.$t('common.failed'));
-          }
-        })
-        .catch(() => { this.$message.warning(this.$t('common.failed')); })
-        .finally(done);
+
+    // 上传失败也要让调用方拿到结果（true=成功），由调用方决定关窗或留窗
+    doUploadFile(code: string): Promise<boolean> {
+      return new Promise((resolve) => {
+        const fd = new FormData();
+        fd.append('code', code);
+        fd.append('hash', this.uploadHash);
+        fd.append('file', this.uploadFile as File);
+        const timeout = Math.max(300000, Math.ceil((this.uploadFile as File).size / 102400) * 1000 + 90000);
+        this.uploadProgress = 0;
+        request(buildUploadConfig('/application/app/upload', fd, timeout, this.opPassword, (p) => { this.uploadProgress = p; }))
+          .then(res => {
+            if (res && res.code === 0) {
+              this.uploadState = 'success';
+              this.uploadProgress = null;
+              this.$message.success(this.$t('page.application.upload_init_uploaded'));
+              resolve(true);
+            } else {
+              this.uploadState = 'failed';
+              this.uploadProgress = null;
+              const msg = res ? res.msg : '';
+              this.formError = this.$t('page.application.upload_failed_keep_record', { reason: msg ? `：${msg}` : '' });
+              resolve(false);
+            }
+          })
+          .catch(() => {
+            this.uploadState = 'failed';
+            this.uploadProgress = null;
+            this.formError = this.$t('page.application.upload_failed_keep_record', { reason: '' });
+            resolve(false);
+          });
+      });
     },
+
+    // 新增成功后反查记录 ID：优先用 add 响应里的 data.id（新后端），否则按 code 翻列表查（现契约 add 不返回 data）
+    resolveRecordId(): Promise<string> {
+      if (this.recordId) return Promise.resolve(this.recordId);
+      const { code } = this.formData as any;
+      if (!code) return Promise.resolve('');
+      const pageSize = 100;
+      let pageIndex = 1;
+      const tryPage: () => Promise<string> = () =>
+        wafAppListApi({ pageIndex, pageSize }).then(res => {
+          if (!(res && res.code === 0 && res.data)) return '';
+          const list = res.data.list || [];
+          const hit = list.find((it: any) => it.code === code);
+          if (hit && hit.id) { this.recordId = hit.id; return hit.id; }
+          if (list.length < pageSize || pageIndex >= 20) return '';
+          pageIndex += 1;
+          return tryPage();
+        }).catch(() => '');
+      return tryPage();
+    },
+
+    finishSuccess() {
+      this.submitting = false;
+      this.formError = '';
+      this.$message.success(this.$t('common.tips.save_success'));
+      this.$emit('submit');
+    },
+
     onSubmit({ validateResult }) {
       if (validateResult !== true) return;
       this.submitting = true;
-      const api = this.isEdit ? wafAppEditApi : wafAppAddApi;
-      api(this.formData).then(res => {
-        if (res && res.code === 0) {
-          if (!this.isEdit && this.uploadFile) {
-            this.doUploadFile((this.formData as any).code, () => {
-              this.submitting = false;
-              this.$message.success(this.$t('common.tips.save_success'));
-              this.$emit('submit');
-            });
-          } else {
-            this.submitting = false;
-            this.$message.success(this.$t('common.tips.save_success'));
-            this.$emit('submit');
-          }
-        } else {
+      this.formError = '';
+      const plan = planSubmit({
+        isEdit: this.isEdit,
+        recordCreated: this.recordCreated,
+        hasUploadFile: !!this.uploadFile,
+        uploadState: this.uploadState,
+      });
+      if (plan === 'add') {
+        this.submitAdd();
+      } else {
+        this.submitExisting(plan === 'edit_then_upload');
+      }
+    },
+
+    submitAdd() {
+      wafAppAddApi(this.formData).then(res => {
+        if (!(res && res.code === 0)) {
           this.submitting = false;
-          this.$message.error(res ? res.msg : this.$t('common.failed'));
+          this.formError = (res && res.msg) || this.$t('common.failed');
+          return;
+        }
+        // 记录已创建：此后提交只更新既有记录，绝不重复 Add
+        this.recordCreated = true;
+        const d: any = res && res.data;
+        if (d && typeof d === 'object' && d.id) {
+          this.recordId = d.id;
+          (this.formData as any).id = d.id;
+        }
+        if (this.uploadFile) {
+          this.doUploadFile((this.formData as any).code).then(ok => {
+            this.submitting = false;
+            if (ok) this.finishSuccess();
+          });
+        } else {
+          this.resolveRecordId().finally(() => { this.finishSuccess(); });
         }
       }).catch(() => {
         this.submitting = false;
-        this.$message.error(this.$t('common.failed'));
+        this.formError = this.$t('common.failed');
+      });
+    },
+
+    submitExisting(withUploadRetry: boolean) {
+      this.resolveRecordId().then(id => {
+        const canUploadOnly = withUploadRetry && this.uploadFile && (this.formData as any).code;
+        if (!id) {
+          // 拿不到记录 ID 时不能盲目新增；若只是要重试上传（仅需 code）仍可继续
+          if (canUploadOnly) {
+            this.doUploadFile((this.formData as any).code).then(ok => {
+              this.submitting = false;
+              if (ok) this.finishSuccess();
+            });
+          } else {
+            this.submitting = false;
+            this.formError = this.$t('page.application.record_id_missing');
+          }
+          return;
+        }
+        (this.formData as any).id = id;
+        wafAppEditApi(this.formData).then(res => {
+          if (!(res && res.code === 0)) {
+            this.submitting = false;
+            this.formError = (res && res.msg) || this.$t('common.failed');
+            return;
+          }
+          if (withUploadRetry && this.uploadFile) {
+            this.doUploadFile((this.formData as any).code).then(ok => {
+              this.submitting = false;
+              if (ok) this.finishSuccess();
+            });
+          } else {
+            this.finishSuccess();
+          }
+        }).catch(() => {
+          this.submitting = false;
+          this.formError = this.$t('common.failed');
+        });
       });
     },
   },
@@ -222,13 +405,43 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.dir-hint {
+.form-error-alert {
+  margin-bottom: 12px;
+}
+.dir-preview {
   margin-top: 4px;
   font-size: 12px;
-  color: #999;
+  line-height: 1.8;
   word-break: break-all;
 }
-.dir-hint-warn {
+.dir-preview-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+.dir-preview-label {
+  color: #999;
+  flex-shrink: 0;
+}
+.dir-preview-muted {
+  color: #999;
+}
+.dir-preview-warn {
   color: #e37318;
+}
+.dir-preview-error {
+  color: #d54941;
+}
+.dir-preview-code {
+  background: var(--td-bg-color-secondarycontainer, #f3f3f3);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+.upload-retry-tip {
+  margin-top: 6px;
+  color: #e37318;
+  font-size: 12px;
 }
 </style>
