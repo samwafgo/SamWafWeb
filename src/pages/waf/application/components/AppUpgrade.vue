@@ -182,7 +182,7 @@ export default Vue.extend({
 
         const res = await request(buildUploadConfig(url, fd, timeout, this.opPassword));
         if (res && res.code === 0) {
-          this.$message.success(this.$t('common.success'));
+          this.$message.success(res.msg || this.$t('common.success'));
           this.loadBackups();
           this.$emit('done');
         } else {
@@ -213,7 +213,7 @@ export default Vue.extend({
         })
         .then(res => {
           if (res && res.code === 0) {
-            this.$message.success(this.$t('page.application.rollback_success'));
+            this.$message.success(res.msg || this.$t('page.application.rollback_success'));
             this.$emit('done');
           } else {
             this.$message.error(res ? res.msg : this.$t('common.failed'));

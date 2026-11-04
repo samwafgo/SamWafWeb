@@ -35,7 +35,7 @@
           </t-form>
         </div>
       </t-row>
-      <help-block :summary="$t('page.access.audit.alert_message')" doc="guide/AccessAudit" />
+      <help-block :summary="$t('page.access.audit.alert_message') + ' ' + $t('page.access.audit.app_audit_note')" doc="guide/AccessAudit" />
       <div class="table-container">
         <t-table :columns="columns" :data="data" :rowKey="rowKey" :verticalAlign="verticalAlign" :hover="hover"
           :pagination="pagination" :loading="dataLoading" @page-change="rehandlePageChange"
@@ -64,7 +64,7 @@ import Vue from 'vue';
 import { prefix } from '@/config/global';
 import { wafAccessAuditListApi } from '@/apis/access';
 
-// 与后端 model/security_audit_log.go 的 AccessEvent*/AuditEventConfig* 常量一一对应
+// 与后端 model/security_audit_log.go 的审计事件常量对应
 const EVENTS = [
   'login_ok', 'login_fail', 'otp_fail', 'locked', 'logout', 'kick',
   'ticket_issue', 'ticket_consume', 'ticket_replay', 'bad_return_to',
@@ -73,15 +73,17 @@ const EVENTS = [
   // 网站密码访问（站点级密码那道门），与统一访问认证是两套独立功能，前缀也分开
   'httpauth_login_ok', 'httpauth_login_fail', 'httpauth_locked',
   'httpauth_kick', 'httpauth_expired', 'httpauth_denied',
+  'app_add', 'app_edit', 'app_del', 'app_start', 'app_stop', 'app_restart',
+  'app_upload', 'app_upgrade', 'app_rollback', 'app_clear_logs', 'app_op_denied',
 ];
 
 // 审计分类，与后端 AuditCategory* 常量对应
-const CATEGORIES = ['access', 'httpauth', 'config'];
+const CATEGORIES = ['access', 'httpauth', 'config', 'app'];
 
 // 安全告警级事件用 danger 高亮：票据重放与回跳地址异常在正常流程里不该出现，
 // 一旦出现就意味着有人在主动构造请求。
 const DANGER_EVENTS = ['ticket_replay', 'bad_return_to', 'locked', 'httpauth_locked'];
-const WARNING_EVENTS = ['login_fail', 'otp_fail', 'denied', 'httpauth_login_fail', 'httpauth_denied'];
+const WARNING_EVENTS = ['login_fail', 'otp_fail', 'denied', 'httpauth_login_fail', 'httpauth_denied', 'app_op_denied'];
 
 export default Vue.extend({
   name: 'WafAccessAudit',
@@ -136,7 +138,7 @@ export default Vue.extend({
       const label = this.$t(key);
       return label === key ? c : label;
     },
-    // 三个分类各给一个色，混在一张表里时能一眼分开谁是谁
+    // 审计分类标签配色
     categoryTheme(c) {
       if (c === 'config') return 'warning';
       if (c === 'httpauth') return 'primary';
