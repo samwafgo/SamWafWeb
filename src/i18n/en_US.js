@@ -5340,6 +5340,8 @@ export default {
       filter_domains_tip: "Supports *.example.com wildcards, empty means no restriction",
       label_filter_exclude_ips: "Exclude These IPs",
       filter_exclude_ips_tip: "Supports CIDR, e.g. 10.0.0.0/8",
+      label_filter_exclude_rules: "Exclude These Rules",
+      filter_exclude_rules_tip: "Enter full rule names (one per line); events triggered by these rules won't be sent, empty means no restriction",
       label_filter_keywords: "Keywords",
       filter_keywords_tip: "Send only when rule info / attack type / URL matches any keyword, empty means no restriction",
       label_filter_min_severity: "Minimum Severity",

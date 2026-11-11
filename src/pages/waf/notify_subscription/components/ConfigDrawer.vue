@@ -128,6 +128,10 @@
               <t-textarea v-model="filterText.exclude_ips" :placeholder="excludeIpsPlaceholder" :autosize="{ minRows: 3, maxRows: 6 }" />
               <div class="form-tip">{{ $t('page.notify_subscription.filter_exclude_ips_tip') }}</div>
             </t-form-item>
+            <t-form-item :label="$t('page.notify_subscription.label_filter_exclude_rules')">
+              <t-textarea v-model="filterText.exclude_rules" :placeholder="excludeRulesPlaceholder" :autosize="{ minRows: 3, maxRows: 6 }" />
+              <div class="form-tip">{{ $t('page.notify_subscription.filter_exclude_rules_tip') }}</div>
+            </t-form-item>
             <t-form-item :label="$t('page.notify_subscription.label_filter_keywords')">
               <t-textarea v-model="filterText.keywords" :autosize="{ minRows: 3, maxRows: 6 }" />
               <div class="form-tip">{{ $t('page.notify_subscription.filter_keywords_tip') }}</div>
@@ -207,6 +211,7 @@ function emptyForm() {
     filter: {
       domains: [] as string[],
       exclude_ips: [] as string[],
+      exclude_rules: [] as string[],
       keywords: [] as string[],
       min_severity: '',
     },
@@ -230,10 +235,11 @@ export default Vue.extend({
       activeTab: 'throttle',
       form: emptyForm(),
       // 多行文本 ↔ 数组：过滤条件用文本框填更顺手，提交前再切成数组
-      filterText: { domains: '', exclude_ips: '', keywords: '' },
+      filterText: { domains: '', exclude_ips: '', exclude_rules: '', keywords: '' },
       // 换行只能从 JS 传：写在模板的 placeholder 属性里会被当成字面量 &#10; 显示出来
       domainsPlaceholder: 'www.example.com\n*.example.com',
       excludeIpsPlaceholder: '10.0.0.0/8\n192.168.1.1',
+      excludeRulesPlaceholder: '禁止国外IP访问',
       cooldownStepsText: '',
       templateVars: [] as any[],
       defaultTitle: '',
@@ -297,6 +303,7 @@ export default Vue.extend({
       this.filterText = {
         domains: (form.filter.domains || []).join('\n'),
         exclude_ips: (form.filter.exclude_ips || []).join('\n'),
+        exclude_rules: (form.filter.exclude_rules || []).join('\n'),
         keywords: (form.filter.keywords || []).join('\n'),
       };
       this.preview = { title: '', content: '', is_fallback: false };
@@ -346,6 +353,7 @@ export default Vue.extend({
         filter: {
           domains: this.splitLines(this.filterText.domains),
           exclude_ips: this.splitLines(this.filterText.exclude_ips),
+          exclude_rules: this.splitLines(this.filterText.exclude_rules),
           keywords: this.splitLines(this.filterText.keywords),
           min_severity: this.form.filter.min_severity || '',
         },

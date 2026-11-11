@@ -5321,6 +5321,8 @@ export default {
       filter_domains_tip: "支持 *.example.com 通配，留空表示不限",
       label_filter_exclude_ips: "排除这些IP",
       filter_exclude_ips_tip: "支持 CIDR，例如 10.0.0.0/8",
+      label_filter_exclude_rules: "排除这些规则",
+      filter_exclude_rules_tip: "填写完整规则名称（每行一个），这些规则触发的拦截不发通知，留空表示不限",
       label_filter_keywords: "关键字",
       filter_keywords_tip: "规则信息/攻击类型/URL 命中任一关键字才发送，留空表示不限",
       label_filter_min_severity: "最低严重级别",
