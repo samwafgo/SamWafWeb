@@ -180,8 +180,16 @@ export default Vue.extend({
           name: this.$t('page.notify_subscription.message_type_ssl_expire'),
         },
         {
+          type: 'daily_report',
+          name: this.$t('page.notify_subscription.message_type_daily_report'),
+        },
+        {
           type: 'weekly_report',
           name: this.$t('page.notify_subscription.message_type_weekly_report'),
+        },
+        {
+          type: 'monthly_report',
+          name: this.$t('page.notify_subscription.message_type_monthly_report'),
         },
         {
           type: 'system_error',

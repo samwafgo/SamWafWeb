@@ -10,7 +10,9 @@
                 <t-option value="operation_notice" :label="$t('page.notify_log.message_type_operation_notice')"></t-option>
                 <t-option value="user_login" :label="$t('page.notify_log.message_type_user_login')"></t-option>
                 <t-option value="attack_info" :label="$t('page.notify_log.message_type_attack_info')"></t-option>
+                <t-option value="daily_report" :label="$t('page.notify_log.message_type_daily_report')"></t-option>
                 <t-option value="weekly_report" :label="$t('page.notify_log.message_type_weekly_report')"></t-option>
+                <t-option value="monthly_report" :label="$t('page.notify_log.message_type_monthly_report')"></t-option>
                 <t-option value="ssl_expire" :label="$t('page.notify_log.message_type_ssl_expire')"></t-option>
                 <t-option value="system_error" :label="$t('page.notify_log.message_type_system_error')"></t-option>
                 <t-option value="ip_ban" :label="$t('page.notify_log.message_type_ip_ban')"></t-option>
@@ -224,7 +226,9 @@ export default Vue.extend({
         operation_notice: this.$t('page.notify_log.message_type_operation_notice'),
         user_login: this.$t('page.notify_log.message_type_user_login'),
         attack_info: this.$t('page.notify_log.message_type_attack_info'),
+        daily_report: this.$t('page.notify_log.message_type_daily_report'),
         weekly_report: this.$t('page.notify_log.message_type_weekly_report'),
+        monthly_report: this.$t('page.notify_log.message_type_monthly_report'),
         ssl_expire: this.$t('page.notify_log.message_type_ssl_expire'),
         system_error: this.$t('page.notify_log.message_type_system_error'),
         ip_ban: this.$t('page.notify_log.message_type_ip_ban'),

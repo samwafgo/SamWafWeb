@@ -395,6 +395,12 @@ export default [
         meta: { title: 'menu.system.private_info_title' },
       },
       {
+        path: 'SecurityReport',
+        name: 'SecurityReport',
+        component: () => import('@/pages/waf/security_report/index.vue'),
+        meta: { title: 'securityReport.title', keepAlive: false },
+      },
+      {
         path: 'DataRetention',
         name: 'DataRetention',
         component: () => import('@/pages/waf/data_retention/index.vue'),

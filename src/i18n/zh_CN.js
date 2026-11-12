@@ -6,9 +6,11 @@
  * page 里面放置对应功能页面的字段
  */
 import { zh as logExport } from './logExport';
+import { zh as securityReport } from './securityReport';
 
 export default {
   logExport,
+  securityReport,
   common: {
     yes: "是",
     no: "否",
@@ -5219,7 +5221,9 @@ export default {
       message_type_operation_notice: "操作通知",
       message_type_user_login: "用户登录",
       message_type_attack_info: "攻击信息",
+      message_type_daily_report: "日报",
       message_type_weekly_report: "周报",
+      message_type_monthly_report: "月报",
       message_type_ssl_expire: "SSL证书过期",
       message_type_system_error: "系统错误",
       message_type_ip_ban: "IP封禁",
@@ -5371,7 +5375,9 @@ export default {
       message_type_operation_notice: "操作通知",
       message_type_user_login: "用户登录",
       message_type_attack_info: "攻击信息",
+      message_type_daily_report: "日报",
       message_type_weekly_report: "周报",
+      message_type_monthly_report: "月报",
       message_type_ssl_expire: "SSL证书过期",
       message_type_system_error: "系统错误",
       message_type_ip_ban: "IP封禁",
