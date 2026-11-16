@@ -250,6 +250,7 @@
           { code: 'et_comp', name: 'ET Compromised', url: 'https://rules.emergingthreats.net/blockrules/compromised-ips.txt', parser_type: 'cidr_only', threshold: 0, optionLabel: 'ET Compromised · emergingthreats.net（已失陷主机）' },
           { code: 'spamhaus', name: 'Spamhaus DROP', url: 'https://www.spamhaus.org/drop/drop.txt', parser_type: 'plain_mixed', threshold: 0, optionLabel: 'Spamhaus DROP · spamhaus.org（被劫持网段，低误报）' },
           { code: 'feodo', name: 'Feodo Tracker', url: 'https://feodotracker.abuse.ch/downloads/ipblocklist.txt', parser_type: 'cidr_only', threshold: 0, optionLabel: 'Feodo Tracker · abuse.ch（僵尸网络C2）' },
+          { code: 'netapi', name: 'NetAPI Honeypot', url: 'https://netapi.com/api2/?method=compromised&dataset_type=ip', parser_type: 'cidr_only', threshold: 0, optionLabel: 'NetAPI Honeypot · netapi.com（自有蜜罐网络捕获的攻击IP，每小时更新）' },
         ],
         columns: [
           { title: this.$t('page.threatip.label_name'), align: 'left', width: 160, ellipsis: true, colKey: 'name' },
