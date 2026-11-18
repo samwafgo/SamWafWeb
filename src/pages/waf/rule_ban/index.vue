@@ -296,13 +296,13 @@ export default Vue.extend({
     font-size: 12px;
     line-height: 1.7;
     color: var(--td-text-color-primary);
-    background: #fff;
+    background: var(--td-bg-color-container);
     overflow-x: auto;
   }
 
   .example-foot {
     padding: 8px 16px 12px;
-    color: var(--td-text-color-placeholder);
+    color: var(--td-text-color-secondary);
     font-size: 12px;
   }
 }
