@@ -3710,6 +3710,16 @@ export default {
         description: "This global response applies when a request matches no configured website. The status code is fixed at 403. Edit only the HTML response body below.",
         builtin_tip: "With no custom record, the editor is prefilled with the built-in page and ready to edit. Saving content identical to the built-in page (or an empty body) uses the built-in page (which upgrades with releases); deleting the record is unnecessary. The built-in page guides administrators to create a host under Website Protection.",
         variable_tip: "[[.SAMWAF_HOST]] is the escaped request Host text. Use it only as HTML text, never in script, style, or a URL.",
+      },
+      backend_unavailable: {
+        title: "Backend Unavailable Response",
+        response_code: "Preserve Actual Status",
+        description: "This global response applies when SamWaf fails to connect to or receive a response from the origin. The original HTTP status (502, 503, or 504) is preserved. Edit the HTML response body below.",
+        builtin_failed: "Unable to load the built-in page and verify backend support. Saving is disabled. Close and reopen this dialog to retry.",
+        builtin_tip: "When no custom body is set, the editor starts with the built-in page. Save an empty body or an unchanged built-in page to keep using the built-in page as it updates with releases.",
+        variable_tip: "[[.SAMWAF_HOST]] is the escaped request Host, and [[.SAMWAF_STATUS_CODE]] is the actual HTTP status code. Use these variables only in HTML text.",
+      },
+      global_response: {
         placeholder: "Enter an HTML body, or leave it empty (or identical to the built-in page) and save to use the built-in page",
         clear: "Restore Built-in Page",
         preview_builtin_failed: "Unable to load the built-in page for preview. You can switch to Edit and enter HTML directly.",

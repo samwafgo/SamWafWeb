@@ -3714,6 +3714,16 @@ export default {
         description: "请求未匹配任何已配置网站时使用此全局响应，响应码固定为 403。下方仅编辑 HTML 响应正文。",
         builtin_tip: "无自定义记录时，编辑区默认填充内置页面，可直接修改。内容与内置页面一致或清空后保存，即使用内置页面（随版本更新），无须删除记录。内置页面会提示管理员前往「网站防护」新建主机。",
         variable_tip: "变量 [[.SAMWAF_HOST]] 为已转义的请求 Host 文本，仅可用于 HTML 文本，不能用于 script、style 或 URL。",
+      },
+      backend_unavailable: {
+        title: "源站不可用响应",
+        response_code: "保留实际状态码",
+        description: "SamWaf 代理回源失败时使用此全局响应，保留实际的 HTTP 状态码（502、503 或 504）。下方仅编辑 HTML 响应正文。",
+        builtin_failed: "无法读取内置页面并确认后端支持此功能，当前不能保存。请关闭弹窗后重新打开重试。",
+        builtin_tip: "未设置自定义正文时，编辑区会填入内置页面。留空或保持与内置页面一致并保存，即使用随版本更新的内置页面。",
+        variable_tip: "[[.SAMWAF_HOST]] 为已转义的请求 Host，[[.SAMWAF_STATUS_CODE]] 为实际响应状态码。请仅在 HTML 文本中使用这些变量。",
+      },
+      global_response: {
         placeholder: "填写 HTML 正文；留空或保持与内置页面一致并保存，使用内置页面",
         clear: "恢复内置页面",
         preview_builtin_failed: "内置页面读取失败，预览不可用，可切换到「编辑」直接填写 HTML。",

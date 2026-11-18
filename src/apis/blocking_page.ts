@@ -46,3 +46,11 @@ export function wafBlockingPageUnmatchedBuiltinApi() {
     method: 'get',
   })
 }
+
+// 源站不可用内置页面（预览用）
+export function wafBlockingPageBackendUnavailableBuiltinApi() {
+  return request({
+    url: '/wafhost/blockingpage/backendunavailablebuiltin',
+    method: 'get',
+  })
+}
