@@ -43,9 +43,17 @@
             </t-tag>
           </template>
           <template #op="slotProps">
-            <a class="t-button-link" @click="handleClickShowConnections(slotProps)">{{ $t('page.tunnel.view_connections') }}</a> 
-            <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
-            <a class="t-button-link" @click="handleClickDelete(slotProps)">{{ $t('common.delete') }}</a>
+            <!-- 高频的「编辑」「访问防护」保持文字直出，低频的「查看连接」「删除」收进「更多」，
+                 对齐站点列表的操作列排版 -->
+            <div class="op-cell">
+              <a class="t-button-link" @click="handleClickEdit(slotProps)">{{ $t('common.edit') }}</a>
+              <a v-if="slotProps.row.id" class="t-button-link"
+                @click="protectionTunnel = slotProps.row">{{ $t('page.tunnel.protection.title') }}</a>
+              <span class="op-vline"></span>
+              <t-dropdown :options="rowMoreOptions()" trigger="click" @click="onRowMoreClick($event, slotProps)">
+                <span class="op-more">{{ $t('page.host.group.more') }} ▾</span>
+              </t-dropdown>
+            </div>
           </template>
         </t-table>
       </div>
@@ -77,6 +85,8 @@
               :onCancel="()=>{connectionsVisible=false}">
       <connection-list ref="connectionList" :key="selectedTunnelCode" :tunnel-code="selectedTunnelCode"></connection-list>
     </t-dialog>
+    <tunnel-protection v-if="protectionTunnel" :tunnel="protectionTunnel"
+      @close="protectionTunnel = null" />
   </div>
 </template>
 <script lang="ts">
@@ -100,7 +110,8 @@ import {
   INITIAL_DATA
 } from './constants';
 import TunnelForm from './components/TunnelForm.vue';
-import ConnectionList from './components/ConnectionList.vue'; 
+import ConnectionList from './components/ConnectionList.vue';
+import TunnelProtection from './components/TunnelProtection.vue';
 import { v4 as uuidv4 } from 'uuid';
 export default Vue.extend({
   name: 'TunnelBase',
@@ -108,10 +119,12 @@ export default Vue.extend({
     SearchIcon,
     Trend,
     TunnelForm,
-    ConnectionList
+    ConnectionList,
+    TunnelProtection,
   },
   data() {
     return {
+      protectionTunnel: null,
       addFormVisible: false,
       editFormVisible: false,
       guardVisible: false,
@@ -224,7 +237,7 @@ export default Vue.extend({
         {
           align: 'left',
           fixed: 'right',
-          width: 200,
+          width: 190,
           colKey: 'op',
           title: this.$t('common.op'),
         },
@@ -362,6 +375,20 @@ export default Vue.extend({
       this.selectedRowKeys = selectedRowKeys;
     },
     rehandleChange(changeParams, triggerAndData) {
+    },
+    rowMoreOptions() {
+      return [
+        { content: this.$t('page.tunnel.view_connections'), value: 'connections' },
+        { content: this.$t('common.delete'), value: 'del', theme: 'error' },
+      ];
+    },
+    onRowMoreClick(data, slotProps) {
+      const act = data && data.value ? data.value : data;
+      if (act === 'connections') {
+        this.handleClickShowConnections(slotProps);
+      } else if (act === 'del') {
+        this.handleClickDelete(slotProps);
+      }
     },
     handleClickEdit(e) {
       console.log(e)
@@ -532,5 +559,32 @@ export default Vue.extend({
 
 .t-button+.t-button {
   margin-left: @spacer;
+}
+
+/* 操作列：编辑 / 访问防护 + 更多，对齐站点列表排版 */
+.op-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  /* reset.less 给全局 a / .t-button-link 加了 margin-right，
+     叠在 flex gap 上会把「更多」挤出列宽，这里必须清掉 */
+  .t-button-link {
+    margin-right: 0;
+  }
+}
+
+.op-vline {
+  width: 1px;
+  height: 11px;
+  background: var(--td-component-stroke);
+  flex: none;
+}
+
+.op-more {
+  color: var(--td-brand-color);
+  cursor: pointer;
+  white-space: nowrap;
 }
 </style>

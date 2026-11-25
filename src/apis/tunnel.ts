@@ -47,3 +47,21 @@ export function wafTunnelConnectionApi(params) {
     params: params
   })
 }
+
+const protectionPath = '/tunnel/tunnel/protection';
+
+export function wafTunnelProtectionDetailApi(params) {
+  return request({ url: `${protectionPath}/detail`, method: 'get', params });
+}
+
+export function wafTunnelProtectionRegionApi(data) {
+  return request({ url: `${protectionPath}/region`, method: 'post', data });
+}
+
+export function wafTunnelProtectionDDNSApi(data) {
+  return request({ url: `${protectionPath}/ddns`, method: 'post', data });
+}
+
+export function wafTunnelProtectionRefreshApi(data) {
+  return request({ url: `${protectionPath}/refresh`, method: 'post', data });
+}
