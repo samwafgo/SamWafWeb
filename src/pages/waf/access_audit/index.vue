@@ -67,6 +67,8 @@
           </template>
           <template #object="{ row }">
             <span v-if="row.object_type === 'tunnel'">{{ $t('page.access.audit.object_tunnel') }} · {{ row.object_id }}</span>
+            <span v-else-if="row.object_type === 'host'">{{ $t('page.access.audit.object_host') }} · {{ row.host || row.object_id }}</span>
+            <span v-else-if="row.object_type === 'path_rule'">{{ $t('page.access.audit.object_path_rule') }} · {{ row.host || row.object_id }}</span>
             <span v-else>—</span>
           </template>
           <template #detail="{ row }">
@@ -103,6 +105,8 @@ import { prefix } from '@/config/global';
 import { wafAccessAuditListApi } from '@/apis/access';
 
 const TUNNEL_EVENTS = ['config_tunnel_region', 'config_tunnel_ddns', 'config_tunnel_ddns_addresses', 'config_tunnel_ddns_resolution'];
+// 角色权限拒绝、静态目录变更与启动巡检
+const STATIC_ROOT_EVENTS = ['config_role_denied', 'config_static_root_change', 'config_static_root_review'];
 
 // 与后端 model/security_audit_log.go 的审计事件常量对应
 const EVENTS = [
@@ -110,6 +114,7 @@ const EVENTS = [
   'ticket_issue', 'ticket_consume', 'ticket_replay', 'bad_return_to',
   'denied', 'bypass_ip', 'bypass_token',
   'config_ssl_export_write', ...TUNNEL_EVENTS,
+  ...STATIC_ROOT_EVENTS,
   // 网站密码访问（站点级密码那道门），与统一访问认证是两套独立功能，前缀也分开
   'httpauth_login_ok', 'httpauth_login_fail', 'httpauth_locked',
   'httpauth_kick', 'httpauth_expired', 'httpauth_denied',
@@ -123,7 +128,8 @@ const CATEGORIES = ['access', 'httpauth', 'config', 'app'];
 // 安全告警级事件用 danger 高亮：票据重放与回跳地址异常在正常流程里不该出现，
 // 一旦出现就意味着有人在主动构造请求。
 const DANGER_EVENTS = ['ticket_replay', 'bad_return_to', 'locked', 'httpauth_locked'];
-const WARNING_EVENTS = ['login_fail', 'otp_fail', 'denied', 'httpauth_login_fail', 'httpauth_denied', 'app_op_denied'];
+const WARNING_EVENTS = ['login_fail', 'otp_fail', 'denied', 'httpauth_login_fail', 'httpauth_denied', 'app_op_denied',
+  'config_role_denied', 'config_static_root_review'];
 
 function initialFilters() {
   return { category: '', event: '', account_name: '', client_ip: '', host: '', object_type: '', object_id: '' };
@@ -221,7 +227,7 @@ export default Vue.extend({
       return 'primary';
     },
     actorLabel(row) {
-      if (row.account_name === 'system' && TUNNEL_EVENTS.slice(2).includes(row.event)) {
+      if (row.account_name === 'system' && (TUNNEL_EVENTS.slice(2).includes(row.event) || row.event === 'config_static_root_review')) {
         return this.$t('page.access.audit.system_actor');
       }
       return row.account_name || '—';
