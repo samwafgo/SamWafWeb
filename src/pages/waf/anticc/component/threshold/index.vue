@@ -22,7 +22,7 @@
       <div class="th-meta">{{ metaText }}</div>
       <div class="th-summary" v-html="summaryHtml"></div>
       <div v-if="data.scope_note" class="th-note">{{ data.scope_note }}</div>
-      <div v-if="data.sampled" class="th-note">{{ $t('page.ccrule.th_sampled', { days: data.days }) }}</div>
+      <div v-if="data.sampled" class="th-note">{{ sampledText }}</div>
 
       <div class="th-stats">
         <div><div class="k">{{ $t('page.ccrule.th_p50') }}</div><div class="v">{{ data.p50 }}</div></div>
@@ -124,7 +124,17 @@ export default Vue.extend({
     },
     metaText() {
       if (!this.data) return '';
+      if (this.data.sample_hours > 0 && this.data.sample_hours < 24) {
+        return this.$t('page.ccrule.th_meta_hours', { hours: this.data.sample_hours, window: this.data.window_sec });
+      }
       return this.$t('page.ccrule.th_meta', { days: this.data.days, window: this.data.window_sec });
+    },
+    sampledText() {
+      if (!this.data) return '';
+      if (this.data.sample_hours > 0 && this.data.sample_hours < 24) {
+        return this.$t('page.ccrule.th_sampled_hours', { hours: this.data.sample_hours });
+      }
+      return this.$t('page.ccrule.th_sampled', { days: this.data.days });
     },
     summaryHtml() {
       if (!this.data) return '';

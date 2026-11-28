@@ -69,7 +69,8 @@ export function wafAntiCCRuleThresholdRecommendApi(params) {
   return request({
     url: '/wafhost/anticcrule/threshold/recommend',
     method: 'post',
-    data: params
+    data: params,
+    timeout: 25000
   })
 }
 //规则命中看板（进程内统计，重启归零）
